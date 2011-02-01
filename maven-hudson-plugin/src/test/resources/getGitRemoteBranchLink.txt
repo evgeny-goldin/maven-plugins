@@ -1,0 +1,61 @@
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# Input file for com.goldin.plugins.hudson.RepositoryTest.getGitRemoteBranchLink() #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GitHub repos
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+git@github.com:evgeny-goldin/maven-plugins.git                   master        http://github.com/evgeny-goldin/maven-plugins/tree/master
+https://evgeny-goldin@github.com/evgeny-goldin/maven-plugins.git master        http://github.com/evgeny-goldin/maven-plugins/tree/master
+git@github.com:evgeny-goldin/maven-plugins.git                   dev           http://github.com/evgeny-goldin/maven-plugins/tree/dev
+https://evgeny-goldin@github.com/evgeny-goldin/maven-plugins.git dev           http://github.com/evgeny-goldin/maven-plugins/tree/dev
+
+git@github.com:evgeny-goldin/WideFinder.git                   master           http://github.com/evgeny-goldin/WideFinder/tree/master
+git://github.com/evgeny-goldin/WideFinder.git                 master           http://github.com/evgeny-goldin/WideFinder/tree/master
+https://evgeny-goldin@github.com/evgeny-goldin/WideFinder.git master           http://github.com/evgeny-goldin/WideFinder/tree/master
+git@github.com:evgeny-goldin/WideFinder.git                   dev              http://github.com/evgeny-goldin/WideFinder/tree/dev
+git://github.com/evgeny-goldin/WideFinder.git                 dev              http://github.com/evgeny-goldin/WideFinder/tree/dev
+https://evgeny-goldin@github.com/evgeny-goldin/WideFinder.git dev              http://github.com/evgeny-goldin/WideFinder/tree/dev
+
+http://github.com/viatropos/cached-commons.git master                          http://github.com/viatropos/cached-commons/tree/master
+git://github.com/viatropos/cached-commons.git  master                          http://github.com/viatropos/cached-commons/tree/master
+http://github.com/viatropos/cached-commons.git worker                          http://github.com/viatropos/cached-commons/tree/worker
+git://github.com/viatropos/cached-commons.git  worker                          http://github.com/viatropos/cached-commons/tree/worker
+http://github.com/viatropos/cached-commons.git gem                             http://github.com/viatropos/cached-commons/tree/gem
+git://github.com/viatropos/cached-commons.git  gem                             http://github.com/viatropos/cached-commons/tree/gem
+
+http://github.com/viatropos/compressible.git master                            http://github.com/viatropos/compressible/tree/master
+git://github.com/viatropos/compressible.git  master                            http://github.com/viatropos/compressible/tree/master
+
+http://github.com/KentBeck/junit.git master                                    http://github.com/KentBeck/junit/tree/master
+git://github.com/KentBeck/junit.git  master                                    http://github.com/KentBeck/junit/tree/master
+http://github.com/KentBeck/junit.git gh-pages                                  http://github.com/KentBeck/junit/tree/gh-pages
+git://github.com/KentBeck/junit.git  gh-pages                                  http://github.com/KentBeck/junit/tree/gh-pages
+http://github.com/KentBeck/junit.git marcphilipp                               http://github.com/KentBeck/junit/tree/marcphilipp
+git://github.com/KentBeck/junit.git  marcphilipp                               http://github.com/KentBeck/junit/tree/marcphilipp
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Gitorious repos
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+git://gitorious.org/qt/qt.git      master                                      http://gitorious.org/qt/qt/trees/master
+http://git.gitorious.org/qt/qt.git master                                      http://git.gitorious.org/qt/qt/trees/master
+git://gitorious.org/qt/qt.git      4.7                                         http://gitorious.org/qt/qt/trees/4.7
+http://git.gitorious.org/qt/qt.git 4.7                                         http://git.gitorious.org/qt/qt/trees/4.7
+git://gitorious.org/qt/qt.git      4.6-stable                                  http://gitorious.org/qt/qt/trees/4.6-stable
+http://git.gitorious.org/qt/qt.git 4.6-stable                                  http://git.gitorious.org/qt/qt/trees/4.6-stable
+
+git://gitorious.org/opensuse/patterns.git      master                          http://gitorious.org/opensuse/patterns/trees/master
+http://git.gitorious.org/opensuse/patterns.git master                          http://git.gitorious.org/opensuse/patterns/trees/master
+git://gitorious.org/opensuse/patterns.git      11.2                            http://gitorious.org/opensuse/patterns/trees/11.2
+http://git.gitorious.org/opensuse/patterns.git 11.2                            http://git.gitorious.org/opensuse/patterns/trees/11.2
+
+git://gitorious.org/jboss-ejb3/jboss-ejb3-context.git      master              http://gitorious.org/jboss-ejb3/jboss-ejb3-context/trees/master
+http://git.gitorious.org/jboss-ejb3/jboss-ejb3-context.git master              http://git.gitorious.org/jboss-ejb3/jboss-ejb3-context/trees/master
+
+git://gitorious.org/esp-home/wsarena3.git        master                        http://gitorious.org/esp-home/wsarena3/trees/master
+http://git.gitorious.org/esp-home/wsarena3.git   master                        http://git.gitorious.org/esp-home/wsarena3/trees/master
+git://gitorious.org/esp-home/wsarena3.git        version1                      http://gitorious.org/esp-home/wsarena3/trees/version1
+http://git.gitorious.org/esp-home/wsarena3.git   version1                      http://git.gitorious.org/esp-home/wsarena3/trees/version1

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns              = "http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi          = "http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0
+                               http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.goldin.plugins</groupId>
+    <artifactId>main.plugins</artifactId>
+    <packaging>pom</packaging>
+    <version>0.2</version>
+    <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
+
+
+    <properties>
+
+        <repository>http://evgeny-goldin.org/artifactory</repository>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Third-party versions -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~ -->
+
+        <!-- DO NOT upgrade. Doing so will not allow plugins usage with Maven 2 -->
+        <maven-version>2.2.1</maven-version>
+
+        <groovy-version>1.8.0-beta-3</groovy-version>
+        <gmaven-version>1.3</gmaven-version>
+        <annomojo-version>1.4.0</annomojo-version>
+        <spring-version>3.0.5.RELEASE</spring-version>
+        <spring-batch-version>2.1.5.RELEASE</spring-batch-version>
+        <junit-version>4.8.2</junit-version>
+        <plexus-utils-version>2.0.5</plexus-utils-version>
+        <ant-version>1.8.2</ant-version>
+    </properties>
+
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>plugins-snapshots-local</id>
+            <name>plugins-snapshots-local</name>
+            <url>${repository}/plugins-snapshots-local</url>
+        </snapshotRepository>
+        <repository>
+            <id>plugins-releases-local</id>
+            <name>plugins-releases-local</name>
+            <url>${repository}/plugins-releases-local</url>
+        </repository>
+    </distributionManagement>
+
+
+    <modules>
+
+        <!-- ~~~~~ -->
+        <!-- Infra -->
+        <!-- ~~~~~ -->
+
+        <module>maven-common</module>
+        <module>mojo-parent</module>
+
+        <!-- ~~~~~~~ -->
+        <!-- Plugins -->
+        <!-- ~~~~~~~ -->
+
+        <module>maven-copy-plugin</module>
+        <module>maven-hudson-plugin</module>
+        <module>maven-assert-plugin</module>
+        <module>maven-mail-plugin</module>
+        <module>maven-find-plugin</module>
+        <module>maven-timestamp-plugin</module>
+        <module>maven-properties-plugin</module>
+        <module>maven-sshexec-plugin</module>
+        <module>maven-spring-batch-plugin</module>
+    </modules>
+
+
+    <build>
+        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
+
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+        </resources>
+
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+        </testResources>
+
+
+
+        <plugins>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Enforcing Maven/Java versions -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>maven-enforcer-display-info</id>
+                        <goals><goal>display-info</goal></goals>
+                        <phase>validate</phase>
+                    </execution>
+                    <execution>
+                        <id>maven-enforcer-enforce</id>
+                        <goals><goal>enforce</goal></goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <requireMavenVersion>
+                            <version>${maven-version}</version>
+                        </requireMavenVersion>
+                        <requireJavaVersion>
+                            <version>1.6</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+            </plugin>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Configuring surefire plugin to display test errors in console -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <useFile>false</useFile>
+                </configuration>
+            </plugin>
+
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- http://maven.apache.org/plugins/maven-compiler-plugin/compile-mojo.html -->
+            <!-- Configuring default compilation options                                 -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerArgument>-Xlint:all</compilerArgument>
+                    <encoding>UTF-8</encoding>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                </configuration>
+            </plugin>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Plugin to execute Groovy scripts and compile Groovy classes      -->
+            <!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code    -->
+            <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
+            <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119     -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>${gmaven-version}</version>
+                <executions>
+                    <execution>
+                        <id>compile-groovy</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <providerSelection>1.7</providerSelection>
+                    <verbose>true</verbose>
+                    <scriptpath>
+                        <element>${projects.basedir}/src/main/groovy</element>
+                    </scriptpath>
+                    <sources>
+                        <fileset>
+                            <directory>${projects.basedir}/src/main/groovy</directory>
+                            <includes>
+                                <include>**/*.groovy</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>${projects.basedir}/src/test/groovy</directory>
+                            <includes>
+                                <include>**/*.groovy</include>
+                            </includes>
+                        </fileset>
+                    </sources>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.gmaven.runtime</groupId>
+                        <artifactId>gmaven-runtime-1.7</artifactId>
+                        <version>${gmaven-version}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.codehaus.groovy</groupId>
+                                <artifactId>groovy-all</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                        <version>${groovy-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                        <version>${ant-version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- AnnoMojo: http://wiki.jfrog.org/confluence/display/OSS/Maven+Anno+Mojo -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>2.6</version>
+                <dependencies>
+                    <dependency>
+                      <groupId>org.apache.maven.plugin-tools</groupId>
+                      <artifactId>maven-plugin-tools-api</artifactId>
+                      <version>2.6</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jfrog.maven.annomojo</groupId>
+                        <artifactId>maven-plugin-tools-anno</artifactId>
+                        <version>${annomojo-version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit-version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- If not put here - older version is used -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>${plexus-utils-version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+</project>
