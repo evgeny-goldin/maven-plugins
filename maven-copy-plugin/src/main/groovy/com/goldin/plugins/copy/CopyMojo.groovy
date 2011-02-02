@@ -266,7 +266,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }.collect {
             CopyDependency d ->
 
-            GCommons.verify().notNullOrEmpty( d.groupId, d.artifactId, d.version )
+            GCommons.verify().notNullOrEmpty( d.groupId, d.artifactId )
 
             try
             {
