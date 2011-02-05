@@ -53,6 +53,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( expression = '${session}', readonly = true, required = true )
     public MavenSession mavenSession
 
+    @MojoParameter ( expression = '${localRepository}', readonly = true, required = true )
+    public  ArtifactRepository artifactRepository
+
+    @MojoParameter ( expression = '${project.remoteArtifactRepositories}', readonly = true, required = true )
+    public  List<ArtifactRepository> remoteArtifactRepositories
+
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig
 
@@ -82,11 +88,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
     private CopyResource[] resources () { GCommons.general().array( this.resources, this.resource, CopyResource ) }
 
-    @MojoParameter ( expression = '${localRepository}', readonly = true, required = true )
-    public  ArtifactRepository artifactRepository
-
-    @MojoParameter ( expression = '${project.remoteArtifactRepositories}', readonly = true, required = true )
-    public  List<ArtifactRepository> remoteArtifactRepositories
 
     @MojoParameter
     public  String  runIf
@@ -97,10 +98,24 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Key   - {@code <filter>} value
      * Value - Groovy expression to use
      */
-    private static final Map<String, String> FILTERS = Collections.unmodifiableMap( new HashMap<String, String>()
+    private static final Map<String, String> FILTERS = [ '{{latest}}' : """
     {{
-         put( "{{latest}}", "{{ files.sort{ a, b -> (( a.lastModified() > b.lastModified()) ? -1 : 1 ) }.first() }}" )
-    }})
+        assert files
+        def file         = files[ 0 ]
+        def lastModified = file.lastModified()
+        if ( files.size() > 1 )
+        {
+            for ( f in files[ 1 .. -1 ] )
+            {
+                if ( f.lastModified() > lastModified )
+                {
+                    lastModified = f.lastModified()
+                    file         = f
+                }
+            }
+        }
+        file
+    }}""" ]
 
 
     public CopyMojo ()
