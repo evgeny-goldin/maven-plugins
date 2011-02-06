@@ -8,7 +8,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenResourcesExecution;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -461,7 +460,7 @@ public final class MojoUtils
                                                      element( "groupId",    groupId     ),
                                                      element( "artifactId", artifactId  ),
                                                      element( "version",    version     ),
-                                                     element( "packaging",  packaging( file )));
+                                                     element( "packaging",  GCommons.file().extension( file )));
         if ( classifier != null )
         {
             configuration.add( element( "classifier", classifier ));
@@ -487,20 +486,5 @@ public final class MojoUtils
             throw new RuntimeException( String.format( "Failed to deploy %s: %s", description, e ),
                                         e );
         }
-    }
-
-
-    /**
-     * Retrieves file "packaging"
-     * @param  file file to retrieve its packaging
-     * @return file extension if different from <code>"tar.gz"<code>,
-     *         <code>"tar.gz"<code> otherwise
-     */
-    private static String packaging ( File file )
-    {
-        String fileName  = file.getName();
-        return fileName.toLowerCase().endsWith( ".tar.gz" ) ?
-                    "tar.gz" :
-                    fileName.substring( fileName.lastIndexOf( '.' ) + 1 );
     }
 }
