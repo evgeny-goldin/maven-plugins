@@ -98,8 +98,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Key   - {@code <filter>} value
      * Value - Groovy expression to use
      */
-    private static final Map<String, String> FILTERS = [ '{{latest}}' : """
-    {{
+    private static final Map<String, String> FILTERS = [ '{{latest}}' :
+        """
         assert files
         def file         = files[ 0 ]
         def lastModified = file.lastModified()
@@ -114,8 +114,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
             }
         }
-        file
-    }}""" ]
+        file""" ]
 
 
     public CopyMojo ()
