@@ -207,7 +207,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                     /**
                      * Creating a Map of files: "file name" => "file size"
                      * Each line in a list file looks like
-                     * "ftp://orywevgeny.clearforest.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
+                     * "ftp://host.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
                      * {@link com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP#listFile}
                      */
                     Map listFileMap = listFileText.splitWith( 'eachLine' ).inject( [:], {

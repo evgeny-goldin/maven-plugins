@@ -2335,7 +2335,7 @@ public class FTP extends Task {
         if (ftpfiles != null && ftpfiles.length > 0)
         {
             String path = this.listingFullPath ?
-                // "ftp://orywevgeny.clearforest.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
+                // "ftp://host.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
                 listSingleFile( this.server, this.remotedir, filename, ftpfiles[ 0 ].getSize()) :
                 // Default listing
                 ftpfiles[0].toString();
