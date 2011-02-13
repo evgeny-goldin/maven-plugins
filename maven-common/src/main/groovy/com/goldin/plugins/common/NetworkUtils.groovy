@@ -180,18 +180,18 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                 }
                 else
                 {
-                    new ClfAntBuilder().ftp( action          : isList ? 'list' : 'get',
-                                             listing         : listFile,
-                                             listingAppend   : true,  // Custom property: to append a data to a listing file instead of overwriting it
-                                             listingFullPath : true,  // Custom property: to list full FTP path of each file instead of default "raw listing"
-                                             server          : ftpData.host,
-                                             userid          : ftpData.username,
-                                             password        : ftpData.password,
-                                             remotedir       : ftpData.directory,
-                                             verbose         : verbose,
-                                             retriesAllowed  : retries,
-                                             passive         : true,
-                                             binary          : true )
+                    new CustomAntBuilder().ftp( action          : isList ? 'list' : 'get',
+                                                listing         : listFile,
+                                                listingAppend   : true,  // Custom property: to append a data to a listing file instead of overwriting it
+                                                listingFullPath : true,  // Custom property: to list full FTP path of each file instead of default "raw listing"
+                                                server          : ftpData.host,
+                                                userid          : ftpData.username,
+                                                password        : ftpData.password,
+                                                remotedir       : ftpData.directory,
+                                                verbose         : verbose,
+                                                retriesAllowed  : retries,
+                                                passive         : true,
+                                                binary          : true )
                     {
                         fileset( dir       : GMojoUtils.path( localDirectory ),
                                  includes  : includes.join( ',' ),

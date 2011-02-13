@@ -6,10 +6,6 @@ import com.goldin.plugins.common.GMojoUtils
 
  /**
  * Class describing a Hudson job
- *
- * See
- * http://svn.goldin.com/svn/clfdev/trunk/devmain/DEV5_COMP/Maven/projects/HudsonConfigs/pom.xml
- * where it's instances are set
  */
 class Job
 {

@@ -1,4 +1,4 @@
-package com.goldin.plugins.clfassert
+package com.goldin.plugins.newassert
 
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
