@@ -81,6 +81,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean failIfNotFound = true
 
     @MojoParameter ( required = false )
+    public  boolean update = false
+
+    @MojoParameter ( required = false )
     public  CopyResource[] resources
 
     @MojoParameter ( required = false )
