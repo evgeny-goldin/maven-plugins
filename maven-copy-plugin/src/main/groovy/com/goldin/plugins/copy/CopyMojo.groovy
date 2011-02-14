@@ -626,7 +626,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             if ( cleanEmptyDirectories )
             {
                 List<File> directoriesDeleted = ( sourceDirectory.splitWith( 'eachDirRecurse' ) + sourceDirectory ).
-                                                findAll{ File f -> f.isDirectory() && ( GCommons.file().directorySize( f ) == 0 )}
+                                                findAll{ File f -> f.isDirectory() && ( f.directorySize() == 0 )}
 
                 GCommons.file().delete( directoriesDeleted as File[] )
                 filesDeleted += directoriesDeleted

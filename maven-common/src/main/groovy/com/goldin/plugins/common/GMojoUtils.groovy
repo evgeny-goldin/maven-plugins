@@ -2,7 +2,6 @@ package com.goldin.plugins.common
 
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
-import groovy.io.FileType
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import org.apache.maven.Maven
@@ -42,21 +41,7 @@ class GMojoUtils
      */
      static init()
      {
-         /**
-          * Splits an object to a list using its "iterating" each-like mthod
-          * http://evgeny-goldin.com/blog/2010/09/01/groovy-splitwith/
-          */
-          Object.metaClass.splitWith = { String methodName ->
-
-              MetaMethod m = delegate.metaClass.pickMethod( GCommons.verify().notNullOrEmpty( methodName ), Closure.class )
-              assert     m
-
-              def result = []
-              m.doMethodInvoke( delegate, { result << it } )
-
-              result
-          }
-
+         GCommons.file() // Trigger GCommons MOP replacements
 
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
@@ -83,16 +68,6 @@ class GMojoUtils
          String.metaClass.addDollar = {->
              // Adding a '$' before {..} where there was no '$' previously
              delegate.replaceAll( /(?<!\$)(?=\{.+?\})/, '\\$' )
-         }
-
-
-         File.metaClass.directorySize = {->
-             File   directory = delegate
-             assert directory.isDirectory()
-
-             long size = 0
-             directory.eachFileRecurse( FileType.FILES ){ size += it.size() }
-             size
          }
      }
 
