@@ -37,7 +37,7 @@ class GMojoUtils
     /**
      * Updates Groovy MOP with additional methods
      */
-     static init()
+     static mopInit ()
      {
          GCommons.file() // Triggers GCommons MOP replacements
 

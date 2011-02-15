@@ -133,7 +133,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          * See {@link com.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
          * it here as long as we can't extend it
          */
-        GMojoUtils.init()
+        GMojoUtils.mopInit()
         ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
         if ( ! GMojoUtils.runIf( runIf )) { return }
 
