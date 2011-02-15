@@ -41,7 +41,7 @@ class GMojoUtils
      */
      static init()
      {
-         GCommons.file() // Trigger GCommons MOP replacements
+         GCommons.file() // Triggers GCommons MOP replacements
 
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
