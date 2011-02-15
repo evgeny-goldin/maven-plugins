@@ -35,9 +35,7 @@ class GMojoUtils
 
 
     /**
-     * Uses ExpandoMetaClass to add methods to classes
-     *
-     * See http://www.ibm.com/developerworks/java/library/j-pg06239.html#N101B5
+     * Updates Groovy MOP with additional methods
      */
      static init()
      {

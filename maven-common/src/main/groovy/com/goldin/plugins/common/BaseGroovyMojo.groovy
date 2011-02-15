@@ -14,8 +14,6 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
  */
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    static { GMojoUtils.init() }
-
     @MojoParameter ( expression = '${project}', required = true )
     public MavenProject mavenProject
 
@@ -46,13 +44,14 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Override
     public void execute()
     {
+        GMojoUtils.init()
         ThreadLocals.set( log, mavenProject, mavenSession )
         if ( ! GMojoUtils.runIf( runIf )) { return }
 
         doExecute()
     }
 
-    
+
     /**
      * {@link #execute()} replacement to be overridden by subclasses
      */

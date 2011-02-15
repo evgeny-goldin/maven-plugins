@@ -15,9 +15,6 @@ import com.goldin.plugins.common.*
 @MojoPhase ( "install" )
 class SpringBatchMojo extends BaseGroovyMojo
 {
-    static { GMojoUtils.init() }
-
-
     SpringBatchMojo ()
     {
     }

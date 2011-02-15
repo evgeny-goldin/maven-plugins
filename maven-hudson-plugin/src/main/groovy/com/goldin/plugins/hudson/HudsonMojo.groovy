@@ -17,9 +17,6 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 @MojoPhase ( "compile" )
 public class HudsonMojo extends BaseGroovyMojo
 {
-    static { GMojoUtils.init() }
-
-
     public HudsonMojo ()
     {
     }

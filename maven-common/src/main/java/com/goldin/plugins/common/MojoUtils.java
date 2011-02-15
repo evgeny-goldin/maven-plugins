@@ -25,10 +25,6 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
  */
 public final class MojoUtils
 {
-
-    static { GMojoUtils.init(); }
-
-
     private MojoUtils ()
     {
     }

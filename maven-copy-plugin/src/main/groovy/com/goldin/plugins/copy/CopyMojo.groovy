@@ -19,7 +19,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.jfrog.maven.annomojo.annotations.*
 
- /**
+/**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )
@@ -27,8 +27,6 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoRequiresDependencyResolution( 'test' )
 class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.CopyMojo
 {
-    static { GMojoUtils.init() }
-
     @MojoComponent
     public ArtifactFactory artifactFactory
 
@@ -131,6 +129,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @Override
     public void execute() throws MojoExecutionException
     {
+        /**
+         * See {@link com.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
+         * it here as long as we can't extend it
+         */
+        GMojoUtils.init()
         ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
         if ( ! GMojoUtils.runIf( runIf )) { return }
 
