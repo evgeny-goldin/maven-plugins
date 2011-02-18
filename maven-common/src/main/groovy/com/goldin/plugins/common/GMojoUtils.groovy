@@ -45,7 +45,7 @@ class GMojoUtils
           * Trims multi-lines String: each line in the String specified is trim()-ed
           */
          String.metaClass.trimMultiline ={->
-             delegate.splitWith( 'eachLine' )*.trim().join( GCommons.constants().CRLF )
+             delegate.splitWith( 'eachLine', String )*.trim().join( GCommons.constants().CRLF )
          }
 
 
@@ -53,7 +53,7 @@ class GMojoUtils
           * Deletes empty lines from the String
           */
          String.metaClass.deleteEmptyLines ={->
-             delegate.splitWith( 'eachLine' ).findAll{ it.trim() }.join( GCommons.constants().CRLF )
+             delegate.splitWith( 'eachLine', String ).findAll{ it.trim() }.join( GCommons.constants().CRLF )
          }
 
 

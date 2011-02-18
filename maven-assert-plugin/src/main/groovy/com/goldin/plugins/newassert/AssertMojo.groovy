@@ -106,7 +106,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            GCommons.verify().notNullOrEmpty( data ).splitWith( 'eachLine' )*.trim().findAll{ it }.each { callback( it ) }
+            GCommons.verify().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().findAll{ it }.each { callback( it ) }
         }
     }
 

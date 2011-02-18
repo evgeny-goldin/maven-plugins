@@ -210,7 +210,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                      * "ftp://host.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
                      * {@link com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP#listFile}
                      */
-                    Map listFileMap = listFileText.splitWith( 'eachLine' ).inject( [:], {
+                    Map listFileMap = listFileText.splitWith( 'eachLine', String ).inject( [:], {
                         Map map, String line ->
 
                         def    ( ftpUrl,   fileSize ) = line.split( /\|/ )
@@ -267,7 +267,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                      * Next listing attempt will append to listing file instead of overwriting it
                      */
                     newList         = false
-                    def sessionList = listFile.splitWith( 'eachLine' ) - previousList.splitWith( 'eachLine' )
+                    def sessionList = listFile.splitWith( 'eachLine', String ) - previousList.splitWith( 'eachLine', String )
                     excludes       += sessionList.collect{ // "ftp://server//path/to/file|size" => "path/to/file"
                                                            it.replaceAll( /^ftp:\/\/[^\/]+\/+|\|\d+$/, '' ) }
 

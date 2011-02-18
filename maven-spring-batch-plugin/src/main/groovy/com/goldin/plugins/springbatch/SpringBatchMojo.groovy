@@ -143,7 +143,7 @@ options         : $optsSplit
 
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
         def filePath   = GMojoUtils.path( file )
-        def lines      = propertiesValue.splitWith( 'eachLine' ).collect { it.trim().replace( '\\', '/' ) }
+        def lines      = propertiesValue.splitWith( 'eachLine', String ).collect { it.trim().replace( '\\', '/' ) }
         def properties = [ '', *lines ].join( "${ GCommons.constants().CRLF }${ ' ' * 16 }" )
         def text       = GMojoUtils.makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 
