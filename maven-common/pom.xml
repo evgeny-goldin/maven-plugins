@@ -250,24 +250,6 @@ Only needed when Maven "${maven-version}" is 3.x
             <artifactId>gcommons</artifactId>
             <version>0.5</version>
             <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.6.1</version>
         </dependency>
 
         <dependency>
@@ -275,6 +257,12 @@ Only needed when Maven "${maven-version}" is 3.x
             <artifactId>spring-core</artifactId>
             <version>${spring-version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.16</version>
         </dependency>
 
         <!-- ~~~~~~~~~~~~~~ -->
