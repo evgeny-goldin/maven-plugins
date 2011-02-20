@@ -4,7 +4,7 @@ import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.MojoUtils
-import com.goldin.plugins.common.NetworkUtils
+
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
@@ -19,7 +19,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.jfrog.maven.annomojo.annotations.*
 
-/**
+ /**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )
@@ -188,42 +188,51 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         assert ( resource.mkdir || resource.directory )
 
-        def  isNet             = GCommons.net().isNet( resource.directory )
+        def  isDownload        = GCommons.net().isNet( resource.directory )
+        def  isUpload          = GCommons.net().isNet( resource.targetPaths())
         File sourceDirectory   = ( resource.mkdir ) ? null                            : // Only <targetPath> is active
-                                 ( isNet          ) ? GCommons.file().tempDirectory() : // Temp dir to download the files to
-                                                      new File( resource.directory )    // Directory to cleanup or copy
+                                 ( isDownload     ) ? GCommons.file().tempDirectory() : // Temp dir to download the files to
+                                                      new File( resource.directory )    // Directory to cleanup, upload or copy
 
         def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
-            ( isNet || ( ! it )) ? null : new ArrayList<String>( it )
-            // Net operation or null/empty list - all files are included, none excluded
+            ( isDownload || ( ! it )) ? null : new ArrayList<String>( it )
+            // Download operation or null/empty list - all files are included, none excluded
         }
 
         if ( ! resource.mkdir )
         {
-            if ( isNet )
+            if ( isDownload )
             {
                 assert ( ! sourceDirectory.list()), \
                        "Temporal directory [$sourceDirectory.canonicalPath] for downloading files is not empty?"
 
-                download( resource, resource.directory, sourceDirectory, verbose )
+                NetworkUtils.download( resource, resource.directory, sourceDirectory, verbose, groovyConfig )
 
                 assert ( sourceDirectory.list() || ( ! failIfNotFound )), \
                        "No files were downloaded from [$resource.directory] " +
                        "and include/exclude patterns ${ resource.includes ?: [] }/${ resource.excludes ?: [] }"
             }
-            /**
-             * Default excludes are not active for downloaded files: all of them are included, none is excluded
-             */
-            else if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
-            {
-                excludes = ( excludes ?: [] ) +
-                           ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it }
+            else
+            {   /**
+                 * Default excludes are not active for downloaded files: all of them are included, none is excluded
+                 */
+                if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
+                {
+                    excludes = ( excludes ?: [] ) +
+                               ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it }
+                }
+
+                if ( isUpload )
+                {
+                    NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, verbose, failIfNotFound )
+                    return
+                }
             }
         }
 
         handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
 
-        if ( isNet ){ GCommons.file().delete( sourceDirectory )}
+        if ( isDownload ){ GCommons.file().delete( sourceDirectory )}
     }
 
 
@@ -308,59 +317,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }.findAll{ it } // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
 
         dependenciesResolved
-    }
-
-
-    /**
-     * Downloads files required using remote location specified.
-     *
-     * @param resource        current copy resource
-     * @param remoteLocation  remote location: http, ftp or scp URL.
-     * @param targetDirectory directory to download the files to
-     * @param verbose         verbose logging
-     */
-    private void download ( CopyResource resource, String remoteLocation, File targetDirectory, boolean verbose )
-    {
-        GCommons.verify().notNull( resource )
-        assert GCommons.net().isNet( remoteLocation )
-        GCommons.verify().directory( targetDirectory )
-
-        if ( GCommons.net().isHttp( remoteLocation ))
-        {
-            NetworkUtils.httpDownload( targetDirectory,
-                                       remoteLocation,
-                                       verbose )
-        }
-        else if ( GCommons.net().isFtp( remoteLocation ))
-        {
-            NetworkUtils.ftpDownload( targetDirectory,
-                                      remoteLocation,
-                                      resource.includes,
-                                      resource.excludes,
-                                      resource.listFilter,
-                                      mavenProject,
-                                      mavenSession,
-                                      groovyConfig,
-                                      verbose,
-                                      resource.curl,
-                                      resource.wget,
-                                      resource.retries,
-                                      resource.timeout )
-        }
-        else if ( GCommons.net().isScp( remoteLocation ))
-        {
-            NetworkUtils.scpDownload( targetDirectory,
-                                      remoteLocation,
-                                      resource.includes,
-                                      resource.excludes,
-                                      verbose,
-                                      resource.curl,
-                                      resource.wget )
-        }
-        else
-        {
-            throw new RuntimeException( "Unrecognized remote location [$remoteLocation]" )
-        }
     }
 
 
@@ -496,6 +452,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetPath,
                        boolean      verbose )
     {
+        assert ! GCommons.net().isNet( sourceDirectory.path, targetPath.path )
         boolean skipIdentical = (( ! resource.process ) && /* If file is processed - it is not skipped */
                                  GMojoUtils.choose ( resource.skipIdentical, skipIdentical ))
         /**

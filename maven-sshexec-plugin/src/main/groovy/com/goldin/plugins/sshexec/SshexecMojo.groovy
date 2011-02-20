@@ -2,12 +2,11 @@ package com.goldin.plugins.sshexec
 
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
-import com.goldin.plugins.common.NetworkUtils
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 
- /**
+/**
  * MOJO that executes "sshexec"
  *
  * See
@@ -49,7 +48,12 @@ public class SshexecMojo extends BaseGroovyMojo
 
         log.info( "Running sshexec [$command] on [$host:$directory]" )
 
-        NetworkUtils.sshexec( command, username, password, host, directory )
+        new AntBuilder().sshexec( command     : "cd $directory $command",
+                                  host        : host,
+                                  username    : username,
+                                  password    : password,
+                                  trust       : true,
+                                  failonerror : true )
 
         log.info( "Sshexec [$command] run on [$host:$directory]" )
     }

@@ -1,12 +1,13 @@
-package com.goldin.plugins.common
+package com.goldin.plugins.copy
 
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
+import com.goldin.plugins.common.CustomAntBuilder
+import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.GMojoUtils.EXEC_OPTION
-import org.apache.maven.execution.MavenSession
+import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.logging.Log
-import org.apache.maven.project.MavenProject
 import static com.goldin.plugins.common.GMojoUtils.*
 
  /**
@@ -17,6 +18,57 @@ import static com.goldin.plugins.common.GMojoUtils.*
 class NetworkUtils
 {
     private static Log getLog () { ThreadLocals.get( Log.class ) }
+
+
+    /**
+     * Downloads files required using remote location specified.
+     *
+     * @param resource        current copy resource
+     * @param remotePath      remote location: http, ftp or scp URL.
+     * @param targetDirectory directory to download the files to
+     * @param verbose         verbose logging
+     */
+    static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
+    {
+        GCommons.verify().notNull( resource )
+        assert GCommons.net().isNet( remotePath )
+        GCommons.verify().directory( targetDirectory )
+
+        if ( GCommons.net().isHttp( remotePath ))
+        {
+            NetworkUtils.httpDownload( targetDirectory,
+                                       remotePath,
+                                       verbose )
+        }
+        else if ( GCommons.net().isFtp( remotePath ))
+        {
+            NetworkUtils.ftpDownload( targetDirectory,
+                                      remotePath,
+                                      resource.includes,
+                                      resource.excludes,
+                                      resource.listFilter,
+                                      groovyConfig,
+                                      verbose,
+                                      resource.curl,
+                                      resource.wget,
+                                      resource.retries,
+                                      resource.timeout )
+        }
+        else if ( GCommons.net().isScp( remotePath ))
+        {
+            NetworkUtils.scpDownload( targetDirectory,
+                                      remotePath,
+                                      resource.includes,
+                                      resource.excludes,
+                                      verbose,
+                                      resource.curl,
+                                      resource.wget )
+        }
+        else
+        {
+            throw new RuntimeException( "Unrecognized download remote path [$remotePath]" )
+        }
+    }
 
 
     /**
@@ -91,8 +143,6 @@ class NetworkUtils
                               List<String> includes,
                               List<String> excludes,
                               String       listFilter,
-                              MavenProject project,
-                              MavenSession session,
                               GroovyConfig config,
                               boolean      verbose,
                               String       curl,
@@ -171,7 +221,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                     // Making sure all glob patterns specify files in the same remote directory
                     assert includes.every{ c( it ) == fileDir }, \
                            "Glob patterns [$includes] specify files from different remote directories - not supported yet, vote for 'pl-264'"
-                    
+
                     for ( file in GCommons.net().listFiles( remotePath, includes, excludes, 1 ))
                     {
                         listFile.append( FTP.listSingleFile( ftpData.host, remoteDirectory, file.name.replaceAll( /.*\//, '' ), file.size ))
@@ -302,7 +352,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
 
         GCommons.file().delete( destFile )
         log.info( "[$ftpUrl] => [$destFilePath]: Started (file [${ fileIndex + 1 }] of [$totalFiles], " +
-                       "[${ fileSize.intdiv( 1024 ) }] Kb)" )
+                  "[${ fileSize.intdiv( 1024 ) }] Kb)" )
 
         if ( verbose )
         {
@@ -321,7 +371,7 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
             if ( fileSizeNow == fileSize )
             {
                 log.info( "[$ftpUrl] => [$destFilePath]: Finished (file [${ fileIndex + 1 }] of [$totalFiles], " +
-                               "[${ fileSizeNow.intdiv( 1024 ) }] Kb)" )
+                          "[${ fileSizeNow.intdiv( 1024 ) }] Kb)" )
                 return
             }
             else
@@ -375,12 +425,6 @@ Timeout           : [$timeoutSec] sec (${ timeoutSec.intdiv( GCommons.constants(
                               verbose  : true,
                               trust    : true,
                               password : password )
-    }
-
-
-    public static void download ()
-    {
-        // ??????????????????????????????????????????????????????
     }
 
 

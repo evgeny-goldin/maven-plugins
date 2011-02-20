@@ -161,6 +161,7 @@ public final class MojoUtils
     {
         GCommons.verify().file( sourceFile );
         GCommons.verify().notNull( destinationFile );
+        assert ! GCommons.net().isNet( destinationFile.getPath());
 
         String sourceFilePath      = path( sourceFile      );
         String destinationFilePath = path( destinationFile );
@@ -171,31 +172,22 @@ public final class MojoUtils
                 String.format( "Source [%s] and destination [%s] are the same", sourceFilePath, destinationFilePath ));
         }
 
+        delete( destinationFile, false, true );
 
-        if ( GCommons.net().isNet( destinationFilePath ))
+        try
         {
-            NetworkUtils.upload( sourceFile, destinationFilePath, verbose );
+            GCommons.file().copy( sourceFile, destinationFile );
+
+            if ( verbose )
+            {
+                getLog().info( String.format( "[%s] copied to [%s]", sourceFilePath, destinationFilePath ));
+            }
         }
-        else
+        catch ( Exception e )
         {
-            delete( destinationFile, false, true );
-
-            try
-            {
-                FileUtils.copyFile ( sourceFile, destinationFile );
-                GCommons.verify().file( destinationFile );
-
-                if ( verbose )
-                {
-                    getLog().info( String.format( "[%s] copied to [%s]", sourceFilePath, destinationFilePath ));
-                }
-            }
-            catch ( Exception e )
-            {
-                throw new RuntimeException( String.format( "Failed to copy [%s] to [%s]: %s",
-                                                           sourceFilePath, destinationFilePath, e ),
-                                            e );
-            }
+            throw new RuntimeException( String.format( "Failed to copy [%s] to [%s]: %s",
+                                                       sourceFilePath, destinationFilePath, e ),
+                                        e );
         }
     }
 
