@@ -190,9 +190,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         def  isDownload        = GCommons.net().isNet( resource.directory )
         def  isUpload          = GCommons.net().isNet( resource.targetPaths())
-        File sourceDirectory   = ( resource.mkdir ) ? null                            : // Only <targetPath> is active
-                                 ( isDownload     ) ? GCommons.file().tempDirectory() : // Temp dir to download the files to
-                                                      new File( resource.directory )    // Directory to cleanup, upload or copy
+        File sourceDirectory   = ( resource.mkdir ? null                            : // Only <targetPath> is active
+                                   isDownload     ? GCommons.file().tempDirectory() : // Temp dir to download the files to
+                                                    new File( resource.directory ))   // Directory to cleanup, upload or copy
 
         def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
             ( isDownload || ( ! it )) ? null : new ArrayList<String>( it )
@@ -452,7 +452,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetPath,
                        boolean      verbose )
     {
-        assert ! GCommons.net().isNet( sourceDirectory.path, targetPath.path )
+        assert ! GCommons.net().isNet( sourceDirectory.path )
+        assert ! GCommons.net().isNet( targetPath.path )
+        
         boolean skipIdentical = (( ! resource.process ) && /* If file is processed - it is not skipped */
                                  GMojoUtils.choose ( resource.skipIdentical, skipIdentical ))
         /**
