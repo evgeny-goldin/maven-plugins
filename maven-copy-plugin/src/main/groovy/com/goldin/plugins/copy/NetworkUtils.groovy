@@ -167,7 +167,9 @@ class NetworkUtils
         boolean isList               = ( resource.curl || resource.wget )
         def     commandParts         = ( resource.curl ?: resource.wget ?: null )?.split( /\|/ ) // "wget|ftp-list.txt|true|false"
         def     command              = ( isList ? commandParts[ 0 ] : null )
-        def     listFile             = ( isList ? new File (( commandParts.size() > 1 ) ?       commandParts[ 1 ]   : 'ftp-list.txt' ) : null )
+        def     listFile             = ( isList ? (( commandParts.size() > 1 ) ? new File ( commandParts[ 1 ] ) :
+                                                                                 new File ( GCommons.constants().USER_DIR_FILE, 'ftp-list.txt' )) :
+                                                  null )
         def     deleteListFile       = ( isList && commandParts.size() > 2 ) ? Boolean.valueOf( commandParts[ 2 ] ) : true
         def     nativeListing        = ( isList && commandParts.size() > 3 ) ? Boolean.valueOf( commandParts[ 3 ] ) : false
         def     listFilePath         = listFile?.canonicalPath
