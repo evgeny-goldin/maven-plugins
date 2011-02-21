@@ -405,7 +405,6 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                               password  : data[ 'password' ],
                               remotedir : data[ 'directory' ],
                               verbose   : verbose,
-                              trust     : true,
                               passive   : true,
                               binary    : true )
         {
