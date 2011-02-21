@@ -204,8 +204,9 @@ Include patterns  :
 ${ stars( includes ) }
 Exclude patterns  :
 ${ stars( excludes ) }
-External command  : [${ command      ?: 'None' }]
-List file         : [${ listFilePath ?: 'None' }]
+External command  : [${ command?.trim()             ?: 'None' }]
+List file         : [${ listFilePath?.trim()        ?: 'None' }]
+List filter       : [${ resource.listFilter?.trim() ?: 'None' }]
 Delete list file  : [$deleteListFile]
 Native FTP listing: [$nativeListing]
 Verbose           : [$verbose]
