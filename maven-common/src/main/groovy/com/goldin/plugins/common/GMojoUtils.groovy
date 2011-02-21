@@ -31,7 +31,7 @@ class GMojoUtils
      * Retrieves plugin's {@link Log} instance
      * @return plugin's {@link Log} instance
      */
-    static Log getLog () { ThreadLocals.get( Log.class ) }
+    static Log getLog () { ThreadLocals.get( Log ) }
 
 
     /**
@@ -225,8 +225,8 @@ class GMojoUtils
     {
 
 
-        MavenProject project    = ThreadLocals.get( MavenProject.class )
-        MavenSession session    = ThreadLocals.get( MavenSession.class )
+        MavenProject project    = ThreadLocals.get( MavenProject )
+        MavenSession session    = ThreadLocals.get( MavenSession )
         Map          bindingMap = [ project      : project,
                                     session      : session,
                                     mavenVersion : mavenVersion(),
@@ -351,20 +351,20 @@ class GMojoUtils
 
         for ( scope in scopes )
         {
-            MavenProject project       = ThreadLocals.get( MavenProject.class )
-            Artifact     buildArtifact = ThreadLocals.get( ArtifactFactory.class ).
+            MavenProject project       = ThreadLocals.get( MavenProject )
+            Artifact     buildArtifact = ThreadLocals.get( ArtifactFactory ).
                                          createBuildArtifact( project.getGroupId(),
                                                               project.getArtifactId(),
                                                               project.getVersion(),
                                                               project.getPackaging())
             ArtifactResolutionResult resolutionResult =
-                ThreadLocals.get( ArtifactResolver.class ).
+                ThreadLocals.get( ArtifactResolver ).
                 resolveTransitively( project.getArtifacts(),
                                      buildArtifact,
                                      project.getManagedVersionMap(),
-                                     ThreadLocals.get( MavenSession.class ).getLocalRepository(),
+                                     ThreadLocals.get( MavenSession ).getLocalRepository(),
                                      project.getRemoteArtifactRepositories(),
-                                     ThreadLocals.get( ArtifactMetadataSource.class ),
+                                     ThreadLocals.get( ArtifactMetadataSource ),
                                      new ScopeArtifactFilter( GCommons.verify().notNullOrEmpty( scope )))
 
             result.addAll( resolutionResult.getArtifacts())
@@ -382,7 +382,7 @@ class GMojoUtils
      */
     static File validate ( File configFile )
     {
-        for ( parserClass in [ XmlParser.class, XmlSlurper.class ] )
+        for ( parserClass in [ XmlParser, XmlSlurper ] )
         {
             def parser = parserClass.newInstance( true, true )
             parser.setErrorHandler( new DefaultHandler2())
@@ -419,12 +419,15 @@ class GMojoUtils
      * @param project Maven project
      * @param session Maven session
      */
-    static void setProperty( String name, String value, MavenProject project, MavenSession session, String logMessage = '' )
+    static void setProperty( String name, String value, String logMessage = '', boolean verbose = true )
     {
         GCommons.verify().notNullOrEmpty( name, value )
-        GCommons.verify().notNull( project, session )
+
+        MavenProject project = ThreadLocals.get( MavenProject )
+        MavenSession session = ThreadLocals.get( MavenSession )
 
         [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
-        log.info( logMessage ?: ">> Maven property \${$name} is set to \"$value\"" )
+
+        log.info( logMessage ?: ">> Maven property \${$name} is set to \"${ verbose ? value : '********' }\"" )
     }
 }

@@ -43,7 +43,7 @@ class TimestampMojo extends BaseGroovyMojo
         for ( t in timestamps())
         {
             String value = t.format( date )
-            GMojoUtils.setProperty( t.property, value, mavenProject, mavenSession,
+            GMojoUtils.setProperty( t.property, value, 
                                     "Property \${$t.property} is set to \"$value\": " +
                                     "date [$date], pattern [$t.pattern], timezone [$t.timezone], locale [$t.locale]" )
         }

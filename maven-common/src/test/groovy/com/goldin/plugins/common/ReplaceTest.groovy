@@ -103,7 +103,7 @@ class ReplaceTest
         replace( 'aaabbbcccddd',
                  new Replace( from: /(\w+)/, to: '$1$2' ),
                  'aaabbbcccddd',
-                 IndexOutOfBoundsException.class,
+                 IndexOutOfBoundsException,
                  'No group 2' )
 
         replace( MAIL, new Replace( from: MAIL_PATTERN, to: '$1@$2.$3' ), MAIL )
@@ -161,13 +161,13 @@ class ReplaceTest
         replace( MAIL, new Replace( from     : MAIL_PATTERN,
                                     to       : '\\' ),
                  '',
-                 StringIndexOutOfBoundsException.class,
+                 StringIndexOutOfBoundsException,
                  'String index out of range: 1' )
 
         replace( MAIL, new Replace( from     : MAIL_PATTERN,
                                     to       : '\\' * 3 ),
                '',
-               StringIndexOutOfBoundsException.class,
+               StringIndexOutOfBoundsException,
                'String index out of range: 3' )
     }
 
@@ -307,13 +307,13 @@ class ReplaceTest
         replace( 'aaabbbcccddd', new Replace( from : /\d/,
                                               to   : '!' ),
                  '',
-                 AssertionError.class )
+                 AssertionError )
 
         replace( 'aaabbbcccddd', new Replace( from          : /\d/,
                                               to            : '!',
                                               failIfNotFound: true ),
                  '',
-                 AssertionError.class )
+                 AssertionError )
 
         replace( 'aaabbbcccddd', new Replace( from          : /\d/,
                                               to            : '!',

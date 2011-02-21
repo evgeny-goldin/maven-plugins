@@ -7,7 +7,7 @@ import org.junit.Test
 
 class RepositoryTest
 {
-    private static Log getLog () { ThreadLocals.get( Log.class ) }
+    private static Log getLog () { ThreadLocals.get( Log ) }
 
     static { GMojoUtils.mopInit() }
 
@@ -26,7 +26,7 @@ class RepositoryTest
     private static List<String> read( String fileName )
     {
         def    stream = RepositoryTest.class.getResourceAsStream( "/${ fileName }" )
-        assert stream, "Failed to load [/${ fileName }] from [${ RepositoryTest.class }] classpath"
+        assert stream, "Failed to load [/${ fileName }] from [${ RepositoryTest }] classpath"
 
         stream.text.splitWith( 'eachLine', String ).findAll{ it }*.trim().findAll{ ! it.startsWith( '#' ) }
     }

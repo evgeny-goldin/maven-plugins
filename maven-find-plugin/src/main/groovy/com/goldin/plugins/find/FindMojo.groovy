@@ -50,7 +50,7 @@ class FindMojo extends BaseGroovyMojo
 
             if ( propertyName )
             {
-                GMojoUtils.setProperty( propertyName, path, mavenProject, mavenSession )
+                GMojoUtils.setProperty( propertyName, path )
             }
 
             if ( sysPropertyName )

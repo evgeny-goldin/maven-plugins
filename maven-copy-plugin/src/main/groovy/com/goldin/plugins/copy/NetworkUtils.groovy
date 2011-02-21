@@ -17,7 +17,7 @@ import static com.goldin.plugins.common.GMojoUtils.*
  */
 class NetworkUtils
 {
-    static Log getLog () { ThreadLocals.get( Log.class ) }
+    static Log getLog () { ThreadLocals.get( Log ) }
 
 
     /**

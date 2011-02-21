@@ -12,7 +12,7 @@ public class CustomAntBuilder extends AntBuilder
 {
     public CustomAntBuilder ()
     {
-        super();
-        getProject().addTaskDefinition( "ftp", FTP.class );
+        super()
+        project.addTaskDefinition( "ftp", FTP )
     }
 }

@@ -32,7 +32,7 @@ class CopyMojoUtils
         List<CopyDependency>  dependencies = allArtifacts.findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                                                           collect { Artifact artifact -> new CopyDependency( artifact ) }
 
-        Log log = ThreadLocals.get( Log.class )
+        Log log = ThreadLocals.get( Log )
 
         log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
         if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
@@ -44,7 +44,7 @@ class CopyMojoUtils
     private static List<ArtifactsFilter> getFilters( CopyDependency dependency )
     {
         List<ArtifactsFilter> filters = [
-            new ProjectTransitivityFilter( ThreadLocals.get( MavenProject.class ).getDependencyArtifacts(),
+            new ProjectTransitivityFilter( ThreadLocals.get( MavenProject ).getDependencyArtifacts(),
                                            dependency.isExcludeTransitive()) ]
 
         if ( dependency.includeScope || dependency.excludeScope )

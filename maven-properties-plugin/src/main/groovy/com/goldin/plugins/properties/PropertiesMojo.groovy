@@ -23,7 +23,10 @@ class PropertiesMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public Property   property
 
-    private Property[] properties() { GCommons.general().array( this.properties, this.property, Property.class ) }
+    @MojoParameter ( required = false )
+    public boolean verbose = true
+
+    private Property[] properties() { GCommons.general().array( this.properties, this.property, Property ) }
 
 
     @Override
@@ -39,7 +42,7 @@ class PropertiesMojo extends BaseGroovyMojo
                 value = GMojoUtils.groovy( value, String, groovyConfig )
             }
 
-            GMojoUtils.setProperty( name, value, mavenProject, mavenSession )
+            GMojoUtils.setProperty( name, value, '', GMojoUtils.choose( property.verbose, verbose ))
         }
     }
 }
