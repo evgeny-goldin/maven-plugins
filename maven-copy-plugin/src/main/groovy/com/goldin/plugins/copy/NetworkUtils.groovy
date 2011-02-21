@@ -32,6 +32,7 @@ class NetworkUtils
     static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
     {
         GCommons.verify().notNull( resource )
+        GCommons.verify().notNullOrEmpty( remotePath )
         assert GCommons.net().isNet( remotePath )
         GCommons.verify().directory( targetDirectory )
 
@@ -71,6 +72,7 @@ class NetworkUtils
                                 boolean      verbose,
                                 boolean      failIfNotFound )
     {
+        assert remotePaths
         GCommons.verify().notNullOrEmpty( *remotePaths )
         GCommons.verify().directory( directory )
 
