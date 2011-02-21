@@ -428,6 +428,6 @@ class GMojoUtils
 
         [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
 
-        log.info( logMessage ?: ">> Maven property \${$name} is set to \"${ verbose ? value : '********' }\"" )
+        log.info( logMessage ?: ">> Maven property \${$name} is set${ verbose ? ' to "' + value + '"' : '' }" )
     }
 }

@@ -15,9 +15,6 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 class PropertiesMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )
-    public GroovyConfig groovyConfig
-
-    @MojoParameter ( required = false )
     public Property[] properties
 
     @MojoParameter ( required = false )
@@ -25,6 +22,9 @@ class PropertiesMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = false )
     public boolean verbose = true
+
+    @MojoParameter ( required = false )
+    public GroovyConfig groovyConfig = new GroovyConfig()
 
     private Property[] properties() { GCommons.general().array( this.properties, this.property, Property ) }
 
@@ -34,15 +34,17 @@ class PropertiesMojo extends BaseGroovyMojo
     {
         for ( property in properties())
         {
-            String name  = property.name?.trim()
-            String value = property.value?.trim()
+            String name      = property.name?.trim()
+            String value     = property.value?.trim()
+            def    isVerbose = GMojoUtils.choose( property.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {
+                groovyConfig.verbose = isVerbose
                 value = GMojoUtils.groovy( value, String, groovyConfig )
             }
 
-            GMojoUtils.setProperty( name, value, '', GMojoUtils.choose( property.verbose, verbose ))
+            GMojoUtils.setProperty( name, value, '', isVerbose )
         }
     }
 }
