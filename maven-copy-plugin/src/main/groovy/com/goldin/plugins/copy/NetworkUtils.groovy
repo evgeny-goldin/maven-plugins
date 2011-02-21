@@ -35,11 +35,6 @@ class NetworkUtils
         assert GCommons.net().isNet( remotePath )
         GCommons.verify().directory( targetDirectory )
 
-        if ( verbose )
-        {
-            log.info( "Downloading [$remotePath] to [$targetDirectory.canonicalPath]" )
-        }
-
         if ( GCommons.net().isHttp( remotePath ))
         {
             httpDownload( targetDirectory, remotePath, verbose )
@@ -55,11 +50,6 @@ class NetworkUtils
         else
         {
             throw new RuntimeException( "Unrecognized download remote path [$remotePath]" )
-        }
-
-        if ( verbose )
-        {
-            log.info( "[$remotePath] downloaded to [$targetDirectory.canonicalPath]" )
         }
     }
 
@@ -88,11 +78,6 @@ class NetworkUtils
         {
             assert GCommons.net().isNet( remotePath )
 
-            if ( verbose )
-            {
-                log.info( "Uploading [$directory.canonicalPath] files to [$remotePath]" )
-            }
-
             if ( GCommons.net().isHttp( remotePath ))
             {
                 throw new RuntimeException( "HTTP upload is not implemented yet: http://evgeny-goldin.org/youtrack/issue/pl-312" )
@@ -112,11 +97,6 @@ class NetworkUtils
                 {
                     throw new RuntimeException( "Unsupported remote path [$remotePath]" )
                 }
-            }
-
-            if ( verbose )
-            {
-                log.info( "[$directory.canonicalPath] files uploaded to [$remotePath]" )
             }
         }
     }
@@ -411,7 +391,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                             boolean verbose )
     {
         def data = GCommons.net().parseNetworkPath( remotePath )
-        assert 'scp' == data[ 'protocol' ]
+        assert 'ftp' == data[ 'protocol' ]
         GCommons.verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**

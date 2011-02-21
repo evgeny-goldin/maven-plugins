@@ -152,10 +152,7 @@ public final class MojoUtils
      *
      * @param sourceFile      source file to copy
      * @param destinationFile destination file to copy the source to,
-     *                        <code><b>scp://user:password@host:location</b></code> URLs are supported
-     * @param verbose         whether information is written to log with "INFO" level
-     *
-     * @throws RuntimeException if copying fails
+     * @param verbose         verbose logging
      */
     public static void copy ( File sourceFile, File destinationFile, boolean verbose )
     {
@@ -176,7 +173,7 @@ public final class MojoUtils
 
         try
         {
-            GCommons.file().copy( sourceFile, destinationFile );
+            GCommons.file().copy( sourceFile, destinationFile.getParentFile(), destinationFile.getName());
 
             if ( verbose )
             {
