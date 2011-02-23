@@ -87,18 +87,20 @@ class SpringBatchMojo extends BaseGroovyMojo
         long        l                    = System.currentTimeMillis()
         def         command              = new GoldinCommandLineJobRunner()
         String[]    configLocationsSplit = configLocations().split( /\s*,\s*/ )
-        String[]    paramsSplit          = MojoUtils.isSet( params()) ? params().trim().split() : new String[ 0 ]
-        Set<String> optsSplit            = MojoUtils.isSet( opts())   ? new HashSet<String>( opts().trim().split().toList()) :
-                                                                        Collections.<String>emptySet()
-        if ( MojoUtils.isSet( props()))
+        def         isSet                = { String s -> ( s != null ) && ( ! s.equalsIgnoreCase( "none" )) }
+        String[]    paramsSplit          = isSet( params()) ? params().trim().split() : new String[ 0 ]
+        Set<String> optsSplit            = ( isSet( opts()) ? opts().trim().split()   : [] ) as Set
+        
+        if ( isSet( props()))
         {
             configLocationsSplit = [ *configLocationsSplit, propertiesConfigLocation( props()) ] as String[]
         }
 
         def builder = new StringBuilder()
-        configLocationsSplit.eachWithIndex
-        {
+        configLocationsSplit.eachWithIndex {
+            
             String configLocation, int index ->
+            
             def n        = (( index < ( configLocationsSplit.size() - 1 )) ? GCommons.constants().CRLF : "" )
             def location = ( configLocation.startsWith( 'classpath:' ) ?
                                 new ClassPathResource( configLocation.substring( 'classpath:'.length())).getURL() :
@@ -142,14 +144,14 @@ options         : $optsSplit
         GCommons.verify().notNullOrEmpty( propertiesValue )
 
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
-        def filePath   = GMojoUtils.path( file )
         def lines      = propertiesValue.splitWith( 'eachLine', String ).collect { it.trim().replace( '\\', '/' ) }
         def properties = [ '', *lines ].join( "${ GCommons.constants().CRLF }${ ' ' * 16 }" )
         def text       = GMojoUtils.makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 
         file.write( text )
 
-        log.info( "Properties bean written to [$filePath]:${ GCommons.constants().CRLF }${ text }" )
-        "file:" + filePath
+        def filePath   = file.canonicalPath
+        log.info( "Properties bean written to [$filePath]:${ GCommons.constants().CRLF }$text" )
+        "file:$filePath"
     }
 }

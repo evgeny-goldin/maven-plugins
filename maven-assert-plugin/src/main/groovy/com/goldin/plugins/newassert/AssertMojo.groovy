@@ -150,7 +150,7 @@ class AssertMojo extends BaseGroovyMojo
             else
             {
                 File   file = new File( line )
-                String path = GMojoUtils.path( file )
+                String path = file.canonicalPath
                 assert file.exists(), "[$path] is missing"
 
                 log.info ( "${file.isFile() ? 'File' : 'Directory' } [$path] exists${ file.isFile() ?  ', [' + file.length() + '] bytes' : '' }" )

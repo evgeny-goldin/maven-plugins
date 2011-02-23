@@ -3,8 +3,6 @@ package com.goldin.plugins.copy
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.GMojoUtils
-import com.goldin.plugins.common.MojoUtils
-
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
@@ -19,7 +17,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.jfrog.maven.annomojo.annotations.*
 
- /**
+/**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )
@@ -153,12 +151,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         for ( CopyResource resource in resources().findAll { GMojoUtils.runIf( it.runIf ) })
         {
-            boolean verbose         = GMojoUtils.choose( resource.verbose,        verbose        )
-            boolean failIfNotFound  = GMojoUtils.choose( resource.failIfNotFound, failIfNotFound )
+            boolean verbose         = GCommons.general().choose( resource.verbose,        verbose        )
+            boolean failIfNotFound  = GCommons.general().choose( resource.failIfNotFound, failIfNotFound )
             boolean resourceHandled = false
 
-            resource.includes = update( resource.includes )
-            resource.excludes = update( resource.excludes )
+            resource.includes = update( resource.includes, resource.encoding )
+            resource.excludes = update( resource.excludes, resource.encoding )
 
             if ( resource.mkdir || resource.directory )
             {
@@ -327,9 +325,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      *   loaded is converted to a pattern
      *
      * @param patterns patterns to analyze
+     * @param files    encoding
+     *
      * @return updated patterns list
      */
-    private List<String> update( List<String> patterns )
+    private List<String> update( List<String> patterns, String encoding )
     {
         if ( ! patterns ) { return patterns }
 
@@ -338,9 +338,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         for ( pattern in patterns*.trim().findAll { it })
         {
             newPatterns.addAll(
-                pattern.startsWith( 'file:'      ) ? GMojoUtils.readLines( new File( pattern.substring( 'file:'.length()))) :
-                pattern.startsWith( 'classpath:' ) ? GMojoUtils.readLines( pattern.substring( 'classpath:'.length()))       :
-                pattern.contains( ',' )            ? pattern.split( ',' )*.trim().findAll{ it }                             :
+                pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()            :
+                pattern.startsWith( 'classpath:' ) ? CopyMojo.class.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
+                pattern.contains( ',' )            ? pattern.split( ',' )*.trim().findAll{ it }                                                 :
                                                      [ pattern ] )
         }
 
@@ -456,11 +456,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         assert ! GCommons.net().isNet( targetPath.path )
         
         boolean skipIdentical = (( ! resource.process ) && /* If file is processed - it is not skipped */
-                                 GMojoUtils.choose ( resource.skipIdentical, skipIdentical ))
+                                 GCommons.general().choose( resource.skipIdentical, skipIdentical ))
         /**
          * Location where the file will be copied to
          */
-        String filePath = new File( targetPath, resource.preservePath ? MojoUtils.relativePath( sourceDirectory, file ) :
+        String filePath = new File( targetPath, resource.preservePath ? GMojoUtils.relativePath( sourceDirectory, file ) :
                                                                         file.name ).canonicalPath
         assert filePath.endsWith( file.name )
 
@@ -470,16 +470,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         File    targetFile = new File( filePath )
-        boolean copied     = MojoUtils.copy( file,
-                                             targetFile,
-                                             skipIdentical,
-                                             resource.replaces(),
-                                             resource.filtering,
-                                             resource.encoding,
-                                             fileFilter,
-                                             mavenProject,
-                                             mavenSession,
-                                             verbose )
+        boolean copied     = GMojoUtils.copy( file,
+                                              targetFile,
+                                              skipIdentical,
+                                              resource.replaces(),
+                                              resource.filtering,
+                                              resource.encoding,
+                                              fileFilter,
+                                              verbose )
 
         copied ? GCommons.verify().file( targetFile ) : null
     }
@@ -504,7 +502,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        List<String> excludes,
                        boolean      failIfNotFound )
     {
-        GCommons.file().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound )
+        GCommons.file().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update )
 
         if ( resource.attachArtifact )
         {
@@ -525,8 +523,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             def ( String url, String groupId, String artifactId, String version ) = data[ 0 .. 3 ].collect { String s -> GCommons.verify().notNullOrEmpty( s ) }
             def classifier = (( data.size() == 4 ) ? GCommons.verify().notNullOrEmpty( data[ 4 ] ) : null )
 
-            MojoUtils.deploy( targetPath, url, groupId, artifactId, version, classifier,
-                              mavenProject, mavenSession, pluginManager )
+            GMojoUtils.deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
         }
 
         GCommons.verify().file( targetPath )

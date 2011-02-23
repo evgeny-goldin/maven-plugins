@@ -44,6 +44,7 @@ class CopyResource extends Resource
     boolean mkdir                 = false
     boolean unpack                = false
     boolean pack                  = false
+    boolean update                = false
     boolean attachArtifact        = false
     boolean dependenciesAtM2      = false  // "false" - all <dependencies> are copied to temp directory first,
                                            //          "stripVersion" is active

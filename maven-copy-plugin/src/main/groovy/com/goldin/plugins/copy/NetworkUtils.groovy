@@ -1,14 +1,17 @@
 package com.goldin.plugins.copy
 
+
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.goldin.plugins.common.CustomAntBuilder
 import com.goldin.plugins.common.GMojoUtils
-import com.goldin.plugins.common.GMojoUtils.EXEC_OPTION
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.logging.Log
-import static com.goldin.plugins.common.GMojoUtils.*
+import static com.goldin.plugins.common.GMojoUtils.devNullOutputStream
+import static com.goldin.plugins.common.GMojoUtils.stars
+import com.goldin.gcommons.beans.ExecOption
+
 
  /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -372,7 +375,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
         for ( def attempts = 1; ( attempts <= maxAttempts ); attempts++ )
         {
             GCommons.file().delete( destFile )
-            execute( exec, EXEC_OPTION.CommonsExec, sout, serr, ( timeoutSec * GCommons.constants().MILLIS_IN_SECOND ), localDirectory )
+            GCommons.general().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * GCommons.constants().MILLIS_IN_SECOND ), localDirectory )
             long fileSizeNow = GCommons.verify().file( destFile ).length()
 
             if ( fileSizeNow == fileSize )

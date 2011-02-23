@@ -36,7 +36,7 @@ class PropertiesMojo extends BaseGroovyMojo
         {
             String name      = property.name?.trim()
             String value     = property.value?.trim()
-            def    isVerbose = GMojoUtils.choose( property.verbose, verbose )
+            def    isVerbose = GCommons.general().choose( property.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {

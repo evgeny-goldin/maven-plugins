@@ -44,7 +44,7 @@ class CopyMojoUtils
     private static List<ArtifactsFilter> getFilters( CopyDependency dependency )
     {
         List<ArtifactsFilter> filters = [
-            new ProjectTransitivityFilter( ThreadLocals.get( MavenProject ).getDependencyArtifacts(),
+            new ProjectTransitivityFilter( ThreadLocals.get( MavenProject ).dependencyArtifacts,
                                            dependency.isExcludeTransitive()) ]
 
         if ( dependency.includeScope || dependency.excludeScope )

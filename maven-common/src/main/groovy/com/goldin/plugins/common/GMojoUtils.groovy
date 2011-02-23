@@ -13,12 +13,16 @@ import org.apache.maven.artifact.resolver.ArtifactResolver
 import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
+import org.apache.maven.plugin.PluginManager
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.apache.maven.shared.filtering.MavenFileFilter
+import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
+import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
-import org.apache.commons.exec.*
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*
 
 class GMojoUtils
 {
@@ -70,35 +74,6 @@ class GMojoUtils
      }
 
 
-   /**
-    * {@link java.io.File#getCanonicalPath()} wrapper.
-    *
-    * @param f file to retrieve canonical path from
-    * @return  file's canonical pathname
-    */
-   static String path( File f ) { GCommons.net().isNet( f.path ) ? f.path : f.canonicalPath }
-
-
-    /**
-     * Retrieves first not-<code>null</code> object.
-     *
-     * @param objects objects to check
-     * @param <T> objects type
-     * @return first not-<code>null</code> object (for chaining)
-     *
-     * @throws RuntimeException if all objects specified are <code>null</code>
-     */
-    static <T> T choose ( T ... objects )
-    {
-        for ( t in objects )
-        {
-            if ( t != null ) { return t }
-        }
-
-        throw new RuntimeException( 'All objects specified are *null*' )
-    }
-
-
     /**
      * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
      * @return instance of {@code OutputStream} ignoring everything that is written to it
@@ -141,33 +116,7 @@ class GMojoUtils
     }
 
 
-    /**
-     * Reads lines from the file specified.
-     *
-     * @param file file to read
-     * @return lines read from the file specified
-     */
-    static Collection<String> readLines( File file )
-    {
-        GCommons.verify().file( file ).readLines( "UTF-8" )
-    }
-
-
-    /**
-     * Reads lines from the resource specified.
-     *
-     * @param file resource to read from the classpath
-     * @return lines read from the resource specified
-     */
-    static Collection<String> readLines( String classPath )
-    {
-        InputStream is = GMojoUtils.class.getResourceAsStream( GCommons.verify().notNullOrEmpty( classPath ))
-        assert      is, "Resource [$classPath] not found in a classpath"
-
-        is.readLines( "UTF-8" )
-    }
-
-
+    
     /**
      * Retrieves Maven version as appears in "pom.properties" inside Maven jar.
      *
@@ -250,96 +199,7 @@ class GMojoUtils
      */
     static String stars ( Collection c ) { "* [${ c.join( "]${ GCommons.constants().CRLF }* [") }]" }
 
-    /**
-     * Strategy for executing the command, see {@link #execute}
-     */
-    enum EXEC_OPTION
-    {
-        /**
-         * Apache Commons Exec {@link Executor} is used
-         */
-        CommonsExec,
-
-        /**
-         * {@link Runtime#getRuntime()} is used
-         */
-        Runtime,
-
-
-        /**
-         * {@link ProcessBuilder} is used
-         */
-        ProcessBuilder
-    }
-
-
-    /**
-     * Executes the command specified.
-     *
-     * @param command    command to execute
-     * @param timeoutMs  command's timeout in ms, 5 min by default
-     * @param stdout     OutputStream to send command's stdout to, System.out by default
-     * @param stderr     OutputStream to send command's stderr to, System.err by default
-     * @param option     strategy for executing the command, EXEC_OPTION.CommonsExec by default
-     *
-     * @return           command's exit value
-     */
-    static int execute ( String       command,
-                         EXEC_OPTION  option      = EXEC_OPTION.CommonsExec,
-                         OutputStream stdout      = System.out,
-                         OutputStream stderr      = System.err,
-                         long         timeoutMs   = ( 5 * GCommons.constants().MILLIS_IN_MINUTE ) /* 5 min */,
-                         File         directory   = new File( GCommons.constants().USER_DIR ),
-                         Map          environment = new HashMap( System.getenv()))
-    {
-        GCommons.verify().notNullOrEmpty( command )
-
-        switch ( option )
-        {
-            case EXEC_OPTION.CommonsExec:
-
-                Executor                    executor = new DefaultExecutor()
-                DefaultExecuteResultHandler handler  = new DefaultExecuteResultHandler()
-
-                executor.setStreamHandler( new PumpStreamHandler( stdout, stderr ))
-                executor.setWatchdog( new ExecuteWatchdog( timeoutMs ))
-                executor.setWorkingDirectory( directory )
-
-                executor.execute( CommandLine.parse( command ), environment, handler );
-                handler.waitFor()
-
-                if ( handler.exception )
-                {
-                    throw new RuntimeException( "Failed to invoke [$command]: ${ handler.exception }",
-                                                handler.exception );
-                }
-
-                return handler.exitValue
-
-            case EXEC_OPTION.Runtime:
-
-                Process p = command.execute()
-
-                p.consumeProcessOutputStream( stdout )
-                p.consumeProcessErrorStream( stderr )
-                p.waitForOrKill( timeoutMs )
-                return p.exitValue()
-
-            case EXEC_OPTION.ProcessBuilder:
-
-                ProcessBuilder builder = new ProcessBuilder( command ).directory( directory )
-                builder.environment() << environment
-
-                Process p = builder.start();
-                p.consumeProcessOutputStream( stdout )
-                p.consumeProcessErrorStream( stderr )
-                p.waitForOrKill( timeoutMs )
-                return p.exitValue()
-
-            default:
-                assert false : "Unknown option [$option]. Known options are ${ EXEC_OPTION.values() }"
-        }
-    }
+    
 
 
     /**
@@ -347,27 +207,24 @@ class GMojoUtils
      */
     static Set<Artifact> getArtifacts ( String ... scopes )
     {
-        def result = new HashSet<Artifact>()
+        def result = [] as Set
 
         for ( scope in scopes )
         {
             MavenProject project       = ThreadLocals.get( MavenProject )
-            Artifact     buildArtifact = ThreadLocals.get( ArtifactFactory ).
-                                         createBuildArtifact( project.getGroupId(),
-                                                              project.getArtifactId(),
-                                                              project.getVersion(),
-                                                              project.getPackaging())
+            Artifact     buildArtifact = ThreadLocals.get( ArtifactFactory ).createBuildArtifact( project.groupId,
+                                                                                                  project.artifactId,
+                                                                                                  project.version,
+                                                                                                  project.packaging )
             ArtifactResolutionResult resolutionResult =
-                ThreadLocals.get( ArtifactResolver ).
-                resolveTransitively( project.getArtifacts(),
-                                     buildArtifact,
-                                     project.getManagedVersionMap(),
-                                     ThreadLocals.get( MavenSession ).getLocalRepository(),
-                                     project.getRemoteArtifactRepositories(),
-                                     ThreadLocals.get( ArtifactMetadataSource ),
-                                     new ScopeArtifactFilter( GCommons.verify().notNullOrEmpty( scope )))
-
-            result.addAll( resolutionResult.getArtifacts())
+                ThreadLocals.get( ArtifactResolver ).resolveTransitively( project.artifacts,
+                                                                          buildArtifact,
+                                                                          project.managedVersionMap,
+                                                                          ThreadLocals.get( MavenSession ).localRepository,
+                                                                          project.remoteArtifactRepositories,
+                                                                          ThreadLocals.get( ArtifactMetadataSource ),
+                                                                          new ScopeArtifactFilter( GCommons.verify().notNullOrEmpty( scope )))
+            result.addAll( resolutionResult.artifacts )
         }
 
         result
@@ -429,5 +286,225 @@ class GMojoUtils
         [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
 
         log.info( logMessage ?: ">> Maven property \${$name} is set${ verbose ? ' to "' + value + '"' : '' }" )
+    }
+
+
+    /**
+     *
+     * Copies source file to destination applying replacements and filtering.
+     *
+     * @param sourceFile      source file to copy
+     * @param destinationFile destination file to copy the source to,
+     *                        <code><b>scp://user:password@host:location</b></code> URLs are supported
+     * @param skipIdentical   whether identical files should be skipped (not copied)
+     * @param replaces        replacements to make
+     * @param filtering       whether Maven
+     *                        <a href="http://www.sonatype.com/books/maven-book/reference/resource-filtering-sect-description.html">filtering</a>
+     *                        should be performed
+     * @param encoding        Filtering/replacement encoding
+     * @param fileFilter      {@link org.apache.maven.shared.filtering.MavenFileFilter} instance,
+     *                        allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
+     * @param verbose         whether information is written to log with "INFO" level
+     *
+     * @return <code>true</code>  if file was copied,
+     *         <code>false</code> if file was skipped (identical)
+     * @throws RuntimeException if fails to make replacements or filtering while copying the file
+     */
+    public static boolean copy ( File            sourceFile,
+                                 File            destinationFile,
+                                 boolean         skipIdentical,
+                                 Replace[]       replaces,
+                                 boolean         filtering,
+                                 String          encoding,
+                                 MavenFileFilter fileFilter,
+                                 boolean         verbose )
+    {
+        GCommons.verify().file( sourceFile )
+        GCommons.verify().notNull( destinationFile, replaces )
+        GCommons.verify().notNullOrEmpty( encoding )
+
+        def mavenProject = ThreadLocals.get( MavenProject )
+        def mavenSession = ThreadLocals.get( MavenSession )
+
+        try
+        {
+            File fromFile    = sourceFile
+            def  deleteFiles = []
+
+            if ( filtering )
+            {
+                GCommons.verify().notNull( fileFilter, mavenProject, mavenSession )
+
+                /**
+                 * http://maven.apache.org/shared/maven-filtering/apidocs/index.html
+                 */
+
+                File                  tempFile = GCommons.file().tempFile()
+                List<MavenFileFilter> wrappers = fileFilter.getDefaultFilterWrappers( mavenProject,
+                                                                                      null,
+                                                                                      false,
+                                                                                      mavenSession,
+                                                                                      new MavenResourcesExecution())
+
+                fileFilter.copyFile( fromFile, tempFile, true, wrappers, encoding, true )
+
+                if ( verbose )
+                {
+                    log.info( "[$fromFile.canonicalPath] copied to [$tempFile.canonicalPath] (with <filtering>)" )
+                }
+
+                deleteFiles << tempFile
+                fromFile = tempFile
+            }
+
+            if ( replaces )
+            {
+                String data = fromFile.getText( encoding )
+
+                for ( replace in replaces )
+                {
+                    data = replace.replace( data, fromFile.canonicalPath )
+                }
+
+                File tempFile = GCommons.file().tempFile()
+                tempFile.write( data, encoding )
+
+                if ( verbose )
+                {
+                    log.info( "[$fromFile.canonicalPath] copied to [$tempFile.canonicalPath] (with <replaces>)" )
+                }
+
+                deleteFiles << tempFile
+                fromFile = tempFile
+            }
+
+            if ( skipIdentical )
+            {
+                boolean identicalFiles = (( destinationFile.isFile())                            &&
+                                          ( destinationFile.length()       == fromFile.length()) &&
+                                          ( destinationFile.lastModified() == fromFile.lastModified()))
+                if ( identicalFiles )
+                {
+                    log.info( "[$fromFile.canonicalPath] skipped - identical to [$destinationFile.canonicalPath]" )
+                    return false
+                }
+            }
+
+            copy( fromFile, destinationFile, verbose )
+            GCommons.file().delete( *deleteFiles )
+            
+            true
+        }
+        catch ( Exception e )
+        {
+            throw new RuntimeException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]: $e",
+                                        e )
+        }
+    }
+
+
+    /**
+     * Copies file to the destination file specified.
+     *
+     * @param sourceFile      source file to copy
+     * @param destinationFile destination file to copy the source to,
+     * @param verbose         verbose logging
+     */
+    private static void copy ( File sourceFile, File destinationFile, boolean verbose )
+    {
+        GCommons.verify().file( sourceFile )
+        GCommons.verify().notNull( destinationFile )
+        assert ! GCommons.net().isNet( destinationFile.path )
+
+        String sourceFilePath      = sourceFile.canonicalPath
+        String destinationFilePath = destinationFile.canonicalPath
+
+        assert sourceFilePath != destinationFilePath, \
+               "Source [$sourceFilePath] and destination [$destinationFilePath] are the same"
+
+        GCommons.file().delete( destinationFile )
+        GCommons.file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+        
+        if ( verbose ) { log.info( "[$sourceFilePath] copied to [$destinationFilePath]" )}
+    }
+    
+
+    /**
+     * Retrieves relative path of file inside directory specified.
+     * For example: for directory <code>"C:\some"</code> and child file <code>"C:\some\folder\opa\1.txt"</code>
+     * this function returns <code>"\folder\opa\1.txt"</code>.
+     *
+     * @param directory file's parent directory
+     * @param file      directory's child file
+     * @return          relative path of file inside directory specified, starts with "\" or "/"
+     */
+    static String relativePath( File directory, File file )
+    {
+        GCommons.verify().notNull( directory, file )
+
+        String directoryPath = directory.canonicalPath
+        String filePath      = file.canonicalPath
+
+        assert filePath.startsWith( directoryPath ), \
+               "File [$filePath] is not a child of [$directoryPath]"
+
+
+        String relativePath = GCommons.verify().notNullOrEmpty( filePath.substring( directoryPath.length()))
+        assert ( relativePath.startsWith( "/" ) || relativePath.startsWith( "\\" ))
+
+        relativePath
+    }
+
+
+    /**
+     * Invokes "maven-deploy-plugin" to deploy the file specified.
+     *
+     * @param file       file to deploy
+     * @param url        Maven repository URL
+     * @param groupId    groupId
+     * @param artifactId artifactId
+     * @param version    version
+     * @param classifier classifier, can be <code>null</code>
+     * @param project    Maven project
+     * @param session    Maven session
+     * @param manager    Maven plugin manager
+     */
+    static void deploy ( File file, String url, String groupId, String artifactId, String version, String classifier,
+                         PluginManager manager )
+    {
+        GCommons.verify().file( file )
+        GCommons.verify().notNullOrEmpty( url, groupId, artifactId, version )
+        assert mavenVersion().startsWith( "2" ): \
+               "<deploy> is only supported by Maven 2 for now, see http://evgeny-goldin.org/youtrack/issue/pl-258"
+
+        List<Element> configuration = Arrays.asList( element( "file",       file.canonicalPath ),
+                                                     element( "url",        url         ),
+                                                     element( "groupId",    groupId     ),
+                                                     element( "artifactId", artifactId  ),
+                                                     element( "version",    version     ),
+                                                     element( "packaging",  GCommons.file().extension( file )))
+        if ( classifier != null )
+        {
+            configuration.add( element( "classifier", classifier ))
+        }
+
+        String description =
+            "[$file.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
+        
+        try
+        {
+            executeMojo( plugin( "org.apache.maven.plugins",
+                                 "maven-deploy-plugin",
+                                 "2.5" ),
+                         goal( "deploy-file" ),
+                         configuration( configuration.toArray( new Element[ configuration.size() ] )),
+                         executionEnvironment( ThreadLocals.get( MavenProject ), ThreadLocals.get( MavenSession ), manager ))
+
+            log.info( "Deployed $description" )
+        }
+        catch ( Exception e )
+        {
+            throw new RuntimeException( "Failed to deploy $description: $e", e )
+        }
     }
 }
