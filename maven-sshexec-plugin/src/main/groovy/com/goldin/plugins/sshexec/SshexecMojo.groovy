@@ -43,7 +43,7 @@ public class SshexecMojo extends BaseGroovyMojo
     public String[] commands
 
     @MojoParameter( required = false )
-    public String keyfile
+    public File   keyfile
 
     @MojoParameter( required = false )
     public String passphrase = ''
@@ -83,7 +83,7 @@ public class SshexecMojo extends BaseGroovyMojo
         String command  = [ "cd $directory", *commands() ].join( commandsShellSeparator )
 
         log.info( "==> Running sshexec [$command] on [$host:$directory], " +
-                  ( keyfile ? "key based authentication with [$keyfile] private key" :
+                  ( keyfile ? "key based authentication with [$keyfile.canonicalPath] private key" :
                               "password based authentication" ))
 
         /**
@@ -101,7 +101,7 @@ public class SshexecMojo extends BaseGroovyMojo
             new AntBuilder().sshexec( command     : command,
                                       host        : host,
                                       username    : username,
-                                      keyfile     : keyfile,
+                                      keyfile     : keyfile.canonicalPath,
                                       passphrase  : passphrase,
                                       verbose     : verbose,
                                       trust       : true,
