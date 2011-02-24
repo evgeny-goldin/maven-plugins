@@ -2,11 +2,12 @@ package com.goldin.plugins.sshexec
 
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
+import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 
- /**
+/**
  * MOJO that executes "sshexec"
  *
  * See
@@ -82,6 +83,12 @@ public class SshexecMojo extends BaseGroovyMojo
         String command  = [ "cd $directory", *commands() ].join( commandsShellSeparator )
 
         log.info( "==> Running sshexec [$command] on [$host:$directory]" )
+
+        /**
+         * pl-334: Multiple executions - if one is "<verbose>true</verbose>" all following are verbose as well
+         * JSch keeps its logger in a static variable: {@link JSch#logger}
+         */
+        JSch.logger = JSch.DEVNULL
 
         if ( keyfile )
         {   /**
