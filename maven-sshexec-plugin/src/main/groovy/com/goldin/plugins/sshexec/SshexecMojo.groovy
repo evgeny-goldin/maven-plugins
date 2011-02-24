@@ -85,7 +85,9 @@ public class SshexecMojo extends BaseGroovyMojo
         log.info( "==> Running sshexec [$command] on [$host:$directory]" )
 
         /**
-         * pl-334: Multiple executions - if one is "<verbose>true</verbose>" all following are verbose as well
+         * http://evgeny-goldin.org/youtrack/issue/pl-334:
+         * Multiple executions - if one is "<verbose>true</verbose>" all following are verbose as well
+         * 
          * JSch keeps its logger in a static variable: {@link JSch#logger}
          */
         JSch.logger = JSch.DEVNULL
