@@ -36,6 +36,9 @@ public class SshexecMojo extends BaseGroovyMojo
     public String command
 
     @MojoParameter( required = false )
+    public String commandsShellSeparator = '; '
+
+    @MojoParameter( required = false )
     public String[] commands
 
     @MojoParameter( required = false )
@@ -53,7 +56,7 @@ public class SshexecMojo extends BaseGroovyMojo
     {
         String[] commands = GCommons.general().array( this.commands, this.command, String )
         commands          = commands*.split( /,|;/ ).flatten()*.trim().findAll{ it }.
-                            collect { String command -> [( echoCommands ? "echo Running [$command]:" : '' ), command ] }.
+                            collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\\'' ) }]:" : '' ), command ] }.
                             flatten()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).
@@ -76,7 +79,7 @@ public class SshexecMojo extends BaseGroovyMojo
         String              directory = data[ 'directory' ]
 
         long   t        = System.currentTimeMillis()
-        String command  = [ "cd $directory", *commands() ].join( '; ' )
+        String command  = [ "cd $directory", *commands() ].join( commandsShellSeparator )
 
         log.info( "==> Running sshexec [$command] on [$host:$directory]" )
 
@@ -89,8 +92,8 @@ public class SshexecMojo extends BaseGroovyMojo
                                       username    : username,
                                       keyfile     : keyfile,
                                       passphrase  : passphrase,
-                                      trust       : true,
                                       verbose     : verbose,
+                                      trust       : true,
                                       failonerror : true )
         }
         else
@@ -101,8 +104,8 @@ public class SshexecMojo extends BaseGroovyMojo
                                       host        : host,
                                       username    : username,
                                       password    : password,
-                                      trust       : true,
                                       verbose     : verbose,
+                                      trust       : true,
                                       failonerror : true )
         }
 
