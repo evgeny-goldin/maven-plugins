@@ -148,14 +148,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.resolver    = artifactResolver
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
+        def eval         = { String s -> s = s.trim()
+                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? GMojoUtils.groovy( s, String ) : s }
 
         for ( CopyResource resource in resources())
         {
-            if ( resource.description )
-            {
-                log.info( "==> Processing <resource> [$resource.description]" )
-            }
-
+            if ( resource.description ) { log.info( "==> Processing <resource> [${ eval( resource.description )}]" )}
             if ( ! GMojoUtils.runIf( resource.runIf )) { continue }
 
             long    t               = System.currentTimeMillis()
@@ -179,10 +177,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
 
             assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
-
             if ( resource.description )
             {
-                log.info( "==> <resource> [$resource.description] processed, [${ System.currentTimeMillis() - t }] ms" )
+                log.info( "==> <resource> [${ eval( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
             }
         }
     }
