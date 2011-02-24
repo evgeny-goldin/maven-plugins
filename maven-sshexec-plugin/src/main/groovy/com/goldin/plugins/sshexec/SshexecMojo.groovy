@@ -82,7 +82,9 @@ public class SshexecMojo extends BaseGroovyMojo
         long   t        = System.currentTimeMillis()
         String command  = [ "cd $directory", *commands() ].join( commandsShellSeparator )
 
-        log.info( "==> Running sshexec [$command] on [$host:$directory]" )
+        log.info( "==> Running sshexec [$command] on [$host:$directory], " +
+                  ( keyfile ? "key based authentication with [$keyfile] private key" :
+                              "password based authentication" ))
 
         /**
          * http://evgeny-goldin.org/youtrack/issue/pl-334:
