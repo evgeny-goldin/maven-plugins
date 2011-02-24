@@ -149,8 +149,16 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
 
-        for ( CopyResource resource in resources().findAll { GMojoUtils.runIf( it.runIf ) })
+        for ( CopyResource resource in resources())
         {
+            if ( resource.description )
+            {
+                log.info( "==> Processing <resource> [$resource.description]" )
+            }
+
+            if ( ! GMojoUtils.runIf( resource.runIf )) { continue }
+
+            long    t               = System.currentTimeMillis()
             boolean verbose         = GCommons.general().choose( resource.verbose,        verbose        )
             boolean failIfNotFound  = GCommons.general().choose( resource.failIfNotFound, failIfNotFound )
             boolean resourceHandled = false
@@ -171,6 +179,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
 
             assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
+
+            if ( resource.description )
+            {
+                log.info( "==> <resource> [$resource.description] processed, [${ System.currentTimeMillis() - t }] ms" )
+            }
         }
     }
 

@@ -58,6 +58,7 @@ class CopyResource extends Resource
     int     retries        = 5          // Number of retries for FTP download
     long    timeout        = 3600       // FTP download timeout (in seconds)
 
+    String  description
     String  runIf
     String  encoding       = 'UTF-8'
     String  wget
