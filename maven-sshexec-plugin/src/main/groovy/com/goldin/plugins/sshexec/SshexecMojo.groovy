@@ -38,6 +38,12 @@ public class SshexecMojo extends BaseGroovyMojo
     @MojoParameter( required = false )
     public String[] commands
 
+    @MojoParameter( required = false )
+    public String keyfile
+
+    @MojoParameter( required = false )
+    public String passphrase = ''
+
 
     /**
      * Retrieves all execution commands
@@ -74,13 +80,31 @@ public class SshexecMojo extends BaseGroovyMojo
 
         log.info( "==> Running sshexec [$command] on [$host:$directory]" )
 
-        new AntBuilder().sshexec( command     : command,
-                                  host        : host,
-                                  username    : username,
-                                  password    : password,
-                                  trust       : true,
-                                  verbose     : verbose,
-                                  failonerror : true )
+        if ( keyfile )
+        {   /**
+             * Key based authentication
+             */
+            new AntBuilder().sshexec( command     : command,
+                                      host        : host,
+                                      username    : username,
+                                      keyfile     : keyfile,
+                                      passphrase  : passphrase,
+                                      trust       : true,
+                                      verbose     : verbose,
+                                      failonerror : true )
+        }
+        else
+        {   /**
+             * Password based authentication
+             */
+            new AntBuilder().sshexec( command     : command,
+                                      host        : host,
+                                      username    : username,
+                                      password    : password,
+                                      trust       : true,
+                                      verbose     : verbose,
+                                      failonerror : true )
+        }
 
         log.info( "==> Sshexec [$command] run on [$host:$directory] ([${ System.currentTimeMillis() - t }] ms)" )
     }
