@@ -10,13 +10,14 @@ import org.apache.tools.ant.Project
 def    groovydocDir = System.getProperty( 'groovydocDir' )
 assert groovydocDir, "System property [groovydocDir] is not available"
 
+def basedir         = project.basedir.canonicalPath
 def mavenVersion    = project.properties[ 'maven-version'    ]
 def gcommonsVersion = project.properties[ 'gcommons-version' ]
-def destinationDir  = new File( groovydocDir, project.version.contains( '-SNAPSHOT' ) ? '' : project.version ).canonicalPath
+def version         = project.version
+def destinationDir  = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalPath
 def d               = new Date()
-def time            = new SimpleDateFormat( "HH:mm '(GMT'Z')'" ).format( d )
-def date            = new SimpleDateFormat( 'MMMM dd, yyyy' ).format( d )
-def basedir         = project.basedir.canonicalPath
+def time            = new SimpleDateFormat( "HH:mm '(GMT'Z')'", new Locale( 'en' )).format( d )
+def date            = new SimpleDateFormat( 'MMMM dd, yyyy',    new Locale( 'en' )).format( d )
 def project         = new Project()
 def path            = { String path -> path ? new Path( project, path ) : new Path( project ) }
 def sourcePaths     = path( '' )
