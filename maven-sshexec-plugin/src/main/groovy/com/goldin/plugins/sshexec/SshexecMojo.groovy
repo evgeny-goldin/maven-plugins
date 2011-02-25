@@ -57,7 +57,7 @@ public class SshexecMojo extends BaseGroovyMojo
     {
         String[] commands = GCommons.general().array( this.commands, this.command, String )
         commands          = commands*.split( /,|;/ ).flatten()*.trim().findAll{ it }.
-                            collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\\'' ) }]:" : '' ), command ] }.
+                            collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
                             flatten()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).
@@ -89,7 +89,7 @@ public class SshexecMojo extends BaseGroovyMojo
         /**
          * http://evgeny-goldin.org/youtrack/issue/pl-334:
          * Multiple executions - if one is "<verbose>true</verbose>" all following are verbose as well
-         * 
+         *
          * JSch keeps its logger in a static variable: {@link JSch#logger}
          */
         JSch.logger = JSch.DEVNULL
