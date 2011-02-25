@@ -61,7 +61,7 @@ ant.groovydoc(
        link( packages:"org.apache.tools.ant.",              href:"http://evgeny-goldin.org/javadoc/ant/api"        )
        link( packages:"org.junit.,junit.framework.",        href:"http://kentbeck.github.com/junit/javadoc/latest" )
        link( packages:"org.apache.commons.net.",            href:"http://commons.apache.org/net/apidocs"           )
-       link( packages:"de.schlichtherle.",                  href:"http://truezip.java.net/apidocs"                )
+       link( packages:"de.schlichtherle.",                  href:"http://truezip.java.net/apidocs"                 )
        link( packages:"org.codehaus.gmaven.",               href:"http://evgeny-goldin.org/javadoc/gmaven" )
        link( packages:"org.apache.maven.shared.filtering.", href:"http://maven.apache.org/shared/maven-filtering/apidocs" )
        link( packages:"org.apache.maven.artifact.",         href:"http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
