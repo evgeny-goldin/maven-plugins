@@ -1,5 +1,6 @@
 <%
 import com.goldin.plugins.hudson.*
+import com.goldin.plugins.hudson.beans.*
 import com.goldin.plugins.common.*
 %>
 

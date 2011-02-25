@@ -3,6 +3,8 @@ package com.goldin.plugins.hudson
 
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.GMojoUtils
+import com.goldin.plugins.hudson.beans.*
+
 
  /**
  * Class describing a Hudson job
