@@ -248,7 +248,7 @@ Only needed when Maven "${maven-version}" is 3.x
         <dependency>
             <groupId>com.goldin</groupId>
             <artifactId>gcommons</artifactId>
-            <version>0.5.1</version>
+            <version>${gcommons-version}</version>
             <scope>compile</scope>
         </dependency>
 

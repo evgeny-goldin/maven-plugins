@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns              = "http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi          = "http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0
+                               http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.goldin.plugins</groupId>
+    <artifactId>groovydoc</artifactId>
+    <packaging>pom</packaging>
+    <version>0.2.1</version>
+    <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
+
+
+    <parent>
+        <groupId>com.goldin.plugins</groupId>
+        <artifactId>main.plugins</artifactId>
+        <version>0.2.1</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+
+    <build>
+        <plugins>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Generating GroovyDoc                                             -->
+            <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
+            <!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code    -->
+            <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119     -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>${gmaven-version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-groovydoc</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <source>${project.basedir}/src/main/groovy/groovydoc.groovy</source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>${groovy-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>${ant-version}</version>
+        </dependency>
+    </dependencies>
+</project>
