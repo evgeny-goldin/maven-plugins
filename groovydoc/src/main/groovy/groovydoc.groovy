@@ -41,6 +41,7 @@ ant.groovydoc(
         destdir      : destinationDir,
         sourcepath   : sourcePaths,
         doctitle     : "maven-plugins $version API",
+        windowtitle  : "maven-plugins $version API",
         use          : "true",
         private      : "false",
         header       : '<a href="http://evgeny-goldin.com/wiki/Maven-plugins">evgeny-goldin.com/wiki/Maven-plugins</a>',
