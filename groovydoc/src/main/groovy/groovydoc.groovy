@@ -4,7 +4,7 @@ import org.apache.tools.ant.types.Path
 import org.apache.tools.ant.Project
 
 /**
- * http://groovy.codehaus.org/The+groovydoc+Ant+task
+ * http://docs.codehaus.org/display/GROOVY/The+groovydoc+Ant+task
  */
 
 def    groovydocDir = System.getProperty( 'groovydocDir' )
@@ -40,6 +40,7 @@ ant.taskdef(name: 'groovydoc', classname: 'org.codehaus.groovy.ant.Groovydoc' )
 ant.groovydoc(
         destdir      : destinationDir,
         sourcepath   : sourcePaths,
+        doctitle     : "maven-plugins $version API",
         use          : "true",
         private      : "false",
         header       : '<a href="http://evgeny-goldin.com/wiki/Maven-plugins">evgeny-goldin.com/wiki/Maven-plugins</a>',
