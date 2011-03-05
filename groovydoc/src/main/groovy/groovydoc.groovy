@@ -46,17 +46,21 @@ ant.groovydoc(
         private      : "false",
         header       : '<a href="http://evgeny-goldin.com/wiki/Maven-plugins">evgeny-goldin.com/wiki/Maven-plugins</a>',
         footer       : '<a href="http://evgeny-goldin.com/">Evgeny Goldin</a>. GrovyDoc is generated at ' + "$time on $date." + """
-                        <script type='text/javascript'>
+                       <script type="text/javascript">
+
                           var _gaq = _gaq || [];
                           _gaq.push(['_setAccount', 'UA-7925869-2']);
+                          _gaq.push(['_setDomainName', 'none']);
+                          _gaq.push(['_setAllowLinker', true]);
                           _gaq.push(['_trackPageview']);
+
                           (function() {
                             var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
                             ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                             var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
                           })();
-                        </script>
-                        """.stripIndent(),
+
+                       </script>""".stripIndent(),
     {
        link( packages:"java.,org.xml.,javax.,org.xml.",     href:"http://download.oracle.com/javase/6/docs/api"    )
        link( packages:"groovy.,org.codehaus.groovy.",       href:"http://groovy.codehaus.org/api"                  )
