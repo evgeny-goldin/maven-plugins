@@ -1,5 +1,5 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Maven plugins:
 # http://evgeny-goldin.com/wiki/Maven-plugins
-# http://evgeny-goldin.com/wiki/Maven-hudson-plugin
+# http://evgeny-goldin.com/wiki/Maven-jenkins-plugin
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
