@@ -21,7 +21,7 @@
         <!-- Third-party versions -->
         <!-- ~~~~~~~~~~~~~~~~~~~~ -->
 
-        <!-- DO NOT upgrade. Doing so will not allow plugins usage with Maven 2 -->
+        <!-- DO NOT upgrade. Doing so will not allow plugins usage with Maven 2! -->
         <maven-version>2.2.1</maven-version>
         <java-version>1.6</java-version>
 
