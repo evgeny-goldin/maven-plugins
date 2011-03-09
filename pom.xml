@@ -26,7 +26,7 @@
         <java-version>1.6</java-version>
 
         <gcommons-version>0.5.2-SNAPSHOT</gcommons-version>
-        <groovy-version>1.8.0-beta-4</groovy-version>
+        <groovy-version>1.8.0-rc-1</groovy-version>
         <gmaven-version>1.3</gmaven-version>
         <annomojo-version>1.4.0</annomojo-version>
         <spring-version>3.0.5.RELEASE</spring-version>
@@ -111,7 +111,7 @@
 
         <pluginManagement>
             <plugins>
-                
+
                 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                 <!-- Configuring surefire plugin to display test errors in console                 -->
                 <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/ -->
