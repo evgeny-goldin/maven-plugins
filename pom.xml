@@ -65,7 +65,7 @@
         <!-- ~~~~~~~ -->
 
         <module>maven-copy-plugin</module>
-        <module>maven-hudson-plugin</module>
+        <module>maven-jenkins-plugin</module>
         <module>maven-assert-plugin</module>
         <module>maven-mail-plugin</module>
         <module>maven-find-plugin</module>

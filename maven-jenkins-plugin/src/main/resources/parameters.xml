@@ -1,0 +1,140 @@
+<%
+import com.goldin.plugins.jenkins.*
+import com.goldin.plugins.jenkins.beans.*
+import com.goldin.plugins.common.*
+%>
+
+
+<%
+    if ( job.parameters().any{ it.type.toString() != ParameterType.jira.toString() } )
+    {
+%>
+    <hudson.model.ParametersDefinitionProperty>
+        <parameterDefinitions>
+<%
+        job.parameters().findAll{ it.type.toString() != ParameterType.jira.toString() }.each
+        {
+            Parameter p ->
+
+            switch ( p.type.toString())
+            {
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  Boolean
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.bool.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.BooleanParameterDefinition>
+                    <name>${ p.name }</name>
+                    <description>${ p.description }</description>
+                    <defaultValue>${ Boolean.valueOf( p.value ) }</defaultValue>
+                </hudson.model.BooleanParameterDefinition>
+<%
+                    break
+
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  Choice
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.choice.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.ChoiceParameterDefinition>
+                    <name>${ p.name }</name>
+                    <description>${ p.description }</description>
+                    <choices class="java.util.Arrays\$ArrayList">
+                        <a class="string-array">
+<%
+                            p.value.split( /\s*,\s*/ ).each
+                            {
+                                String choice ->
+%>
+                            <string>${ choice.addDollar() }</string>
+<%
+                            }
+%>
+                        </a>
+                    </choices>
+                </hudson.model.ChoiceParameterDefinition>
+<%
+                    break
+
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  String
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.string.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.StringParameterDefinition>
+                    <name>${ p.name }</name>
+                    <description>${ p.description }</description>
+                    <defaultValue>${ p.value.addDollar() }</defaultValue>
+                </hudson.model.StringParameterDefinition>
+<%
+                    break
+
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  Password
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.password.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.PasswordParameterDefinition>
+                    <name>${ p.name }</name>
+                    <description>${ p.description }</description>
+                    <defaultValue>${ p.value }</defaultValue>
+                </hudson.model.PasswordParameterDefinition>
+<%
+                    break
+
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  Run
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.run.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.RunParameterDefinition>
+                    <name>${ p.name }</name>
+                    <description>${ p.description }</description>
+                    <projectName>${ p.value.addDollar() }</projectName>
+                </hudson.model.RunParameterDefinition>
+<%
+                    break
+
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                //  File
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                case ParameterType.file.toString():
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                <hudson.model.FileParameterDefinition>
+                    <name>${ p.value.addDollar() }</name>
+                    <description>${ p.description }</description>
+                </hudson.model.FileParameterDefinition>
+<%
+                    break
+
+                default:
+                    def j // http://jira.codehaus.org/browse/GROOVY-4236
+%>
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <!-- Unsupported parameter type [${ p.type }] -->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<%
+            }
+        }
+%>
+        </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+<%
+    }
+
+    job.parameters().find{ it.type.toString() == ParameterType.jira.toString() }.each
+    {
+        Parameter p ->
+%>
+    <hudson.plugins.jira.JiraProjectProperty>
+      <siteName>${ p.value }</siteName>
+    </hudson.plugins.jira.JiraProjectProperty>
+<%
+    }
+%>

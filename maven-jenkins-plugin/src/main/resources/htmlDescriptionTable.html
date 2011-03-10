@@ -1,0 +1,204 @@
+<%
+import com.goldin.plugins.jenkins.*
+import com.goldin.plugins.jenkins.beans.*
+import com.goldin.plugins.jenkins.Job.*
+import com.goldin.plugins.jenkins.Job.JOB_TYPE
+
+def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job/${ jobId }\"><strong>${ jobId }</strong></a>" }
+%>
+
+<table border="1" width="100%" cellpadding="3" cellspacing="3">
+    <%
+        job.descriptionTable.each
+        {
+            DescriptionRow row ->
+
+            if ( ! row.bottom )
+            {
+    %>
+    <tr>
+        <td  width="15%" valign="top">${ row.key }</td>
+        <td>${ row.value }</td>
+    </tr>
+    <%
+            }
+        }
+    %>
+    <tr>
+        <td  width="15%" valign="top">Job</td>
+        <td>${ jobLink( job.jenkinsUrl, job.id ) }</td>
+    </tr>
+    <tr>
+        <td valign="top">Job type</td>
+        <td>${ job.jobType.description }</td>
+    </tr>
+    <%
+      if ( job.jobType == JOB_TYPE.maven )
+      {
+          def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
+                           job.localRepoPath     ? job.localRepoPath :
+                                                   "&lt;user-home&gt;/.m2/repository" )
+    %>
+    <tr>
+        <td valign="top">Maven goals</td>
+        <td><strong><code>${ job.mavenGoals }</code></strong></td>
+    </tr>
+    <tr>
+        <td valign="top">Maven repository</td>
+        <td><strong><code>"${ repoPath }"</code></strong></td>
+    </tr>
+    <%
+          if ( job.mavenOpts )
+          {
+    %>
+    <tr>
+        <td valign="top">Maven options</td>
+        <td><strong><code>${ job.mavenOpts }</code></strong></td>
+    </tr>
+    <%
+          }
+          if ( job.artifactory?.name )
+          {
+    %>
+    <tr>
+        <td valign="top">Deployed to Artifactory</td>
+        <td><a href="${ job.artifactory.name }"><strong><code>${ job.artifactory.name }</code></strong></a> =>
+            <a href="${ job.artifactory.name }/${ job.artifactory.repository }/"><strong><code>"${ job.artifactory.repository }"</code></strong></a>
+        </td>
+    </tr>
+    <%
+          }
+      }
+      if ( job.mail?.recipients )
+      {
+    %>
+    <tr>
+        <td valign="top">Mail recipients</td>
+        <td><strong><code>${ job.mail.recipients }</code></strong></td>
+    </tr>
+    <%
+      }
+      if ( job.scmType == 'svn' )
+      {
+    %>
+    <tr>
+        <td valign="top">SVN update policy</td>
+        <td>Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]</td>
+    </tr>
+    <%
+      }
+    %>
+    <tr>
+        <td valign="top">Node</td>
+        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/"><strong>${ job.node }</strong></a></td>
+    </tr>
+    <%
+      if ( job.triggers())
+      {
+    %>
+    <tr>
+        <td valign="top">Triggers</td>
+        <td>
+            <%
+                job.triggers().each
+                {
+                    Trigger trigger ->
+            %>
+
+            <li> <strong><code>${ trigger.type }:</code></strong> <a href="http://linuxmanpages.com/man5/crontab.5.php"><strong><code>&quot;${ trigger.expression }&quot;</code></strong></a>
+                ${ trigger.description ? '<i>(' + trigger.description + ')</i>' : '' }
+            <%
+                }
+            %>
+        </td>
+    </tr>
+    <%
+      }
+      if ( job.repositories())
+      {
+    %>
+    <tr>
+        <td valign="top">Repositories</td>
+        <td>
+            <%
+                job.repositories().each
+                {
+                    Repository repo ->
+            %>
+
+            <li><a href="${ repo.remoteLink }/"><strong><code>${ repo.remote }</code></strong></a>
+                <% if ( repo.git ) { %>
+                : <a href="${ repo.gitRemoteBranchLink }/"><strong><code>${ repo.gitBranch }</code></strong></a>
+            <%
+                   }
+
+                }
+                if ( job.pom ) // Free-Style jobs may not use Maven. Even if they use it - its POM is configured inside Maven <task>
+                {
+                    String pomUrl = job.repositories().first().getRemotePathLink( job.pom )
+            %>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top">POM</td>
+        <td>
+            <li><a href="${ pomUrl }"><strong><code>${ pomUrl }</code></strong></a>
+        </td>
+    </tr>
+    <%
+                }
+      }
+      if ( job.invoke?.jobs )
+      {
+    %>
+    <tr>
+        <td valign="top">Invokes</td>
+        <td>
+            <%
+                job.invoke.jobsSplit.each
+                {
+                    String invokedJobId ->
+            %>
+            <li>${ jobLink( job.jenkinsUrl, invokedJobId ) } when this job ${ job.invoke.condition[ 1 ] }
+            <%
+                }
+            %>
+        </td>
+    </tr>
+    <%
+      }
+      if ( job.invokedBy )
+      {
+    %>
+    <tr>
+        <td valign="top">Invoked by</td>
+        <td>
+            <%
+                job.invokedBy.each
+                {
+                    Job invokedBy ->
+            %>
+            <li>${ jobLink( invokedBy.jenkinsUrl, invokedBy.id ) } when it ${ invokedBy.invoke.condition[ 1 ] }
+            <%
+                }
+            %>
+        </td>
+    </tr>
+    <%
+      }
+      job.descriptionTable.each
+      {
+          DescriptionRow row ->
+
+          if ( row.bottom )
+          {
+    %>
+    <tr>
+        <td valign="top">${ row.key }</td>
+        <td>${ row.value }</td>
+    </tr>
+    <%
+          }
+      }
+    %>
+</table>
