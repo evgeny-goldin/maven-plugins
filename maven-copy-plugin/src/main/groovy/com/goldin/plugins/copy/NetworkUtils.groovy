@@ -57,10 +57,10 @@ class NetworkUtils
         }
     }
 
-    
+
     /**
      * Uploads files to remote paths specified.
-     *  
+     *
      * @param remotePaths    remote paths to upload files to
      * @param directory      files directory
      * @param includes       include patterns
@@ -105,7 +105,7 @@ class NetworkUtils
             }
         }
     }
-    
+
 
     /**
      * Downloads file from URL to directory specified.
@@ -224,18 +224,11 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                 previousList = ( listFile?.isFile() ? listFile.text : '' )
 
                 if ( isList && nativeListing )
-                {   // Calculating remote directory where files matched by glob patterns are located
-                    def    c               = { String s -> s.replace( '\\', '/' ).replaceFirst( /^\//, '' ).replaceAll( /\/?[^\/]+$/, '' )}
-                    String fileDir         = c( includes[ 0 ] )
-                    def    remoteDirectory = "${ ftpData[ 'directory' ] }/$fileDir".replaceAll( /\/+/, '/' )
-
-                    // Making sure all glob patterns specify files in the same remote directory
-                    assert includes.every{ c( it ) == fileDir }, \
-                           "Glob patterns [$includes] specify files from different remote directories - not supported yet, vote for 'pl-264'"
-
+                {
                     for ( file in GCommons.net().listFiles( remotePath, includes, excludes, 1 ))
                     {
-                        listFile.append( FTP.listSingleFile( ftpData[ 'host' ], remoteDirectory, file.name.replaceAll( /.*\//, '' ), file.size ))
+                        def filePath = file.path.replaceAll( /.+:/, '' ) // "ftp://user:pass@server:/path" => "/path"
+                        listFile.append( FTP.listSingleFile( ftpData[ 'host' ], filePath, file.size ))
                         listFile.append( '\n' )
                     }
                 }
@@ -448,7 +441,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
         def data = GCommons.net().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
         GCommons.verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
-        
+
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
          */

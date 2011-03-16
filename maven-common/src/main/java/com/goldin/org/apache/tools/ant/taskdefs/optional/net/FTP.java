@@ -2296,17 +2296,16 @@ public class FTP extends Task {
      * Provides a listing for the single file.
      *
      * @param server    FTP server address
-     * @param directory FTP server directory
-     * @param fileName  name of the file
+     * @param filePath  path of the file on server
      * @param fileSize  size of the file
      * @return listing entry for the server and file specified
      */
-    public static String listSingleFile ( String server, String directory, String fileName, long fileSize )
+    public static String listSingleFile ( String server, String filePath, long fileSize )
     {
         return String.format( "ftp://%s//%s|%s",
                               server,
-                              ( directory + "/" + fileName ).replaceAll( "/+", "/" ).   /* '//' => '/' */
-                                                             replaceAll( "^/", ""  ),   /* Removing starting '/' */
+                              filePath.replaceAll( "/+", "/" ).  /* '//' => '/' */
+                                       replaceAll( "^/", ""  ),  /* Removing starting '/' */
                               fileSize ).replace( '\\', '/' );
     }
 
@@ -2336,7 +2335,7 @@ public class FTP extends Task {
         {
             String path = this.listingFullPath ?
                 // "ftp://host.com//od/small/OfficersDirectors03_GL_f_20101120_1of1.xml.zip|23505456"
-                listSingleFile( this.server, this.remotedir, filename, ftpfiles[ 0 ].getSize()) :
+                listSingleFile( this.server, this.remotedir + "/" + filename, ftpfiles[ 0 ].getSize()) :
                 // Default listing
                 ftpfiles[0].toString();
 
