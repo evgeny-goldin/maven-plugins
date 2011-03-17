@@ -227,9 +227,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                 {
                     for ( file in GCommons.net().listFiles( remotePath, includes, excludes, 1 ))
                     {
-                        def filePath = file.path.replaceAll( /.+:/, '' ) // "ftp://user:pass@server:/path" => "/path"
-                        listFile.append( FTP.listSingleFile( ftpData[ 'host' ], filePath, file.size ))
-                        listFile.append( '\n' )
+                        listFile.append( FTP.listSingleFile( ftpData[ 'host' ], file.path, file.size ) + "\n" )
                     }
                 }
                 else
