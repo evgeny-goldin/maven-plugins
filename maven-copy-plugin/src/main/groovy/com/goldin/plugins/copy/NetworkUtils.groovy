@@ -366,12 +366,14 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
         for ( def attempts = 1; ( attempts <= maxAttempts ); attempts++ )
         {
             GCommons.file().delete( destFile )
+            long t           = System.currentTimeMillis()
             GCommons.general().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * GCommons.constants().MILLIS_IN_SECOND ), localDirectory )
             long fileSizeNow = GCommons.verify().file( destFile ).length()
 
             if ( fileSizeNow == fileSize )
             {
-                log.info( "[$ftpUrl] => [$destFilePath]: Finished (file [${ fileIndex + 1 }] of [$totalFiles], " +
+                log.info( "[$ftpUrl] => [$destFilePath]: Finished ([${ ( System.currentTimeMillis() - t ).intdiv( 1000 ) }] sec, " +
+                          "file [${ fileIndex + 1 }] of [$totalFiles], " +
                           "[${ fileSizeNow.intdiv( 1024 ) }] Kb)" )
                 return
             }
