@@ -25,12 +25,12 @@ public class JenkinsMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = true )
     public String jenkinsUrl
-    public String jenkinsUrl() { verify().notNullOrEmpty( this.jenkinsUrl ) }
+    public String jenkinsUrl() { verifyBean().notNullOrEmpty( this.jenkinsUrl ) }
 
 
     @MojoParameter ( required = true )
     public String generationPom
-    public String generationPom() { verify().notNullOrEmpty( this.generationPom ) }
+    public String generationPom() { verifyBean().notNullOrEmpty( this.generationPom ) }
 
 
     @MojoParameter ( required = true, defaultValue = '${project.build.directory}' )
@@ -62,7 +62,7 @@ public class JenkinsMojo extends BaseGroovyMojo
     @MojoParameter
     public Job   job
 
-    private Job[] jobs() { general().array( this.jobs, this.job, Job )  }
+    private Job[] jobs() { generalBean().array( this.jobs, this.job, Job )  }
 
 
     @Override
@@ -100,12 +100,12 @@ public class JenkinsMojo extends BaseGroovyMojo
             else
             {
                 File   configFile = new File( outputDirectory, "${ job.id }/config.xml" )
-                file().mkdirs( configFile.parentFile )
+                fileBean().mkdirs( configFile.parentFile )
 
                 def timestamp = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
                 def config    = GMojoUtils.makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
 
-                configFile.write( verify().notNullOrEmpty( config ))
+                configFile.write( verifyBean().notNullOrEmpty( config ))
                 assert (( configFile.isFile()) && ( configFile.size() == config.size()) && ( configFile.text == config ))
 
                 configPath = GMojoUtils.validate( configFile ).canonicalPath
@@ -129,7 +129,7 @@ public class JenkinsMojo extends BaseGroovyMojo
     */
     private Collection<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
-        verify().notNullOrEmpty( jenkinsUrl, generationPom, svnRepositoryLocalBase )
+        verifyBean().notNullOrEmpty( jenkinsUrl, generationPom, svnRepositoryLocalBase )
 
         Map<String, Job> allJobs = new LinkedHashMap<String, Job>()
 
@@ -153,15 +153,15 @@ public class JenkinsMojo extends BaseGroovyMojo
             {
                 Repository repo ->
 
-                repo.remote = verify().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
-                assert  ( ! ( verify().notNullOrEmpty( repo.remote )).endsWith( '/' ))
+                repo.remote = verifyBean().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
+                assert  ( ! ( verifyBean().notNullOrEmpty( repo.remote )).endsWith( '/' ))
 
                 if (( ! repo.local ) && ( repo.svn ))
                 {
                     int index                    = repo.remote.lastIndexOf( svnRepositoryLocalBase )
                     if     ( index < 0 ) { index = repo.remote.lastIndexOf( '/' ) + 1 } // last path chunk
                     assert ( index > 0 )
-                    repo.local = verify().notNullOrEmpty( repo.remote.substring( index ))
+                    repo.local = verifyBean().notNullOrEmpty( repo.remote.substring( index ))
                 }
             }
         }

@@ -26,7 +26,7 @@ class SpringBatchMojo extends BaseGroovyMojo
     */
     @MojoParameter ( required = true )
     public String configLocations
-    public String configLocations(){ verify().notNullOrEmpty( this.configLocations ) }
+    public String configLocations(){ verifyBean().notNullOrEmpty( this.configLocations ) }
 
 
     /**
@@ -34,7 +34,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      */
     @MojoParameter ( required = true )
     public String jobId
-    public String jobId(){ verify().notNullOrEmpty( this.jobId )}
+    public String jobId(){ verifyBean().notNullOrEmpty( this.jobId )}
 
 
     /**
@@ -102,7 +102,7 @@ class SpringBatchMojo extends BaseGroovyMojo
 
             String configLocation, int index ->
 
-            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constants().CRLF : "" )
+            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constantsBean().CRLF : "" )
             def location = ( configLocation.startsWith( 'classpath:' ) ?
                                 new ClassPathResource( configLocation.substring( 'classpath:'.length())).getURL() :
                                 null );
@@ -142,17 +142,17 @@ options         : $optsSplit
      */
     private String propertiesConfigLocation( String propertiesValue )
     {
-        verify().notNullOrEmpty( propertiesValue )
+        verifyBean().notNullOrEmpty( propertiesValue )
 
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
         def lines      = propertiesValue.splitWith( 'eachLine', String ).collect { it.trim().replace( '\\', '/' ) }
-        def properties = [ '', *lines ].join( "${ constants().CRLF }${ ' ' * 16 }" )
+        def properties = [ '', *lines ].join( "${ constantsBean().CRLF }${ ' ' * 16 }" )
         def text       = GMojoUtils.makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 
         file.write( text )
 
         def filePath   = file.canonicalPath
-        log.info( "Properties bean written to [$filePath]:${ constants().CRLF }$text" )
+        log.info( "Properties bean written to [$filePath]:${ constantsBean().CRLF }$text" )
         "file:$filePath"
     }
 }

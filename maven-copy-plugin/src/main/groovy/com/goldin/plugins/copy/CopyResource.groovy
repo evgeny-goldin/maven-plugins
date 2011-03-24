@@ -15,20 +15,20 @@ class CopyResource extends Resource
      */
 
     String[] targetPaths
-    String[] targetPaths() { general().array( this.targetPaths, getTargetPath(), String ) }
+    String[] targetPaths() { generalBean().array( this.targetPaths, getTargetPath(), String ) }
 
     Replace[] replaces
     Replace   replace
-    Replace[] replaces () { general().array( this.replaces, this.replace, Replace ) }
+    Replace[] replaces () { generalBean().array( this.replaces, this.replace, Replace ) }
 
 
     CopyDependency[] dependencies
     CopyDependency   dependency
-    CopyDependency[] dependencies () { general().array( this.dependencies, this.dependency, CopyDependency ) }
+    CopyDependency[] dependencies () { generalBean().array( this.dependencies, this.dependency, CopyDependency ) }
 
     String[] zipEntries
     String   zipEntry
-    String[] zipEntries () { general().array( this.zipEntries, this.zipEntry, String ) }
+    String[] zipEntries () { generalBean().array( this.zipEntries, this.zipEntry, String ) }
 
 
     /**

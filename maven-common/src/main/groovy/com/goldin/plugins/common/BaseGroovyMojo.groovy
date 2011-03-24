@@ -35,11 +35,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     @MojoParameter ( expression = '${project.build.directory}', required = true )
     public File buildDirectory
-    public File buildDirectory() { file().mkdirs( this.buildDirectory ); this.buildDirectory }
+    public File buildDirectory() { fileBean().mkdirs( this.buildDirectory ); this.buildDirectory }
 
     @MojoParameter ( expression = '${project.build.outputDirectory}' )
     public File outputDirectory
-    public File outputDirectory() { file().mkdirs( this.outputDirectory ); this.outputDirectory }
+    public File outputDirectory() { fileBean().mkdirs( this.outputDirectory ); this.outputDirectory }
 
 
     @Override
