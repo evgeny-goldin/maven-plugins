@@ -1,6 +1,5 @@
 package com.goldin.plugins.copy
 
-import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.ThreadLocals
@@ -15,7 +14,9 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
+import static com.goldin.plugins.common.GMojoUtils.*
 import org.jfrog.maven.annomojo.annotations.*
+
 
 /**
  * MOJO copying resources specified
@@ -85,7 +86,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( required = false )
     public  CopyResource resource
 
-    private CopyResource[] resources () { GCommons.general().array( this.resources, this.resource, CopyResource ) }
+    private CopyResource[] resources () { general().array( this.resources, this.resource, CopyResource ) }
 
 
     @MojoParameter
@@ -131,8 +132,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          * See {@link com.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
          * it here as long as we can't extend it
          */
-        GMojoUtils.mopInit()
         ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
+        GMojoUtils.mopInit()
         if ( ! GMojoUtils.runIf( runIf )) { return }
 
         /**
@@ -142,7 +143,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          * Next verifications below will break when this bug is fixed in Maven
          */
 
-        GCommons.verify().isNull( this.project, this.factory, this.resolver, this.local, this.remoteRepos )
+        verify().isNull( this.project, this.factory, this.resolver, this.local, this.remoteRepos )
         this.project     = mavenProject
         this.factory     = artifactFactory
         this.resolver    = artifactResolver
@@ -157,8 +158,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             if ( ! GMojoUtils.runIf( resource.runIf )) { continue }
 
             long    t               = System.currentTimeMillis()
-            boolean verbose         = GCommons.general().choose( resource.verbose,        verbose        )
-            boolean failIfNotFound  = GCommons.general().choose( resource.failIfNotFound, failIfNotFound )
+            boolean verbose         = general().choose( resource.verbose,        verbose        )
+            boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
             boolean resourceHandled = false
 
             resource.includes = update( resource.includes, resource.encoding )
@@ -196,10 +197,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         assert ( resource.mkdir || resource.directory )
 
-        def  isDownload        = GCommons.net().isNet( resource.directory )
-        def  isUpload          = GCommons.net().isNet( resource.targetPaths())
+        def  isDownload        = net().isNet( resource.directory )
+        def  isUpload          = net().isNet( resource.targetPaths())
         File sourceDirectory   = ( resource.mkdir ? null                            : // Only <targetPath> is active
-                                   isDownload     ? GCommons.file().tempDirectory() : // Temp dir to download the files to
+                                   isDownload     ? file().tempDirectory() : // Temp dir to download the files to
                                                     new File( resource.directory ))   // Directory to cleanup, upload or copy
 
         def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
@@ -240,7 +241,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
 
-        if ( isDownload ){ GCommons.file().delete( sourceDirectory )}
+        if ( isDownload ){ file().delete( sourceDirectory )}
     }
 
 
@@ -253,19 +254,19 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     private void handleDependencies ( CopyResource resource, boolean verbose )
     {
         List<CopyDependency> dependencies = resource.dependencies() as List
-        GCommons.verify().notNullOrEmpty( dependencies )
+        verify().notNullOrEmpty( dependencies )
 
         if ( resource.dependenciesAtM2 )
         {
             resolveDependencies( dependencies ).each {
                 CopyDependency d ->
-                File m2File = GCommons.verify().file( d.artifact.file )
+                File m2File = verify().file( d.artifact.file )
                 handleResource( resource, m2File.parentFile, [ m2File.name ], null, verbose, true )
             }
         }
         else
         {
-            File tempDirectory      = GCommons.file().tempDirectory()
+            File tempDirectory      = file().tempDirectory()
             int  dependenciesCopied = 0
 
             resolveDependencies( dependencies, tempDirectory, resource.stripVersion ).each {
@@ -276,7 +277,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             // Zero dependencies can be copied if some of them are optional and are not resolved.
             handleResource( resource, tempDirectory, null, null, verbose, ( dependenciesCopied > 0 ))
-            GCommons.file().delete( tempDirectory )
+            file().delete( tempDirectory )
         }
     }
 
@@ -290,11 +291,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @return                dependencies resolved and filtered
      */
     private List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
-                                                       File                 outputDirectory = GCommons.constants().USER_DIR_FILE,
+                                                       File                 outputDirectory = constants().USER_DIR_FILE,
                                                        boolean              stripVersion    = false )
     {
-        GCommons.verify().notNullOrEmpty( dependencies )
-        GCommons.verify().directory( outputDirectory )
+        verify().notNullOrEmpty( dependencies )
+        verify().directory( outputDirectory )
 
         List<CopyDependency> dependenciesResolved = ( List<CopyDependency> ) dependencies.inject( [] ) {
             List<CopyDependency> list, CopyDependency d ->
@@ -303,7 +304,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }.collect {
             CopyDependency d ->
 
-            GCommons.verify().notNullOrEmpty( d.groupId, d.artifactId )
+            verify().notNullOrEmpty( d.groupId, d.artifactId )
 
             try
             {
@@ -375,7 +376,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                           boolean      verbose         = true,
                                           boolean      failIfNotFound  = true )
     {
-        GCommons.verify().notNull( resource )
+        verify().notNull( resource )
         def zipEntries = resource.zipEntries() as List
 
         if ( zipEntries )
@@ -391,14 +392,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( ! resource.mkdir )
         {
-            GCommons.verify().directory( sourceDirectory )
+            verify().directory( sourceDirectory )
         }
 
         def filesToProcess = []
 
         for ( path in resource.targetPaths())
         {
-            File targetPath = new File( GCommons.verify().notNullOrEmpty( path ))
+            File targetPath = new File( verify().notNullOrEmpty( path ))
 
             if ( resource.mkdir )
             {
@@ -414,15 +415,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                  * (if we take all <includes> at once and some patterns come empty - no exception will be thrown)
                  */
                 def files = []
-                if ( includes ) { includes.each{ files.addAll( GCommons.file().files( sourceDirectory, [ it ], excludes, true, false, failIfNotFound )) }}
-                else            {                files.addAll( GCommons.file().files( sourceDirectory, null,   excludes, true, false, failIfNotFound ))  }
+                if ( includes ) { includes.each{ files.addAll( file().files( sourceDirectory, [ it ], excludes, true, false, failIfNotFound )) }}
+                else            {                files.addAll( file().files( sourceDirectory, null,   excludes, true, false, failIfNotFound ))  }
 
                 for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
                 {
                     if ( resource.unpack )
                     {
-                        zipEntries ? GCommons.file().unpackZipEntries( file, targetPath, zipEntries, resource.preservePath, verbose ) :
-                                     GCommons.file().unpack( file, targetPath )
+                        zipEntries ? file().unpackZipEntries( file, targetPath, zipEntries, resource.preservePath, verbose ) :
+                                     file().unpack( file, targetPath )
                         filesToProcess << file
                     }
                     else
@@ -462,11 +463,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetPath,
                        boolean      verbose )
     {
-        assert ! GCommons.net().isNet( sourceDirectory.path )
-        assert ! GCommons.net().isNet( targetPath.path )
-        
+        assert ! net().isNet( sourceDirectory.path )
+        assert ! net().isNet( targetPath.path )
+
         boolean skipIdentical = (( ! resource.process ) && /* If file is processed - it is not skipped */
-                                 GCommons.general().choose( resource.skipIdentical, skipIdentical ))
+                                 general().choose( resource.skipIdentical, skipIdentical ))
         /**
          * Location where the file will be copied to
          */
@@ -489,7 +490,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                               fileFilter,
                                               verbose )
 
-        copied ? GCommons.verify().file( targetFile ) : null
+        copied ? verify().file( targetFile ) : null
     }
 
 
@@ -512,12 +513,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        List<String> excludes,
                        boolean      failIfNotFound )
     {
-        GCommons.file().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update )
+        file().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update )
 
         if ( resource.attachArtifact )
         {
             mavenProjectHelper.attachArtifact( mavenProject,
-                                               GCommons.file().extension( targetPath ),
+                                               file().extension( targetPath ),
                                                resource.artifactClassifier,
                                                targetPath )
         }
@@ -530,13 +531,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                    "Failed to split <deploy> tag data [$resource.deploy]. " +
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 
-            def ( String url, String groupId, String artifactId, String version ) = data[ 0 .. 3 ].collect { String s -> GCommons.verify().notNullOrEmpty( s ) }
-            def classifier = (( data.size() == 4 ) ? GCommons.verify().notNullOrEmpty( data[ 4 ] ) : null )
+            def ( String url, String groupId, String artifactId, String version ) = data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
+            def classifier = (( data.size() == 4 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
 
             GMojoUtils.deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
         }
 
-        GCommons.verify().file( targetPath )
+        verify().file( targetPath )
     }
 
 
@@ -557,10 +558,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             return
         }
 
-        GCommons.file().mkdirs( targetPath )
+        file().mkdirs( targetPath )
         if ( verbose ){ log.info( "Directory [$targetPath.canonicalPath] created" )}
 
-        GCommons.verify().directory( targetPath )
+        verify().directory( targetPath )
     }
 
 
@@ -583,21 +584,21 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                         boolean      verbose,
                         boolean      failIfNotFound )
     {
-        if ( failIfNotFound ) { GCommons.verify().directory( sourceDirectory ) }
+        if ( failIfNotFound ) { verify().directory( sourceDirectory ) }
 
         if ( sourceDirectory.isDirectory())
         {
-            def filesDeleted = filter( GCommons.file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ),
+            def filesDeleted = filter( file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ),
                                        filterExpression, verbose, failIfNotFound )
 
-            GCommons.file().delete( filesDeleted as File[] )
+            file().delete( filesDeleted as File[] )
 
             if ( cleanEmptyDirectories )
             {
                 List<File> directoriesDeleted = ( sourceDirectory.splitWith( 'eachDirRecurse', File ) + sourceDirectory ).
                                                 findAll{ File f -> f.isDirectory() && ( f.directorySize() == 0 )}
 
-                GCommons.file().delete( directoriesDeleted as File[] )
+                file().delete( directoriesDeleted as File[] )
                 filesDeleted += directoriesDeleted
             }
 
@@ -633,14 +634,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             return files
         }
 
-        GCommons.verify().exists( files as File[] )
+        verify().exists( files as File[] )
 
         if ( ! filterExpression )
         {
             return files
         }
 
-        String           expression    = GCommons.verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
+        String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
         Object           o             = GMojoUtils.groovy( expression, Object, groovyConfig, 'files', files )
         Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                           ( o instanceof Collection ) ? (( Collection<File> ) o ) :
@@ -651,7 +652,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( verbose )
         {
-            log.info( "Files left after applying <filter>:${ GCommons.constants().CRLF }${ GMojoUtils.stars( filesIncluded ) }" )
+            log.info( "Files left after applying <filter>:${ constants().CRLF }${ GMojoUtils.stars( filesIncluded ) }" )
         }
 
         filesIncluded
@@ -675,7 +676,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             return
         }
 
-        GCommons.verify().exists( files as File[] )
+        verify().exists( files as File[] )
 
         if ( processExpression )
         {

@@ -1,6 +1,6 @@
 package com.goldin.plugins.springbatch
 
-import com.goldin.gcommons.GCommons
+import static com.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.plugin.MojoFailureException
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
@@ -8,7 +8,8 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.springframework.core.io.ClassPathResource
 import com.goldin.plugins.common.*
 
- /**
+
+/**
  * Spring Batch invoker
  */
 @MojoGoal  ( "run" )
@@ -25,7 +26,7 @@ class SpringBatchMojo extends BaseGroovyMojo
     */
     @MojoParameter ( required = true )
     public String configLocations
-    public String configLocations(){ GCommons.verify().notNullOrEmpty( this.configLocations ) }
+    public String configLocations(){ verify().notNullOrEmpty( this.configLocations ) }
 
 
     /**
@@ -33,7 +34,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      */
     @MojoParameter ( required = true )
     public String jobId
-    public String jobId(){ GCommons.verify().notNullOrEmpty( this.jobId )}
+    public String jobId(){ verify().notNullOrEmpty( this.jobId )}
 
 
     /**
@@ -90,7 +91,7 @@ class SpringBatchMojo extends BaseGroovyMojo
         def         isSet                = { String s -> ( s != null ) && ( ! s.equalsIgnoreCase( "none" )) }
         String[]    paramsSplit          = isSet( params()) ? params().trim().split() : new String[ 0 ]
         Set<String> optsSplit            = ( isSet( opts()) ? opts().trim().split()   : [] ) as Set
-        
+
         if ( isSet( props()))
         {
             configLocationsSplit = [ *configLocationsSplit, propertiesConfigLocation( props()) ] as String[]
@@ -98,10 +99,10 @@ class SpringBatchMojo extends BaseGroovyMojo
 
         def builder = new StringBuilder()
         configLocationsSplit.eachWithIndex {
-            
+
             String configLocation, int index ->
-            
-            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? GCommons.constants().CRLF : "" )
+
+            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constants().CRLF : "" )
             def location = ( configLocation.startsWith( 'classpath:' ) ?
                                 new ClassPathResource( configLocation.substring( 'classpath:'.length())).getURL() :
                                 null );
@@ -141,17 +142,17 @@ options         : $optsSplit
      */
     private String propertiesConfigLocation( String propertiesValue )
     {
-        GCommons.verify().notNullOrEmpty( propertiesValue )
+        verify().notNullOrEmpty( propertiesValue )
 
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
         def lines      = propertiesValue.splitWith( 'eachLine', String ).collect { it.trim().replace( '\\', '/' ) }
-        def properties = [ '', *lines ].join( "${ GCommons.constants().CRLF }${ ' ' * 16 }" )
+        def properties = [ '', *lines ].join( "${ constants().CRLF }${ ' ' * 16 }" )
         def text       = GMojoUtils.makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 
         file.write( text )
 
         def filePath   = file.canonicalPath
-        log.info( "Properties bean written to [$filePath]:${ GCommons.constants().CRLF }$text" )
+        log.info( "Properties bean written to [$filePath]:${ constants().CRLF }$text" )
         "file:$filePath"
     }
 }

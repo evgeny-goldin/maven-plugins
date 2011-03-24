@@ -1,6 +1,7 @@
 package com.goldin.plugins.jenkins
 
-import com.goldin.gcommons.GCommons
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * Source repository location
@@ -131,7 +132,7 @@ class Repository
     */
     String getRemotePathLink( String path )
     {
-        GCommons.verify().notNullOrEmpty( path )
+        verify().notNullOrEmpty( path )
 
         ( isGit() ? "${ remoteLink }/${ isGitorious() ? 'blobs' : 'blob' }/${ gitBranch }" :
                     remoteLink ) +

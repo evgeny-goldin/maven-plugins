@@ -1,6 +1,5 @@
 package com.goldin.plugins.common
 
-import com.goldin.gcommons.GCommons
 import org.apache.maven.artifact.repository.ArtifactRepository
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.PluginManager
@@ -8,8 +7,10 @@ import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
+import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+
+/**
  * Base GroovyMojo class
  */
 abstract class BaseGroovyMojo extends GroovyMojo
@@ -34,18 +35,18 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     @MojoParameter ( expression = '${project.build.directory}', required = true )
     public File buildDirectory
-    public File buildDirectory() { GCommons.file().mkdirs( this.buildDirectory ); this.buildDirectory }
+    public File buildDirectory() { file().mkdirs( this.buildDirectory ); this.buildDirectory }
 
     @MojoParameter ( expression = '${project.build.outputDirectory}' )
     public File outputDirectory
-    public File outputDirectory() { GCommons.file().mkdirs( this.outputDirectory ); this.outputDirectory }
+    public File outputDirectory() { file().mkdirs( this.outputDirectory ); this.outputDirectory }
 
 
     @Override
     public void execute()
     {
-        GMojoUtils.mopInit()
         ThreadLocals.set( log, mavenProject, mavenSession )
+        GMojoUtils.mopInit()
         if ( ! GMojoUtils.runIf( runIf )) { return }
 
         doExecute()

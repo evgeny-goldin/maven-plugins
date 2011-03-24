@@ -1,6 +1,5 @@
 package com.goldin.plugins.mail
 
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
@@ -10,6 +9,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import javax.mail.*
+import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**
@@ -50,8 +50,8 @@ public class MailMojo extends BaseGroovyMojo
     void doExecute()
     {
         Properties props = new Properties()
-        props[ 'mail.smtp.host' ] = GCommons.verify().notNullOrEmpty( smtp )
-        props[ 'mail.from'      ] = GCommons.verify().notNullOrEmpty( from )
+        props[ 'mail.smtp.host' ] = verify().notNullOrEmpty( smtp )
+        props[ 'mail.from'      ] = verify().notNullOrEmpty( from )
 
         Message             message    = new MimeMessage( Session.getInstance( props, null ))
         Map<String, String> recipients = setRecipients( message, mails )
@@ -146,7 +146,7 @@ public class MailMojo extends BaseGroovyMojo
     private static MimeBodyPart textBodyPart( String text, File file )
     {
         MimeBodyPart mbp = new MimeBodyPart()
-        mbp.text = "$text${ GCommons.constants().CRLF }${ file ? file.text : '' }"
+        mbp.text = "$text${ constants().CRLF }${ file ? file.text : '' }"
         mbp
     }
 

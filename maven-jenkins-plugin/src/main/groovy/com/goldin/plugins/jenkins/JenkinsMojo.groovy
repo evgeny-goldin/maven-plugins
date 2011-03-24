@@ -1,6 +1,5 @@
 package com.goldin.plugins.jenkins
 
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.jenkins.Job.JOB_TYPE
@@ -9,6 +8,8 @@ import org.apache.maven.plugin.MojoFailureException
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * Plugin that creates Jenkins config files to define new build projects
@@ -24,12 +25,12 @@ public class JenkinsMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = true )
     public String jenkinsUrl
-    public String jenkinsUrl() { GCommons.verify().notNullOrEmpty( this.jenkinsUrl ) }
+    public String jenkinsUrl() { verify().notNullOrEmpty( this.jenkinsUrl ) }
 
 
     @MojoParameter ( required = true )
     public String generationPom
-    public String generationPom() { GCommons.verify().notNullOrEmpty( this.generationPom ) }
+    public String generationPom() { verify().notNullOrEmpty( this.generationPom ) }
 
 
     @MojoParameter ( required = true, defaultValue = '${project.build.directory}' )
@@ -61,7 +62,7 @@ public class JenkinsMojo extends BaseGroovyMojo
     @MojoParameter
     public Job   job
 
-    private Job[] jobs() { GCommons.general().array( this.jobs, this.job, Job )  }
+    private Job[] jobs() { general().array( this.jobs, this.job, Job )  }
 
 
     @Override
@@ -99,12 +100,12 @@ public class JenkinsMojo extends BaseGroovyMojo
             else
             {
                 File   configFile = new File( outputDirectory, "${ job.id }/config.xml" )
-                GCommons.file().mkdirs( configFile.parentFile )
+                file().mkdirs( configFile.parentFile )
 
                 def timestamp = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
                 def config    = GMojoUtils.makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
 
-                configFile.write( GCommons.verify().notNullOrEmpty( config ))
+                configFile.write( verify().notNullOrEmpty( config ))
                 assert (( configFile.isFile()) && ( configFile.size() == config.size()) && ( configFile.text == config ))
 
                 configPath = GMojoUtils.validate( configFile ).canonicalPath
@@ -128,7 +129,7 @@ public class JenkinsMojo extends BaseGroovyMojo
     */
     private Collection<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
-        GCommons.verify().notNullOrEmpty( jenkinsUrl, generationPom, svnRepositoryLocalBase )
+        verify().notNullOrEmpty( jenkinsUrl, generationPom, svnRepositoryLocalBase )
 
         Map<String, Job> allJobs = new LinkedHashMap<String, Job>()
 
@@ -152,15 +153,15 @@ public class JenkinsMojo extends BaseGroovyMojo
             {
                 Repository repo ->
 
-                repo.remote = GCommons.verify().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
-                assert  ( ! ( GCommons.verify().notNullOrEmpty( repo.remote )).endsWith( '/' ))
+                repo.remote = verify().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
+                assert  ( ! ( verify().notNullOrEmpty( repo.remote )).endsWith( '/' ))
 
                 if (( ! repo.local ) && ( repo.svn ))
                 {
                     int index                    = repo.remote.lastIndexOf( svnRepositoryLocalBase )
                     if     ( index < 0 ) { index = repo.remote.lastIndexOf( '/' ) + 1 } // last path chunk
                     assert ( index > 0 )
-                    repo.local = GCommons.verify().notNullOrEmpty( repo.remote.substring( index ))
+                    repo.local = verify().notNullOrEmpty( repo.remote.substring( index ))
                 }
             }
         }

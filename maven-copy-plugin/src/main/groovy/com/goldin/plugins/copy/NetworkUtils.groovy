@@ -1,7 +1,7 @@
 package com.goldin.plugins.copy
 
 
-import com.goldin.gcommons.GCommons
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.goldin.plugins.common.CustomAntBuilder
@@ -13,7 +13,7 @@ import static com.goldin.plugins.common.GMojoUtils.stars
 import com.goldin.gcommons.beans.ExecOption
 
 
- /**
+/**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Various network related util methods
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,20 +34,20 @@ class NetworkUtils
      */
     static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
     {
-        GCommons.verify().notNull( resource )
-        GCommons.verify().notNullOrEmpty( remotePath )
-        assert GCommons.net().isNet( remotePath )
-        GCommons.verify().directory( targetDirectory )
+        verify().notNull( resource )
+        verify().notNullOrEmpty( remotePath )
+        assert net().isNet( remotePath )
+        verify().directory( targetDirectory )
 
-        if ( GCommons.net().isHttp( remotePath ))
+        if ( net().isHttp( remotePath ))
         {
             httpDownload( targetDirectory, remotePath, verbose )
         }
-        else if ( GCommons.net().isFtp( remotePath ))
+        else if ( net().isFtp( remotePath ))
         {
             ftpDownload( targetDirectory, remotePath, resource, groovyConfig, verbose )
         }
-        else if ( GCommons.net().isScp( remotePath ))
+        else if ( net().isScp( remotePath ))
         {
             scpDownload( targetDirectory, remotePath, verbose )
         }
@@ -76,25 +76,25 @@ class NetworkUtils
                                 boolean      failIfNotFound )
     {
         assert remotePaths
-        GCommons.verify().notNullOrEmpty( *remotePaths )
-        GCommons.verify().directory( directory )
+        verify().notNullOrEmpty( *remotePaths )
+        verify().directory( directory )
 
         for ( remotePath in remotePaths )
         {
-            assert GCommons.net().isNet( remotePath )
+            assert net().isNet( remotePath )
 
-            if ( GCommons.net().isHttp( remotePath ))
+            if ( net().isHttp( remotePath ))
             {
                 throw new RuntimeException( "HTTP upload is not implemented yet: http://evgeny-goldin.org/youtrack/issue/pl-312" )
             }
 
-            for ( file in GCommons.file().files( directory, includes, excludes, true, false, failIfNotFound ))
+            for ( file in file().files( directory, includes, excludes, true, false, failIfNotFound ))
             {
-                if ( GCommons.net().isScp( remotePath ))
+                if ( net().isScp( remotePath ))
                 {
                     scpUpload( file, remotePath, verbose )
                 }
-                else if ( GCommons.net().isFtp( remotePath ))
+                else if ( net().isFtp( remotePath ))
                 {
                     ftpUpload( file, remotePath, verbose )
                 }
@@ -120,8 +120,8 @@ class NetworkUtils
                                       String  httpUrl,
                                       boolean verbose )
     {
-        GCommons.file().mkdirs( parentDirectory )
-        assert ( GCommons.net().isHttp( httpUrl ))
+        file().mkdirs( parentDirectory )
+        assert ( net().isHttp( httpUrl ))
 
         BufferedInputStream  bis           = null
         BufferedOutputStream bos           = null
@@ -132,7 +132,7 @@ class NetworkUtils
 
         localFile.withOutputStream { OutputStream os ->  httpUrl.toURL().eachByte( 10240 ) { byte[] buffer, int bytes -> os.write( buffer, 0, bytes ) }}
 
-        GCommons.verify().file( localFile )
+        verify().file( localFile )
         if ( verbose ) { log.info( "[$httpUrl] downloaded to [$localFile.canonicalPath]" )}
         localFile
     }
@@ -162,18 +162,18 @@ class NetworkUtils
                               GroovyConfig groovyConfig,
                               boolean      verbose )
     {
-        GCommons.file().mkdirs( localDirectory )
+        file().mkdirs( localDirectory )
         assert resource.includes, "<include> or <includes> should be specified for FTP download"
 
         List<String>        includes = new ArrayList<String>( resource.includes )
         List<String>        excludes = new ArrayList<String>( resource.excludes )
-        Map<String, String> ftpData  = GCommons.net().parseNetworkPath( remotePath )
+        Map<String, String> ftpData  = net().parseNetworkPath( remotePath )
         String  remotePathLog        = "${ ftpData[ 'protocol' ] }://${ ftpData[ 'username' ] }@${ ftpData[ 'host' ] }${ ftpData[ 'directory' ] }"
         boolean isList               = ( resource.curl || resource.wget )
         def     commandParts         = ( resource.curl ?: resource.wget ?: null )?.split( /\|/ ) // "wget|ftp-list.txt|true|false"
         def     command              = ( isList ? commandParts[ 0 ] : null )
         def     listFile             = ( isList ? (( commandParts.size() > 1 ) ? new File ( commandParts[ 1 ] ) :
-                                                                                 new File ( GCommons.constants().USER_DIR_FILE, 'ftp-list.txt' )) :
+                                                                                 new File ( constants().USER_DIR_FILE, 'ftp-list.txt' )) :
                                                   null )
         def     deleteListFile       = ( isList && commandParts.size() > 2 ) ? Boolean.valueOf( commandParts[ 2 ] ) : true
         def     nativeListing        = ( isList && commandParts.size() > 3 ) ? Boolean.valueOf( commandParts[ 3 ] ) : false
@@ -184,7 +184,7 @@ class NetworkUtils
         def     newList              = true
         def     previousList         = ''
 
-        if ( listFile ) { GCommons.file().mkdirs( listFile.parentFile ) }
+        if ( listFile ) { file().mkdirs( listFile.parentFile ) }
 
         if ( ftpData[ 'directory' ] != '/' )
         {   /**
@@ -214,7 +214,7 @@ Delete list file  : [$deleteListFile]
 Native FTP listing: [$nativeListing]
 Verbose           : [$verbose]
 Number of retries : [$resource.retries]
-Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommons.constants().SECONDS_IN_MINUTE ) } min)
+Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constants().SECONDS_IN_MINUTE ) } min)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""" )
 
             try
@@ -225,7 +225,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
 
                 if ( isList && nativeListing )
                 {
-                    for ( file in GCommons.net().listFiles( remotePath, includes, excludes, 1 ))
+                    for ( file in net().listFiles( remotePath, includes, excludes, 1 ))
                     {
                         listFile.append( FTP.listSingleFile( ftpData[ 'host' ], file.path, file.size ) + "\n" )
                     }
@@ -253,8 +253,8 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
 
                 if ( isList )
                 {
-                    def listFileText  = GCommons.verify().file( listFile ).text
-                    log.info( "List file is stored at [$listFilePath]:${ GCommons.constants().CRLF }${ listFileText }" )
+                    def listFileText  = verify().file( listFile ).text
+                    log.info( "List file is stored at [$listFilePath]:${ constants().CRLF }${ listFileText }" )
 
                     /**
                      * Creating a Map of files: "file name" => "file size"
@@ -283,7 +283,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
 
                         if ( verbose )
                         {
-                            log.info( "Files to download after applying <listFilter>:${ GCommons.constants().CRLF }${ stars( listFileMap.keySet()) }" )
+                            log.info( "Files to download after applying <listFilter>:${ constants().CRLF }${ stars( listFileMap.keySet()) }" )
                         }
                     }
 
@@ -295,13 +295,13 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                         download( ftpUrl, size, ftpData, localDirectory, resource.curl, command, verbose, resource.timeout, resource.retries, index, nFiles )
                     }
 
-                    if ( deleteListFile ) { GCommons.file().delete( listFile ) }
+                    if ( deleteListFile ) { file().delete( listFile ) }
                 }
 
                 long totalTimeMs  = ( System.currentTimeMillis() - t )
                 log.info( "Attempt [$retryCount]: done, " +
-                          "[${ totalTimeMs.intdiv( GCommons.constants().MILLIS_IN_SECOND ) }] sec "+
-                          "(${ totalTimeMs.intdiv( GCommons.constants().MILLIS_IN_MINUTE ) } min)" )
+                          "[${ totalTimeMs.intdiv( constants().MILLIS_IN_SECOND ) }] sec "+
+                          "(${ totalTimeMs.intdiv( constants().MILLIS_IN_MINUTE ) } min)" )
                 return
             }
             catch ( e )
@@ -322,7 +322,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                     excludes       += sessionList.collect{ // "ftp://server//path/to/file|size" => "path/to/file"
                                                            it.replaceAll( /^ftp:\/\/[^\/]+\/+|\|\d+$/, '' ) }
 
-                    log.info( "Files listed in this session are added to excludes: ${ GCommons.constants().CRLF }${ stars( sessionList ) }" )
+                    log.info( "Files listed in this session are added to excludes: ${ constants().CRLF }${ stars( sessionList ) }" )
                 }
             }
         }
@@ -351,7 +351,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
             "Not implemented yet" :
             "$command -S -${ verbose ? '' : 'n' }v -O \"$destFile\" -T 300 \"$ftpUrl\" --ftp-user=${ ftpData.username } --ftp-password=${ ftpData.password }"
 
-        GCommons.file().delete( destFile )
+        file().delete( destFile )
         log.info( "[$ftpUrl] => [$destFilePath]: Started (file [${ fileIndex + 1 }] of [$totalFiles], " +
                   "[${ fileSize.intdiv( 1024 ) }] Kb)" )
 
@@ -365,10 +365,10 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
 
         for ( def attempts = 1; ( attempts <= maxAttempts ); attempts++ )
         {
-            GCommons.file().delete( destFile )
+            file().delete( destFile )
             long t           = System.currentTimeMillis()
-            GCommons.general().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * GCommons.constants().MILLIS_IN_SECOND ), localDirectory )
-            long fileSizeNow = GCommons.verify().file( destFile ).length()
+            general().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * constants().MILLIS_IN_SECOND ), localDirectory )
+            long fileSizeNow = verify().file( destFile ).length()
 
             if ( fileSizeNow == fileSize )
             {
@@ -391,9 +391,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                             String  remotePath,
                             boolean verbose )
     {
-        def data = GCommons.net().parseNetworkPath( remotePath )
+        def data = net().parseNetworkPath( remotePath )
         assert 'ftp' == data[ 'protocol' ]
-        GCommons.verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
@@ -416,9 +416,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                               String  remotePath,
                               boolean verbose )
     {
-        def data = GCommons.net().parseNetworkPath( remotePath )
+        def data = net().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
-        GCommons.verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
@@ -438,9 +438,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( GCommon
                             String  remotePath,
                             boolean verbose )
     {
-        def data = GCommons.net().parseNetworkPath( remotePath )
+        def data = net().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
-        GCommons.verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html

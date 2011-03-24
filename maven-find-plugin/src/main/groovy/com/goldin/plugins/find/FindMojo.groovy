@@ -1,11 +1,11 @@
 package com.goldin.plugins.find
 
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.goldin.plugins.common.GMojoUtils
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**
@@ -43,10 +43,10 @@ class FindMojo extends BaseGroovyMojo
      */
     void doExecute()
     {
-        File file = find( startDir )
-        if ( file )
+        File foundFile = find( startDir )
+        if ( foundFile )
         {
-            def path = GCommons.verify().exists( file ).canonicalPath
+            def path = foundFile.canonicalPath
 
             if ( propertyName )
             {
@@ -70,7 +70,7 @@ class FindMojo extends BaseGroovyMojo
      */
     private File find( File startDir )
     {
-        GCommons.verify().directory( startDir )
+        verify().directory( startDir )
 
         log.info( "Looking for [$file] starting from [$startDir.canonicalPath]" )
 
