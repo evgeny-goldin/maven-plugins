@@ -70,7 +70,7 @@ class FindMojo extends BaseGroovyMojo
      */
     private File find( File startDir )
     {
-        verify().directory( startDir )
+        verifyBean().directory( startDir )
 
         log.info( "Looking for [$file] starting from [$startDir.canonicalPath]" )
 

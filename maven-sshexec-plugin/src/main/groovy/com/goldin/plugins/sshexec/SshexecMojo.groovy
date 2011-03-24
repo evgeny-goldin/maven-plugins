@@ -56,7 +56,7 @@ public class SshexecMojo extends BaseGroovyMojo
      */
     private String[] commands ()
     {
-        String[] commands = general().array( this.commands, this.command, String )
+        String[] commands = generalBean().array( this.commands, this.command, String )
         commands          = commands*.split( /,|;/ ).flatten()*.trim().findAll{ it }.
                             collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
                             flatten()
@@ -74,7 +74,7 @@ public class SshexecMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        Map<String, String> data      = net().parseNetworkPath( location )
+        Map<String, String> data      = netBean().parseNetworkPath( location )
         String              username  = data[ 'username' ]
         String              password  = data[ 'password' ]
         String              host      = data[ 'host' ]

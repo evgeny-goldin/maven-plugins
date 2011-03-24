@@ -50,8 +50,8 @@ public class MailMojo extends BaseGroovyMojo
     void doExecute()
     {
         Properties props = new Properties()
-        props[ 'mail.smtp.host' ] = verify().notNullOrEmpty( smtp )
-        props[ 'mail.from'      ] = verify().notNullOrEmpty( from )
+        props[ 'mail.smtp.host' ] = verifyBean().notNullOrEmpty( smtp )
+        props[ 'mail.from'      ] = verifyBean().notNullOrEmpty( from )
 
         Message             message    = new MimeMessage( Session.getInstance( props, null ))
         Map<String, String> recipients = setRecipients( message, mails )
@@ -146,7 +146,7 @@ public class MailMojo extends BaseGroovyMojo
     private static MimeBodyPart textBodyPart( String text, File file )
     {
         MimeBodyPart mbp = new MimeBodyPart()
-        mbp.text = "$text${ constants().CRLF }${ file ? file.text : '' }"
+        mbp.text = "$text${ constantsBean().CRLF }${ file ? file.text : '' }"
         mbp
     }
 

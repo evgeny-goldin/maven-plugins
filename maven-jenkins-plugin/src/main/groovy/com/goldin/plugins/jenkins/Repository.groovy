@@ -132,7 +132,7 @@ class Repository
     */
     String getRemotePathLink( String path )
     {
-        verify().notNullOrEmpty( path )
+        verifyBean().notNullOrEmpty( path )
 
         ( isGit() ? "${ remoteLink }/${ isGitorious() ? 'blobs' : 'blob' }/${ gitBranch }" :
                     remoteLink ) +

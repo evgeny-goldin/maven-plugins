@@ -27,7 +27,7 @@ class PropertiesMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig = new GroovyConfig()
 
-    private Property[] properties() { general().array( this.properties, this.property, Property ) }
+    private Property[] properties() { generalBean().array( this.properties, this.property, Property ) }
 
 
     @Override
@@ -37,7 +37,7 @@ class PropertiesMojo extends BaseGroovyMojo
         {
             String name      = property.name?.trim()
             String value     = property.value?.trim()
-            def    isVerbose = general().choose( property.verbose, verbose )
+            def    isVerbose = generalBean().choose( property.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {

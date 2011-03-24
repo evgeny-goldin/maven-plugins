@@ -34,20 +34,20 @@ class NetworkUtils
      */
     static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
     {
-        verify().notNull( resource )
-        verify().notNullOrEmpty( remotePath )
-        assert net().isNet( remotePath )
-        verify().directory( targetDirectory )
+        verifyBean().notNull( resource )
+        verifyBean().notNullOrEmpty( remotePath )
+        assert netBean().isNet( remotePath )
+        verifyBean().directory( targetDirectory )
 
-        if ( net().isHttp( remotePath ))
+        if ( netBean().isHttp( remotePath ))
         {
             httpDownload( targetDirectory, remotePath, verbose )
         }
-        else if ( net().isFtp( remotePath ))
+        else if ( netBean().isFtp( remotePath ))
         {
             ftpDownload( targetDirectory, remotePath, resource, groovyConfig, verbose )
         }
-        else if ( net().isScp( remotePath ))
+        else if ( netBean().isScp( remotePath ))
         {
             scpDownload( targetDirectory, remotePath, verbose )
         }
@@ -76,25 +76,25 @@ class NetworkUtils
                                 boolean      failIfNotFound )
     {
         assert remotePaths
-        verify().notNullOrEmpty( *remotePaths )
-        verify().directory( directory )
+        verifyBean().notNullOrEmpty( *remotePaths )
+        verifyBean().directory( directory )
 
         for ( remotePath in remotePaths )
         {
-            assert net().isNet( remotePath )
+            assert netBean().isNet( remotePath )
 
-            if ( net().isHttp( remotePath ))
+            if ( netBean().isHttp( remotePath ))
             {
                 throw new RuntimeException( "HTTP upload is not implemented yet: http://evgeny-goldin.org/youtrack/issue/pl-312" )
             }
 
-            for ( file in file().files( directory, includes, excludes, true, false, failIfNotFound ))
+            for ( file in fileBean().files( directory, includes, excludes, true, false, failIfNotFound ))
             {
-                if ( net().isScp( remotePath ))
+                if ( netBean().isScp( remotePath ))
                 {
                     scpUpload( file, remotePath, verbose )
                 }
-                else if ( net().isFtp( remotePath ))
+                else if ( netBean().isFtp( remotePath ))
                 {
                     ftpUpload( file, remotePath, verbose )
                 }
@@ -120,8 +120,8 @@ class NetworkUtils
                                       String  httpUrl,
                                       boolean verbose )
     {
-        file().mkdirs( parentDirectory )
-        assert ( net().isHttp( httpUrl ))
+        fileBean().mkdirs( parentDirectory )
+        assert ( netBean().isHttp( httpUrl ))
 
         BufferedInputStream  bis           = null
         BufferedOutputStream bos           = null
@@ -132,7 +132,7 @@ class NetworkUtils
 
         localFile.withOutputStream { OutputStream os ->  httpUrl.toURL().eachByte( 10240 ) { byte[] buffer, int bytes -> os.write( buffer, 0, bytes ) }}
 
-        verify().file( localFile )
+        verifyBean().file( localFile )
         if ( verbose ) { log.info( "[$httpUrl] downloaded to [$localFile.canonicalPath]" )}
         localFile
     }
@@ -162,18 +162,18 @@ class NetworkUtils
                               GroovyConfig groovyConfig,
                               boolean      verbose )
     {
-        file().mkdirs( localDirectory )
+        fileBean().mkdirs( localDirectory )
         assert resource.includes, "<include> or <includes> should be specified for FTP download"
 
         List<String>        includes = new ArrayList<String>( resource.includes )
         List<String>        excludes = new ArrayList<String>( resource.excludes )
-        Map<String, String> ftpData  = net().parseNetworkPath( remotePath )
+        Map<String, String> ftpData  = netBean().parseNetworkPath( remotePath )
         String  remotePathLog        = "${ ftpData[ 'protocol' ] }://${ ftpData[ 'username' ] }@${ ftpData[ 'host' ] }${ ftpData[ 'directory' ] }"
         boolean isList               = ( resource.curl || resource.wget )
         def     commandParts         = ( resource.curl ?: resource.wget ?: null )?.split( /\|/ ) // "wget|ftp-list.txt|true|false"
         def     command              = ( isList ? commandParts[ 0 ] : null )
         def     listFile             = ( isList ? (( commandParts.size() > 1 ) ? new File ( commandParts[ 1 ] ) :
-                                                                                 new File ( constants().USER_DIR_FILE, 'ftp-list.txt' )) :
+                                                                                 new File ( constantsBean().USER_DIR_FILE, 'ftp-list.txt' )) :
                                                   null )
         def     deleteListFile       = ( isList && commandParts.size() > 2 ) ? Boolean.valueOf( commandParts[ 2 ] ) : true
         def     nativeListing        = ( isList && commandParts.size() > 3 ) ? Boolean.valueOf( commandParts[ 3 ] ) : false
@@ -184,7 +184,7 @@ class NetworkUtils
         def     newList              = true
         def     previousList         = ''
 
-        if ( listFile ) { file().mkdirs( listFile.parentFile ) }
+        if ( listFile ) { fileBean().mkdirs( listFile.parentFile ) }
 
         if ( ftpData[ 'directory' ] != '/' )
         {   /**
@@ -214,7 +214,7 @@ Delete list file  : [$deleteListFile]
 Native FTP listing: [$nativeListing]
 Verbose           : [$verbose]
 Number of retries : [$resource.retries]
-Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constants().SECONDS_IN_MINUTE ) } min)
+Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constantsBean().SECONDS_IN_MINUTE ) } min)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""" )
 
             try
@@ -225,7 +225,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                 if ( isList && nativeListing )
                 {
-                    for ( file in net().listFiles( remotePath, includes, excludes, 1 ))
+                    for ( file in netBean().listFiles( remotePath, includes, excludes, 1 ))
                     {
                         listFile.append( FTP.listSingleFile( ftpData[ 'host' ], file.path, file.size ) + "\n" )
                     }
@@ -253,8 +253,8 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                 if ( isList )
                 {
-                    def listFileText  = verify().file( listFile ).text
-                    log.info( "List file is stored at [$listFilePath]:${ constants().CRLF }${ listFileText }" )
+                    def listFileText  = verifyBean().file( listFile ).text
+                    log.info( "List file is stored at [$listFilePath]:${ constantsBean().CRLF }${ listFileText }" )
 
                     /**
                      * Creating a Map of files: "file name" => "file size"
@@ -283,7 +283,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                         if ( verbose )
                         {
-                            log.info( "Files to download after applying <listFilter>:${ constants().CRLF }${ stars( listFileMap.keySet()) }" )
+                            log.info( "Files to download after applying <listFilter>:${ constantsBean().CRLF }${ stars( listFileMap.keySet()) }" )
                         }
                     }
 
@@ -295,13 +295,13 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                         download( ftpUrl, size, ftpData, localDirectory, resource.curl, command, verbose, resource.timeout, resource.retries, index, nFiles )
                     }
 
-                    if ( deleteListFile ) { file().delete( listFile ) }
+                    if ( deleteListFile ) { fileBean().delete( listFile ) }
                 }
 
                 long totalTimeMs  = ( System.currentTimeMillis() - t )
                 log.info( "Attempt [$retryCount]: done, " +
-                          "[${ totalTimeMs.intdiv( constants().MILLIS_IN_SECOND ) }] sec "+
-                          "(${ totalTimeMs.intdiv( constants().MILLIS_IN_MINUTE ) } min)" )
+                          "[${ totalTimeMs.intdiv( constantsBean().MILLIS_IN_SECOND ) }] sec "+
+                          "(${ totalTimeMs.intdiv( constantsBean().MILLIS_IN_MINUTE ) } min)" )
                 return
             }
             catch ( e )
@@ -322,7 +322,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                     excludes       += sessionList.collect{ // "ftp://server//path/to/file|size" => "path/to/file"
                                                            it.replaceAll( /^ftp:\/\/[^\/]+\/+|\|\d+$/, '' ) }
 
-                    log.info( "Files listed in this session are added to excludes: ${ constants().CRLF }${ stars( sessionList ) }" )
+                    log.info( "Files listed in this session are added to excludes: ${ constantsBean().CRLF }${ stars( sessionList ) }" )
                 }
             }
         }
@@ -351,7 +351,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
             "Not implemented yet" :
             "$command -S -${ verbose ? '' : 'n' }v -O \"$destFile\" -T 300 \"$ftpUrl\" --ftp-user=${ ftpData.username } --ftp-password=${ ftpData.password }"
 
-        file().delete( destFile )
+        fileBean().delete( destFile )
         log.info( "[$ftpUrl] => [$destFilePath]: Started (file [${ fileIndex + 1 }] of [$totalFiles], " +
                   "[${ fileSize.intdiv( 1024 ) }] Kb)" )
 
@@ -365,10 +365,10 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
         for ( def attempts = 1; ( attempts <= maxAttempts ); attempts++ )
         {
-            file().delete( destFile )
+            fileBean().delete( destFile )
             long t           = System.currentTimeMillis()
-            general().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * constants().MILLIS_IN_SECOND ), localDirectory )
-            long fileSizeNow = verify().file( destFile ).length()
+            generalBean().execute( exec, ExecOption.CommonsExec, sout, serr, ( timeoutSec * constantsBean().MILLIS_IN_SECOND ), localDirectory )
+            long fileSizeNow = verifyBean().file( destFile ).length()
 
             if ( fileSizeNow == fileSize )
             {
@@ -391,9 +391,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                             String  remotePath,
                             boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        def data = netBean().parseNetworkPath( remotePath )
         assert 'ftp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verifyBean().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
@@ -416,9 +416,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                               String  remotePath,
                               boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        def data = netBean().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verifyBean().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
@@ -438,9 +438,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                             String  remotePath,
                             boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        def data = netBean().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        verifyBean().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
