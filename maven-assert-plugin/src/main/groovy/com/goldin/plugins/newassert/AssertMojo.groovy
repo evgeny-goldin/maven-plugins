@@ -1,13 +1,14 @@
 package com.goldin.plugins.newassert
 
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.goldin.plugins.common.GMojoUtils
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+
+/**
  * Asserts invoker
  */
 @MojoGoal  ( "assert" )
@@ -106,7 +107,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            GCommons.verify().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().findAll{ it }.each { callback( it ) }
+            verify().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().findAll{ it }.each { callback( it ) }
         }
     }
 
@@ -142,10 +143,10 @@ class AssertMojo extends BaseGroovyMojo
 
                 File       basedir        = new File( line.substring( 0, j ))
                 String     includePattern = line.substring( j + 1 )
-                Collection c              = GCommons.file().files( basedir, [ includePattern ], [], true, false, false )
+                Collection c              = file().files( basedir, [ includePattern ], [], true, false, false )
                 assert     c, "File pattern [$line] - no files matched"
 
-                log.info( "File pattern [$line] - [${ c.size()}] file${ GCommons.general().s( c.size()) } matched" )
+                log.info( "File pattern [$line] - [${ c.size()}] file${ general().s( c.size()) } matched" )
             }
             else
             {
@@ -188,7 +189,7 @@ class AssertMojo extends BaseGroovyMojo
                 "Verifying [${ file1.canonicalPath }]/[$pattern] file(s) have corresponding and identical file(s) in [${ file2.canonicalPath }]" :
                 "Verifying [${ file1.canonicalPath }] is identical to [${ file2.canonicalPath }]" )
 
-            int filesChecked = GCommons.verify().equal( file1, file2, verifyChecksum, pattern, endOfLine )
+            int filesChecked = verify().equal( file1, file2, verifyChecksum, pattern, endOfLine )
 
             log.info( "[${ file1.canonicalPath }] is identical to [${ file2.canonicalPath }] " +
                            "($filesChecked file${ ( filesChecked == 1 ) ? '' : 's' } checked)" )

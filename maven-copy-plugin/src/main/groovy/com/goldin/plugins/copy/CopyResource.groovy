@@ -1,8 +1,9 @@
 package com.goldin.plugins.copy
 
-import com.goldin.gcommons.GCommons
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.Replace
 import org.apache.maven.model.Resource
+
 
 /**
  * <resource> data container
@@ -14,20 +15,20 @@ class CopyResource extends Resource
      */
 
     String[] targetPaths
-    String[] targetPaths() { GCommons.general().array( this.targetPaths, getTargetPath(), String ) }
+    String[] targetPaths() { general().array( this.targetPaths, getTargetPath(), String ) }
 
     Replace[] replaces
     Replace   replace
-    Replace[] replaces () { GCommons.general().array( this.replaces, this.replace, Replace ) }
+    Replace[] replaces () { general().array( this.replaces, this.replace, Replace ) }
 
 
     CopyDependency[] dependencies
     CopyDependency   dependency
-    CopyDependency[] dependencies () { GCommons.general().array( this.dependencies, this.dependency, CopyDependency ) }
+    CopyDependency[] dependencies () { general().array( this.dependencies, this.dependency, CopyDependency ) }
 
     String[] zipEntries
     String   zipEntry
-    String[] zipEntries () { GCommons.general().array( this.zipEntries, this.zipEntry, String ) }
+    String[] zipEntries () { general().array( this.zipEntries, this.zipEntry, String ) }
 
 
     /**

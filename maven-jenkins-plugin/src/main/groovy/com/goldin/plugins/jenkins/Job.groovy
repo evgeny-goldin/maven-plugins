@@ -1,7 +1,7 @@
 package com.goldin.plugins.jenkins
 
 
-import com.goldin.gcommons.GCommons
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.jenkins.beans.*
 
@@ -126,15 +126,15 @@ class Job
 
     Trigger[]            triggers
     Trigger              trigger
-    Trigger[]            triggers() { GCommons.general().array( this.triggers, this.trigger, Trigger ) }
+    Trigger[]            triggers() { general().array( this.triggers, this.trigger, Trigger ) }
 
     Parameter[]          parameters
     Parameter            parameter
-    Parameter[]          parameters() { GCommons.general().array( this.parameters, this.parameter, Parameter ) }
+    Parameter[]          parameters() { general().array( this.parameters, this.parameter, Parameter ) }
 
     Repository[]         repositories
     Repository           repository
-    Repository[]         repositories() { GCommons.general().array( this.repositories, this.repository, Repository ) }
+    Repository[]         repositories() { general().array( this.repositories, this.repository, Repository ) }
 
 
     /**
@@ -212,11 +212,11 @@ class Job
     */
     void extend ( Job parentJob, override = false )
     {
-        set( 'description',       parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, '&nbsp;' )
-        set( 'scmType',           parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, 'svn' )
-        set( 'jobType',           parentJob, override, { GCommons.verify().notNullOrEmpty( it.toString() )}, JOB_TYPE.maven )
-        set( 'node',              parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, 'master' )
-        set( 'jdkName',           parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, '(Default)' )
+        set( 'description',       parentJob, override, { verify().notNullOrEmpty( it )}, '&nbsp;' )
+        set( 'scmType',           parentJob, override, { verify().notNullOrEmpty( it )}, 'svn' )
+        set( 'jobType',           parentJob, override, { verify().notNullOrEmpty( it.toString() )}, JOB_TYPE.maven )
+        set( 'node',              parentJob, override, { verify().notNullOrEmpty( it )}, 'master' )
+        set( 'jdkName',           parentJob, override, { verify().notNullOrEmpty( it )}, '(Default)' )
         set( 'authToken',         parentJob, override, { it }, '' )
         set( 'scm',               parentJob, override, { it }, '' )
         set( 'properties',        parentJob, override, { it }, '' )
@@ -252,9 +252,9 @@ class Job
 
         if ( this.jobType == JOB_TYPE.maven )
         {
-            set( 'pom',               parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, 'pom.xml' )
-            set( 'mavenGoals',        parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, '-e clean install' )
-            set( 'mavenName',         parentJob, override, { GCommons.verify().notNullOrEmpty( it )}, '' )
+            set( 'pom',               parentJob, override, { verify().notNullOrEmpty( it )}, 'pom.xml' )
+            set( 'mavenGoals',        parentJob, override, { verify().notNullOrEmpty( it )}, '-e clean install' )
+            set( 'mavenName',         parentJob, override, { verify().notNullOrEmpty( it )}, '' )
             set( 'mavenOpts',         parentJob, override, { it }, ''    )
             set( 'buildOnSNAPSHOT',   parentJob, override, { it }, false )
             set( 'privateRepository', parentJob, override, { it }, false )
@@ -285,7 +285,7 @@ class Job
         /**
          * {..} => ${..}
          */
-        this.mavenGoals = GCommons.verify().notNullOrEmpty( this.mavenGoals ).addDollar()
+        this.mavenGoals = verify().notNullOrEmpty( this.mavenGoals ).addDollar()
 
         if ( this.privateRepository )
         {
@@ -299,7 +299,7 @@ class Job
              * or replacing it with updated value, if already exists
              */
 
-            this.localRepoPath = (( this.localRepoBase ?: "${ GCommons.constants().USER_HOME }/.m2/repository" ) +
+            this.localRepoPath = (( this.localRepoBase ?: "${ constants().USER_HOME }/.m2/repository" ) +
                                   '/' +
                                   ( this.localRepo     ?: '.' )).
                                  replace( '\\', '/' )

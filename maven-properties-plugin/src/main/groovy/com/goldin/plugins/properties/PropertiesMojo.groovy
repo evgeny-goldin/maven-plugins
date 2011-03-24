@@ -1,6 +1,5 @@
 package com.goldin.plugins.properties
 
-import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.goldin.plugins.common.GMojoUtils
@@ -9,6 +8,8 @@ import org.apache.maven.plugin.MojoFailureException
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
@@ -26,7 +27,7 @@ class PropertiesMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig = new GroovyConfig()
 
-    private Property[] properties() { GCommons.general().array( this.properties, this.property, Property ) }
+    private Property[] properties() { general().array( this.properties, this.property, Property ) }
 
 
     @Override
@@ -36,7 +37,7 @@ class PropertiesMojo extends BaseGroovyMojo
         {
             String name      = property.name?.trim()
             String value     = property.value?.trim()
-            def    isVerbose = GCommons.general().choose( property.verbose, verbose )
+            def    isVerbose = general().choose( property.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {

@@ -22,7 +22,9 @@ import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
+import com.goldin.gcommons.beans.*
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
+
 
 class GMojoUtils
 {
@@ -43,13 +45,13 @@ class GMojoUtils
      */
      static mopInit ()
      {
-         GCommons.file() // Triggers GCommons MOP replacements
+         file() // Triggers GCommons MOP replacements
 
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
           */
          String.metaClass.trimMultiline ={->
-             delegate.splitWith( 'eachLine', String )*.trim().join( GCommons.constants().CRLF )
+             delegate.splitWith( 'eachLine', String )*.trim().join( constants().CRLF )
          }
 
 
@@ -57,7 +59,7 @@ class GMojoUtils
           * Deletes empty lines from the String
           */
          String.metaClass.deleteEmptyLines ={->
-             delegate.splitWith( 'eachLine', String ).findAll{ it.trim() }.join( GCommons.constants().CRLF )
+             delegate.splitWith( 'eachLine', String ).findAll{ it.trim() }.join( constants().CRLF )
          }
 
 
@@ -112,11 +114,11 @@ class GMojoUtils
         if ( endOfLine        ) { content = content.replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )) }
         if ( deleteEmptyLines ) { content = content.deleteEmptyLines() }
 
-        GCommons.verify().notNullOrEmpty( content )
+        verify().notNullOrEmpty( content )
     }
 
 
-    
+
     /**
      * Retrieves Maven version as appears in "pom.properties" inside Maven jar.
      *
@@ -124,11 +126,11 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        InputStream is    = GCommons.verify().notNull( Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+        InputStream is    = verify().notNull( Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
         Properties  props = new Properties()
         props.load( is )
         is.close()
-        GCommons.verify().notNullOrEmpty( props.getProperty( 'version', 'Unknown' ).trim())
+        verify().notNullOrEmpty( props.getProperty( 'version', 'Unknown' ).trim())
     }
 
 
@@ -181,9 +183,9 @@ class GMojoUtils
                                     mavenVersion : mavenVersion(),
                                     *:( project.properties + session.userProperties + session.executionProperties )]
 
-        GCommons.groovy().eval( expression,
+        groovy().eval( expression,
                                 resultType,
-                                GCommons.groovy().binding( bindingMap, bindingObjects ),
+                                groovy().binding( bindingMap, bindingObjects ),
                                 config )
     }
 
@@ -197,9 +199,9 @@ class GMojoUtils
      * @param c Collection to convert
      * @return String to use for log messages
      */
-    static String stars ( Collection c ) { "* [${ c.join( "]${ GCommons.constants().CRLF }* [") }]" }
+    static String stars ( Collection c ) { "* [${ c.join( "]${ constants().CRLF }* [") }]" }
 
-    
+
 
 
     /**
@@ -223,7 +225,7 @@ class GMojoUtils
                                                                           ThreadLocals.get( MavenSession ).localRepository,
                                                                           project.remoteArtifactRepositories,
                                                                           ThreadLocals.get( ArtifactMetadataSource ),
-                                                                          new ScopeArtifactFilter( GCommons.verify().notNullOrEmpty( scope )))
+                                                                          new ScopeArtifactFilter( verify().notNullOrEmpty( scope )))
             result.addAll( resolutionResult.artifacts )
         }
 
@@ -265,6 +267,7 @@ class GMojoUtils
         ThreadLocals.set( new MavenProject(),
                           new MavenSession( null, null, null, null, null, null, null, new Properties(), new Properties(), new Date()),
                           new DefaultLog( new ConsoleLogger( Logger.LEVEL_DEBUG, "TestLog" )))
+        mopInit()
     }
 
 
@@ -278,7 +281,7 @@ class GMojoUtils
      */
     static void setProperty( String name, String value, String logMessage = '', boolean verbose = true )
     {
-        GCommons.verify().notNullOrEmpty( name, value )
+        verify().notNullOrEmpty( name, value )
 
         MavenProject project = ThreadLocals.get( MavenProject )
         MavenSession session = ThreadLocals.get( MavenSession )
@@ -319,9 +322,9 @@ class GMojoUtils
                                  MavenFileFilter fileFilter,
                                  boolean         verbose )
     {
-        GCommons.verify().file( sourceFile )
-        GCommons.verify().notNull( destinationFile, replaces )
-        GCommons.verify().notNullOrEmpty( encoding )
+        verify().file( sourceFile )
+        verify().notNull( destinationFile, replaces )
+        verify().notNullOrEmpty( encoding )
 
         def mavenProject = ThreadLocals.get( MavenProject )
         def mavenSession = ThreadLocals.get( MavenSession )
@@ -333,13 +336,13 @@ class GMojoUtils
 
             if ( filtering )
             {
-                GCommons.verify().notNull( fileFilter, mavenProject, mavenSession )
+                verify().notNull( fileFilter, mavenProject, mavenSession )
 
                 /**
                  * http://maven.apache.org/shared/maven-filtering/apidocs/index.html
                  */
 
-                File                  tempFile = GCommons.file().tempFile()
+                File                  tempFile = file().tempFile()
                 List<MavenFileFilter> wrappers = fileFilter.getDefaultFilterWrappers( mavenProject,
                                                                                       null,
                                                                                       false,
@@ -366,7 +369,7 @@ class GMojoUtils
                     data = replace.replace( data, fromFile.canonicalPath )
                 }
 
-                File tempFile = GCommons.file().tempFile()
+                File tempFile = file().tempFile()
                 tempFile.write( data, encoding )
 
                 if ( verbose )
@@ -391,8 +394,8 @@ class GMojoUtils
             }
 
             copy( fromFile, destinationFile, verbose )
-            GCommons.file().delete( *deleteFiles )
-            
+            file().delete( *deleteFiles )
+
             true
         }
         catch ( Exception e )
@@ -412,9 +415,9 @@ class GMojoUtils
      */
     private static void copy ( File sourceFile, File destinationFile, boolean verbose )
     {
-        GCommons.verify().file( sourceFile )
-        GCommons.verify().notNull( destinationFile )
-        assert ! GCommons.net().isNet( destinationFile.path )
+        verify().file( sourceFile )
+        verify().notNull( destinationFile )
+        assert ! net().isNet( destinationFile.path )
 
         String sourceFilePath      = sourceFile.canonicalPath
         String destinationFilePath = destinationFile.canonicalPath
@@ -422,12 +425,12 @@ class GMojoUtils
         assert sourceFilePath != destinationFilePath, \
                "Source [$sourceFilePath] and destination [$destinationFilePath] are the same"
 
-        GCommons.file().delete( destinationFile )
-        GCommons.file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-        
+        file().delete( destinationFile )
+        file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+
         if ( verbose ) { log.info( "[$sourceFilePath] copied to [$destinationFilePath]" )}
     }
-    
+
 
     /**
      * Retrieves relative path of file inside directory specified.
@@ -440,7 +443,7 @@ class GMojoUtils
      */
     static String relativePath( File directory, File file )
     {
-        GCommons.verify().notNull( directory, file )
+        verify().notNull( directory, file )
 
         String directoryPath = directory.canonicalPath
         String filePath      = file.canonicalPath
@@ -449,7 +452,7 @@ class GMojoUtils
                "File [$filePath] is not a child of [$directoryPath]"
 
 
-        String relativePath = GCommons.verify().notNullOrEmpty( filePath.substring( directoryPath.length()))
+        String relativePath = verify().notNullOrEmpty( filePath.substring( directoryPath.length()))
         assert ( relativePath.startsWith( "/" ) || relativePath.startsWith( "\\" ))
 
         relativePath
@@ -472,8 +475,8 @@ class GMojoUtils
     static void deploy ( File file, String url, String groupId, String artifactId, String version, String classifier,
                          PluginManager manager )
     {
-        GCommons.verify().file( file )
-        GCommons.verify().notNullOrEmpty( url, groupId, artifactId, version )
+        verify().file( file )
+        verify().notNullOrEmpty( url, groupId, artifactId, version )
         assert mavenVersion().startsWith( "2" ): \
                "<deploy> is only supported by Maven 2 for now, see http://evgeny-goldin.org/youtrack/issue/pl-258"
 
@@ -482,7 +485,7 @@ class GMojoUtils
                                                      element( "groupId",    groupId     ),
                                                      element( "artifactId", artifactId  ),
                                                      element( "version",    version     ),
-                                                     element( "packaging",  GCommons.file().extension( file )))
+                                                     element( "packaging",  file().extension( file )))
         if ( classifier != null )
         {
             configuration.add( element( "classifier", classifier ))
@@ -490,7 +493,7 @@ class GMojoUtils
 
         String description =
             "[$file.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
-        
+
         try
         {
             executeMojo( plugin( "org.apache.maven.plugins",
@@ -507,4 +510,13 @@ class GMojoUtils
             throw new RuntimeException( "Failed to deploy $description: $e", e )
         }
     }
+
+
+    static ConstantsBean constants(){ GCommons.constants ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static GeneralBean   general()  { GCommons.general   ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static FileBean      file()     { GCommons.file      ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static NetBean       net()      { GCommons.net       ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static IOBean        io()       { GCommons.io        ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static VerifyBean    verify()   { GCommons.verify    ( false, ThreadLocals.get( MavenSession ).executionProperties )}
+    static GroovyBean    groovy()   { GCommons.groovy    ( false, ThreadLocals.get( MavenSession ).executionProperties )}
 }
