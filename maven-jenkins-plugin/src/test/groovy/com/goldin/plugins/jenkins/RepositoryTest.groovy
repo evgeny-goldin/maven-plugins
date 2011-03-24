@@ -1,9 +1,10 @@
 package com.goldin.plugins.jenkins
 
-import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.logging.Log
 import org.junit.Test
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 class RepositoryTest
 {
@@ -11,7 +12,7 @@ class RepositoryTest
 
     RepositoryTest ()
     {
-        GMojoUtils.initTestThreadLocals()
+        initTestThreadLocals()
     }
 
 

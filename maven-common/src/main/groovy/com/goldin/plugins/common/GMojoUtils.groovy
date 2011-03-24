@@ -184,9 +184,9 @@ class GMojoUtils
                                     *:( project.properties + session.userProperties + session.executionProperties )]
 
         groovyBean().eval( expression,
-                                resultType,
-                                groovyBean().binding( bindingMap, bindingObjects ),
-                                config )
+                           resultType,
+                           groovyBean().binding( bindingMap, bindingObjects ),
+                           config )
     }
 
 

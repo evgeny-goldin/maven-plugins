@@ -1,14 +1,12 @@
 package com.goldin.plugins.newassert
 
 import com.goldin.plugins.common.BaseGroovyMojo
-import com.goldin.plugins.common.GMojoUtils
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
-
-/**
+ /**
  * Asserts invoker
  */
 @MojoGoal  ( "assert" )
@@ -205,6 +203,6 @@ class AssertMojo extends BaseGroovyMojo
 
     private verifyGroovy( String groovy )
     {
-        verifyEachLine( groovy, { String line -> GMojoUtils.groovy( "assert $line" ) })
+        verifyEachLine( groovy, { String line -> groovy( "assert $line" ) })
     }
 }

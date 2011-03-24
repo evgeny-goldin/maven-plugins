@@ -6,6 +6,7 @@ import com.goldin.plugins.jenkins.beans.*
 import com.goldin.plugins.jenkins.Job.*
 import com.goldin.plugins.jenkins.Job.JOB_TYPE
 import com.goldin.plugins.common.*
+import static com.goldin.plugins.common.GMojoUtils.*
 %>
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -43,7 +44,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }
   <properties>
   <%
       if ( job.properties )  { print job.properties.addDollar() }
-      if ( job.parameters()) { print GMojoUtils.getTemplate( '/parameters.xml' ).make([ job : job ]) }
+      if ( job.parameters()) { print getTemplate( '/parameters.xml' ).make([ job : job ]) }
   %>
   </properties>
   <scm class="${ job.scmClass }">
@@ -258,7 +259,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }
       </hudson.tasks.Mailer>
   <%
       }
-  
+
       if (( job.deploy?.url ) && ( job.jobType == JOB_TYPE.maven ))
       {
   %>
