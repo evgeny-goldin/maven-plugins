@@ -16,7 +16,7 @@ import org.codehaus.plexus.util.FileUtils
 import static com.goldin.plugins.common.GMojoUtils.*
 import org.jfrog.maven.annomojo.annotations.*
 
- /**
+/**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )

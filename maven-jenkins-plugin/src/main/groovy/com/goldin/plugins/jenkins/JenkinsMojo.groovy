@@ -9,7 +9,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+/**
  * Plugin that creates Jenkins config files to define new build projects
  */
 @MojoGoal ( "generate" )

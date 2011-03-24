@@ -6,7 +6,8 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+
+/**
  * Asserts invoker
  */
 @MojoGoal  ( "assert" )
