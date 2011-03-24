@@ -433,33 +433,6 @@ class GMojoUtils
 
 
     /**
-     * Retrieves relative path of file inside directory specified.
-     * For example: for directory <code>"C:\some"</code> and child file <code>"C:\some\folder\opa\1.txt"</code>
-     * this function returns <code>"\folder\opa\1.txt"</code>.
-     *
-     * @param directory file's parent directory
-     * @param file      directory's child file
-     * @return          relative path of file inside directory specified, starts with "\" or "/"
-     */
-    static String relativePath( File directory, File file )
-    {
-        verifyBean().notNull( directory, file )
-
-        String directoryPath = directory.canonicalPath
-        String filePath      = file.canonicalPath
-
-        assert filePath.startsWith( directoryPath ), \
-               "File [$filePath] is not a child of [$directoryPath]"
-
-
-        String relativePath = verifyBean().notNullOrEmpty( filePath.substring( directoryPath.length()))
-        assert ( relativePath.startsWith( "/" ) || relativePath.startsWith( "\\" ))
-
-        relativePath
-    }
-
-
-    /**
      * Invokes "maven-deploy-plugin" to deploy the file specified.
      *
      * @param file       file to deploy
