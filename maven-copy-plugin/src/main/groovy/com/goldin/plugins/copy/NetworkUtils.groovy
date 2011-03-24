@@ -248,7 +248,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                 if ( isList )
                 {
-                    def listFileText  = verifyBean().file( listFile ).text
+                    def listFileText  = listFile.text
                     log.info( "List file is stored at [$listFilePath]:${ constantsBean().CRLF }${ listFileText }" )
 
                     /**
