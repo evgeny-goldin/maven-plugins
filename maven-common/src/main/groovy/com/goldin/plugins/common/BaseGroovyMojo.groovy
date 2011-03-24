@@ -46,8 +46,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
     public void execute()
     {
         ThreadLocals.set( log, mavenProject, mavenSession )
-        GMojoUtils.mopInit()
-        if ( ! GMojoUtils.runIf( runIf )) { return }
+        mopInit()
+        if ( ! runIf( runIf )) { return }
 
         doExecute()
     }

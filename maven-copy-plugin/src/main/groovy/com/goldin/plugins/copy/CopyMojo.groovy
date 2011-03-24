@@ -1,7 +1,6 @@
 package com.goldin.plugins.copy
 
 import com.goldin.gcommons.util.GroovyConfig
-import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
@@ -17,8 +16,7 @@ import org.codehaus.plexus.util.FileUtils
 import static com.goldin.plugins.common.GMojoUtils.*
 import org.jfrog.maven.annomojo.annotations.*
 
-
-/**
+ /**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )
@@ -133,8 +131,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          * it here as long as we can't extend it
          */
         ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
-        GMojoUtils.mopInit()
-        if ( ! GMojoUtils.runIf( runIf )) { return }
+        mopInit()
+        if ( ! runIf( runIf )) { return }
 
         /**
          * Initializing super-class fields
@@ -150,12 +148,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
         def eval         = { String s -> s = s.trim()
-                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? GMojoUtils.groovy( s, String ) : s }
+                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? groovy( s, String ) : s }
 
         for ( CopyResource resource in resources())
         {
             if ( resource.description ) { log.info( "==> Processing <resource> [${ eval( resource.description )}]" )}
-            if ( ! GMojoUtils.runIf( resource.runIf )) { continue }
+            if ( ! runIf( resource.runIf )) { continue }
 
             long    t               = System.currentTimeMillis()
             boolean verbose         = generalBean().choose( resource.verbose,        verbose        )
@@ -200,7 +198,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         def  isDownload        = netBean().isNet( resource.directory )
         def  isUpload          = netBean().isNet( resource.targetPaths())
         File sourceDirectory   = ( resource.mkdir ? null                            : // Only <targetPath> is active
-                                   isDownload     ? fileBean().tempDirectory() : // Temp dir to download the files to
+                                   isDownload     ? fileBean().tempDirectory()      : // Temp dir to download the files to
                                                     new File( resource.directory ))   // Directory to cleanup, upload or copy
 
         def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
@@ -471,7 +469,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         /**
          * Location where the file will be copied to
          */
-        String filePath = new File( targetPath, resource.preservePath ? GMojoUtils.relativePath( sourceDirectory, file ) :
+        String filePath = new File( targetPath, resource.preservePath ? relativePath( sourceDirectory, file ) :
                                                                         file.name ).canonicalPath
         assert filePath.endsWith( file.name )
 
@@ -481,7 +479,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         File    targetFile = new File( filePath )
-        boolean copied     = GMojoUtils.copy( file,
+        boolean copied     = copy( file,
                                               targetFile,
                                               skipIdentical,
                                               resource.replaces(),
@@ -534,7 +532,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             def ( String url, String groupId, String artifactId, String version ) = data[ 0 .. 3 ].collect { String s -> verifyBean().notNullOrEmpty( s ) }
             def classifier = (( data.size() == 4 ) ? verifyBean().notNullOrEmpty( data[ 4 ] ) : null )
 
-            GMojoUtils.deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
+            deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
         }
 
         verifyBean().file( targetPath )
@@ -642,7 +640,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         String           expression    = verifyBean().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
-        Object           o             = GMojoUtils.groovy( expression, Object, groovyConfig, 'files', files )
+        Object           o             = groovy( expression, Object, groovyConfig, 'files', files )
         Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                           ( o instanceof Collection ) ? (( Collection<File> ) o ) :
                                                                         null )
@@ -652,7 +650,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( verbose )
         {
-            log.info( "Files left after applying <filter>:${ constantsBean().CRLF }${ GMojoUtils.stars( filesIncluded ) }" )
+            log.info( "Files left after applying <filter>:${ constantsBean().CRLF }${ stars( filesIncluded ) }" )
         }
 
         filesIncluded
@@ -680,7 +678,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( processExpression )
         {
-            GMojoUtils.groovy( processExpression, null, groovyConfig, 'files', files )
+            groovy( processExpression, null, groovyConfig, 'files', files )
         }
     }
 }

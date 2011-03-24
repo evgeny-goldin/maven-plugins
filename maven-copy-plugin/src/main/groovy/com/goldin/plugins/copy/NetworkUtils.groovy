@@ -1,19 +1,14 @@
 package com.goldin.plugins.copy
 
-
-import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.beans.ExecOption
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.goldin.plugins.common.CustomAntBuilder
-import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.logging.Log
-import static com.goldin.plugins.common.GMojoUtils.devNullOutputStream
-import static com.goldin.plugins.common.GMojoUtils.stars
-import com.goldin.gcommons.beans.ExecOption
+import static com.goldin.plugins.common.GMojoUtils.*
 
-
-/**
+ /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Various network related util methods
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,7 +272,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                     if ( resource.listFilter )
                     {
-                        def o        = GMojoUtils.groovy( resource.listFilter, Object, groovyConfig, 'files', listFileMap )
+                        def o        = groovy( resource.listFilter, Object, groovyConfig, 'files', listFileMap )
                         def filesSet = new HashSet( o as List<String> )                   // Set<String> of file names to include
                         listFileMap  = listFileMap.findAll{ filesSet.contains( it.key )}  // Filtering all Map entries with a Set
 

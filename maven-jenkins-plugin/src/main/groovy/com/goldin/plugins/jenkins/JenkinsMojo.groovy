@@ -1,7 +1,6 @@
 package com.goldin.plugins.jenkins
 
 import com.goldin.plugins.common.BaseGroovyMojo
-import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.jenkins.Job.JOB_TYPE
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
@@ -10,8 +9,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
-
-/**
+ /**
  * Plugin that creates Jenkins config files to define new build projects
  */
 @MojoGoal ( "generate" )
@@ -103,12 +101,12 @@ public class JenkinsMojo extends BaseGroovyMojo
                 fileBean().mkdirs( configFile.parentFile )
 
                 def timestamp = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
-                def config    = GMojoUtils.makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
+                def config    = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
 
                 configFile.write( verifyBean().notNullOrEmpty( config ))
                 assert (( configFile.isFile()) && ( configFile.size() == config.size()) && ( configFile.text == config ))
 
-                configPath = GMojoUtils.validate( configFile ).canonicalPath
+                configPath = validate( configFile ).canonicalPath
             }
 
             assert configPath

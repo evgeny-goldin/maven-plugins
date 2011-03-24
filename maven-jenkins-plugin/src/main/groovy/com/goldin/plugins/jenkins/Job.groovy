@@ -1,10 +1,7 @@
 package com.goldin.plugins.jenkins
 
-
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.jenkins.beans.*
-
 
  /**
  * Class describing a Jenkins job
@@ -151,7 +148,7 @@ class Job
    /**
     * Retrieves job description table
     */
-    String getHtmlDescriptionTable() { GMojoUtils.makeTemplate( '/htmlDescriptionTable.html', [ job : this ] ) }
+    String getHtmlDescriptionTable() { makeTemplate( '/htmlDescriptionTable.html', [ job : this ] ) }
 
 
     /**

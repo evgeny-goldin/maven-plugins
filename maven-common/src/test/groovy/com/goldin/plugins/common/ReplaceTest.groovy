@@ -1,8 +1,10 @@
 package com.goldin.plugins.common
 
 import org.junit.Test
+import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+
+/**
  * {@link Replace} unit tests
  */
 class ReplaceTest
@@ -13,7 +15,7 @@ class ReplaceTest
 
     ReplaceTest ()
     {
-        GMojoUtils.initTestThreadLocals()
+        initTestThreadLocals()
     }
 
     /**

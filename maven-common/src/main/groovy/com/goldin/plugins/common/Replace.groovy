@@ -2,8 +2,10 @@ package com.goldin.plugins.common
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import static com.goldin.plugins.common.GMojoUtils.*
 
- /**
+
+/**
  * <replace> data container
  */
 class Replace
@@ -57,7 +59,7 @@ class Replace
                           matcher = ( result =~ GROOVY_EXPRESSION_PATTERN ))
             {
                 String expression = matcher.group( 1 )
-                String value      = GMojoUtils.groovy( expression, String )
+                String value      = groovy( expression, String )
                 result            = result.substring( 0, matcher.start()) + value + result.substring( matcher.end())
             }
         }
