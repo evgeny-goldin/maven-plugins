@@ -43,14 +43,14 @@ class FindMojo extends BaseGroovyMojo
      */
     void doExecute()
     {
-        File file = find( startDir )
-        if ( file )
+        File foundFile = find( startDir )
+        if ( foundFile )
         {
-            def path = verify().exists( file ).canonicalPath
+            def path = foundFile.canonicalPath
 
             if ( propertyName )
             {
-                GMojoUtils.setProperty( propertyName, path )
+                setProperty( propertyName, path )
             }
 
             if ( sysPropertyName )
@@ -70,7 +70,7 @@ class FindMojo extends BaseGroovyMojo
      */
     private File find( File startDir )
     {
-        verify().directory( startDir )
+        verifyBean().directory( startDir )
 
         log.info( "Looking for [$file] starting from [$startDir.canonicalPath]" )
 
