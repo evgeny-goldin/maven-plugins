@@ -519,7 +519,6 @@ class GMojoUtils
      * Using {@link MavenSession#executionProperties} as a Map where GCommons context and beans cache are stored.
      */
 
-
     static ConstantsBean constants(){ GCommons.constants ( false, ThreadLocals.get( MavenSession ).executionProperties )}
     static GeneralBean   general()  { GCommons.general   ( false, ThreadLocals.get( MavenSession ).executionProperties )}
     static FileBean      file()     { GCommons.file      ( false, ThreadLocals.get( MavenSession ).executionProperties )}
