@@ -272,7 +272,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                     if ( resource.listFilter )
                     {
-                        def o        = groovy( resource.listFilter, Object, groovyConfig, 'files', listFileMap )
+                        def o        = eval( resource.listFilter, Object, groovyConfig, 'files', listFileMap )
                         def filesSet = new HashSet( o as List<String> )                   // Set<String> of file names to include
                         listFileMap  = listFileMap.findAll{ filesSet.contains( it.key )}  // Filtering all Map entries with a Set
 

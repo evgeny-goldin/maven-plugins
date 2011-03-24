@@ -40,7 +40,7 @@ class PropertiesMojo extends BaseGroovyMojo
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {
                 groovyConfig.verbose = isVerbose
-                value = groovy( value, String, groovyConfig )
+                value = eval( value, String, groovyConfig )
             }
 
             setProperty( name, value, '', isVerbose )

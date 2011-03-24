@@ -147,7 +147,7 @@ class GMojoUtils
 
         if ( s )
         {
-            run = Boolean.valueOf( groovy( s, String ))
+            run = Boolean.valueOf( eval( s, String ))
             log.info( "<runIf>: [$s] evaluated to [$run] - ${ run ? 'continuing' : 'returning' }" )
         }
 
@@ -169,10 +169,10 @@ class GMojoUtils
      * @return           expression evaluated and casted to the type specified
      *                   (after verifying compliance with {@link Class#isInstance(Object)}
      */
-    public static <T> T groovy( String       expression,
-                                Class<T>     resultType = null,
-                                GroovyConfig config     = new GroovyConfig(),
-                                Object ...   bindingObjects )
+    public static <T> T eval ( String       expression,
+                               Class<T>     resultType = null,
+                               GroovyConfig config     = new GroovyConfig(),
+                               Object ...   bindingObjects )
     {
 
 

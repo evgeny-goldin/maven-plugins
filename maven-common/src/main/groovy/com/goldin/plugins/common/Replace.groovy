@@ -59,7 +59,7 @@ class Replace
                           matcher = ( result =~ GROOVY_EXPRESSION_PATTERN ))
             {
                 String expression = matcher.group( 1 )
-                String value      = groovy( expression, String )
+                String value      = eval( expression, String )
                 result            = result.substring( 0, matcher.start()) + value + result.substring( matcher.end())
             }
         }

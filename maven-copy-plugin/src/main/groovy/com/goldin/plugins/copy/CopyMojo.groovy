@@ -147,12 +147,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.resolver    = artifactResolver
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
-        def eval         = { String s -> s = s.trim()
-                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? groovy( s, String ) : s }
+        def e            = { String s -> s = s.trim()
+                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? eval( s, String ) : s }
 
         for ( CopyResource resource in resources())
         {
-            if ( resource.description ) { log.info( "==> Processing <resource> [${ eval( resource.description )}]" )}
+            if ( resource.description ) { log.info( "==> Processing <resource> [${ e( resource.description )}]" )}
             if ( ! runIf( resource.runIf )) { continue }
 
             long    t               = System.currentTimeMillis()
@@ -178,7 +178,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
             if ( resource.description )
             {
-                log.info( "==> <resource> [${ eval( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
+                log.info( "==> <resource> [${ e( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
             }
         }
     }
@@ -667,7 +667,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         String           expression    = verifyBean().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
-        Object           o             = groovy( expression, Object, groovyConfig, 'files', files )
+        Object           o             = eval( expression, Object, groovyConfig, 'files', files )
         Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                           ( o instanceof Collection ) ? (( Collection<File> ) o ) :
                                                                         null )
@@ -705,7 +705,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( processExpression )
         {
-            groovy( processExpression, null, groovyConfig, 'files', files )
+            eval( processExpression, null, groovyConfig, 'files', files )
         }
     }
 }

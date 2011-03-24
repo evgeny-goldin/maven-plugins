@@ -203,6 +203,6 @@ class AssertMojo extends BaseGroovyMojo
 
     private verifyGroovy( String groovy )
     {
-        verifyEachLine( groovy, { String line -> groovy( "assert $line" ) })
+        verifyEachLine( groovy, { String line -> eval( "assert $line" ) })
     }
 }
