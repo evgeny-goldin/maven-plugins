@@ -1,22 +1,18 @@
 package com.goldin.plugins.common
 
-import com.goldin.gcommons.GCommons
-
  /**
  * {@link ThreadLocal} storage of plugin environment
  */
 class ThreadLocals
 {
 
-    static class MyThreadLocal<T> extends ThreadLocal<T>
+    static class MyThreadLocal extends ThreadLocal<Map<Class<?>, ?>>
     {
-        private final   T initialValue
-        MyThreadLocal ( T initialValue ) { this.initialValue = GCommons.verify().notNull( initialValue )  }
-
-        @Override protected T initialValue() { this.initialValue }
+        @Override
+        protected Map initialValue() { [:] }
     }
 
-    private static final ThreadLocal<Map<Class<?>, ?>> TL = new MyThreadLocal<Map<Class<?>, ?>>( [:] )
+    private static final ThreadLocal<Map<Class<?>, ?>> TL = new MyThreadLocal()
 
 
     /**
@@ -43,7 +39,8 @@ class ThreadLocals
      */
     static <T> T get ( Class<T> requiredClass )
     {
-        T t = ( T ) TL.get()[ GCommons.verify().notNull( requiredClass ) ]
+        assert requiredClass
+        T t = ( T ) TL.get()[ requiredClass ]
 
         if ( t == null )
         {

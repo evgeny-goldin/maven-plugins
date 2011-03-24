@@ -9,8 +9,6 @@ class RepositoryTest
 {
     private static Log getLog () { ThreadLocals.get( Log ) }
 
-    static { GMojoUtils.mopInit() }
-
     RepositoryTest ()
     {
         GMojoUtils.initTestThreadLocals()

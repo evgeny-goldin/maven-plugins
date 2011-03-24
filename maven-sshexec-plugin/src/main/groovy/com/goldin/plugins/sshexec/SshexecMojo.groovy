@@ -1,11 +1,12 @@
 package com.goldin.plugins.sshexec
 
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * MOJO that executes "sshexec"
@@ -55,7 +56,7 @@ public class SshexecMojo extends BaseGroovyMojo
      */
     private String[] commands ()
     {
-        String[] commands = GCommons.general().array( this.commands, this.command, String )
+        String[] commands = general().array( this.commands, this.command, String )
         commands          = commands*.split( /,|;/ ).flatten()*.trim().findAll{ it }.
                             collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
                             flatten()
@@ -73,7 +74,7 @@ public class SshexecMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        Map<String, String> data      = GCommons.net().parseNetworkPath( location )
+        Map<String, String> data      = net().parseNetworkPath( location )
         String              username  = data[ 'username' ]
         String              password  = data[ 'password' ]
         String              host      = data[ 'host' ]
