@@ -45,7 +45,7 @@ ant.groovydoc(
         use          : "true",
         private      : "false",
         header       : '<a href="http://evgeny-goldin.com/wiki/Maven-plugins">evgeny-goldin.com/wiki/Maven-plugins</a>',
-        footer       : '<a href="http://evgeny-goldin.com/">Evgeny Goldin</a>. GrovyDoc is generated at ' + "$time on $date." + """
+        footer       : '<a href="http://evgeny-goldin.com/">Evgeny Goldin</a>. GrovyDoc was generated at ' + "$time on $date." + """
                        <script type="text/javascript">
 
                           var _gaq = _gaq || [];
