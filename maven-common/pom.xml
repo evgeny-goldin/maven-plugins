@@ -105,7 +105,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-project</artifactId>
-            <!-- http://evgeny-goldin.org/youtrack/issue/pl-244 -->
+            <!-- Only needed when Maven "${maven-version}" is 2.x -->
             <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
