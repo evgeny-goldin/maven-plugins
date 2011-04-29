@@ -580,7 +580,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         if ( targetPath.isDirectory())
         {
             if ( verbose ){ log.info( "Directory [$targetPath.canonicalPath] already exists" )}
-            return
+            return targetPath
         }
 
         fileBean().mkdirs( targetPath )
