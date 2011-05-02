@@ -286,9 +286,9 @@ Only needed when Maven "${maven-version}" is 3.x
             <version>${ant-version}</version>
         </dependency>
 
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- http://code.google.com/p/mojo-executor/ -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- https://github.com/TimMoore/mojo-executor -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
         <dependency>
             <groupId>org.twdata.maven</groupId>
