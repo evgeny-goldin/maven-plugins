@@ -25,6 +25,9 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpSystem = true
 
     @MojoParameter
+    public boolean dumpPaths = true
+
+    @MojoParameter
     public String endOfLine = 'windows'
 
     @MojoParameter
