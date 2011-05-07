@@ -25,6 +25,9 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpSystem = true
 
     @MojoParameter
+    public String endOfLine = 'windows'
+
+    @MojoParameter
     public File directory
 
     @MojoParameter
@@ -46,14 +49,20 @@ class AboutMojo extends BaseGroovyMojo
         this.include   = file.name
     }
 
-    String exec ( String command )                { command.execute().text }
-    String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
-    String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }.replace( prefix, '' ).trim() }
-    String sort ( Map<String,String> map )        { def maxKey = map.keySet().collect { it.size() }.max()
-                                                    map.sort().
-                                                        collect { String key, String value ->
-                                                                  "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
-                                                        join( '\n' )
+    String exec     ( String command )                { command.execute().text }
+    String padLines ( String s, int j )               { def lines = s.readLines()
+                                                        ( lines ? ( lines[ 0 ] +
+                                                                    (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { ( ' ' * j ) + it }.join( '\n' ) :
+                                                                                            '' )) :
+                                                                    '' )
+    }
+    String find     ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
+    String find     ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }.replace( prefix, '' ).trim() }
+    String sort     ( Map<String,String> map )        { def maxKey = map.keySet().collect { it.size() }.max()
+                                                        map.sort().
+                                                            collect { String key, String value ->
+                                                                      "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
+                                                            join( '\n' )
     }
 
     String generalContent()
@@ -114,6 +123,7 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Repository    : [${ find( 'URL:',      svnInfo )}]
         | Revision      : [${ find( 'Revision:', svnInfo )}]
+        | Status        : [${ padLines( exec( 'svn status' ), ' Status        : ['.size() ) }]
         | Last Commit   : [$commit]
         | Commit Date   : [${ commit.split( '\\|' )[ 2 ].trim() }]
         | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]
@@ -132,6 +142,7 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Repository    : [${ find( 'origin',      'git remote -v' )}]
         | Branch        : [${ find( '# On branch', 'git status' )}]
+        | Status        : [${ padLines( exec( 'git status' ), ' Status        : ['.size() ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
         | Commit Author : [${ find( 'Author:',     gitLog )}]
@@ -145,7 +156,9 @@ class AboutMojo extends BaseGroovyMojo
         def split    = { String s -> ( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
         def files    = GCommons.file().files( directory, split( include ?: '*.jar' ), split( exclude ))
         def tempFile = new File( outputDirectory, "about-${project.groupId}-${project.artifactId}-${project.version}.txt" )
-        tempFile.write((( 'svn' == scm ) ? svnContent() : gitContent()).stripMargin().trim())
+        def content  = (( 'svn' == scm ) ? svnContent() : gitContent()).stripMargin().trim().
+                       replaceAll( /\r?\n/, ( 'windows' == endOfLine ) ? '\r\n' : '\n' )
+        tempFile.write( content )
 
         for ( file in files )
         {
