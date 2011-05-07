@@ -16,19 +16,19 @@ import com.goldin.plugins.common.GMojoUtils
 class AboutMojo extends BaseGroovyMojo
 {
     @MojoParameter
-    public String scm = 'svn'
+    public String scm         = 'svn'
 
     @MojoParameter
-    public boolean dumpEnv = true
+    public boolean dumpEnv    = true
 
     @MojoParameter
     public boolean dumpSystem = true
 
     @MojoParameter
-    public boolean dumpPaths = true
+    public boolean dumpPaths  = true
 
     @MojoParameter
-    public String endOfLine = 'windows'
+    public String endOfLine   = 'windows'
 
     @MojoParameter
     public File directory
