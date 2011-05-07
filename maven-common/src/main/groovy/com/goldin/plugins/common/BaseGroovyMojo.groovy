@@ -16,10 +16,10 @@ import static com.goldin.plugins.common.GMojoUtils.*
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     @MojoParameter ( expression = '${project}', required = true )
-    public MavenProject mavenProject
+    public MavenProject project
 
     @MojoParameter ( expression = '${session}', required = true )
-    public MavenSession mavenSession
+    public MavenSession session
 
     @MojoParameter ( expression = '${project.basedir}', required = true )
     public File basedir
@@ -45,7 +45,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Override
     public void execute()
     {
-        ThreadLocals.set( log, mavenProject, mavenSession )
+        ThreadLocals.set( log, project, session )
         mopInit()
         if ( ! runIf( runIf )) { return }
 

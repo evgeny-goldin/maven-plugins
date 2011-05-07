@@ -116,7 +116,7 @@ class AssertMojo extends BaseGroovyMojo
 
             String propertyName ->
 
-            Map    superMap      = mavenProject.properties + mavenSession.userProperties + mavenSession.executionProperties
+            Map    superMap      = project.properties + session.userProperties + session.executionProperties
             Object propertyValue = superMap[ propertyName ]
 
             assert ( propertyValue != null ), 'Property ${' + propertyName + '} is undefined!'

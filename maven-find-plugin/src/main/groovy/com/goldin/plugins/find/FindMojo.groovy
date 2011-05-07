@@ -1,7 +1,7 @@
 package com.goldin.plugins.find
 
 import com.goldin.plugins.common.BaseGroovyMojo
-import com.goldin.plugins.common.GMojoUtils
+
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
@@ -87,7 +87,7 @@ class FindMojo extends BaseGroovyMojo
 
         if ( propertyName )
         {
-            String propertyValue = mavenProject.properties.getProperty( propertyName )
+            String propertyValue = project.properties.getProperty( propertyName )
 
             if (( propertyValue ) && ( new File( propertyValue ).exists()))
             {
