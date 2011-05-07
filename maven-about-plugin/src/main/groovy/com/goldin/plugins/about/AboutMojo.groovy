@@ -76,8 +76,8 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | M2_HOME       : [${ env[ 'M2_HOME' ]}]
         | Version       : [${ GMojoUtils.mavenVersion() }]
-        | Basedir       : [$basedir.canonicalPath]
         | Project       : [$project]
+        | Basedir       : [$basedir.canonicalPath]
         | Name          : [$project.name]
         | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
         |===============================================================================
@@ -97,8 +97,7 @@ class AboutMojo extends BaseGroovyMojo
         | System Properties
         |===============================================================================
         |${ sort( props ) }
-        |===============================================================================
-        """ : '' ) +
+        |===============================================================================""" : '' ) +
 
         ( dumpEnv ?
         
@@ -106,8 +105,7 @@ class AboutMojo extends BaseGroovyMojo
         | Environment Variables
         |===============================================================================
         |${ sort( env ) }
-        |===============================================================================
-        """ : '' )
+        |===============================================================================""" : '' )
     }
 
     
@@ -126,8 +124,7 @@ class AboutMojo extends BaseGroovyMojo
         | Status        : [${ padLines( exec( 'svn status' ), ' Status        : ['.size() ) }]
         | Last Commit   : [$commit]
         | Commit Date   : [${ commit.split( '\\|' )[ 2 ].trim() }]
-        | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]
-        """ + generalContent()
+        | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]""" + generalContent()
     }
 
     
@@ -145,8 +142,7 @@ class AboutMojo extends BaseGroovyMojo
         | Status        : [${ padLines( exec( 'git status' ), ' Status        : ['.size() ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
-        | Commit Author : [${ find( 'Author:',     gitLog )}]
-        """ + generalContent()
+        | Commit Author : [${ find( 'Author:',     gitLog )}]""" + generalContent()
     }
 
 
