@@ -51,8 +51,9 @@ class AboutMojo extends BaseGroovyMojo
         this.include   = file.name
     }
 
+
     
-    String padLines ( String s, int j )
+    private String padLines ( String s, int j )
     {
         def lines = s.readLines()
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { ( ' ' * j ) + it }.join( '\n' ) :
@@ -60,14 +61,22 @@ class AboutMojo extends BaseGroovyMojo
                   '' )
     }
 
-    String exec  ( String command )                { def p = command.execute(); p.text + p.err.text }
-    String find  ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
-    String find  ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }.replace( prefix, '' ).trim() }
-    String sort  ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
-                                                     map.sort().
-                                                         collect { String key, String value ->
-                                                                   "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
-                                                         join( '\n' )
+    
+    private String exec ( String command )
+    {
+        def    p      = command.execute()
+        def    result = p.text + p.err.text
+        assert result, "Running [$command] - result is [$result]"
+        result
+    }
+
+    
+    private String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
+    private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }.replace( prefix, '' ).trim() }
+    private String sort ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
+                                                            map.sort().collect { String key, String value ->
+                                                                                 "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
+                                                                       join( '\n' )
     }
 
 
