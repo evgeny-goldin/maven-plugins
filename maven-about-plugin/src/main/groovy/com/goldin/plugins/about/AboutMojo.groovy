@@ -39,6 +39,8 @@ class AboutMojo extends BaseGroovyMojo
     @MojoParameter
     public String exclude
 
+    private env = System.getenv()
+
 
     public void setFile ( File file )
     {
@@ -68,9 +70,58 @@ class AboutMojo extends BaseGroovyMojo
                                                          join( '\n' )
     }
 
+
+    String hudsonContent()
+    {
+        // http://weblogs.java.net/blog/johnsmart/archive/2008/03/using_hudson_en.html
+
+        """
+        |===============================================================================
+        | Hudson Info
+        |===============================================================================
+        | Hudson URL    : [${ env[ 'HUDSON_URL' ] }]
+        | Job URL       : [${ env[ 'HUDSON_URL' ] }/job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]"""
+    }
+
+    
+    String jenkinsContent()
+    {
+        // https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project
+        
+        """
+        |===============================================================================
+        | Jenkins Info
+        |===============================================================================
+        | Hudson URL    : [${ env[ 'JENKINS_URL' ] }]
+        | Job URL       : [${ env[ 'JENKINS_URL' ] }/job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]"""
+    }
+
+
+    String teamcityContent()
+    {
+        // http://confluence.jetbrains.net/display/TCD4/Predefined+Properties
+        
+        """
+        |===============================================================================
+        | TeamCity Info
+        |===============================================================================
+        | Project Name  : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
+        | Build Config  : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
+        | Build Number  : [${ env[ 'BUILD_NUMBER' ] }]"""
+    }
+
+    
+    String serverContent()
+    {
+        env[ 'HUDSON_URL'       ] ? hudsonContent()   :
+        env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
+        env[ 'TEAMCITY_VERSION' ] ? teamcityContent() : 
+                                    ''
+    }
+
+
     String generalContent()
     {
-        def env    = System.getenv()
         def props  = System.properties
         def format = new SimpleDateFormat( "dd MMM, EEEE, yyyy, HH:mm:ss (zzzzzz:'GMT'ZZZZZZ)", Locale.ENGLISH )
 
@@ -95,24 +146,26 @@ class AboutMojo extends BaseGroovyMojo
         | User          : [${ props[ 'user.name' ] }]
         | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
         | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
-        | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
-        |===============================================================================""" +
+        | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]""" +
 
         ( dumpSystem ?
 
         """
+        |===============================================================================
         | System Properties
         |===============================================================================
-        |${ sort( props ) }
-        |===============================================================================""" : '' ) +
+        |${ sort( props ) }""" : '' ) +
 
         ( dumpEnv ?
         
         """
+        |===============================================================================
         | Environment Variables
         |===============================================================================
-        |${ sort( env ) }
-        |===============================================================================""" : '' )
+        |${ sort( env ) }""" : '' ) +
+
+        """
+        |==============================================================================="""
     }
 
     
@@ -136,7 +189,7 @@ class AboutMojo extends BaseGroovyMojo
         | Status        : [${ padLines( status, ' Status        : ['.size()) }]
         | Last Commit   : [$commit]
         | Commit Date   : [${ commit.split( '\\|' )[ 2 ].trim() }]
-        | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]""" + generalContent()
+        | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]"""
     }
 
     
@@ -157,7 +210,7 @@ class AboutMojo extends BaseGroovyMojo
         | Status        : [${ padLines( status, ' Status        : ['.size() ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
-        | Commit Author : [${ find( 'Author:',     gitLog )}]""" + generalContent()
+        | Commit Author : [${ find( 'Author:',     gitLog )}]"""
     }
 
 
@@ -167,7 +220,7 @@ class AboutMojo extends BaseGroovyMojo
         def split    = { String s -> ( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
         def files    = fileBean().files( directory, split( include ), split( exclude ))
         def tempFile = new File( outputDirectory, "about-${project.groupId}-${project.artifactId}-${project.version}.txt" )
-        def content  = (( new File( basedir, '.svn' ).isDirectory() ? svnContent() : gitContent()).
+        def content  = ((( new File( basedir, '.svn' ).isDirectory() ? svnContent() : gitContent()) + serverContent() + generalContent()).
                         stripMargin().trim().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
                         join(( 'windows' == endOfLine ) ? '\r\n' : '\n' ))
 
