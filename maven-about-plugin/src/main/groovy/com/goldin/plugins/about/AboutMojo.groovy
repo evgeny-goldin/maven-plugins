@@ -199,6 +199,10 @@ class AboutMojo extends BaseGroovyMojo
         def status = exec( 'git status' )
         assert ! status.contains( 'Not a git repository' ), "[$basedir.canonicalPath] is not a Git project"
 
+
+        log.info( "GIT STATUS: [$status]" )
+        
+
         def gitLog = exec( 'git log -1' ).readLines()
 
         """
