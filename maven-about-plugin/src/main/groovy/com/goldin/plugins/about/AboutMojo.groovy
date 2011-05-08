@@ -72,11 +72,25 @@ class AboutMojo extends BaseGroovyMojo
 
     
     private String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
-    private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() }
+    private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() ?: '' }
     private String sort ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
                                                             map.sort().collect { String key, String value ->
                                                                                  "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
                                                                        join( '\n' )
+    }
+
+
+    String jenkinsContent()
+    {
+        // http://weblogs.java.net/blog/johnsmart/archive/2008/03/using_hudson_en.html
+
+        """
+        |===============================================================================
+        | Jenkins Info
+        |===============================================================================
+        | Server URL    : [${ env[ 'JENKINS_URL' ] }]
+        | Job URL       : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Job Log       : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
@@ -86,9 +100,9 @@ class AboutMojo extends BaseGroovyMojo
 
         """
         |===============================================================================
-        | Jenkins/Hudson Info
+        | Hudson Info
         |===============================================================================
-        | Hudson URL    : [${ env[ 'HUDSON_URL' ] }]
+        | Server URL    : [${ env[ 'HUDSON_URL' ] }]
         | Job URL       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
         | Job Log       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
@@ -110,6 +124,7 @@ class AboutMojo extends BaseGroovyMojo
     
     String serverContent()
     {
+        env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
         env[ 'HUDSON_URL'       ] ? hudsonContent()   :
         env[ 'TEAMCITY_VERSION' ] ? teamcityContent() :
                                     ''
@@ -126,7 +141,7 @@ class AboutMojo extends BaseGroovyMojo
         | Maven Info
         |===============================================================================
         | ${ dumpPaths ? 'M2_HOME       : [' + env[ 'M2_HOME' ] + ']' : '' }
-        | MAVEN_OPTS    : [${ env[ 'MAVEN_OPTS' ]}]
+        | MAVEN_OPTS    : [${ env[ 'MAVEN_OPTS' ] ?: '' }]
         | Version       : [${ mavenVersion() }]
         | Project       : [${ dumpPaths ? project.toString() : project.toString().replaceAll( /\s+@.+/, '' )}]
         | Goals         : $session.goals
@@ -136,7 +151,7 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Build Info
         |===============================================================================
-        | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] }]
+        | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
         | Build Time    : Started         - [${ format.format( session.startTime ) }]
         | Build Time    : "About" created - [${ format.format( new Date())         }]
         | User          : [${ props[ 'user.name' ] }]
@@ -202,7 +217,7 @@ class AboutMojo extends BaseGroovyMojo
         | Git Info
         |===============================================================================
         | Repositories  : [${ padLines( exec( 'git remote -v' ), ' Repository    : ['.size()) }]
-        | Branch        : [${ find( '# On branch', 'git status' )}]
+        | Branch        : [${ find( '# On branch', 'git status' ) }]
         | Status        : [${ padLines( status, ' Status        : ['.size() ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
