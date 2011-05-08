@@ -65,7 +65,7 @@ class AboutMojo extends BaseGroovyMojo
     private String exec ( String command )
     {
         def    p      = command.execute()
-        def    result = p.text + p.err.text
+        def    result = ( p.text + p.err.text ).trim()
         assert result, "Running [$command] - result is [$result]"
         result
     }
