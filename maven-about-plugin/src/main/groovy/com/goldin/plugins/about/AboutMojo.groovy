@@ -60,7 +60,7 @@ class AboutMojo extends BaseGroovyMojo
                   '' )
     }
 
-    String exec  ( String command )                { command.execute().text }
+    String exec  ( String command )                { def p = command.execute(); p.text + p.err.text }
     String find  ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
     String find  ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }.replace( prefix, '' ).trim() }
     String sort  ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
