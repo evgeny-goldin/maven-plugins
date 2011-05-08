@@ -175,7 +175,7 @@ class AboutMojo extends BaseGroovyMojo
         verifyBean().directory( new File( basedir, '.svn' ))
         
         def status  = exec( "svn status $basedir.canonicalPath" )
-        assert ! status.contains( 'is not a working copy' ), "[$basedir.canonicalPath] is not an SVN project"
+        assert ! status.contains( 'is not a working copy' ), "[$basedir.canonicalPath] is not managed by SVN"
 
         def svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
         def commit  = exec( 'svn log -l 1' ).readLines()[ 1 ]
@@ -197,11 +197,7 @@ class AboutMojo extends BaseGroovyMojo
     {
         assert exec( 'git --version' ), "Failed to run 'git --version'"
         def status = exec( 'git status' )
-        assert ! status.contains( 'Not a git repository' ), "[$basedir.canonicalPath] is not a Git project"
-
-
-        log.info( "GIT STATUS: [$status]" )
-        
+        assert ! status.contains( 'Not a git repository' ), "[$basedir.canonicalPath] lacks Git repository"
 
         def gitLog = exec( 'git log -1' ).readLines()
 
