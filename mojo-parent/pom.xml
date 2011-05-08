@@ -58,6 +58,29 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Adding "about" data to all plugins -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>com.goldin.plugins</groupId>
+                <artifactId>maven-about-plugin</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>create-about</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>create-about</goal>
+                        </goals>
+                        <configuration>
+                            <runIf>{{ new File( project.build.directory ).isDirectory() }}</runIf>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
