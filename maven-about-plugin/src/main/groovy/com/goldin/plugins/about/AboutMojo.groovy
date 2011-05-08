@@ -7,6 +7,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
+
 /**
  * Updates files specified with "about" build metadata
  */
@@ -77,13 +78,13 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Maven Info
         |===============================================================================
-        | M2_HOME       : [${ env[ 'M2_HOME' ]}]
+        | ${ dumpPaths ? 'M2_HOME       : [' + env[ 'M2_HOME' ] + ']' : '' }
         | MAVEN_OPTS    : [${ env[ 'MAVEN_OPTS' ]}]
         | Version       : [${ mavenVersion() }]
-        | Project       : [$project]
+        | Project       : [${ dumpPaths ? project.toString() : project.toString().replaceAll( /\s+@.+/, '' )}]
         | Goals         : $session.goals
-        | Basedir       : [$basedir.canonicalPath]
-        | Name          : [$project.name]
+        | ${ dumpPaths ? 'Basedir       : [' + basedir.canonicalPath + ']': '' }
+        | Name          : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
         | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
         |===============================================================================
         | Build Info
@@ -92,8 +93,8 @@ class AboutMojo extends BaseGroovyMojo
         | Build Time    : Started         - [${ format.format( session.startTime ) }]
         | Build Time    : "About" created - [${ format.format( new Date())         }]
         | User          : [${ props[ 'user.name' ] }]
-        | Directory     : [${ props[ 'user.dir'  ] }]
-        | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }][${ props[ 'java.home' ] }][${ props[ 'java.vm.name' ] }]
+        | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
+        | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
         | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
         |===============================================================================""" +
 
@@ -167,8 +168,9 @@ class AboutMojo extends BaseGroovyMojo
         def files    = fileBean().files( directory, split( include ), split( exclude ))
         def tempFile = new File( outputDirectory, "about-${project.groupId}-${project.artifactId}-${project.version}.txt" )
         def content  = (( new File( basedir, '.svn' ).isDirectory() ? svnContent() : gitContent()).
-                        stripMargin().trim().replaceAll( /\r?\n/, ( 'windows' == endOfLine ) ? '\r\n' : '\n' ))
-        
+                        stripMargin().trim().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
+                        join(( 'windows' == endOfLine ) ? '\r\n' : '\n' ))
+
         tempFile.write( content )
 
         for ( file in files )
