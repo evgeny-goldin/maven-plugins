@@ -82,7 +82,7 @@ class AboutMojo extends BaseGroovyMojo
 
     String jenkinsContent()
     {
-        // http://weblogs.java.net/blog/johnsmart/archive/2008/03/using_hudson_en.html
+        // https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project
 
         """
         |===============================================================================
