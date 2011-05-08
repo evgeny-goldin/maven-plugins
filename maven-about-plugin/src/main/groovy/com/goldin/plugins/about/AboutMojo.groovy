@@ -86,29 +86,17 @@ class AboutMojo extends BaseGroovyMojo
 
         """
         |===============================================================================
-        | Hudson Info
+        | Jenkins/Hudson Info
         |===============================================================================
         | Hudson URL    : [${ env[ 'HUDSON_URL' ] }]
-        | Job URL       : [${ env[ 'HUDSON_URL' ] }/job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]"""
-    }
-
-    
-    String jenkinsContent()
-    {
-        // https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project
-        
-        """
-        |===============================================================================
-        | Jenkins Info
-        |===============================================================================
-        | Hudson URL    : [${ env[ 'JENKINS_URL' ] }]
-        | Job URL       : [${ env[ 'JENKINS_URL' ] }/job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]"""
+        | Job URL       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Job Log       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
     String teamcityContent()
     {
-        // http://confluence.jetbrains.net/display/TCD4/Predefined+Properties
+        // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
         
         """
         |===============================================================================
@@ -123,8 +111,7 @@ class AboutMojo extends BaseGroovyMojo
     String serverContent()
     {
         env[ 'HUDSON_URL'       ] ? hudsonContent()   :
-        env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
-        env[ 'TEAMCITY_VERSION' ] ? teamcityContent() : 
+        env[ 'TEAMCITY_VERSION' ] ? teamcityContent() :
                                     ''
     }
 
