@@ -72,7 +72,7 @@ class AboutMojo extends BaseGroovyMojo
 
     
     private String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
-    private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' ).trim() }
+    private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() }
     private String sort ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
                                                             map.sort().collect { String key, String value ->
                                                                                  "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
