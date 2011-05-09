@@ -303,7 +303,7 @@ class AboutMojo extends BaseGroovyMojo
 
         log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
 
-        tempFile.write(( buildContent() + scmContent() + serverContent()).
+        tempFile.write(( scmContent() + buildContent() + serverContent()).
                        stripMargin().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
                        join( 'windows' == endOfLine ? '\r\n' : '\n' ))
 
