@@ -31,6 +31,9 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpDependencies = false
 
     @MojoParameter
+    public boolean gitStatusProject = true
+
+    @MojoParameter
     public String endOfLine   = 'windows'
 
     @MojoParameter ( defaultValue = '${project.build.directory}' )
@@ -203,11 +206,12 @@ class AboutMojo extends BaseGroovyMojo
     {
         if ( ! dumpSCM ) { return '' }
 
-        File   svnDir     = new File( basedir, '.svn' )
-        String svnVersion = null
-        String svnStatus  = null
-        String gitVersion = null
-        String gitStatus  = null
+        File   svnDir           = new File( basedir, '.svn' )
+        String svnVersion       = null
+        String svnStatus        = null
+        String gitVersion       = null
+        String gitStatusCommand = null
+        String gitStatus        = null
 
         /**
          * Trying SVN
@@ -235,7 +239,9 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( gitVersion.contains( 'git version' ))
         {
-            gitStatus = exec( "git status $basedir.canonicalPath" )
+            gitStatusCommand = "git status" + ( gitStatusProject ? '' : ' ' + basedir.canonicalPath )
+            gitStatus        = exec( gitStatusCommand )
+            
             if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
             {
                 return gitContent( gitStatus )
@@ -255,7 +261,7 @@ class AboutMojo extends BaseGroovyMojo
         | Tried Git:
         | ~~~~~~~~~~
         | ${ gitVersion ? '"git --version" returned [' + gitVersion + ']'                            : '' }
-        | ${ gitStatus  ? '"git status ' + basedir.canonicalPath + '" returned [' + gitStatus  + ']' : '' }"""
+        | ${ gitStatus  ? '"' + gitStatusCommand + '" returned [' + gitStatus + ']'                  : '' }"""
     }
 
     
@@ -287,7 +293,7 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Repositories  : [${ padLines( exec( 'git remote -v' )) }]
         | Branch        : [${ find( '# On branch', 'git status' ) }]
-        | Status        : [${ padLines( gitStatus ) }]
+        | Status ${ gitStatusProject ? '(Proj)' : '(Dir) ' } : [${ padLines( gitStatus ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
         | Commit Author : [${ find( 'Author:',     gitLog )}]"""
