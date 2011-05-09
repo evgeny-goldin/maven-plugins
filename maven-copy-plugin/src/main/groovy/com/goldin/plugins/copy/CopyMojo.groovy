@@ -480,13 +480,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         File    targetFile = new File( filePath )
         boolean copied     = copy( file,
-                                              targetFile,
-                                              skipIdentical,
-                                              resource.replaces(),
-                                              resource.filtering,
-                                              resource.encoding,
-                                              fileFilter,
-                                              verbose )
+                                   targetFile,
+                                   skipIdentical,
+                                   resource.replaces(),
+                                   resource.filtering,
+                                   resource.encoding,
+                                   fileFilter,
+                                   verbose )
 
         copied ? verifyBean().file( targetFile ) : null
     }
@@ -538,7 +538,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        List<String> excludes,
                        boolean      failIfNotFound )
     {
-        fileBean().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update )
+        fileBean().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
+                         ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List )
 
         if ( resource.attachArtifact )
         {

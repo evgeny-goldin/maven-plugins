@@ -75,7 +75,7 @@
                             <goal>create-about</goal>
                         </goals>
                         <configuration>
-                            <runIf>{{ new File( project.build.directory ).isDirectory() }}</runIf>
+                            <runIf>{{ new File( project.build.directory ).isDirectory() &amp;&amp; Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
                             <dumpDependencies>true</dumpDependencies>
                         </configuration>
                     </execution>
