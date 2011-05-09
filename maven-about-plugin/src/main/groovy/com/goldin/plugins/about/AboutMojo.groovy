@@ -250,12 +250,12 @@ class AboutMojo extends BaseGroovyMojo
         | Tried SVN:
         | ~~~~~~~~~~
         | [$svnDir.canonicalPath] - ${ svnDir.isDirectory() ? 'found' : 'not found' }
-        | "svn --version" returned [$svnVersion]
-        | "svn status $basedir.canonicalPath" returned [$svnStatus]
+        | ${ svnVersion ? '"svn --version" returned [' + svnVersion + ']'                           : '' }
+        | ${ svnStatus  ? '"svn status" ' + basedir.canonicalPath + ' returned [' + svnStatus + ']' : '' }
         | Tried Git:
         | ~~~~~~~~~~
-        | "git --version" returned [$gitVersion]
-        | "git status"    returned [$gitStatus]"""
+        | ${ gitVersion ? '"git --version" returned [' + gitVersion + ']' : '' }
+        | ${ gitStatus  ? '"git status"    returned [' + gitStatus  + ']' : '' }"""
     }
 
     
