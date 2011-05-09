@@ -88,8 +88,8 @@ class AboutMojo extends BaseGroovyMojo
         assert mvnHome, "'M2_HOME' environment variable is not defined"
         verifyBean().directory( new File( mvnHome ))
         
-        def mvn = mvnHome + '/bin/' + System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' :
-                                                                                                            'mvn'
+        def mvn = mvnHome + '/bin/' + ( System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' :
+                                                                                                              'mvn' )
 
         exec( "$mvn -B dependency:tree", basedir ).replace( '[INFO] ', '' ).
                                                    replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
