@@ -16,6 +16,9 @@ import static com.goldin.plugins.common.GMojoUtils.*
 class AboutMojo extends BaseGroovyMojo
 {
     @MojoParameter
+    public boolean dumpSCM    = true
+
+    @MojoParameter
     public boolean dumpEnv    = false
 
     @MojoParameter
@@ -25,13 +28,13 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpPaths  = false
 
     @MojoParameter
+    public boolean dumpDependencies = false
+
+    @MojoParameter
     public String endOfLine   = 'windows'
 
     @MojoParameter ( defaultValue = '${project.build.directory}' )
     public File directory
-
-    @MojoParameter
-    public File file
 
     @MojoParameter
     public String include = '*.jar'
@@ -42,29 +45,21 @@ class AboutMojo extends BaseGroovyMojo
     private env = System.getenv()
 
 
-    public void setFile ( File file )
-    {
-        verifyBean().file( file )
-        assert file.parentFile, "File [$file.canonicalPath] has no parent directory"
-
-        this.directory = file.parentFile
-        this.include   = file.name
-    }
-
-
     
-    private String padLines ( String s, int j )
+    private String padLines ( String s )
     {
-        def lines = s.readLines()
-        ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { ( ' ' * j ) + it }.join( '\n' ) :
+        def padWidth = ' Status        : ['.size()
+        def lines    = s.readLines()
+        
+        ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * padWidth ) + it }.join( '\n' ) :
                                                          '' )) :
                   '' )
     }
 
     
-    private String exec ( String command )
+    private String exec ( String command, File directory = null )
     {
-        def    p      = command.execute()
+        def    p      = directory ? command.execute( null, directory ) : command.execute()
         def    result = ( p.text + p.err.text ).trim()
         assert result, "Running [$command] - result is [$result]"
         result
@@ -73,10 +68,34 @@ class AboutMojo extends BaseGroovyMojo
     
     private String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
     private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() ?: '' }
-    private String sort ( Map<String,String> map )        { def maxKey = map.keySet()*.size().max()
-                                                            map.sort().collect { String key, String value ->
-                                                                                 "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
-                                                                       join( '\n' )
+    private String sort ( Map<String,String> map )
+    {
+        def maxKey = map.keySet()*.size().max()
+        map.sort().collect { String key, String value ->
+                             "[$key]".padRight( maxKey + 3 ) + ":[$value]" }.
+                   join( '\n' )
+    }
+
+
+    /**
+     * Retrieves result of running "mvn dependency:tree" for the current project.
+     * 
+     * @return Result of running "mvn dependency:tree" for the current project.
+     */
+    private String dependencyTree()
+    {
+        def mvnHome = env[ 'M2_HOME' ]
+        assert mvnHome, "'M2_HOME' environment variable is not defined"
+        verifyBean().directory( new File( mvnHome ))
+        
+        def mvn = mvnHome + '/bin/' + System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' :
+                                                                                                            'mvn'
+
+        exec( "$mvn -B dependency:tree", basedir ).replace( '[INFO] ', '' ).
+                                                   replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
+                                                   replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+                                                   replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
+                                                   trim()
     }
 
 
@@ -124,19 +143,31 @@ class AboutMojo extends BaseGroovyMojo
     
     String serverContent()
     {
-        env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
-        env[ 'HUDSON_URL'       ] ? hudsonContent()   :
-        env[ 'TEAMCITY_VERSION' ] ? teamcityContent() :
-                                    ''
+        ( env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
+          env[ 'HUDSON_URL'       ] ? hudsonContent()   :
+          env[ 'TEAMCITY_VERSION' ] ? teamcityContent() :
+                                      '' )  +
+        """
+        |==============================================================================="""
     }
 
 
-    String generalContent()
+    String buildContent ()
     {
         def props  = System.properties
         def format = new SimpleDateFormat( "dd MMM, EEEE, yyyy, HH:mm:ss (zzzzzz:'GMT'ZZZZZZ)", Locale.ENGLISH )
 
         """
+        |===============================================================================
+        | Build Info
+        |===============================================================================
+        | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
+        | Build Time    : Started         - [${ format.format( session.startTime ) }]
+        | Build Time    : "About" created - [${ format.format( new Date())         }]
+        | User          : [${ props[ 'user.name' ] }]
+        | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
+        | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
+        | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
         |===============================================================================
         | Maven Info
         |===============================================================================
@@ -148,16 +179,7 @@ class AboutMojo extends BaseGroovyMojo
         | ${ dumpPaths ? 'Basedir       : [' + basedir.canonicalPath + ']': '' }
         | Name          : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
         | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
-        |===============================================================================
-        | Build Info
-        |===============================================================================
-        | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
-        | Build Time    : Started         - [${ format.format( session.startTime ) }]
-        | Build Time    : "About" created - [${ format.format( new Date())         }]
-        | User          : [${ props[ 'user.name' ] }]
-        | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
-        | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
-        | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]""" +
+        | ${ dumpDependencies ? 'Dependencies  : [' + padLines( dependencyTree()) + ']' : '' }""" +
 
         ( dumpSystem ?
 
@@ -173,21 +195,72 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Environment Variables
         |===============================================================================
-        |${ sort( env ) }""" : '' ) +
+        |${ sort( env ) }""" : '' )
+    }
+
+
+    String scmContent()
+    {
+        if ( ! dumpSCM ) { return '' }
+
+        File   svnDir     = new File( basedir, '.svn' )
+        String svnVersion = null
+        String svnStatus  = null
+        String gitVersion = null
+        String gitStatus  = null
+
+        /**
+         * Trying SVN
+         */
+
+        if ( svnDir.isDirectory())
+        {
+            svnVersion = exec( 'svn --version' )
+            if ( svnVersion.contains( 'svn, version' ))
+            {
+                svnStatus = exec( "svn status $basedir.canonicalPath" )
+                if (( ! svnStatus.contains( 'is not a working copy' )) &&
+                    ( ! svnStatus.contains( 'containing working copy admin area is missing' )))
+                {
+                    return svnContent( svnStatus )
+                }
+            }
+        }
+
+        /**
+         * Trying Git
+         */
+
+        gitVersion = exec( 'git --version' )
+
+        if ( gitVersion.contains( 'git version' ))
+        {
+            gitStatus = exec( 'git status' )
+            if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
+            {
+                return gitContent( gitStatus )
+            }
+        }
 
         """
-        |==============================================================================="""
+        |===============================================================================
+        | SCM Info
+        |===============================================================================
+        | Unsupported SCM system: either project is not managed by SVN/Git or corresponding command-line clients are not available.
+        | Tried SVN:
+        | ~~~~~~~~~~
+        | [$svnDir.canonicalPath] - ${ svnDir.isDirectory() ? 'found' : 'not found' }
+        | "svn --version" returned [$svnVersion]
+        | "svn status $basedir.canonicalPath" returned [$svnStatus]
+        | Tried Git:
+        | ~~~~~~~~~~
+        | "git --version" returned [$gitVersion]
+        | "git status"    returned [$gitStatus]"""
     }
 
     
-    String svnContent()
+    String svnContent( String svnStatus )
     {
-        assert exec( 'svn --version' ), "Failed to run 'svn --version'"
-        verifyBean().directory( new File( basedir, '.svn' ))
-        
-        def status  = exec( "svn status $basedir.canonicalPath" )
-        assert ! status.contains( 'is not a working copy' ), "[$basedir.canonicalPath] is not managed by SVN"
-
         def svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
         def commit  = exec( 'svn log -l 1' ).readLines()[ 1 ]
 
@@ -197,28 +270,24 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Repository    : [${ find( 'URL:',      svnInfo )}]
         | Revision      : [${ find( 'Revision:', svnInfo )}]
-        | Status        : [${ padLines( status, ' Status        : ['.size()) }]
+        | Status        : [${ padLines( svnStatus ) }]
         | Last Commit   : [$commit]
         | Commit Date   : [${ commit.split( '\\|' )[ 2 ].trim() }]
         | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]"""
     }
 
     
-    String gitContent()
+    String gitContent( String gitStatus )
     {
-        assert exec( 'git --version' ), "Failed to run 'git --version'"
-        def status = exec( 'git status' )
-        assert ! status.contains( 'Not a git repository' ), "[$basedir.canonicalPath] lacks Git repository"
-
         def gitLog = exec( 'git log -1' ).readLines()
 
         """
         |===============================================================================
         | Git Info
         |===============================================================================
-        | Repositories  : [${ padLines( exec( 'git remote -v' ), ' Repository    : ['.size()) }]
+        | Repositories  : [${ padLines( exec( 'git remote -v' )) }]
         | Branch        : [${ find( '# On branch', 'git status' ) }]
-        | Status        : [${ padLines( status, ' Status        : ['.size() ) }]
+        | Status        : [${ padLines( gitStatus ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
         | Commit Author : [${ find( 'Author:',     gitLog )}]"""
@@ -231,15 +300,18 @@ class AboutMojo extends BaseGroovyMojo
         def split    = { String s -> ( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
         def files    = fileBean().files( directory, split( include ), split( exclude ))
         def tempFile = new File( outputDirectory, "about-${project.groupId}-${project.artifactId}-${project.version}.txt" )
-        def content  = ((( new File( basedir, '.svn' ).isDirectory() ? svnContent() : gitContent()) + serverContent() + generalContent()).
-                        stripMargin().trim().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
-                        join(( 'windows' == endOfLine ) ? '\r\n' : '\n' ))
 
-        tempFile.write( content )
+        log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
+
+        tempFile.write(( buildContent() + scmContent() + serverContent()).
+                       stripMargin().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
+                       join( 'windows' == endOfLine ? '\r\n' : '\n' ))
+
+        log.info( "Generating \"about\" in [$tempFile.canonicalPath] - Done" )
 
         for ( file in files )
         {
-            log.info( "Updating [$file.canonicalPath] .." )
+            log.info( "Adding \"about\" to [$file.canonicalPath] .." )
 
             new AntBuilder().zip( destfile: file.canonicalPath,
                                   update  : true ){
@@ -247,7 +319,7 @@ class AboutMojo extends BaseGroovyMojo
                             prefix: 'META-INF' )
             }
 
-            log.info( "Updating [$file.canonicalPath] - Done" )
+            log.info( "Adding \"about\" to [$file.canonicalPath] - Done" )
         }
     }
 }

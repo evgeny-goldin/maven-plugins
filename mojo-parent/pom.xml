@@ -76,6 +76,7 @@
                         </goals>
                         <configuration>
                             <runIf>{{ new File( project.build.directory ).isDirectory() }}</runIf>
+                            <dumpDependencies>true</dumpDependencies>
                         </configuration>
                     </execution>
                 </executions>
