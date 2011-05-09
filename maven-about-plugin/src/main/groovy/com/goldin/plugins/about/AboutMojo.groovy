@@ -293,7 +293,7 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Repositories  : [${ padLines( exec( 'git remote -v' )) }]
         | Branch        : [${ find( '# On branch', 'git status' ) }]
-        | Status ${ gitStatusProject ? '(Proj)' : '(Dir) ' } : [${ padLines( gitStatus ) }]
+        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status: [${ padLines( gitStatus ) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
         | Commit Author : [${ find( 'Author:',     gitLog )}]"""
