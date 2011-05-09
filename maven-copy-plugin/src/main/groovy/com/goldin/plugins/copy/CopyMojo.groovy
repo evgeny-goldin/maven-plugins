@@ -668,7 +668,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         String           expression    = verifyBean().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
-        Object           o             = eval( expression, Object, groovyConfig, 'files', files )
+        Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', ( files ? files.first() : null ))
         Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                           ( o instanceof Collection ) ? (( Collection<File> ) o ) :
                                                                         null )
@@ -706,7 +706,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( processExpression )
         {
-            eval( processExpression, null, groovyConfig, 'files', files )
+            eval( processExpression, null, groovyConfig, 'files', files, 'file', ( files ? files.first() : null ))
         }
     }
 }
