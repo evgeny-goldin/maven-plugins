@@ -307,14 +307,14 @@ ${ job.htmlDescriptionTable.trimMultiline() }
         <hudson.plugins.parameterizedtrigger.BuildTrigger>
             <configs>
                 <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-                <configs>
-                    <!-- http://issues.hudson-ci.org/browse/HUDSON-7377 -->
-                    <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                        <properties>dummyRequiredParam</properties>
-                    </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                </configs>
-                <projects>${ job.invoke.jobs }</projects>
-                <condition>${ job.invoke.condition[ 0 ] }</condition>
+                    <configs>
+                        <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                            <properties></properties>
+                        </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                    </configs>
+                    <projects>${ job.invoke.jobs }</projects>
+                    <condition>${ job.invoke.condition[ 0 ] }</condition>
+                    <triggerWithNoParameters>true</triggerWithNoParameters>
                 </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
             </configs>
         </hudson.plugins.parameterizedtrigger.BuildTrigger>
