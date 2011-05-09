@@ -235,7 +235,7 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( gitVersion.contains( 'git version' ))
         {
-            gitStatus = exec( 'git status' )
+            gitStatus = exec( "git status $basedir.canonicalPath" )
             if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
             {
                 return gitContent( gitStatus )
@@ -254,8 +254,8 @@ class AboutMojo extends BaseGroovyMojo
         | ${ svnStatus  ? '"svn status" ' + basedir.canonicalPath + ' returned [' + svnStatus + ']' : '' }
         | Tried Git:
         | ~~~~~~~~~~
-        | ${ gitVersion ? '"git --version" returned [' + gitVersion + ']' : '' }
-        | ${ gitStatus  ? '"git status"    returned [' + gitStatus  + ']' : '' }"""
+        | ${ gitVersion ? '"git --version" returned [' + gitVersion + ']'                            : '' }
+        | ${ gitStatus  ? '"git status" ' + basedir.canonicalPath + ' returned [' + gitStatus  + ']' : '' }"""
     }
 
     
