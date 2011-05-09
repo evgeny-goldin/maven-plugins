@@ -107,9 +107,9 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Jenkins Info
         |===============================================================================
-        | Server URL    : [${ env[ 'JENKINS_URL' ] }]
-        | Job URL       : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
-        | Job Log       : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
+        | Server        : [${ env[ 'JENKINS_URL' ] }]
+        | Job           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Log           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
@@ -121,9 +121,9 @@ class AboutMojo extends BaseGroovyMojo
         |===============================================================================
         | Hudson Info
         |===============================================================================
-        | Server URL    : [${ env[ 'HUDSON_URL' ] }]
-        | Job URL       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
-        | Job Log       : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
+        | Server        : [${ env[ 'HUDSON_URL' ] }]
+        | Job           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Log           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
