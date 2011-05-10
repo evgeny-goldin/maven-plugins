@@ -15,63 +15,9 @@
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
-        <artifactId>main.plugins</artifactId>
+        <artifactId>mojo-parent</artifactId>
         <version>0.2.3-SNAPSHOT</version>
-        <relativePath>..</relativePath>
+        <relativePath>../mojo-parent</relativePath>
     </parent>
-
-
-    <build>
-        <sourceDirectory>${project.basedir}/src/main/groovy</sourceDirectory>
-
-        <plugins>
-
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Generating Java stubs from Groovy MOJOs -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>${gmaven-version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-stubs</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generateStubs</goal>
-                        </goals>
-                        <configuration>
-                            <providerSelection>1.7</providerSelection>
-                            <sources>
-                                <fileset>
-                                    <directory>${projects.basedir}/src/main/groovy</directory>
-                                    <includes>
-                                        <include>**/*.groovy</include>
-                                    </includes>
-                                </fileset>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-
-    <dependencies>
-        <dependency>
-            <groupId>com.goldin.plugins</groupId>
-            <artifactId>maven-common</artifactId>
-            <scope>compile</scope>
-            <version>0.2.3-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>${groovy-version}</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
 </project>

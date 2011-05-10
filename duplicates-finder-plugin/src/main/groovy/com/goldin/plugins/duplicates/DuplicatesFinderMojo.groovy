@@ -78,7 +78,7 @@ class DuplicatesFinderMojo extends GroovyMojo
          */
         Set<String>             scopes  = this.scopes.split( /,/ )*.trim() as Set
         Map<String, List<File>> classes =
-            project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) }.
+            project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) && ( a.type != 'pom' ) }.
                               // Artifact => File
                               collect { Artifact a ->
                                         File f   = resolveArtifact( a )
@@ -103,6 +103,7 @@ class DuplicatesFinderMojo extends GroovyMojo
                                    map }
 
         if ( violations ) { reportViolations( violations ) }
+        else              { log.info( "No duplicate libraries found" ) }
     }
 
 

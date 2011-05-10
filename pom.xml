@@ -64,6 +64,7 @@
         <!-- Plugins -->
         <!-- ~~~~~~~ -->
 
+        <module>duplicates-finder-plugin</module>
         <module>maven-about-plugin</module>
         <module>maven-copy-plugin</module>
         <module>maven-jenkins-plugin</module>
@@ -74,7 +75,6 @@
         <module>maven-properties-plugin</module>
         <module>maven-sshexec-plugin</module>
         <module>maven-spring-batch-plugin</module>
-        <module>maven-duplicates-finder-plugin</module>
     </modules>
 
 

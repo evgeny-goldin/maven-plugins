@@ -42,6 +42,18 @@
                     <groupId>plexus</groupId>
                     <artifactId>plexus-utils</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>classworlds</groupId>
+                    <artifactId>classworlds</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging-api</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
