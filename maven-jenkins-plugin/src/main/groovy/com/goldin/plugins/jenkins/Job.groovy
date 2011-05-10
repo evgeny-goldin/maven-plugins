@@ -26,7 +26,7 @@ class Job
     static enum JOB_TYPE
     {
         free  ( 'Free-Style' ),
-        maven ( 'Maven2'     );
+        maven ( 'Maven'      );
 
         final String description
         JOB_TYPE ( String description ) { this.description = description }
