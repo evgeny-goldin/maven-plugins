@@ -17,6 +17,9 @@ class PropertiesMojo extends BaseGroovyMojo
     public String rawProperties
 
     @MojoParameter ( required = false )
+    public String rawPropertiesReplace
+
+    @MojoParameter ( required = false )
     public Property[] properties
 
     @MojoParameter ( required = false )
@@ -36,12 +39,17 @@ class PropertiesMojo extends BaseGroovyMojo
     {
         if ( rawProperties )
         {
-            Properties p = new Properties()
-            p.load( new StringReader( rawProperties ))
-            def map1 = [ *:p ]
-            def map2 = [:]
+            Map<String, String> map2 = [:]
+            Map<String, String> map1 = rawProperties.readLines().inject( [:] ){
+                Map m, String line ->
+                def ( String key, String value ) = line.findAll( /^\s*(\S*)\s*=\s*(.+?)\s*$/ ){ [ it[1], it[2] ] }.first()
+                m[ key ] = value
+                m }
 
-            while ( map1.values().any { String value -> value.contains( '${' ) })
+            /**
+             * Interpolating map1 values and storing them in map2 until no more values are left to interpolate
+             */
+            while ( map1.values().any{ it.contains( '${' ) } )
             {
                 map1.each {
                     String name, String value ->
@@ -53,7 +61,16 @@ class PropertiesMojo extends BaseGroovyMojo
                 map2 = [:]
             }
 
-            map1.each { String name, String value -> setProperty( name, value, '', verbose ) }
+            map1.each {
+                String name, String value ->
+
+                if ( rawPropertiesReplace )
+                {
+                    value = groovyBean().eval( rawPropertiesReplace, String, groovyBean().binding( 'value', value ), new GroovyConfig( verbose: false ))
+                }
+
+                setProperty( name, value, '', verbose )
+            }
         }
 
 
