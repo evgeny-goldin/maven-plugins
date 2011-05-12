@@ -14,6 +14,9 @@ import static com.goldin.plugins.common.GMojoUtils.*
 class PropertiesMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )
+    public String rawProperties
+
+    @MojoParameter ( required = false )
     public Property[] properties
 
     @MojoParameter ( required = false )
@@ -31,6 +34,29 @@ class PropertiesMojo extends BaseGroovyMojo
     @Override
     public void doExecute() throws MojoExecutionException, MojoFailureException
     {
+        if ( rawProperties )
+        {
+            Properties p = new Properties()
+            p.load( new StringReader( rawProperties ))
+            def map1 = [ *:p ]
+            def map2 = [:]
+
+            while ( map1.values().any { String value -> value.contains( '${' ) })
+            {
+                map1.each {
+                    String name, String value ->
+                    map2[ name ] = value.contains( '${' ) ? value.replaceAll( /\$\{(.+?)\}/ ){ map1[ it[ 1 ]] } :
+                                                            value
+                }
+
+                map1 = map2
+                map2 = [:]
+            }
+
+            map1.each { String name, String value -> setProperty( name, value, '', verbose ) }
+        }
+
+
         for ( property in properties())
         {
             String name      = property.name?.trim()

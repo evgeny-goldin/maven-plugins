@@ -29,6 +29,33 @@
 
         <plugins>
 
+            <!-- ~~~~~~~~~~~~~~~~~ -->
+            <!-- Enforcing Maven 3 -->
+            <!-- ~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>display-info</goal>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.0</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Checking for duplicate libraries in scope -->
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -40,7 +67,7 @@
                 <executions>
                     <execution>
                         <id>find-duplicates</id>
-                        <phase>validate</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>find-duplicates</goal>
                         </goals>
