@@ -453,12 +453,12 @@ class GMojoUtils
         assert mavenVersion().startsWith( "2" ): \
                "<deploy> is only supported by Maven 2 for now, see http://evgeny-goldin.org/youtrack/issue/pl-258"
 
-        List<Element> configuration = Arrays.asList( element( "file",       file.canonicalPath ),
-                                                     element( "url",        url         ),
-                                                     element( "groupId",    groupId     ),
-                                                     element( "artifactId", artifactId  ),
-                                                     element( "version",    version     ),
-                                                     element( "packaging",  fileBean().extension( file )))
+        List<Element> config = Arrays.asList( element( "file",       file.canonicalPath ),
+                                              element( "url",        url         ),
+                                              element( "groupId",    groupId     ),
+                                              element( "artifactId", artifactId  ),
+                                              element( "version",    version     ),
+                                              element( "packaging",  fileBean().extension( file )))
         if ( classifier != null )
         {
             configuration.add( element( "classifier", classifier ))
@@ -473,7 +473,7 @@ class GMojoUtils
                                  "maven-deploy-plugin",
                                  "2.5" ),
                          goal( "deploy-file" ),
-                         configuration( configuration.toArray( new Element[ configuration.size() ] )),
+                         configuration( config as Element[] ),
                          executionEnvironment( ThreadLocals.get( MavenProject ), ThreadLocals.get( MavenSession ), manager ))
 
             log.info( "Deployed $description" )
