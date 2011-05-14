@@ -417,7 +417,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             {
                 filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )
             }
-            else
+            else if ( sourceDirectory /* null when mkdir is performed */ )
             {   /**
                  * Taking each <include> separately to make sure it doesn't come out empty
                  * (if we take all <includes> at once and some patterns come empty - no exception will be thrown)
