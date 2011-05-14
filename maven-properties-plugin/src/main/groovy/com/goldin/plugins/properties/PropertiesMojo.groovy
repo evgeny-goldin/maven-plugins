@@ -2,13 +2,10 @@ package com.goldin.plugins.properties
 
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.BaseGroovyMojo
-import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugin.MojoFailureException
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
-
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
@@ -39,7 +36,7 @@ class PropertiesMojo extends BaseGroovyMojo
 
 
     @Override
-    public void doExecute() throws MojoExecutionException, MojoFailureException
+    public void doExecute()
     {
         Map<String, String> props = [:]
         def normalizePath         = { String value -> def file = new File( value )
