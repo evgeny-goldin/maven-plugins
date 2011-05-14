@@ -130,8 +130,11 @@ class AssertMojo extends BaseGroovyMojo
             }
         })
 
-        int keyLength = propertiesMap.keySet()*.size().max() + 3
-        propertiesMap.each { String name, String value -> log.info( "\${$name}".padRight( keyLength ) + " = [$value]" )}
+        if ( propertiesMap )
+        {
+            int keyLength = propertiesMap.keySet()*.size().max() + 3
+            propertiesMap.each { String name, String value -> log.info( "\${$name}".padRight( keyLength ) + " = [$value]" )}
+        }
     }
 
 
