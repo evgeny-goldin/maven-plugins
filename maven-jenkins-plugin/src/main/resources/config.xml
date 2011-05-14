@@ -319,7 +319,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }
                         <% if ( job.invoke.gitCommitParam          ) { %><hudson.plugins.git.GitRevisionBuildParameters/><% } %>
                         <% if ( job.invoke.params ) { %>
                             <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                                <properties>${ job.invoke.params }</properties>
+                                <properties>${ job.invoke.params.readLines()*.trim().join( '\n' ) }</properties>
                             </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
                         <% } %>
                         <% if ( job.invoke.propertiesFileParams ) { %>
