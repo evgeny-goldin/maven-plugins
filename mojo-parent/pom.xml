@@ -45,7 +45,7 @@
                             <goal>find-duplicates</goal>
                         </goals>
                         <configuration>
-                            <runIf>{{ new File( project.build.directory ).isDirectory() &amp;&amp; Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
+                            <runIf>{{ Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
                         </configuration>
                     </execution>
                 </executions>
