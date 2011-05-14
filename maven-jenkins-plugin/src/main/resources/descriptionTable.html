@@ -32,6 +32,10 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
         <td valign="top">Job type</td>
         <td>${ job.jobType.description }</td>
     </tr>
+    <tr>
+        <td valign="top">Java</td>
+        <td>${ job.jdkName }</td>
+    </tr>
     <%
       if ( job.jobType == JOB_TYPE.maven )
       {
@@ -39,6 +43,10 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
                            job.localRepoPath     ? job.localRepoPath :
                                                    "&lt;user-home&gt;/.m2/repository" )
     %>
+    <tr>
+        <td valign="top">Maven</td>
+        <td><strong><code>${ job.mavenName }</code></strong></td>
+    </tr>
     <tr>
         <td valign="top">Maven goals</td>
         <td><strong><code>${ job.mavenGoals }</code></strong></td>

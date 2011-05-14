@@ -148,7 +148,7 @@ class Job
    /**
     * Retrieves job description table
     */
-    String getHtmlDescriptionTable() { makeTemplate( '/htmlDescriptionTable.html', [ job : this ] ) }
+    String getHtmlDescriptionTable() { makeTemplate( '/descriptionTable.html', [ job : this ] ) }
 
 
     /**
@@ -313,7 +313,7 @@ class Job
      * Verifies job is fully configured before config file is created
      *
      * All job properties used "as-is" (without "if" and safe navigation operator)
-     * in "config.xml" and "htmlDescriptionTable.html" are verified to be defined
+     * in "config.xml" and "descriptionTable.html" are verified to be defined
      */
      void verifyAll ()
      {
