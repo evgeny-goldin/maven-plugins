@@ -276,7 +276,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }
       {
   %>
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Requires "Artifactory Plugin" v1.3.4 at least                 -->
+        <!-- Requires "Artifactory Plugin" v2.0.0                          -->
         <!-- http://wiki.jenkins-ci.org/display/JENKINS/Artifactory+Plugin -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <org.jfrog.hudson.ArtifactoryRedeployPublisher>
@@ -299,22 +299,39 @@ ${ job.htmlDescriptionTable.trimMultiline() }
 
       if ( job.invoke?.jobs )
       {
+         def anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
+                            job.invoke.gitCommitParam     || job.invoke.params                  ||
+                            job.invoke.propertiesFileParams )
   %>
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Requires "Parameterized Trigger Plugin"                                 -->
+        <!-- Requires "Parameterized Trigger Plugin" v2.8                            -->
         <!-- http://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <hudson.plugins.parameterizedtrigger.BuildTrigger>
             <configs>
                 <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                    <% if ( ! anyConfigs ) { %>
+                    <configs class="java.util.Collections\$EmptyList"/>
+                    <% } else { %>
                     <configs>
-                        <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                            <properties></properties>
-                        </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                        <% if ( job.invoke.currentBuildParams      ) { %><hudson.plugins.parameterizedtrigger.CurrentBuildParameters/><% } %>
+                        <% if ( job.invoke.subversionRevisionParam ) { %><hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters/><% } %>
+                        <% if ( job.invoke.gitCommitParam          ) { %><hudson.plugins.git.GitRevisionBuildParameters/><% } %>
+                        <% if ( job.invoke.params ) { %>
+                            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                                <properties>${ job.invoke.params }</properties>
+                            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                        <% } %>
+                        <% if ( job.invoke.propertiesFileParams ) { %>
+                            <hudson.plugins.parameterizedtrigger.FileBuildParameters>
+                                <propertiesFile>${ job.invoke.propertiesFileParams }</propertiesFile>
+                            </hudson.plugins.parameterizedtrigger.FileBuildParameters>
+                        <% } %>
                     </configs>
+                    <% } %>
                     <projects>${ job.invoke.jobs }</projects>
                     <condition>${ job.invoke.condition[ 0 ] }</condition>
-                    <triggerWithNoParameters>true</triggerWithNoParameters>
+                    <triggerWithNoParameters>${ job.invoke.triggerWithoutParameters }</triggerWithNoParameters>
                 </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
             </configs>
         </hudson.plugins.parameterizedtrigger.BuildTrigger>

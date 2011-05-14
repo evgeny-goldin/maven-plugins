@@ -6,12 +6,23 @@ package com.goldin.plugins.jenkins.beans
  */
 class Invoke
 {
+    String      jobs               // Comma-separated job IDs to invoke
+    Set<String> jobsSplit          // Job IDs to invoke (split)
     boolean     always    = false  // Whether other jobs should always be invoked
     boolean     stable    = true   // Whether other jobs should be invoked if build is stable
     boolean     unstable  = false  // Whether other jobs should be invoked if build is unstable (tests failed)
     boolean     failed    = false  // Whether other jobs should be invoked if build has failed
-    String      jobs               // Comma-separated job IDs to invoke
-    Set<String> jobsSplit          // Job IDs to invoke (split)
+
+    /**
+     * Job parameters
+     */
+    
+    boolean     triggerWithoutParameters = false  // Trigger build without parameters
+    boolean     currentBuildParams       = false  // Current build parameters
+    boolean     subversionRevisionParam  = false  // Subversion revision parameters
+    boolean     gitCommitParam           = false  // Pass-through Git Commit that was built
+    String      params                            // Predefined parameters
+    String      propertiesFileParams              // Parameters from properties file
 
 
    /**
