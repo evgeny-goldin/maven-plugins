@@ -67,10 +67,12 @@
                             <goal>generateStubs</goal>
                         </goals>
                         <configuration>
-                            <providerSelection>1.7</providerSelection>
                             <sources>
                                 <fileset>
                                     <directory>${projects.basedir}/src/main/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
                                 </fileset>
                             </sources>
                         </configuration>

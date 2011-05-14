@@ -185,24 +185,7 @@
                     <configuration>
                         <providerSelection>1.7</providerSelection>
                         <verbose>true</verbose>
-                        <scriptpath>
-                            <element>${projects.basedir}/src/main/groovy</element>
-                        </scriptpath>
-                        <sources>
-                            <fileset>
-                                <directory>${projects.basedir}/src/main/groovy</directory>
-                                <includes>
-                                    <include>**/*.groovy</include>
-                                </includes>
-                            </fileset>
-                            <fileset>
-                                <directory>${projects.basedir}/src/test/groovy</directory>
-                                <includes>
-                                    <include>**/*.groovy</include>
-                                </includes>
-                            </fileset>
-                        </sources>
-                        <source><!-- To stop the warning --></source>
+                        <source/>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -287,6 +270,9 @@
                             <sources>
                                 <fileset>
                                     <directory>${pom.basedir}/src/main/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
                                 </fileset>
                             </sources>
                         </configuration>
@@ -301,6 +287,9 @@
                             <sources>
                                 <fileset>
                                     <directory>${pom.basedir}/src/test/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
                                 </fileset>
                             </sources>
                         </configuration>
