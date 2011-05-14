@@ -16,6 +16,12 @@ import static com.goldin.plugins.common.GMojoUtils.*
 class AboutMojo extends BaseGroovyMojo
 {
     @MojoParameter
+    public String prefix = 'META-INF'
+
+    @MojoParameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
+    public String fileName
+
+    @MojoParameter
     public boolean dumpSCM    = true
 
     @MojoParameter
@@ -303,9 +309,9 @@ class AboutMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
-        def split    = { String s -> ( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
+        def split    = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
         def files    = fileBean().files( directory, split( include ), split( exclude ))
-        def tempFile = new File( outputDirectory, "about-${project.groupId}-${project.artifactId}-${project.version}.txt" )
+        def tempFile = new File( outputDirectory, fileName )
 
         log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
 
@@ -314,19 +320,19 @@ class AboutMojo extends BaseGroovyMojo
                        stripMargin().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
                        join( 'windows' == endOfLine ? '\r\n' : '\n' ))
 
-        log.info( "Generating \"about\" in [$tempFile.canonicalPath] - Done" )
+        log.info( "Generated  \"about\" in [$tempFile.canonicalPath]" )
 
         for ( file in files )
         {
-            log.info( "Adding \"about\" to [$file.canonicalPath] .." )
+            log.info( "Adding \"about\" to [$file.canonicalPath/$prefix/$fileName] .." )
 
             new AntBuilder().zip( destfile: file.canonicalPath,
                                   update  : true ){
                 zipfileset( file  : tempFile.canonicalPath,
-                            prefix: 'META-INF' )
+                            prefix: prefix )
             }
 
-            log.info( "Adding \"about\" to [$file.canonicalPath] - Done" )
+            log.info( "Added  \"about\" to [$file.canonicalPath/$prefix/$fileName]" )
         }
     }
 }
