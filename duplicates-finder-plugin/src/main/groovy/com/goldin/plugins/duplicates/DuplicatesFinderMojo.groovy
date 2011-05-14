@@ -65,6 +65,7 @@ class DuplicatesFinderMojo extends GroovyMojo
          * Mapping of File to Maven Artifact
          */
         Map<File, Artifact> f2A = [:]
+        def time                = System.currentTimeMillis()
 
        /**
         * Makes sure map specified has a new list entry and adds a new value to it
@@ -102,6 +103,7 @@ class DuplicatesFinderMojo extends GroovyMojo
                                    updateMap( map, violatingArtifacts, className )
                                    map }
 
+        log.info( "[${ f2A.size() }] artifact${ generalBean().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
         if ( violations ) { reportViolations( violations ) }
         else              { log.info( "No duplicate libraries found" ) }
     }
