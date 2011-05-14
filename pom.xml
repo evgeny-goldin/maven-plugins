@@ -282,11 +282,31 @@
                 <executions>
                     <execution>
                         <id>compile-groovy</id>
-                        <phase>process-sources</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${pom.basedir}/src/main/groovy</directory>
+                                </fileset>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-groovy-tests</id>
+                        <phase>test-compile</phase>
+                        <goals>
                             <goal>testCompile</goal>
                         </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${pom.basedir}/src/test/groovy</directory>
+                                </fileset>
+                            </sources>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
