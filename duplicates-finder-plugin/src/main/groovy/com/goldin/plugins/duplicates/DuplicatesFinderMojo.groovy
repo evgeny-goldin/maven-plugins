@@ -1,20 +1,17 @@
 package com.goldin.plugins.duplicates
 
+import com.goldin.plugins.common.BaseGroovyMojo
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import org.apache.maven.artifact.Artifact
+import org.apache.maven.plugin.MojoFailureException
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
 import org.sonatype.aether.util.artifact.DefaultArtifact
-
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import org.apache.maven.artifact.Artifact
-import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.MojoFailureException
-import org.apache.maven.project.MavenProject
-import org.codehaus.gmaven.mojo.GroovyMojo
-import org.jfrog.maven.annomojo.annotations.*
 import static com.goldin.plugins.common.GMojoUtils.*
+import org.jfrog.maven.annomojo.annotations.*
 
 
 /**
@@ -23,7 +20,7 @@ import static com.goldin.plugins.common.GMojoUtils.*
 @MojoGoal ( 'find-duplicates' )
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )
-class DuplicatesFinderMojo extends GroovyMojo
+class DuplicatesFinderMojo extends BaseGroovyMojo
 {
     /**
      * Cache of Maven artifact to file on the disk
@@ -45,12 +42,6 @@ class DuplicatesFinderMojo extends GroovyMojo
     @MojoParameter
     public boolean fail = true
 
-    @MojoParameter ( expression = '${project}', required = true )
-    public MavenProject project
-
-    @MojoParameter ( expression = '${session}', required = true )
-    public MavenSession session
-
     /**
      * Aether components:
      * http://aether.sonatype.org/using-aether-in-maven-plugins.html
@@ -68,7 +59,7 @@ class DuplicatesFinderMojo extends GroovyMojo
 
 
     @Override
-    void execute ()
+    void doExecute ()
     {
         assert mavenVersion().startsWith( '3' ), "This plugin only runs with Maven 3"
 
