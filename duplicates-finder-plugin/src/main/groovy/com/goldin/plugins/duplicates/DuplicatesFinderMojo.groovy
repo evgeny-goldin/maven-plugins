@@ -25,6 +25,17 @@ import static com.goldin.plugins.common.GMojoUtils.*
 @MojoRequiresDependencyResolution ( 'test' )
 class DuplicatesFinderMojo extends GroovyMojo
 {
+    /**
+     * Cache of Maven artifact to file on the disk
+     */
+    private static final Map<Artifact, File> FILES_CACHE = [:]
+
+    /**
+     * Cache of file on the disk to classes it contains
+     */
+    private static final Map<File, List<String>> CLASSES_CACHE = [:]
+
+
     @MojoParameter
     public String scopes = 'compile'
 
@@ -117,6 +128,11 @@ class DuplicatesFinderMojo extends GroovyMojo
      */
     private File resolveArtifact( Artifact artifact )
     {
+        if ( FILES_CACHE.containsKey( artifact ))
+        {
+            return FILES_CACHE[ artifact ]
+        }
+
         def request = new ArtifactRequest( new DefaultArtifact( artifact.groupId,
                                                                 artifact.artifactId,
                                                                 artifact.classifier,
@@ -124,7 +140,7 @@ class DuplicatesFinderMojo extends GroovyMojo
                                                                 artifact.version ),
                                            remoteRepos, null )
 
-        verifyBean().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        FILES_CACHE[ artifact ] = verifyBean().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
     }
 
 
@@ -136,13 +152,18 @@ class DuplicatesFinderMojo extends GroovyMojo
      */
     private List<String> classNames ( File file )
     {
+        if ( CLASSES_CACHE.containsKey( file ))
+        {
+            return CLASSES_CACHE[ file ]
+        }
+
         ZipFile zip = new ZipFile( file )
 
         try
         {
-            zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
-                          collect{ ZipEntry entry -> entry.name.replace( '/', '.' ).
-                                                                replaceAll( /\.class$/, '' ) }
+            CLASSES_CACHE[ file ] = verifyBean().notNull( zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
+                                                                        collect{ ZipEntry entry -> entry.name.replace( '/', '.' ).
+                                                                                 replaceAll( /\.class$/, '' ) } )
         }
         finally { zip.close() }
     }

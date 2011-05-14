@@ -195,11 +195,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         assert ( resource.mkdir || resource.directory )
 
-        def  isDownload        = netBean().isNet( resource.directory )
-        def  isUpload          = netBean().isNet( resource.targetPaths())
-        File sourceDirectory   = ( resource.mkdir ? null                            : // Only <targetPath> is active
-                                   isDownload     ? fileBean().tempDirectory()      : // Temp dir to download the files to
-                                                    new File( resource.directory ))   // Directory to cleanup, upload or copy
+        def  isDownload      = netBean().isNet( resource.directory )
+        def  isUpload        = netBean().isNet( resource.targetPaths())
+        File sourceDirectory = ( isDownload         ? fileBean().tempDirectory()     : // Temp dir to download the files to
+                                 resource.directory ? new File( resource.directory ) : // Directory to cleanup, upload or copy
+                                                      null )                           // mkdir, no source directory
         try
         {
             def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
@@ -412,7 +412,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             {
                 filesToProcess << mkdir( targetPath, verbose )
             }
-            else if ( resource.pack )
+            
+            if ( resource.pack )
             {
                 filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )
             }
