@@ -47,7 +47,6 @@ class ReplaceTest
         else
         {
             assert expectedOutput == replaceCall()
-            println "[${ replace.from }]: [$input] => [$expectedOutput]"
         }
     }
 

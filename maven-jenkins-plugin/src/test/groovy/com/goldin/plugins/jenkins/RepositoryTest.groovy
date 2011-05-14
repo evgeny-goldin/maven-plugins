@@ -34,7 +34,6 @@ class RepositoryTest
     private static checkEquals( Object expected, Object result, String logMessage )
     {
         assert expected == result
-        log.info( logMessage )
     }
 
 

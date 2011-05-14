@@ -67,29 +67,36 @@ class PropertiesMojo extends BaseGroovyMojo
         assert rawProperties
 
         Map<String, String> map = rawProperties.readLines().inject( [:] ) {
-            Map m, String line -> /* Splitting "key = value" line to key and value */
-            def ( String key, String value ) = line.split( /=/ )[ 0, 1 ]*.trim()
-            m[ key ] = addDollar( value, addDollar )
+            Map m, String line ->
+            def ( String name, String value ) = line.split( /=/ )[ 0, 1 ]*.trim()
+            m[ name ] = addDollar( value, addDollar )
             m
         }
 
+        /**
+         * Interpolates the value specified: "aa${expression}" => "aabb"
+         */
         def interpolate = {
             String name, String value ->
             while ( value.contains( '${' ))
             {
-                value = value.replaceAll( /\$\{(.+?)\}/ ){ String expression  = it[ 1 ]
-                                                           assert expression
-                                                           assert expression != name, "Property [$name] has a circular definition with itself"
-                                                           String newValue    = map[ expression ]
-                                                           assert newValue, "Unable to interpolate \${$expression} - unknown value"
-                                                           newValue }
+                value = value.replaceAll( /\$\{(.+?)\}/ ){
+                    String all, String expression ->
+                    assert expression
+                    assert expression != name, "Property [$name] has a circular definition with itself"
+                    String newValue    = map[ expression ] ?: System.getProperty( expression )
+                    if (( ! newValue ) && ( expression.startsWith( 'env.' )))
+                    {
+                        newValue = System.getenv( expression.substring( 'env.'.size()))
+                    }
+                    assert newValue, "Unable to interpolate \${$expression} - unknown value"
+                    newValue
+                }
             }
             value
         }
 
-        def map2 = [:]
-        map.each{ String name, String value -> map2[ name ] = interpolate( name, value ) }
-        map2
+        ( Map<String, String> ) map.collectEntries{ String name, String value -> [ name, interpolate( name, value ) ] }
     }
 
 

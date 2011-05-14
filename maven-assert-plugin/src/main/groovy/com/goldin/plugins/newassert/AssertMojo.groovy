@@ -112,17 +112,26 @@ class AssertMojo extends BaseGroovyMojo
 
     private verifyProperties ( String properties )
     {
+        def propertiesMap = [:]
+        
         verifyEachLine( properties, {
 
-            String propertyName ->
+            String line ->
 
-            Map    superMap      = project.properties + session.userProperties + session.executionProperties
-            Object propertyValue = superMap[ propertyName ]
+            for ( propertyName in line.split())
+            {
+                Map    superMap      = project.properties + session.userProperties + session.executionProperties
+                Object propertyValue = superMap[ propertyName ]
 
-            assert ( propertyValue != null ), 'Property ${' + propertyName + '} is undefined!'
+                assert ( propertyValue != null ), 'Property ${' + propertyName + '} is undefined!'
+                assert propertyValue instanceof String
 
-            log.info( '${' + propertyName + '} = [' + propertyValue + ']' )
+                propertiesMap[ propertyName ] = propertyValue
+            }
         })
+
+        int keyLength = propertiesMap.keySet()*.size().max() + 3
+        propertiesMap.each { String name, String value -> log.info( "\${$name}".padRight( keyLength ) + " = [$value]" )}
     }
 
 
