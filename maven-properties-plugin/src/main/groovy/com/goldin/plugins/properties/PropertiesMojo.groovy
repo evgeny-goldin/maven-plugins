@@ -9,6 +9,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
 
+
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
 class PropertiesMojo extends BaseGroovyMojo
@@ -17,7 +18,10 @@ class PropertiesMojo extends BaseGroovyMojo
     public String rawProperties
 
     @MojoParameter ( required = false )
-    public String rawPropertiesReplace
+    public String addDollar
+
+    @MojoParameter ( required = false )
+    public boolean normalizePath = true
 
     @MojoParameter ( required = false )
     public Property[] properties
@@ -37,48 +41,71 @@ class PropertiesMojo extends BaseGroovyMojo
     @Override
     public void doExecute() throws MojoExecutionException, MojoFailureException
     {
-        if ( rawProperties )
-        {
-            Map<String, String> map2 = [:]
-            Map<String, String> map1 = rawProperties.readLines().inject( [:] ){
-                Map m, String line ->
-                def ( String key, String value ) = line.findAll( /^\s*(\S*)\s*=\s*(.+?)\s*$/ ){ [ it[1], it[2] ] }.first()
-                m[ key ] = value
-                m }
+        def props = [:]
 
-            /**
-             * Interpolating map1 values and storing them in map2 until no more values are left to interpolate
-             */
-            while ( map1.values().any{ it.contains( '${' ) } )
-            {
-                map1.each {
-                    String name, String value ->
-                    map2[ name ] = value.contains( '${' ) ? value.replaceAll( /\$\{(.+?)\}/ ){ map1[ it[ 1 ]] } :
-                                                            value
-                }
+        if ( rawProperties ) { props += rawProperties()   }
+        if ( properties())   { props += namedProperties() }
 
-                map1 = map2
-                map2 = [:]
-            }
+        props.each {
+            String name, String value ->
 
-            map1.each {
-                String name, String value ->
+            assert name && value
+            value = ( normalizePath && ( new File( value ).exists())) ?
+                        new File( value ).canonicalPath.replace( '\\', '/' ) :
+                        value
 
-                if ( rawPropertiesReplace )
-                {
-                    value = groovyBean().eval( rawPropertiesReplace, String, groovyBean().binding( 'value', value ), new GroovyConfig( verbose: false ))
-                }
+            setProperty( name, value, '', verbose )
+        }
+    }
 
-                setProperty( name, value, '', verbose )
-            }
+    
+    /**
+     * Sets raw properties specified.
+     */
+    private Map<String, String> rawProperties ()
+    {
+        assert rawProperties
+
+        Map<String, String> map = rawProperties.readLines().inject( [:] ) {
+            Map m, String line -> /* Splitting "key = value" line to key and value */
+            def ( String key, String value ) = line.split( /=/ )[ 0, 1 ]*.trim()
+            m[ key ] = addDollar( value, addDollar )
+            m
         }
 
+        def interpolate = {
+            String name, String value ->
+            while ( value.contains( '${' ))
+            {
+                value = value.replaceAll( /\$\{(.+?)\}/ ){ String expression  = it[ 1 ]
+                                                           assert expression
+                                                           assert expression != name, "Property [$name] has a circular definition with itself"
+                                                           String newValue    = map[ expression ]
+                                                           assert newValue, "Unable to interpolate \${$expression} - unknown value"
+                                                           newValue }
+            }
+            value
+        }
+
+        def map2 = [:]
+        map.each{ String name, String value -> map2[ name ] = interpolate( name, value ) }
+        map2
+    }
+
+
+    /**
+     * Set named properties specified.
+     */
+    private Map<String, String> namedProperties()
+    {
+        assert properties()
+        def map = [:]
 
         for ( property in properties())
         {
-            String name      = property.name?.trim()
-            String value     = property.value?.trim()
-            def    isVerbose = generalBean().choose( property.verbose, verbose )
+            def name      = property.name?.trim()
+            def value     = addDollar( property.value?.trim(), addDollar )
+            def isVerbose = generalBean().choose( property.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {
@@ -86,7 +113,9 @@ class PropertiesMojo extends BaseGroovyMojo
                 value = eval( value, String, groovyConfig )
             }
 
-            setProperty( name, value, '', isVerbose )
+            map[ name ] = value
         }
+
+        map
     }
 }

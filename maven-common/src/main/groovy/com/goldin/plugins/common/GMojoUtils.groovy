@@ -484,7 +484,27 @@ class GMojoUtils
         }
     }
 
+    /**
+     * Add a '$' character to {..} expressions.
+     * 
+     * @param value value containing {..} expressions.
+     * @param addDollar if "false" or Groovy Truth false - no changes are made to the value,
+     *                  if "true" - all {..} expressions are converted to ${..}
+     *                  if list of comma-separated tokens - only {token} expressions are updated
+     * @return value modified according to 'addDollar' 
+     */
+    static String addDollar( String value, String addDollar )
+    {
+        if ( value && addDollar && ( 'false' != addDollar ))
+        {
+            String pattern = ( 'true' == addDollar ) ? '.+?' : addDollar.split( /,/ )*.trim().collect{ String token -> "\\Q$token\\E" }.join( '|' )
+            value = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
+        }
 
+        value
+    }
+
+    
     /**
      * http://evgeny-goldin.org/youtrack/issue/gc-41
      * "Load GCommons only once per Maven job execution when more than one plugin uses it"

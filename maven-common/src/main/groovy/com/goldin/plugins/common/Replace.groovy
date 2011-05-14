@@ -76,21 +76,8 @@ class Replace
                                   matcher.replaceFirst( replacement )
         }
 
-        if (( addDollar ) && ( 'false' != addDollar ))
-        {
-            /**
-             * If addDollar is "true" then all {..} expressions have $ prepended to them
-             * Otherwise, addDollar is comma-separated list of token names, so only {tokenName} expressions have $ prepended
-             */
-
-            String pattern = ( 'true' == addDollar ) ? '.+?' :
-                                                       addDollar.trim().split( /\s*,\s*/ ).collect { "\\Q${it}\\E" }.join( '|' )
-            /**
-             * Adding '$' before {..} where there was no '$' previously
-             */
-            result = result.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
-        }
-
+        result = addDollar( result, addDollar )
+        
         ( endOfLine ) ? result.replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )) :
                         result
     }
