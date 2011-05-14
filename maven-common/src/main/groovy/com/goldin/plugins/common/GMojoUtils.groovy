@@ -270,16 +270,23 @@ class GMojoUtils
         mopInit()
     }
 
+    
+    /**
+     * Retrieves maximal length of map's key.
+     */
+    static int maxKeyLength ( Map<String, ?> map ) { map.keySet()*.size().max() }
+
 
     /**
      * Sets property specified to maven project and session provided.
      *
-     * @param name    name of the property to set
-     * @param value   value of the property to set
-     * @param project Maven project
-     * @param session Maven session
+     * @param name       name of the property to set
+     * @param value      value of the property to set
+     * @param logMessage log message to use when property is set, instead of the default one
+     * @param verbose    whether property value set is logged or hidden
+     * @param padName    number of characters to pad the property name
      */
-    static void setProperty( String name, String value, String logMessage = '', boolean verbose = true )
+    static void setProperty( String name, String value, String logMessage = '', boolean verbose = true, int padName = 0 )
     {
         verifyBean().notNullOrEmpty( name, value )
 
@@ -288,7 +295,9 @@ class GMojoUtils
 
         [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
 
-        log.info( logMessage ?: ">> Maven property \${$name} is set${ verbose ? ' to "' + value + '"' : '' }" )
+        log.info( logMessage ?: ">> Maven property " +
+                                "\${$name}".padRight( padName + 3 ) +
+                                " is set" + ( verbose ? " to \"$value\"" : '' ))
     }
 
 

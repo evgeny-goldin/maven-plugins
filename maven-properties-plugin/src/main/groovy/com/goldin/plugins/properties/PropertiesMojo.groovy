@@ -41,20 +41,18 @@ class PropertiesMojo extends BaseGroovyMojo
     @Override
     public void doExecute() throws MojoExecutionException, MojoFailureException
     {
-        def props = [:]
+        Map<String, String> props = [:]
+        def normalizePath         = { String s -> try { new File( s ).canonicalPath.replace( '\\', '/' ) } catch ( ignored ){ s }}
 
         if ( rawProperties ) { props += rawProperties()   }
         if ( properties())   { props += namedProperties() }
 
+        def padName = maxKeyLength( props )
+
         props.each {
             String name, String value ->
-
             assert name && value
-            value = ( normalizePath && ( new File( value ).exists())) ?
-                        new File( value ).canonicalPath.replace( '\\', '/' ) :
-                        value
-
-            setProperty( name, value, '', verbose )
+            setProperty( name, ( normalizePath ? normalizePath( value ) : value ), '', verbose, padName )
         }
     }
 
