@@ -200,46 +200,49 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         File sourceDirectory   = ( resource.mkdir ? null                            : // Only <targetPath> is active
                                    isDownload     ? fileBean().tempDirectory()      : // Temp dir to download the files to
                                                     new File( resource.directory ))   // Directory to cleanup, upload or copy
-
-        def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
-            ( isDownload || ( ! it )) ? null : new ArrayList<String>( it )
-            // Download operation or null/empty list - all files are included, none excluded
-        }
-
-        if ( ! resource.mkdir )
+        try
         {
-            if ( isDownload )
+            def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
+                ( isDownload || ( ! it )) ? null : new ArrayList<String>( it )
+                // Download operation or null/empty list - all files are included, none excluded
+            }
+            
+            if ( ! resource.mkdir )
             {
-                assert ( ! sourceDirectory.list()), \
-                       "Temporal directory [$sourceDirectory.canonicalPath] for downloading files is not empty?"
-
-                NetworkUtils.download( resource, resource.directory, sourceDirectory, verbose, groovyConfig )
-
-                assert ( sourceDirectory.list() || ( ! failIfNotFound )), \
-                       "No files were downloaded from [$resource.directory] " +
-                       "and include/exclude patterns ${ resource.includes ?: [] }/${ resource.excludes ?: [] }"
-            }
-            else
-            {   /**
-                 * Default excludes are not active for downloaded files: all of them are included, none is excluded
-                 */
-                if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
+                if ( isDownload )
                 {
-                    excludes = ( excludes ?: [] ) +
-                               ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it }
-                }
+                    assert ( ! sourceDirectory.list()), \
+                           "Temporal directory [$sourceDirectory.canonicalPath] for downloading files is not empty?"
 
-                if ( isUpload )
-                {
-                    NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, verbose, failIfNotFound )
-                    return
+                    NetworkUtils.download( resource, resource.directory, sourceDirectory, verbose, groovyConfig )
+
+                    assert ( sourceDirectory.list() || ( ! failIfNotFound )), \
+                           "No files were downloaded from [$resource.directory] " +
+                           "and include/exclude patterns ${ resource.includes ?: [] }/${ resource.excludes ?: [] }"
+                }
+                else
+                {   /**
+                     * Default excludes are not active for downloaded files: all of them are included, none is excluded
+                     */
+                    if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
+                    {
+                        excludes = ( excludes ?: [] ) +
+                                   ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it }
+                    }
+
+                    if ( isUpload )
+                    {
+                        NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, verbose, failIfNotFound )
+                        return
+                    }
                 }
             }
+            handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
         }
-
-        handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
-
-        if ( isDownload ){ fileBean().delete( sourceDirectory )}
+        finally
+        {
+            if ( isDownload ){ fileBean().delete( sourceDirectory )}
+        }
     }
 
 
@@ -264,18 +267,24 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
         else
         {
-            File tempDirectory      = fileBean().tempDirectory()
-            int  dependenciesCopied = 0
+            File tempDirectory = fileBean().tempDirectory()
 
-            resolveDependencies( dependencies, tempDirectory, resource.stripVersion ).each {
-                CopyDependency d ->
-                copyArtifact( d ) // Copy <dependency> to temp directory
-                dependenciesCopied++
+            try
+            {
+                int  dependenciesCopied = 0
+                resolveDependencies( dependencies, tempDirectory, resource.stripVersion ).each {
+                    CopyDependency d ->
+                    copyArtifact( d )    // Copies <dependency> to temp directory
+                    dependenciesCopied++
+                }
+
+                // Zero dependencies can be copied if some of them are optional and are not resolved.
+                handleResource( resource, tempDirectory, null, null, verbose, ( dependenciesCopied > 0 ))
             }
-
-            // Zero dependencies can be copied if some of them are optional and are not resolved.
-            handleResource( resource, tempDirectory, null, null, verbose, ( dependenciesCopied > 0 ))
-            fileBean().delete( tempDirectory )
+            finally
+            {
+                fileBean().delete( tempDirectory )
+            }
         }
     }
 
