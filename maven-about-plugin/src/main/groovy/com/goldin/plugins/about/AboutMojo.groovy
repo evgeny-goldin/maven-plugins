@@ -334,5 +334,7 @@ class AboutMojo extends BaseGroovyMojo
 
             log.info( "Added  \"about\" to [$file.canonicalPath/$prefix/$fileName]" )
         }
+
+        fileBean().delete( tempFile )
     }
 }
