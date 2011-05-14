@@ -42,7 +42,8 @@ class PropertiesMojo extends BaseGroovyMojo
     public void doExecute() throws MojoExecutionException, MojoFailureException
     {
         Map<String, String> props = [:]
-        def normalizePath         = { String s -> try { new File( s ).canonicalPath.replace( '\\', '/' ) } catch ( ignored ){ s }}
+        def normalizePath         = { String value -> def file = new File( value )
+                                                      file.isAbsolute() ? file.canonicalPath.replace( '\\', '/' ) : value }
 
         if ( rawProperties ) { props += rawProperties()   }
         if ( properties())   { props += namedProperties() }
