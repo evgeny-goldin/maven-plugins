@@ -431,13 +431,17 @@ class GMojoUtils
         String sourceFilePath      = sourceFile.canonicalPath
         String destinationFilePath = destinationFile.canonicalPath
 
-        assert sourceFilePath != destinationFilePath, \
-               "Source [$sourceFilePath] and destination [$destinationFilePath] are the same"
-
-        fileBean().delete( destinationFile )
-        fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-
-        if ( verbose ) { log.info( "[$sourceFilePath] copied to [$destinationFilePath]" )}
+        if ( sourceFilePath == destinationFilePath )
+        {
+            // http://evgeny-goldin.org/youtrack/issue/pl-395
+            log.warn( "Source [$sourceFilePath] and destination [$destinationFilePath] are the same. File is not copied." )
+        }
+        else
+        {
+            fileBean().delete( destinationFile )
+            fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+            if ( verbose ) { log.info( "[$sourceFilePath] copied to [$destinationFilePath]" )}
+        }
     }
 
 
