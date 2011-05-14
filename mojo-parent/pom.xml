@@ -33,11 +33,10 @@
             <!-- Checking for duplicate libraries in scope -->
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
-<!--
             <plugin>
                 <groupId>com.goldin.plugins</groupId>
                 <artifactId>duplicates-finder-plugin</artifactId>
-                <version>${project.version}</version>
+                <version>0.2.3</version>
                 <executions>
                     <execution>
                         <id>find-duplicates</id>
@@ -51,7 +50,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
 
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Generating Java stubs from Groovy MOJOs -->
@@ -87,11 +85,10 @@
             <!-- Adding "about" data to all plugins -->
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
-<!--
             <plugin>
                 <groupId>com.goldin.plugins</groupId>
                 <artifactId>maven-about-plugin</artifactId>
-                <version>${project.version}</version>
+                <version>0.2.3</version>
                 <executions>
                     <execution>
                         <id>create-about</id>
@@ -106,7 +103,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
 
         </plugins>
     </build>
