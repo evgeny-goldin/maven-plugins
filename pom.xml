@@ -9,7 +9,7 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.4-SNAPSHOT</version>
+    <version>0.2.3</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
@@ -247,28 +247,6 @@
                 </configuration>
             </plugin>
 
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Checking for duplicate libraries in scope -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-            <plugin>
-                <groupId>com.goldin.plugins</groupId>
-                <artifactId>duplicates-finder-plugin</artifactId>
-                <version>${duplicates-about-version}</version>
-                <executions>
-                    <execution>
-                        <id>find-duplicates</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>find-duplicates</goal>
-                        </goals>
-                        <configuration>
-                            <runIf>{{ Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Compiling Groovy sources and tests                               -->
             <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
@@ -318,28 +296,6 @@
                 </executions>
             </plugin>
 
-            <!-- ~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Adding "about" data -->
-            <!-- ~~~~~~~~~~~~~~~~~~~ -->
-
-            <plugin>
-                <groupId>com.goldin.plugins</groupId>
-                <artifactId>maven-about-plugin</artifactId>
-                <version>${duplicates-about-version}</version>
-                <executions>
-                    <execution>
-                        <id>create-about</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>create-about</goal>
-                        </goals>
-                        <configuration>
-                            <runIf>{{ new File( project.build.directory ).isDirectory() &amp;&amp; Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
-                            <dumpDependencies>true</dumpDependencies>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
