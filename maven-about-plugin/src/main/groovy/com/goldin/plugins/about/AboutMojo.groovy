@@ -47,25 +47,25 @@ class AboutMojo extends BaseGroovyMojo
 
     @MojoParameter
     public String include = '*.jar'
-    
+
     @MojoParameter
     public String exclude
 
     private env = System.getenv()
 
 
-    
+
     private String padLines ( String s )
     {
         def padWidth = ' Status        : ['.size()
         def lines    = s.readLines()
-        
+
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * padWidth ) + it }.join( '\n' ) :
                                                          '' )) :
                   '' )
     }
 
-    
+
     private String exec ( String command, File directory = null )
     {
         def    p      = directory ? command.execute( null, directory ) : command.execute()
@@ -74,7 +74,7 @@ class AboutMojo extends BaseGroovyMojo
         result
     }
 
-    
+
     private String find ( String prefix, String command ) { find( prefix, exec( command ).readLines()) }
     private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() ?: '' }
     private String sort ( Map<String,String> map )
@@ -88,7 +88,7 @@ class AboutMojo extends BaseGroovyMojo
 
     /**
      * Retrieves result of running "mvn dependency:tree" for the current project.
-     * 
+     *
      * @return Result of running "mvn dependency:tree" for the current project.
      */
     private String dependencyTree()
@@ -96,7 +96,7 @@ class AboutMojo extends BaseGroovyMojo
         def mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
         verifyBean().directory( new File( mvnHome ))
-        
+
         def mvn = mvnHome + '/bin/' + ( System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' :
                                                                                                               'mvn' )
 
@@ -139,7 +139,7 @@ class AboutMojo extends BaseGroovyMojo
     String teamcityContent()
     {
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
-        
+
         """
         |===============================================================================
         | TeamCity Info
@@ -149,7 +149,7 @@ class AboutMojo extends BaseGroovyMojo
         | Build Number  : [${ env[ 'BUILD_NUMBER' ] }]"""
     }
 
-    
+
     String serverContent()
     {
         ( env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
@@ -199,7 +199,7 @@ class AboutMojo extends BaseGroovyMojo
         |${ sort( props ) }""" : '' ) +
 
         ( dumpEnv ?
-        
+
         """
         |===============================================================================
         | Environment Variables
@@ -247,7 +247,7 @@ class AboutMojo extends BaseGroovyMojo
         {
             gitStatusCommand = "git status" + ( gitStatusProject ? '' : ' ' + basedir.canonicalPath )
             gitStatus        = exec( gitStatusCommand )
-            
+
             if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
             {
                 return gitContent( gitStatus )
@@ -270,7 +270,7 @@ class AboutMojo extends BaseGroovyMojo
         | ${ gitStatus  ? '"' + gitStatusCommand + '" returned [' + gitStatus + ']'                  : '' }"""
     }
 
-    
+
     String svnContent( String svnStatus )
     {
         def svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
@@ -288,7 +288,7 @@ class AboutMojo extends BaseGroovyMojo
         | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]"""
     }
 
-    
+
     String gitContent( String gitStatus )
     {
         def gitLog = exec( 'git log -1' ).readLines()
@@ -311,7 +311,7 @@ class AboutMojo extends BaseGroovyMojo
     {
         def split    = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
         def files    = fileBean().files( directory, split( include ), split( exclude ))
-        def tempFile = new File( outputDirectory, fileName )
+        def tempFile = new File( outputDirectory(), fileName )
 
         log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
 
