@@ -21,7 +21,10 @@ def date            = new SimpleDateFormat( 'MMMM dd, yyyy',    new Locale( 'en'
 def project         = new Project()
 def path            = { String path -> path ? new Path( project, path ) : new Path( project ) }
 def sourcePaths     = path( '' )
-[ 'maven-assert-plugin',
+
+[ 'maven-about-plugin',
+  'duplicates-finder-plugin',
+  'maven-assert-plugin',
   'maven-common',
   'maven-copy-plugin',
   'maven-find-plugin',
