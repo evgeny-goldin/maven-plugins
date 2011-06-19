@@ -274,8 +274,8 @@ class AboutMojo extends BaseGroovyMojo
 
     String svnContent( String svnStatus )
     {
-        def svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
-        def commit  = exec( 'svn log -l 1' ).readLines()[ 1 ]
+        def svnInfo = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
+        def commit  = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines()[ 1 ]
 
         """
         |===============================================================================
