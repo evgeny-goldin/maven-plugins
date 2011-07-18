@@ -18,7 +18,21 @@ class CopyResource extends Resource
      */
 
     String[] targetPaths
-    String[] targetPaths() { generalBean().array( this.targetPaths, getTargetPath(), String ) }
+    String[] targetPaths()
+    {
+        def paths = generalBean().array( this.@targetPaths, targetPath, String )
+
+        if ( targetRoots )
+        {           // target roots => list of roots
+            paths = targetRoots.split( ',' )*.trim().findAll{ it }.
+                    // target root  => list of paths
+                    collect{ String root -> paths.collect {  root + '/' + it }}.
+                    // list of lists of paths => list of paths
+                    flatten()
+        }
+
+        paths
+    }
 
     Replace[] replaces
     Replace   replace
