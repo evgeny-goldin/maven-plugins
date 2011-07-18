@@ -132,6 +132,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          */
         ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
         mopInit()
+
         if ( ! runIf( runIf )) { return }
 
         /**
@@ -206,7 +207,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 ( isDownload || ( ! it )) ? null : new ArrayList<String>( it )
                 // Download operation or null/empty list - all files are included, none excluded
             }
-            
+
             if ( ! resource.mkdir )
             {
                 if ( isDownload )
@@ -412,7 +413,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             {
                 filesToProcess << mkdir( targetPath, verbose )
             }
-            
+
             if ( resource.pack )
             {
                 filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )

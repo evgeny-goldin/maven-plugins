@@ -34,6 +34,7 @@
         <junit-version>4.8.2</junit-version>
         <plexus-utils-version>2.0.5</plexus-utils-version>
         <ant-version>1.8.2</ant-version>
+        <codenarc-version>0.14</codenarc-version>
     </properties>
 
 
@@ -76,21 +77,6 @@
         <module>maven-sshexec-plugin</module>
         <module>maven-spring-batch-plugin</module>
     </modules>
-
-
-    <profiles>
-        <profile>
-            <id>groovyDoc</id>
-            <activation>
-                <property>
-                    <name>groovydocDir</name>
-                </property>
-            </activation>
-            <modules>
-                <module>groovydoc</module>
-            </modules>
-        </profile>
-    </profiles>
 
 
 
@@ -361,5 +347,99 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
+
+    <profiles>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- GroovyDoc-generating profile -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <profile>
+            <id>groovyDoc</id>
+            <activation>
+                <property>
+                    <name>groovydocDir</name>
+                </property>
+            </activation>
+            <modules>
+                <module>groovydoc</module>
+            </modules>
+        </profile>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- CodeNarc-running profile -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <profile>
+            <id>codenarc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>run-codenarc</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <taskdef name="codenarc" classname="org.codenarc.ant.CodeNarcTask"/>
+                                        <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+                                        <if>
+                                            <available file="${project.basedir}/src/main/groovy" type="dir"/>
+                                            <then>
+                                                <!-- A work in progress .. -->
+                                                <codenarc ruleSetFiles           = "file:${project.basedir}/../codenarc.txt"
+                                                          maxPriority1Violations = "200"
+                                                          maxPriority2Violations = "200"
+                                                          maxPriority3Violations = "200">
+
+                                                    <report type="html">
+                                                        <option name="outputFile" value="${project.build.directory}/CodeNarc.html"/>
+                                                    </report>
+
+                                                    <fileset dir="${project.basedir}/src/main/groovy">
+                                                        <include name="**/*.groovy"/>
+                                                    </fileset>
+                                                </codenarc>
+                                            </then>
+                                        </if>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant</artifactId>
+                                <version>${ant-version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.codenarc</groupId>
+                                <artifactId>CodeNarc</artifactId>
+                                <version>${codenarc-version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                            </dependency>
+                            <!-- Contains CodeNarc-specific "log4j.xml" -->
+                            <dependency>
+                                <groupId>com.goldin.plugins</groupId>
+                                <artifactId>gradle</artifactId>
+                                <version>0.1-RC3</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

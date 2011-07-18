@@ -10,6 +10,9 @@ import org.apache.maven.model.Resource
  */
 class CopyResource extends Resource
 {
+
+    String targetRoots
+
     /**
      * Single/plural configuration shortcuts
      */
@@ -104,10 +107,10 @@ class CopyResource extends Resource
              * when plugin is configured if created by previous <resource> at run-time
              */
             File file = new File( filePath )
-            assert file.getParent(), "File [$file] has no parent directory"
+            assert file.parent, "File [$file] has no parent directory"
 
-            setDirectory( file.getParent())
-            setInclude( file.getName())
+            setDirectory( file.parent )
+            setInclude( file.name )
         }
     }
 
