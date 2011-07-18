@@ -315,6 +315,13 @@ class AboutMojo extends BaseGroovyMojo
     {
         try
         {
+            if ( ! directory.isDirectory())
+            {
+                assert  ( ! failIfNotFound ), "Directory [$directory.canonicalPath] is not available, consider using <failIfNotFound>"
+                log.warn( "Directory [$directory.canonicalPath] is not available, \"about\" is not created" )
+                return
+            }
+
             def split = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
             def files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
