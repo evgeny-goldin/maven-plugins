@@ -64,7 +64,7 @@ class CopyResource extends Resource
     boolean pack                  = false
     boolean update                = false
     boolean attachArtifact        = false
-    boolean dependenciesAtM2      = false  // "false" - all <dependencies> are copied to temp directory first,
+    Boolean dependenciesAtM2               // "false" - all <dependencies> are copied to temp directory first,
                                            //          "stripVersion" is active
                                            //          <filter> and <process> operate on all of them at once
                                            //          dependencies are not processes in the same order they are declared
@@ -126,6 +126,22 @@ class CopyResource extends Resource
             setDirectory( file.parent )
             setInclude( file.name )
         }
+    }
+
+
+    /**
+     * Retrieves {@code <dependenciesAtM2>} value.
+     * If it is defined - the corresponding value is returned.
+     * If this resource makes no use of {@code <stripVersion>}, {@code <filter>}, and {@code <process>} - true is returned
+     * as it is safe not to copy dependencies to the temporal folder.
+     * Otherwise, false is returned.
+     *
+     * @return
+     */
+    boolean getDependenciesAtM2()
+    {
+        ( this.@dependenciesAtM2 != null ) ? this.@dependenciesAtM2 :
+                                             ( ! ( this.@stripVersion || this.@filter || this.@process ))
     }
 
 
