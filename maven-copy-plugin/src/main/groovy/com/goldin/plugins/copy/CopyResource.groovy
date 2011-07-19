@@ -23,12 +23,12 @@ class CopyResource extends Resource
         def paths = generalBean().array( this.@targetPaths, targetPath, String )
 
         if ( targetRoots )
-        {           // target roots => list of roots
-            paths = targetRoots.split( ',' )*.trim().findAll{ it }.
-                    // target root  => list of paths
-                    collect{ String root -> paths.collect {  root + '/' + it }}.
-                    // list of lists of paths => list of paths
-                    flatten()
+        {
+            def  targetRootsSplit = targetRoots.split( ',' )*.trim().findAll{ it }
+            if ( targetRootsSplit )
+            {
+                paths = targetRootsSplit.collect{ String targetRoot -> paths.collect { targetRoot + '/' + it }}.flatten()
+            }
         }
 
         paths
