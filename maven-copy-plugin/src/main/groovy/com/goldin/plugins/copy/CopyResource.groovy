@@ -141,7 +141,7 @@ class CopyResource extends Resource
     boolean getDependenciesAtM2()
     {
         ( this.@dependenciesAtM2 != null ) ? this.@dependenciesAtM2 :
-                                             ( ! ( this.@stripVersion || this.@destFileName || this.@filter || this.@process ))
+                                             ( ! ( this.@stripVersion || this.@filter || this.@process ))
     }
 
 
