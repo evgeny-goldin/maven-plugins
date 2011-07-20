@@ -15,6 +15,8 @@ import static com.goldin.plugins.common.GMojoUtils.*
 @MojoPhase( 'package' )
 class AboutMojo extends BaseGroovyMojo
 {
+    public static final String SEPARATOR = '|==============================================================================='
+
     @MojoParameter
     public String prefix = 'META-INF'
 
@@ -117,9 +119,9 @@ class AboutMojo extends BaseGroovyMojo
         // https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project
 
         """
-        |===============================================================================
+        $SEPARATOR
         | Jenkins Info
-        |===============================================================================
+        $SEPARATOR
         | Server        : [${ env[ 'JENKINS_URL' ] }]
         | Job           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
         | Log           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
@@ -131,9 +133,9 @@ class AboutMojo extends BaseGroovyMojo
         // http://weblogs.java.net/blog/johnsmart/archive/2008/03/using_hudson_en.html
 
         """
-        |===============================================================================
+        $SEPARATOR
         | Hudson Info
-        |===============================================================================
+        $SEPARATOR
         | Server        : [${ env[ 'HUDSON_URL' ] }]
         | Job           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
         | Log           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
@@ -145,9 +147,9 @@ class AboutMojo extends BaseGroovyMojo
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
 
         """
-        |===============================================================================
+        $SEPARATOR
         | TeamCity Info
-        |===============================================================================
+        $SEPARATOR
         | Project Name  : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
         | Build Config  : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
         | Build Number  : [${ env[ 'BUILD_NUMBER' ] }]"""
@@ -156,12 +158,10 @@ class AboutMojo extends BaseGroovyMojo
 
     String serverContent()
     {
-        ( env[ 'JENKINS_URL'      ] ? jenkinsContent()  :
-          env[ 'HUDSON_URL'       ] ? hudsonContent()   :
+        ( env[ 'JENKINS_URL'      ] ? jenkinsContent () :
+          env[ 'HUDSON_URL'       ] ? hudsonContent  () :
           env[ 'TEAMCITY_VERSION' ] ? teamcityContent() :
-                                      '' )  +
-        """
-        |==============================================================================="""
+                                      '' )
     }
 
 
@@ -171,9 +171,9 @@ class AboutMojo extends BaseGroovyMojo
         def format = new SimpleDateFormat( "dd MMM, EEEE, yyyy, HH:mm:ss (zzzzzz:'GMT'ZZZZZZ)", Locale.ENGLISH )
 
         """
-        |===============================================================================
+        $SEPARATOR
         | Build Info
-        |===============================================================================
+        $SEPARATOR
         | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
         | Build Time    : Started         - [${ format.format( session.startTime ) }]
         | Build Time    : "About" created - [${ format.format( new Date())         }]
@@ -181,9 +181,9 @@ class AboutMojo extends BaseGroovyMojo
         | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
         | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
         | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
-        |===============================================================================
+        $SEPARATOR
         | Maven Info
-        |===============================================================================
+        $SEPARATOR
         | ${ dumpPaths ? 'M2_HOME       : [' + env[ 'M2_HOME' ] + ']' : '' }
         | MAVEN_OPTS    : [${ env[ 'MAVEN_OPTS' ] ?: '' }]
         | Version       : [${ mavenVersion() }]
@@ -197,17 +197,17 @@ class AboutMojo extends BaseGroovyMojo
         ( dumpSystem ?
 
         """
-        |===============================================================================
+        $SEPARATOR
         | System Properties
-        |===============================================================================
+        $SEPARATOR
         |${ sort( props ) }""" : '' ) +
 
         ( dumpEnv ?
 
         """
-        |===============================================================================
+        $SEPARATOR
         | Environment Variables
-        |===============================================================================
+        $SEPARATOR
         |${ sort( env ) }""" : '' )
     }
 
@@ -259,9 +259,9 @@ class AboutMojo extends BaseGroovyMojo
         }
 
         """
-        |===============================================================================
+        $SEPARATOR
         | SCM Info
-        |===============================================================================
+        $SEPARATOR
         | Unsupported SCM system: either project is not managed by SVN/Git or corresponding command-line clients are not available.
         | Tried SVN:
         | ~~~~~~~~~~
@@ -281,9 +281,9 @@ class AboutMojo extends BaseGroovyMojo
         def commit  = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines()[ 1 ]
 
         """
-        |===============================================================================
+        $SEPARATOR
         | SVN Info
-        |===============================================================================
+        $SEPARATOR
         | Repository    : [${ find( 'URL:',      svnInfo )}]
         | Revision      : [${ find( 'Revision:', svnInfo )}]
         | Status        : [${ padLines( svnStatus ) }]
@@ -298,9 +298,9 @@ class AboutMojo extends BaseGroovyMojo
         def gitLog = exec( 'git log -1' ).readLines()
 
         """
-        |===============================================================================
+        $SEPARATOR
         | Git Info
-        |===============================================================================
+        $SEPARATOR
         | Repositories  : [${ padLines( exec( 'git remote -v' )) }]
         | Branch        : [${ find( '# On branch', 'git status' ) }]
         | ${ gitStatusProject ? 'Project' : 'Basedir' } Status: [${ padLines( gitStatus ) }]
@@ -333,7 +333,7 @@ class AboutMojo extends BaseGroovyMojo
                 log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
 
                 tempFile.write(( " Generated by http://evgeny-goldin.com/wiki/Maven-about-plugin\n" +
-                                 scmContent() + buildContent() + serverContent()).
+                                 serverContent() + scmContent() + buildContent() + SEPARATOR ).
                                stripMargin().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
                                join(( 'windows' == endOfLine ) ? '\r\n' : '\n' ))
 
