@@ -8,7 +8,7 @@ import org.apache.maven.model.Resource
 /**
  * <resource> data container
  */
-class CopyResource extends Resource
+class CopyResource extends Resource implements Cloneable
 {
 
     String targetRoots

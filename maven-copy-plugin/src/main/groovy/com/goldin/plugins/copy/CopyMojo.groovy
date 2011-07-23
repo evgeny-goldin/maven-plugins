@@ -260,10 +260,25 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( resource.dependenciesAtM2 )
         {
+            CopyResource resourceCopy
+
             resolveDependencies( dependencies ).each {
                 CopyDependency d ->
+
                 File m2File = verifyBean().file( d.artifact.file )
-                handleResource( resource, m2File.parentFile, [ m2File.name ], null, verbose, true )
+                assert m2File.name == "${d.artifactId}-${d.version}.${d.type}"
+
+                if ( d.destFileName && ( d.destFileName != m2File.name ))
+                {
+                    resourceCopy = (( CopyResource ) resource.clone())
+                    resourceCopy.destFileName = d.destFileName
+                }
+                else
+                {
+                    resourceCopy = resource
+                }
+
+                handleResource( resourceCopy, m2File.parentFile, [ m2File.name ], null, verbose, true )
             }
         }
         else
