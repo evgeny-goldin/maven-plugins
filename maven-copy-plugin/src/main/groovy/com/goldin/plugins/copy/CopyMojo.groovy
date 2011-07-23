@@ -497,7 +497,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                    resource.filtering,
                                    resource.encoding,
                                    fileFilter,
-                                   verbose )
+                                   verbose,
+                                   resource.move )
 
         copied ? verifyBean().file( targetFile ) : null
     }

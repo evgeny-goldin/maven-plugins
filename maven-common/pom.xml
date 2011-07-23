@@ -270,6 +270,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.gcontracts</groupId>
+            <artifactId>gcontracts-core</artifactId>
+            <version>${gcontracts-version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.16</version>

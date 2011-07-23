@@ -64,6 +64,7 @@ class CopyResource extends Resource
     boolean pack                  = false
     boolean update                = false
     boolean attachArtifact        = false
+    boolean move                  = false
     Boolean dependenciesAtM2               // "false" - all <dependencies> are copied to temp directory first,
                                            //          "stripVersion" is active
                                            //          <filter> and <process> operate on all of them at once

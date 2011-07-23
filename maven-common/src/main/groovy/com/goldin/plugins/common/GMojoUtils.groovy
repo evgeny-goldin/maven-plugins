@@ -270,7 +270,7 @@ class GMojoUtils
         mopInit()
     }
 
-    
+
     /**
      * Retrieves maximal length of map's key.
      */
@@ -317,6 +317,7 @@ class GMojoUtils
      * @param fileFilter      {@link org.apache.maven.shared.filtering.MavenFileFilter} instance,
      *                        allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
      * @param verbose         whether information is written to log with "INFO" level
+     * @param move            whether file should be moved and not copied
      *
      * @return <code>true</code>  if file was copied,
      *         <code>false</code> if file was skipped (identical)
@@ -329,7 +330,8 @@ class GMojoUtils
                                  boolean         filtering,
                                  String          encoding,
                                  MavenFileFilter fileFilter,
-                                 boolean         verbose )
+                                 boolean         verbose,
+                                 boolean         move )
     {
         verifyBean().file( sourceFile )
         verifyBean().notNull( destinationFile, replaces )
@@ -340,8 +342,8 @@ class GMojoUtils
 
         try
         {
-            File fromFile    = sourceFile
-            def  deleteFiles = []
+            File       fromFile    = sourceFile
+            List<File> deleteFiles = []
 
             if ( filtering )
             {
@@ -402,7 +404,8 @@ class GMojoUtils
                 }
             }
 
-            copy( fromFile, destinationFile, verbose )
+            copy( fromFile, destinationFile, verbose, move )
+            if ( move && sourceFile.exists()) { deleteFiles << sourceFile }
             fileBean().delete( *deleteFiles )
 
             true
@@ -421,8 +424,9 @@ class GMojoUtils
      * @param sourceFile      source file to copy
      * @param destinationFile destination file to copy the source to,
      * @param verbose         verbose logging
+     * @param verbose         whether file should be moved and not copied
      */
-    private static void copy ( File sourceFile, File destinationFile, boolean verbose )
+    private static void copy ( File sourceFile, File destinationFile, boolean verbose, boolean move )
     {
         verifyBean().file( sourceFile )
         verifyBean().notNull( destinationFile )
@@ -430,18 +434,20 @@ class GMojoUtils
 
         String sourceFilePath      = sourceFile.canonicalPath
         String destinationFilePath = destinationFile.canonicalPath
+        String operationName       = ( move ? 'moved' : 'copied' )
 
         if ( sourceFilePath == destinationFilePath )
         {
-            // http://evgeny-goldin.org/youtrack/issue/pl-395
-            log.warn( "Source [$sourceFilePath] and destination [$destinationFilePath] are the same. File is not copied." )
+            log.warn( "Source [$sourceFilePath] and destination [$destinationFilePath] are the same. File is not $operationName." )
+            return
         }
-        else
-        {
-            fileBean().delete( destinationFile )
-            fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-            if ( verbose ) { log.info( "[$sourceFilePath] copied to [$destinationFilePath]" )}
-        }
+
+        fileBean().delete( destinationFile )
+
+        if ( move ) { assert ( sourceFile.renameTo( destinationFile ) && ( ! sourceFile.file ) && ( destinationFile.file )) }
+        else        { fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name ) }
+
+        if ( verbose ) { log.info( "[$sourceFilePath] $operationName to [$destinationFilePath]" )}
     }
 
 
@@ -499,12 +505,12 @@ class GMojoUtils
 
     /**
      * Add a '$' character to {..} expressions.
-     * 
+     *
      * @param value value containing {..} expressions.
      * @param addDollar if "false" or Groovy Truth false - no changes are made to the value,
      *                  if "true" - all {..} expressions are converted to ${..}
      *                  if list of comma-separated tokens - only {token} expressions are updated
-     * @return value modified according to 'addDollar' 
+     * @return value modified according to 'addDollar'
      */
     static String addDollar( String value, String addDollar )
     {
@@ -517,7 +523,7 @@ class GMojoUtils
         value
     }
 
-    
+
     /**
      * http://evgeny-goldin.org/youtrack/issue/gc-41
      * "Load GCommons only once per Maven job execution when more than one plugin uses it"
