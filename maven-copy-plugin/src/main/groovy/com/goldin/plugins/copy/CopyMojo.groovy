@@ -266,7 +266,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 CopyDependency d ->
 
                 File m2File = verifyBean().file( d.artifact.file )
-                assert m2File.name == "${d.artifactId}-${d.version}.${d.type}"
+                assert m2File.name == "${d.artifactId}-${d.version}${ d.classifier ? '-' + d.classifier : '' }.${d.type}"
 
                 if ( d.destFileName && ( d.destFileName != m2File.name ))
                 {
