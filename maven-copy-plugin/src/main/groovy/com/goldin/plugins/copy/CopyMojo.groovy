@@ -320,11 +320,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         verifyBean().notNullOrEmpty( dependencies )
         verifyBean().directory( outputDirectory )
 
-        List<CopyDependency> dependenciesResolved = ( List<CopyDependency> ) dependencies.inject( [] ) {
+        ( List<CopyDependency> ) dependencies.inject( [] ) {
             List<CopyDependency> list, CopyDependency d ->
             list.addAll( d.groupId ? [ d ] : CopyMojoUtils.getFilteredDependencies( d ))
             list
-        }.collect {
+        }.
+        collect {
             CopyDependency d ->
 
             verifyBean().notNullOrEmpty( d.groupId, d.artifactId )
@@ -346,9 +347,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     throw new RuntimeException( "Failed to resolve dependency [$d]: $e", e )
                 }
             }
-        }.findAll{ it } // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
-
-        dependenciesResolved
+        }.
+        findAll{ it } // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
     }
 
 
@@ -402,12 +402,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         verifyBean().notNull( resource )
         def zipEntries = resource.zipEntries() as List
 
-        if ( zipEntries )
-        {
-            assert resource.unpack, 'You should specify <unpack>true</unpack> when using <zipEntry> or <zipEntries>'
-        }
-
-        if ( resource.clean )
+        if ( zipEntries      ) { assert resource.unpack, 'You should specify <unpack>true</unpack> when using <zipEntry> or <zipEntries>' }
+        if ( resource.prefix ) { assert resource.pack,   'You should specify <pack>true</pack> when using resource <prefix>'              }
+        if ( resource.clean  )
         {
             clean( sourceDirectory, includes, excludes, resource.cleanEmptyDirectories, resource.filter, verbose, failIfNotFound )
             return resource
@@ -566,7 +563,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        boolean      failIfNotFound )
     {
         fileBean().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
-                         ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List )
+                         ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List,
+                         resource.destFileName, resource.prefix )
 
         if ( resource.attachArtifact )
         {
@@ -580,7 +578,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {
             String[] data = resource.deploy.split( /\|/ )
 
-            assert ( data?.size()?.any{( it == 3 ) || ( it == 4 )}), \
+            assert ( data?.size()?.with{( it == 3 ) || ( it == 4 )}), \
                    "Failed to split <deploy> tag data [$resource.deploy]. " +
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 

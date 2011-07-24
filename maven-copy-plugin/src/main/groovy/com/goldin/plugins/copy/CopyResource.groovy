@@ -89,6 +89,7 @@ class CopyResource extends Resource implements Cloneable
     String  deploy
     String  artifactClassifier
     String  defaultExcludes
+    String  prefix
 
 
     /**
