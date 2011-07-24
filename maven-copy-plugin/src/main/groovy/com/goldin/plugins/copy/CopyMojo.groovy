@@ -238,6 +238,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     }
                 }
             }
+
             handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
         }
         finally
@@ -402,8 +403,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         verifyBean().notNull( resource )
         def zipEntries = resource.zipEntries() as List
 
-        if ( zipEntries      ) { assert resource.unpack, 'You should specify <unpack>true</unpack> when using <zipEntry> or <zipEntries>' }
-        if ( resource.prefix ) { assert resource.pack,   'You should specify <pack>true</pack> when using resource <prefix>'              }
+        if ( zipEntries      ) { assert resource.unpack, '<zipEntry> or <zipEntries> can only be used with <unpack>true</unpack>' }
+        if ( resource.prefix ) { assert resource.pack,   '<prefix> can only be used with <pack>true</pack>' }
         if ( resource.clean  )
         {
             clean( sourceDirectory, includes, excludes, resource.cleanEmptyDirectories, resource.filter, verbose, failIfNotFound )
@@ -428,7 +429,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             if ( resource.pack )
             {
-                filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )
+                filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, verbose, failIfNotFound )
             }
             else if ( sourceDirectory /* null when mkdir is performed */ )
             {   /**
@@ -443,17 +444,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {
                     if ( resource.unpack )
                     {
-                        zipEntries ? fileBean().unpackZipEntries( file, targetPath, zipEntries, resource.preservePath, verbose ) :
-                                     fileBean().unpack( file, targetPath )
-                        filesToProcess << file
+                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, verbose ))
                     }
                     else
                     {
                         File fileCopied = copy( resource, sourceDirectory, file, targetPath, verbose )
-                        if ( fileCopied )
-                        {
-                            filesToProcess << fileCopied
-                        }
+                        if ( fileCopied ) { filesToProcess << fileCopied }
                     }
                 }
             }
@@ -501,18 +497,17 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             filePath = filePath.substring( 0, filePath.lastIndexOf( file.name )) + resource.destFileName
         }
 
-        File    targetFile = new File( filePath )
-        boolean copied     = copy( file,
-                                   targetFile,
-                                   skipIdentical,
-                                   resource.replaces(),
-                                   resource.filtering,
-                                   resource.encoding,
-                                   fileFilter,
-                                   verbose,
-                                   resource.move )
+        File  targetFile = new File( filePath )
 
-        copied ? verifyBean().file( targetFile ) : null
+        copy( file,
+              targetFile,
+              skipIdentical,
+              resource.replaces(),
+              resource.filtering,
+              resource.encoding,
+              fileFilter,
+              verbose,
+              resource.move ) ? verifyBean().file( targetFile ) : null
     }
 
 
@@ -551,6 +546,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param targetPath      target archie to pack the directory to
      * @param includes        files to include, may be <code>null</code>
      * @param excludes        files to exclude, may be <code>null</code>
+     * @param verbose         whether verbose logging should be used
      * @param failIfNotFound  fail if directory not found or no files were included
      *
      * @return target archive packed
@@ -560,11 +556,31 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetPath,
                        List<String> includes,
                        List<String> excludes,
+                       boolean      verbose,
                        boolean      failIfNotFound )
     {
-        fileBean().pack( sourceDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
+        File filesDirectory = ( resource.replaces() || resource.filtering ) ? fileBean().tempDirectory() : sourceDirectory
+
+        if ( ! filesDirectory.is( sourceDirectory ))
+        {
+            // filesDirectory is temporal directory
+
+            CopyResource newResource = new CopyResource()
+            newResource.targetPath   = filesDirectory
+            newResource.directory    = sourceDirectory
+            newResource.includes     = includes
+            newResource.excludes     = excludes
+            newResource.replaces     = resource.replaces()
+            newResource.filtering    = resource.filtering
+
+            handleResource( newResource, verbose, failIfNotFound )
+        }
+
+        fileBean().pack( filesDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
                          ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List,
                          resource.destFileName, resource.prefix )
+
+        if ( ! filesDirectory.is( sourceDirectory )) { fileBean().delete( filesDirectory ) }
 
         if ( resource.attachArtifact )
         {
@@ -593,6 +609,46 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
 
     /**
+     * Unpacks archive specified and retrieves files unpacked.
+     *
+     * @param sourceArchive        archive to unpack
+     * @param destinationDirectory directory to unpack the archive to
+     * @param zipEntries           Zip entries to unpack, can be null or empty
+     * @param preservePath         whether to preserve files archive path when unpacking them
+     * @param verbose              whether verbose logging is enabled
+     * @return                     list of files unpacked
+     */
+    private List<File> unpack ( CopyResource resource,
+                                File         sourceArchive,
+                                File         destinationDirectory,
+                                List<String> zipEntries,
+                                boolean      verbose )
+    {
+        File unpackDirectory = ( resource.replaces() || resource.filtering ) ? fileBean().tempDirectory() : destinationDirectory
+
+        zipEntries ? fileBean().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, resource.preservePath, verbose ) :
+                     fileBean().unpack( sourceArchive, unpackDirectory )
+
+        if ( ! unpackDirectory.is( destinationDirectory ))
+        {
+            // unpackDirectory is temporal directory
+
+            CopyResource newResource = new CopyResource()
+            newResource.targetPath   = destinationDirectory.path
+            newResource.directory    = unpackDirectory.path
+            newResource.replaces     = resource.replaces()
+            newResource.filtering    = resource.filtering
+
+            handleResource( newResource, verbose, true )
+
+            fileBean().delete( unpackDirectory )
+        }
+
+        fileBean().files( destinationDirectory )
+    }
+
+
+    /**
      * Creates the directory specified.
      *
      * @param targetPath directory to create
@@ -603,7 +659,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     private File mkdir( File    targetPath,
                         boolean verbose )
     {
-        if ( targetPath.isDirectory())
+        if ( targetPath.directory )
         {
             if ( verbose ){ log.info( "Directory [$targetPath.canonicalPath] already exists" )}
             return targetPath

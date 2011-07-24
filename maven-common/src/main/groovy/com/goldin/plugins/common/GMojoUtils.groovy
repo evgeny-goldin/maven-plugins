@@ -13,6 +13,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver
 import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
+import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.PluginManager
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
@@ -24,7 +25,6 @@ import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
 import com.goldin.gcommons.beans.*
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
-
 
 class GMojoUtils
 {
@@ -319,19 +319,18 @@ class GMojoUtils
      * @param verbose         whether information is written to log with "INFO" level
      * @param move            whether file should be moved and not copied
      *
-     * @return <code>true</code>  if file was copied,
-     *         <code>false</code> if file was skipped (identical)
-     * @throws RuntimeException if fails to make replacements or filtering while copying the file
+     * @return destinationFile if file was copied,
+     *         null            if file was skipped (identical)
      */
-    public static boolean copy ( File            sourceFile,
-                                 File            destinationFile,
-                                 boolean         skipIdentical,
-                                 Replace[]       replaces,
-                                 boolean         filtering,
-                                 String          encoding,
-                                 MavenFileFilter fileFilter,
-                                 boolean         verbose,
-                                 boolean         move )
+    public static File copy ( File            sourceFile,
+                              File            destinationFile,
+                              boolean         skipIdentical,
+                              Replace[]       replaces,
+                              boolean         filtering,
+                              String          encoding,
+                              MavenFileFilter fileFilter,
+                              boolean         verbose,
+                              boolean         move )
     {
         verifyBean().file( sourceFile )
         verifyBean().notNull( destinationFile, replaces )
@@ -394,13 +393,13 @@ class GMojoUtils
 
             if ( skipIdentical )
             {
-                boolean identicalFiles = (( destinationFile.isFile())                            &&
+                boolean identicalFiles = (( destinationFile.file )                               &&
                                           ( destinationFile.length()       == fromFile.length()) &&
                                           ( destinationFile.lastModified() == fromFile.lastModified()))
                 if ( identicalFiles )
                 {
                     log.info( "[$fromFile.canonicalPath] skipped - identical to [$destinationFile.canonicalPath]" )
-                    return false
+                    return null
                 }
             }
 
@@ -408,12 +407,12 @@ class GMojoUtils
             if ( move && sourceFile.exists()) { deleteFiles << sourceFile }
             fileBean().delete( *deleteFiles )
 
-            true
+            destinationFile
         }
-        catch ( Exception e )
+        catch ( e )
         {
-            throw new RuntimeException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]: $e",
-                                        e )
+            throw new MojoExecutionException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]: $e",
+                                              e )
         }
     }
 
