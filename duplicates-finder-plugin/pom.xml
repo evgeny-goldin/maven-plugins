@@ -22,6 +22,9 @@
 
 
     <properties>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Runs on Maven 3 only ! -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
         <maven-version>3.0.3</maven-version>
     </properties>
 
