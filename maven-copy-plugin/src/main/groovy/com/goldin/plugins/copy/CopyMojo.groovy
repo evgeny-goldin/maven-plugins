@@ -580,6 +580,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                          ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List,
                          resource.destFileName, resource.prefix )
 
+        if ( resource.move ) { fileBean().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
+                                          each { fileBean().delete( it ) }}
+
         if ( ! filesDirectory.is( sourceDirectory )) { fileBean().delete( filesDirectory ) }
 
         if ( resource.attachArtifact )
