@@ -442,10 +442,14 @@ class GMojoUtils
         }
 
         fileBean().delete( destinationFile )
+        fileBean().mkdirs( destinationFile.parentFile )
 
-        if ( move ) { assert ( sourceFile.renameTo( destinationFile ) && ( ! sourceFile.file ) && ( destinationFile.file )) }
-        else        { fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name ) }
+        if ( ! ( move && sourceFile.renameTo( destinationFile )))
+        {
+            fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+        }
 
+        if ( move    ) { fileBean().delete( sourceFile ) }
         if ( verbose ) { log.info( "[$sourceFilePath] $operationName to [$destinationFilePath]" )}
     }
 
