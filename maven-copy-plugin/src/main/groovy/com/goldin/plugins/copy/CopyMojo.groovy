@@ -570,6 +570,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             newResource.directory    = sourceDirectory
             newResource.includes     = includes
             newResource.excludes     = excludes
+            newResource.preservePath = true
             newResource.replaces     = resource.replaces()
             newResource.filtering    = resource.filtering
 
@@ -639,6 +640,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             CopyResource newResource = new CopyResource()
             newResource.targetPath   = destinationDirectory.path
             newResource.directory    = unpackDirectory.path
+            newResource.preservePath = true
             newResource.replaces     = resource.replaces()
             newResource.filtering    = resource.filtering
 
