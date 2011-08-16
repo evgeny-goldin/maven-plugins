@@ -631,7 +631,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         File unpackDirectory = ( resource.replaces() || resource.filtering ) ? fileBean().tempDirectory() : destinationDirectory
 
         zipEntries ? fileBean().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, resource.preservePath, verbose ) :
-                     fileBean().unpack( sourceArchive, unpackDirectory )
+                     fileBean().unpack( sourceArchive, unpackDirectory, true )
 
         if ( ! unpackDirectory.is( destinationDirectory ))
         {
