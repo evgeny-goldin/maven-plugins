@@ -266,7 +266,7 @@ class GMojoUtils
     {
         ThreadLocals.set( new MavenProject(),
                           new MavenSession( null, null, null, null, null, null, null, new Properties(), new Properties(), new Date()),
-                          new DefaultLog( new ConsoleLogger( Logger.LEVEL_DEBUG, "TestLog" )))
+                          new DefaultLog( new ConsoleLogger( Logger.LEVEL_DEBUG, 'TestLog' )))
         mopInit()
     }
 
@@ -274,7 +274,7 @@ class GMojoUtils
     /**
      * Retrieves maximal length of map's key.
      */
-    static int maxKeyLength ( Map<String, ?> map ) { map.keySet()*.size().max() }
+    static int maxKeyLength ( Map<?, ?> map ) { map.keySet().max{ it.toString().size() }.toString().size() }
 
 
     /**
