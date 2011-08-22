@@ -1,5 +1,6 @@
 package com.goldin.plugins.about
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.text.SimpleDateFormat
 import org.gcontracts.annotations.Ensures
@@ -7,7 +8,7 @@ import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * Updates files specified with "about" build metadata
