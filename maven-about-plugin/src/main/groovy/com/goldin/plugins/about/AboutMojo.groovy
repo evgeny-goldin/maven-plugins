@@ -241,7 +241,7 @@ class AboutMojo extends BaseGroovyMojo
     Map<String, String> mavenProperties()
     {
         Set<String> envVariables     = env.keySet()*.toLowerCase()
-        Set<String> prefixes         = 'java. user. os. sun. awt. file. line.separator path.separator'.tokenize() as Set
+        Set<String> prefixes         = 'java. user. os. sun. awt. file. line.separator path.separator teamcity.'.tokenize() as Set
         Set<String> systemProperties = System.properties.keySet()
 
         ( Map )( project.properties + session.executionProperties + session.userProperties ).findAll {
