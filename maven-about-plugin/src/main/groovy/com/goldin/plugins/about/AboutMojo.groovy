@@ -214,9 +214,9 @@ class AboutMojo extends BaseGroovyMojo
     {
         def props = System.properties
 
-        section( dumpMaven,                    'Maven Properties'      ) { sort( mavenProperties( props )) } +
-        section( addContent.trim() as boolean, 'User Content'          ) { evaluateAddContent() }            +
-        section( dumpSystem,                   'System Properties'     ) { sort( props ) }                   +
+        section( dumpMaven,                    'Maven Properties'      ) { sort( mavenProperties()) } +
+        section( addContent.trim() as boolean, 'User Content'          ) { evaluateAddContent() }     +
+        section( dumpSystem,                   'System Properties'     ) { sort( props ) }            +
         section( dumpEnv,                      'Environment Variables' ) { sort( env   ) }
     }
 
@@ -237,13 +237,20 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    @Requires({ systemProperties })
-    @Ensures({ result })
-    Map<String, String> mavenProperties( Properties systemProperties )
+    @Ensures({ result != null })
+    Map<String, String> mavenProperties()
     {
-        ( Map<String, String> )( project.properties + session.executionProperties + session.userProperties ).findAll
-        {
-            String key, String value -> ( ! ( key.startsWith( 'env.' ) || systemProperties.containsKey( key )))
+        Set<String> envVariables     = env.keySet()*.toLowerCase()
+        Set<String> prefixes         = 'java. user. os. sun. awt. file. line.separator path.separator'.tokenize() as Set
+        Set<String> systemProperties = System.properties.keySet()
+
+        ( Map )( project.properties + session.executionProperties + session.userProperties ).findAll {
+            String key, String value ->
+
+            if ( key.startsWith( 'env.' )             && envVariables.contains( key.substring( 4 ).toLowerCase())) { return false }
+            if ( prefixes.any{ key.startsWith( it ) } && systemProperties.contains( key )) { return false }
+
+            true
         }
     }
 
