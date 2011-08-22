@@ -25,7 +25,11 @@ class AboutMojo extends BaseGroovyMojo
     public String  fileName
 
     @MojoParameter
-    public String  addContent = ''
+    public  String addContent = ''
+    private String evaluateAddContent()
+    {
+        addContent.trim().with { ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
+    }
 
     @MojoParameter
     public boolean failOnError = true
@@ -200,10 +204,10 @@ class AboutMojo extends BaseGroovyMojo
         | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
         | ${ dumpDependencies ? 'Dependencies  : [' + padLines( dependencyTree()) + ']' : '' }""" +
 
-        addSection( dumpMaven,             'Maven Properties',      { sort( mavenProperties( props )) } ) +
-        addSection( addContent as boolean, 'User Content',          { addContent    }                   ) +
-        addSection( dumpSystem,            'System Properties',     { sort( props ) }                   ) +
-        addSection( dumpEnv,               'Environment Variables', { sort( env   ) }                   )
+        addSection( dumpMaven,                    'Maven Properties',      { sort( mavenProperties( props )) } ) +
+        addSection( addContent.trim() as boolean, 'User Content',          { evaluateAddContent() }            ) +
+        addSection( dumpSystem,                   'System Properties',     { sort( props ) }                   ) +
+        addSection( dumpEnv,                      'Environment Variables', { sort( env   ) }                   )
     }
 
 
