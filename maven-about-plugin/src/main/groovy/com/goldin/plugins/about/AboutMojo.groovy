@@ -408,6 +408,7 @@ class AboutMojo extends BaseGroovyMojo
             {
 
                 File aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory, fileName )}
+                assert ( ! aboutFile.file ) || ( aboutFile.delete()), "Failed to delete old [$aboutFile.canonicalPath]"
 
                 log.info( "Generating \"about\" in [$aboutFile.canonicalPath] .." )
                 aboutFile.write( allContent())
