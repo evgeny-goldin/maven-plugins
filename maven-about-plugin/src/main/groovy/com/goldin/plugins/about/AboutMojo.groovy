@@ -423,3 +423,4 @@ class AboutMojo extends BaseGroovyMojo
         }
     }
 }
+
