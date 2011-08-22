@@ -101,7 +101,7 @@ class AboutMojo extends BaseGroovyMojo
     private String sort ( Map<?,?> map )
     {
         def maxKey = maxKeyLength( map ) + 3
-        map.sort().collect { key, value -> "[$key]".padRight( maxKey ) + ":[$value]" }.
+        map.sort().collect { key, value -> " [$key]".padRight( maxKey ) + ":[$value]" }.
                    join( '\n' )
     }
 
