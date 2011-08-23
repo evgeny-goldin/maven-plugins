@@ -1,6 +1,5 @@
 package com.goldin.plugins.about
 
-import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.text.SimpleDateFormat
 import org.gcontracts.annotations.Ensures
@@ -8,7 +7,8 @@ import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-
+import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.beans.ExecOption
 
 /**
  * Updates files specified with "about" build metadata
@@ -91,8 +91,14 @@ class AboutMojo extends BaseGroovyMojo
 
     private String exec ( String command, File directory = null )
     {
-        def process = command.execute(( List ) null, directory )
-        ( process.text + process.err.text ).trim()
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream( 1024 )
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream( 64   )
+
+        if ( directory ) { generalBean().execute( command, ExecOption.CommonsExec, stdout, stderr, -1, directory ) }
+        else             { generalBean().execute( command, ExecOption.CommonsExec, stdout, stderr ) }
+
+        String result = ( stdout.toString( 'UTF-8' ) + stderr.toString( 'UTF-8' )).trim()
+        result
     }
 
 
@@ -113,18 +119,21 @@ class AboutMojo extends BaseGroovyMojo
      */
     private String dependencyTree()
     {
-        def mvnHome = env[ 'M2_HOME' ]
+        String mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
-        verifyBean().directory( new File( mvnHome ))
 
-        def mvn = mvnHome + '/bin/' + ( System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' :
-                                                                                                              'mvn' )
+        File mvnHomeFile = new File( mvnHome )
+        mvnHomeFile.with{ assert isDirectory() && new File(( File ) delegate, 'bin' ).isDirectory() }
 
-        exec( "$mvn -B dependency:tree", basedir ).replace( '[INFO] ', '' ).
-                                                   replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
-                                                   replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
-                                                   replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
-                                                   trim()
+        def mvn = new File( mvnHomeFile, '/bin/' + ( System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' : 'mvn' )).
+                  canonicalPath
+
+        exec( "$mvn -B org.apache.maven.plugins:maven-dependency-plugin:2.3:tree", basedir ).
+            replace( '[INFO] ', '' ).
+            replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
+            replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+            replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
+            trim()
     }
 
 
