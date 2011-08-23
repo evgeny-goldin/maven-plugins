@@ -60,9 +60,6 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpDependencies = false
 
     @MojoParameter
-    public boolean gitStatusProject = true
-
-    @MojoParameter
     public String  endOfLine   = 'windows'
 
     @MojoParameter ( defaultValue = '${project.build.directory}' )
@@ -88,16 +85,27 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    private String exec ( String command, File directory = null )
+    private String exec ( String command, File directory = basedir )
     {
-        ByteArrayOutputStream stdout     = new ByteArrayOutputStream( 1024 )
-        ByteArrayOutputStream stderr     = new ByteArrayOutputStream( 64   )
+        ByteArrayOutputStream out        = new ByteArrayOutputStream( 1024 )
+        def                   getStdout  = { out.toString( 'UTF-8' ).trim() }
+        ByteArrayOutputStream err        = new ByteArrayOutputStream( 64   )
+        def                   getStderr  = { err.toString( 'UTF-8' ).trim() }
         def                   execOption = ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime )
 
-        if ( directory ) { generalBean().execute( command, execOption, stdout, stderr, -1, directory ) }
-        else             { generalBean().execute( command, execOption, stdout, stderr ) }
+        try
+        {
+            generalBean().execute( command, execOption, out, err, -1, directory )
+        }
+        catch ( e )
+        {
+            throw new RuntimeException(
+                "Failed to execute \"$command\" in [${ directory.canonicalPath }], " +
+                "stdout is [${ getStdout() }], stderr is [${ getStderr() }]",
+                e )
+        }
 
-        String result = ( stdout.toString( 'UTF-8' ) + stderr.toString( 'UTF-8' )).trim()
+        String result = getStdout() + getStderr()
         result
     }
 
@@ -282,8 +290,7 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( gitVersion.contains( 'git version' ))
         {
-            gitStatusCommand = "git status" + ( gitStatusProject ? '' : ' ' + basedir.canonicalPath )
-            gitStatus        = exec( gitStatusCommand )
+            gitStatus = exec( 'git status' )
 
             if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
             {
@@ -338,7 +345,7 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories  : ['.size()) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
-        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status : [${ padLines( gitStatus, ' Basedir Status : ['.size()) }]
+        | Git Status     : [${ padLines( gitStatus, ' Git Status     : ['.size()) }]
         | Last Commit    : [${ find( 'commit',      gitLog )}]
         | Commit Date    : [${ find( 'Date:',       gitLog )}]
         | Commit Author  : [${ find( 'Author:',     gitLog )}]
