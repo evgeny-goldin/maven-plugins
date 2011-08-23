@@ -1,5 +1,6 @@
 package com.goldin.plugins.about
 
+import com.goldin.gcommons.beans.ExecOption
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.text.SimpleDateFormat
 import org.gcontracts.annotations.Ensures
@@ -8,7 +9,6 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.gcommons.beans.ExecOption
 
 /**
  * Updates files specified with "about" build metadata
@@ -87,26 +87,7 @@ class AboutMojo extends BaseGroovyMojo
 
     private String exec ( String command, File directory = basedir )
     {
-        ByteArrayOutputStream out        = new ByteArrayOutputStream( 1024 )
-        def                   getStdout  = { out.toString( 'UTF-8' ).trim() }
-        ByteArrayOutputStream err        = new ByteArrayOutputStream( 64   )
-        def                   getStderr  = { err.toString( 'UTF-8' ).trim() }
-        def                   execOption = ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime )
-
-        try
-        {
-            generalBean().execute( command, execOption, out, err, -1, directory )
-        }
-        catch ( e )
-        {
-            throw new RuntimeException(
-                "Failed to execute \"$command\" in [${ directory.canonicalPath }], " +
-                "stdout is [${ getStdout() }], stderr is [${ getStderr() }]",
-                e )
-        }
-
-        String result = getStdout() + getStderr()
-        result
+        generalBean().executeWithResult( command, ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ), -1, directory )
     }
 
 
@@ -135,12 +116,13 @@ class AboutMojo extends BaseGroovyMojo
 
         def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
 
-        exec( "$mvn -B org.apache.maven.plugins:maven-dependency-plugin:2.3:tree", basedir ).
-            replace( '[INFO] ', '' ).
-            replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
-            replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
-            replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
-            trim()
+        exec( "$mvn -B -f ${ new File( basedir, 'pom.xml' ).canonicalPath } " +
+              "org.apache.maven.plugins:maven-dependency-plugin:2.3:tree",
+              basedir ).replace( '[INFO] ', '' ).
+                        replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
+                        replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+                        replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
+                        trim()
     }
 
 
@@ -388,19 +370,16 @@ class AboutMojo extends BaseGroovyMojo
                     def tempFile = new File( outputDirectory(), fileName )
                     def prefix   = (( prefix == '/' ) ? '' : prefix )
 
-                    log.info( "Generating \"about\" in [$tempFile.canonicalPath] .." )
-
+                    log.info( "Generating \"about\" in [$tempFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
                     tempFile.write( allContent())
-
                     log.info( "Generated  \"about\" in [$tempFile.canonicalPath]" )
 
                     for ( file in files )
                     {
                         def aboutPath = "$file.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
+
                         log.info( "Adding \"about\" to [$aboutPath]" )
-
                         fileBean().pack( tempFile.parentFile, file, [ tempFile.name ], null, true, true, true, null, null, prefix )
-
                         log.info( "Added  \"about\" to [$aboutPath]" )
                     }
 
@@ -413,11 +392,10 @@ class AboutMojo extends BaseGroovyMojo
             }
             else
             {
-
                 File aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory, fileName )}
                 assert ( ! aboutFile.file ) || ( aboutFile.delete()), "Failed to delete old [$aboutFile.canonicalPath]"
 
-                log.info( "Generating \"about\" in [$aboutFile.canonicalPath] .." )
+                log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
                 aboutFile.write( allContent())
                 log.info( "Generated  \"about\" in [$aboutFile.canonicalPath]" )
             }
