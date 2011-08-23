@@ -74,8 +74,8 @@ class AboutMojo extends BaseGroovyMojo
     @MojoParameter
     public String  exclude
 
-    private env = System.getenv()
-
+    private env       = System.getenv()
+    private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
 
 
     private String padLines ( String s )
@@ -91,11 +91,12 @@ class AboutMojo extends BaseGroovyMojo
 
     private String exec ( String command, File directory = null )
     {
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream( 1024 )
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream( 64   )
+        ByteArrayOutputStream stdout     = new ByteArrayOutputStream( 1024 )
+        ByteArrayOutputStream stderr     = new ByteArrayOutputStream( 64   )
+        def                   execOption = ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime )
 
-        if ( directory ) { generalBean().execute( command, ExecOption.CommonsExec, stdout, stderr, -1, directory ) }
-        else             { generalBean().execute( command, ExecOption.CommonsExec, stdout, stderr ) }
+        if ( directory ) { generalBean().execute( command, execOption, stdout, stderr, -1, directory ) }
+        else             { generalBean().execute( command, execOption, stdout, stderr ) }
 
         String result = ( stdout.toString( 'UTF-8' ) + stderr.toString( 'UTF-8' )).trim()
         result
@@ -125,8 +126,7 @@ class AboutMojo extends BaseGroovyMojo
         File mvnHomeFile = new File( mvnHome )
         mvnHomeFile.with{ assert isDirectory() && new File(( File ) delegate, 'bin' ).isDirectory() }
 
-        def mvn = new File( mvnHomeFile, '/bin/' + ( System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' ) ? 'mvn.bat' : 'mvn' )).
-                  canonicalPath
+        def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
 
         exec( "$mvn -B org.apache.maven.plugins:maven-dependency-plugin:2.3:tree", basedir ).
             replace( '[INFO] ', '' ).
