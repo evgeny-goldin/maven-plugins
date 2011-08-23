@@ -343,7 +343,7 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Git Info
         $SEPARATOR
-        | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories  : ['.size()) }]
+        | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : ['.size()) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
         | Git Status     : [${ padLines( gitStatus, ' Git Status     : ['.size()) }]
         | Last Commit    : [${ find( 'commit',      gitLog )}]
