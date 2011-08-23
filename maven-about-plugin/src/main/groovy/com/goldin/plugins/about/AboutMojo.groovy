@@ -78,10 +78,11 @@ class AboutMojo extends BaseGroovyMojo
     private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
 
 
-    private String padLines ( String s )
+    @Requires({ ( s != null ) && ( padWidth > 0 ) })
+    @Ensures({ result != null })
+    private String padLines ( String s, int padWidth, List l = null )
     {
-        def padWidth = ' Status        : ['.size()
-        def lines    = s.readLines()
+        List<String> lines = (( s != null ) ? s.readLines() : l )
 
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * padWidth ) + it }.join( '\n' ) :
                                                          '' )) :
@@ -215,7 +216,7 @@ class AboutMojo extends BaseGroovyMojo
         | ${ dumpPaths ? 'Basedir       : [' + basedir.canonicalPath + ']': '' }
         | Name          : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
         | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
-        | ${ dumpDependencies ? 'Dependencies  : [' + padLines( dependencyTree()) + ']' : '' }"""
+        | ${ dumpDependencies ? 'Dependencies  : [' + padLines( dependencyTree(), ' Dependencies  : ['.size()) + ']' : '' }"""
     }
 
 
@@ -311,19 +312,21 @@ class AboutMojo extends BaseGroovyMojo
 
     String svnContent( String svnStatus )
     {
-        def svnInfo = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
-        def commit  = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines()[ 1 ]
+        def svnInfo     = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
+        def commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines()
+        def commit      = commitLines[ 1 ]
 
         """
         $SEPARATOR
         | SVN Info
         $SEPARATOR
-        | Repository    : [${ find( 'URL:',      svnInfo )}]
-        | Revision      : [${ find( 'Revision:', svnInfo )}]
-        | Status        : [${ padLines( svnStatus ) }]
-        | Last Commit   : [$commit]
-        | Commit Date   : [${ commit.split( '\\|' )[ 2 ].trim() }]
-        | Commit Author : [${ commit.split( '\\|' )[ 1 ].trim() }]"""
+        | Repository     : [${ find( 'URL:',      svnInfo )}]
+        | Revision       : [${ find( 'Revision:', svnInfo )}]
+        | Status         : [${ padLines( svnStatus, ' Status         : ['.size()) }]
+        | Last Commit    : [$commit]
+        | Commit Date    : [${ commit.split( '\\|' )[ 2 ].trim() }]
+        | Commit Author  : [${ commit.split( '\\|' )[ 1 ].trim() }]
+        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitLines[ 3 .. -1 ] ) }]"""
     }
 
 
@@ -335,9 +338,9 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Git Info
         $SEPARATOR
-        | Repositories  : [${ padLines( exec( 'git remote -v' )) }]
+        | Repositories  : [${ padLines( exec( 'git remote -v' ), ' Repositories  : ['.size()) }]
         | Branch        : [${ find( '# On branch', 'git status' ) }]
-        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status: [${ padLines( gitStatus ) }]
+        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status: [${ padLines( gitStatus, ' Basedir Status: ['.size()) }]
         | Last Commit   : [${ find( 'commit',      gitLog )}]
         | Commit Date   : [${ find( 'Date:',       gitLog )}]
         | Commit Author : [${ find( 'Author:',     gitLog )}]"""
