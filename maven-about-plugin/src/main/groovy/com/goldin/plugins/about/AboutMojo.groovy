@@ -78,8 +78,6 @@ class AboutMojo extends BaseGroovyMojo
     private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
 
 
-    @Requires({ ( s != null ) && ( padWidth > 0 ) })
-    @Ensures({ result != null })
     private String padLines ( String s, int padWidth, List l = null )
     {
         List<String> lines = (( s != null ) ? s.readLines() : l )
@@ -312,9 +310,9 @@ class AboutMojo extends BaseGroovyMojo
 
     String svnContent( String svnStatus )
     {
-        def svnInfo     = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
-        def commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines()
-        def commit      = commitLines[ 1 ]
+        List<String> svnInfo     = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
+        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
+        String       commit      = commitLines[ 1 ]
 
         """
         $SEPARATOR
@@ -326,24 +324,25 @@ class AboutMojo extends BaseGroovyMojo
         | Last Commit    : [$commit]
         | Commit Date    : [${ commit.split( '\\|' )[ 2 ].trim() }]
         | Commit Author  : [${ commit.split( '\\|' )[ 1 ].trim() }]
-        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitLines[ 3 .. -1 ] ) }]"""
+        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitLines[ 2 .. -2 ]*.trim()) }]"""
     }
 
 
     String gitContent( String gitStatus )
     {
-        def gitLog = exec( 'git log -1' ).readLines()
+        List<String> gitLog = exec( 'git log -1' ).readLines().findAll { it }
 
         """
         $SEPARATOR
         | Git Info
         $SEPARATOR
-        | Repositories  : [${ padLines( exec( 'git remote -v' ), ' Repositories  : ['.size()) }]
-        | Branch        : [${ find( '# On branch', 'git status' ) }]
-        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status: [${ padLines( gitStatus, ' Basedir Status: ['.size()) }]
-        | Last Commit   : [${ find( 'commit',      gitLog )}]
-        | Commit Date   : [${ find( 'Date:',       gitLog )}]
-        | Commit Author : [${ find( 'Author:',     gitLog )}]"""
+        | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories  : ['.size()) }]
+        | Branch         : [${ find( '# On branch', 'git status' ) }]
+        | ${ gitStatusProject ? 'Project' : 'Basedir' } Status : [${ padLines( gitStatus, ' Basedir Status : ['.size()) }]
+        | Last Commit    : [${ find( 'commit',      gitLog )}]
+        | Commit Date    : [${ find( 'Date:',       gitLog )}]
+        | Commit Author  : [${ find( 'Author:',     gitLog )}]
+        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), gitLog[ 3 .. -1 ]*.trim()) }]"""
     }
 
 
