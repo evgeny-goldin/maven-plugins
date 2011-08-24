@@ -349,6 +349,23 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
+    @Requires({ aboutFile })
+    @Ensures({ result == aboutFile })
+    File writeAboutFile( File aboutFile )
+    {
+        fileBean().delete( aboutFile )
+
+        long t = System.currentTimeMillis()
+
+        log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
+        fileBean().mkdirs( aboutFile.parentFile )
+        aboutFile.write( allContent())
+        log.info( "Generated  \"about\" in [$aboutFile.canonicalPath] (${ System.currentTimeMillis() - t } ms)" )
+
+        aboutFile
+    }
+
+
     @Override
     void doExecute ()
     {
@@ -368,23 +385,21 @@ class AboutMojo extends BaseGroovyMojo
 
                 if ( files )
                 {
-                    def tempFile = new File( outputDirectory(), fileName )
-                    def prefix   = (( prefix == '/' ) ? '' : prefix )
+                    def aboutFile = new File( outputDirectory(), fileName )
+                    def prefix    = (( prefix == '/' ) ? '' : prefix )
 
-                    log.info( "Generating \"about\" in [$tempFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
-                    tempFile.write( allContent())
-                    log.info( "Generated  \"about\" in [$tempFile.canonicalPath]" )
+                    writeAboutFile( aboutFile )
 
                     for ( file in files )
                     {
                         def aboutPath = "$file.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
 
                         log.info( "Adding \"about\" to [$aboutPath]" )
-                        fileBean().pack( tempFile.parentFile, file, [ tempFile.name ], null, true, true, true, null, null, prefix )
+                        fileBean().pack( aboutFile.parentFile, file, [ aboutFile.name ], null, true, true, true, null, null, prefix )
                         log.info( "Added  \"about\" to [$aboutPath]" )
                     }
 
-                    fileBean().delete( tempFile )
+                    fileBean().delete( aboutFile )
                 }
                 else
                 {
@@ -393,12 +408,8 @@ class AboutMojo extends BaseGroovyMojo
             }
             else
             {
-                File aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory, fileName )}
-                assert ( ! aboutFile.file ) || ( aboutFile.delete()), "Failed to delete old [$aboutFile.canonicalPath]"
-
-                log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
-                aboutFile.write( allContent())
-                log.info( "Generated  \"about\" in [$aboutFile.canonicalPath]" )
+                def aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory, fileName )}
+                writeAboutFile( aboutFile )
             }
         }
         catch ( e )
