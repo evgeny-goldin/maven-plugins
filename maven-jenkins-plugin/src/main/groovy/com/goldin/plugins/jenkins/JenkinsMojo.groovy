@@ -103,7 +103,7 @@ public class JenkinsMojo extends BaseGroovyMojo
                 def config    = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
 
                 configFile.write( verifyBean().notNullOrEmpty( config ))
-                assert (( configFile.isFile()) && ( configFile.size() == config.size()) && ( configFile.text == config ))
+                assert (( configFile.file ) && ( configFile.size() == config.size()) && ( configFile.text == config ))
 
                 configPath = validate( configFile ).canonicalPath
             }

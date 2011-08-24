@@ -86,9 +86,13 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    private String exec ( String command, File directory = basedir )
+    private String exec ( String command, File directory = basedir, boolean failOnError = true )
     {
-        generalBean().executeWithResult( command, ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ), -1, directory )
+        generalBean().executeWithResult( command,
+                                         ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
+                                         failOnError,
+                                         -1,
+                                         directory )
     }
 
 
@@ -113,7 +117,7 @@ class AboutMojo extends BaseGroovyMojo
         assert mvnHome, "'M2_HOME' environment variable is not defined"
 
         File mvnHomeFile = new File( mvnHome )
-        mvnHomeFile.with{ assert isDirectory() && new File(( File ) delegate, 'bin' ).isDirectory() }
+        mvnHomeFile.with{ assert isDirectory() && new File(( File ) delegate, 'bin' ).directory }
 
         def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
 
@@ -251,9 +255,9 @@ class AboutMojo extends BaseGroovyMojo
          * Trying SVN
          */
 
-        if ( svnDir.isDirectory())
+        if ( svnDir.directory )
         {
-            svnVersion = exec( 'svn --version' )
+            svnVersion = exec( 'svn --version', basedir, false )
             if ( svnVersion.contains( 'svn, version' ))
             {
                 svnStatus = exec( "svn status $basedir.canonicalPath" )
@@ -269,7 +273,7 @@ class AboutMojo extends BaseGroovyMojo
          * Trying Git
          */
 
-        gitVersion = exec( 'git --version' )
+        gitVersion = exec( 'git --version', basedir, false )
 
         if ( gitVersion.contains( 'git version' ))
         {
@@ -288,7 +292,7 @@ class AboutMojo extends BaseGroovyMojo
         | Unsupported SCM system: either project is not managed by SVN/Git or corresponding command-line clients are not available.
         | Tried SVN:
         | ~~~~~~~~~~
-        | [$svnDir.canonicalPath] - ${ svnDir.isDirectory() ? 'found' : 'not found' }
+        | [$svnDir.canonicalPath] - ${ svnDir.directory ? 'exists' : 'does not exist' }
         | ${ svnVersion ? '"svn --version" returned [' + svnVersion + ']'                           : '' }
         | ${ svnStatus  ? '"svn status ' + basedir.canonicalPath + '" returned [' + svnStatus + ']' : '' }
         | Tried Git:

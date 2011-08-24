@@ -217,7 +217,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
             {
                 if ( isList && newList ) { listFile.write( '' ) } // Will be appended with data
 
-                previousList = ( listFile?.isFile() ? listFile.text : '' )
+                previousList = ( listFile?.file ? listFile.text : '' )
 
                 if ( isList && nativeListing )
                 {
@@ -308,7 +308,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                 log.info( "Trying again .." )
 
-                if ( listFile?.isFile() && ( ! nativeListing ))
+                if ( listFile?.file && ( ! nativeListing ))
                 {   /**
                      * Files that are already listed are added to excludes pattern.
                      * Next listing attempt will append to listing file instead of overwriting it

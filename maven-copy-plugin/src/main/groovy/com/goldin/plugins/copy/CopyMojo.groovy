@@ -699,7 +699,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         if ( failIfNotFound ) { verifyBean().directory( sourceDirectory ) }
 
-        if ( sourceDirectory.isDirectory())
+        if ( sourceDirectory.directory )
         {
             def filesDeleted = filter( fileBean().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ),
                                        filterExpression, verbose, failIfNotFound )
@@ -709,7 +709,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             if ( cleanEmptyDirectories )
             {
                 List<File> directoriesDeleted = ( sourceDirectory.splitWith( 'eachDirRecurse', File ) + sourceDirectory ).
-                                                findAll{ File f -> f.isDirectory() && ( f.directorySize() == 0 )}
+                                                findAll{ File f -> f.directory && ( f.directorySize() == 0 )}
 
                 fileBean().delete( directoriesDeleted as File[] )
                 filesDeleted += directoriesDeleted
@@ -719,7 +719,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
         else if ( verbose )
         {
-            assert ( ! sourceDirectory.isDirectory()) && ( ! failIfNotFound )
+            assert ( ! sourceDirectory.directory ) && ( ! failIfNotFound )
             log.info( "[$sourceDirectory.canonicalPath] doesn't exist, <failIfNotFound> is [$failIfNotFound], no files deleted" )
         }
     }

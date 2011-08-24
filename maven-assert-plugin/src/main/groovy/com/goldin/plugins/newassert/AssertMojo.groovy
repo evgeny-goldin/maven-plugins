@@ -165,7 +165,7 @@ class AssertMojo extends BaseGroovyMojo
                 String path = file.canonicalPath
                 assert file.exists(), "[$path] is missing"
 
-                log.info ( "${file.isFile() ? 'File' : 'Directory' } [$path] exists${ file.isFile() ?  ', [' + file.length() + '] bytes' : '' }" )
+                log.info ( "${ file.file ? 'File' : 'Directory' } [$path] exists${ file.file ?  ', [' + file.length() + '] bytes' : '' }" )
             }
         })
     }
