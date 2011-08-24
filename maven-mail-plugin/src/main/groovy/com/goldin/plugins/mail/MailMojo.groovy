@@ -1,5 +1,6 @@
 package com.goldin.plugins.mail
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
@@ -9,7 +10,6 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import javax.mail.*
-import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**

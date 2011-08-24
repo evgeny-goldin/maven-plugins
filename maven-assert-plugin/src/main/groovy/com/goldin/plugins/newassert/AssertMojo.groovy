@@ -1,10 +1,11 @@
 package com.goldin.plugins.newassert
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * Asserts invoker
@@ -113,7 +114,7 @@ class AssertMojo extends BaseGroovyMojo
     private verifyProperties ( String properties )
     {
         def propertiesMap = [:]
-        
+
         verifyEachLine( properties, {
 
             String line ->

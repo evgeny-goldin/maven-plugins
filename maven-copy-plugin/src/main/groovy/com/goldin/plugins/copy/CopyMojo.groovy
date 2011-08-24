@@ -1,5 +1,6 @@
 package com.goldin.plugins.copy
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
@@ -13,8 +14,8 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
-import static com.goldin.plugins.common.GMojoUtils.*
 import org.jfrog.maven.annomojo.annotations.*
+
 
 /**
  * MOJO copying resources specified

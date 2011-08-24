@@ -1,11 +1,11 @@
 package com.goldin.plugins.sshexec
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**

@@ -1,5 +1,6 @@
 package com.goldin.plugins.common
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.repository.ArtifactRepository
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.PluginManager
@@ -7,7 +8,6 @@ import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
-import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**

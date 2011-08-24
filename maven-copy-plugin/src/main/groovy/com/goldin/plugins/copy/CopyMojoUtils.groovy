@@ -1,11 +1,11 @@
 package com.goldin.plugins.copy
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.shared.artifact.filter.collection.*
-import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**

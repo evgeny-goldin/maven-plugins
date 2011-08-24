@@ -1,11 +1,12 @@
 package com.goldin.plugins.properties
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import static com.goldin.plugins.common.GMojoUtils.*
+
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
@@ -54,7 +55,7 @@ class PropertiesMojo extends BaseGroovyMojo
         }
     }
 
-    
+
     /**
      * Sets raw properties specified.
      */

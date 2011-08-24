@@ -1,5 +1,6 @@
 package com.goldin.plugins.duplicates
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -10,7 +11,6 @@ import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
 import org.sonatype.aether.util.artifact.DefaultArtifact
-import static com.goldin.plugins.common.GMojoUtils.*
 import org.jfrog.maven.annomojo.annotations.*
 
 

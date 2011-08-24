@@ -1,5 +1,6 @@
 package com.goldin.plugins.common
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import groovy.text.SimpleTemplateEngine
@@ -24,7 +25,7 @@ import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
 import com.goldin.gcommons.beans.*
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*
+
 
 class GMojoUtils
 {

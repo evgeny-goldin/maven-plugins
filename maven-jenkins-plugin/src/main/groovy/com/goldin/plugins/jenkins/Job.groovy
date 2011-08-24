@@ -3,6 +3,7 @@ package com.goldin.plugins.jenkins
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.jenkins.beans.*
 
+
  /**
  * Class describing a Jenkins job
  */

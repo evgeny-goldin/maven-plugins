@@ -1,8 +1,8 @@
 package com.goldin.plugins.common
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import static com.goldin.plugins.common.GMojoUtils.*
 
 
 /**
@@ -77,7 +77,7 @@ class Replace
         }
 
         result = addDollar( result, addDollar )
-        
+
         ( endOfLine ) ? result.replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )) :
                         result
     }
