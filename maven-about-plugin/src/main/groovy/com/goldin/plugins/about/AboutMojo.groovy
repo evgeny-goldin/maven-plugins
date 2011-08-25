@@ -76,9 +76,11 @@ class AboutMojo extends BaseGroovyMojo
     private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
 
 
-    private String padLines ( String s, int padWidth, List l = null )
+    @Requires({ ( s != null ) && ( padWidth > 0 ) })
+    @Ensures({ result != null })
+    private String padLines ( String s, int padWidth )
     {
-        List<String> lines = (( s != null ) ? s.readLines() : l )
+        List<String> lines = s.readLines()
 
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * padWidth ) + it }.join( '\n' ) :
                                                          '' )) :
@@ -304,18 +306,37 @@ class AboutMojo extends BaseGroovyMojo
 
     String svnContent( String svnStatus )
     {
-        List<String> svnInfo       = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
-        List<String> commitLines   = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
+        /**
+         * Path: .
+         * URL: http://server/path/project
+         * Repository Root: http://server
+         * Repository UUID: 3b0d414a-98df-144e-9520-49725f2e85eb
+         * Revision: 39134
+         * Node Kind: directory
+         * Schedule: normal
+         * Last Changed Author: Evgeny
+         * Last Changed Rev: 39087
+         * Last Changed Date: 2011-08-24 09:28:06 +0300 (Wed, 24 Aug 2011)
+         */
 
-        assert commitLines.size() > 2, "Commit message is too short:\n$commitLines"
+        List<String> svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
 
         /**
          * ------------------------------------------------------------------------
          * r39087 | Evgeny | 2011-08-24 09:28:06 +0300 (Wed, 24 Aug 2011) | 1 line
          *
-         * ONECALAIS-5573: about removed
+         * About removed
          * ------------------------------------------------------------------------
          */
+
+        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
+
+        assert commitLines.size() > 2, \
+               "Commit message is too short:\n$commitLines"
+
+        assert [ commitLines[ 0 ], commitLines[ -1 ]].each { it.with { startsWith( '---' ) && endsWith( '---' ) }}, \
+               "Unknown commit format:\n$commitLines"
+
         String       commit        = commitLines[ 1 ]
         List<String> commitMessage = ( commitLines.size() > 3 ) ? commitLines[ 2 .. -2 ]*.trim() : []
 
@@ -329,7 +350,7 @@ class AboutMojo extends BaseGroovyMojo
         | Last Commit    : [$commit]
         | Commit Date    : [${ commit.split( '\\|' )[ 2 ].trim() }]
         | Commit Author  : [${ commit.split( '\\|' )[ 1 ].trim() }]
-        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitMessage ) }]"""
+        | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : ['.size()) }]"""
     }
 
 
