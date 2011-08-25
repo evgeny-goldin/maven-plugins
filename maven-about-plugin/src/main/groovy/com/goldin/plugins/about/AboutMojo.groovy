@@ -304,9 +304,20 @@ class AboutMojo extends BaseGroovyMojo
 
     String svnContent( String svnStatus )
     {
-        List<String> svnInfo     = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
-        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
-        String       commit      = commitLines[ 1 ]
+        List<String> svnInfo       = exec( "svn info ${basedir.canonicalPath}"      ).readLines()
+        List<String> commitLines   = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
+
+        assert commitLines.size() > 2, "Commit message is too short:\n$commitLines"
+
+        /**
+         * ------------------------------------------------------------------------
+         * r39087 | Evgeny | 2011-08-24 09:28:06 +0300 (Wed, 24 Aug 2011) | 1 line
+         *
+         * ONECALAIS-5573: about removed
+         * ------------------------------------------------------------------------
+         */
+        String       commit        = commitLines[ 1 ]
+        List<String> commitMessage = ( commitLines.size() > 3 ) ? commitLines[ 2 .. -2 ]*.trim() : []
 
         """
         $SEPARATOR
@@ -318,13 +329,24 @@ class AboutMojo extends BaseGroovyMojo
         | Last Commit    : [$commit]
         | Commit Date    : [${ commit.split( '\\|' )[ 2 ].trim() }]
         | Commit Author  : [${ commit.split( '\\|' )[ 1 ].trim() }]
-        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitLines[ 2 .. -2 ]*.trim()) }]"""
+        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitMessage ) }]"""
     }
 
 
     String gitContent( String gitStatus )
     {
-        List<String> gitLog = exec( 'git log -1' ).readLines().findAll { it }
+        List<String> commitLines   = exec( 'git log -1' ).readLines().findAll { it }
+
+        assert commitLines.size() > 2, "Commit message is too short:\n$commitLines"
+
+        /**
+         * commit b2c9b4d360fbb7db27b123b16109d43853d5f378
+         * Author: Evgeny Goldin <evgenyg@gmail.com>
+         * Date:   Wed Aug 24 19:02:27 2011 +0300
+         *
+         * "About" title - "Created with"
+         */
+        List<String> commitMessage = ( commitLines.size() > 3 ) ? commitLines[ 3 .. -1 ]*.trim() : []
 
         """
         $SEPARATOR
@@ -333,10 +355,10 @@ class AboutMojo extends BaseGroovyMojo
         | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : ['.size()) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
         | Git Status     : [${ padLines( gitStatus, ' Git Status     : ['.size()) }]
-        | Last Commit    : [${ find( 'commit',      gitLog )}]
-        | Commit Date    : [${ find( 'Date:',       gitLog )}]
-        | Commit Author  : [${ find( 'Author:',     gitLog )}]
-        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), gitLog[ 3 .. -1 ]*.trim()) }]"""
+        | Last Commit    : [${ find( 'commit',      commitLines )}]
+        | Commit Date    : [${ find( 'Date:',       commitLines )}]
+        | Commit Author  : [${ find( 'Author:',     commitLines )}]
+        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitMessage ) }]"""
     }
 
 
