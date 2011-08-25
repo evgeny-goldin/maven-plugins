@@ -123,7 +123,7 @@ class AboutMojo extends BaseGroovyMojo
 
         def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
 
-        exec( "$mvn -B -f ${ new File( basedir, 'pom.xml' ).canonicalPath } " +
+        exec( "$mvn -e -B -f ${ new File( basedir, 'pom.xml' ).canonicalPath } " +
               "org.apache.maven.plugins:maven-dependency-plugin:2.3:tree",
               basedir ).replace( '[INFO] ', '' ).
                         replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
