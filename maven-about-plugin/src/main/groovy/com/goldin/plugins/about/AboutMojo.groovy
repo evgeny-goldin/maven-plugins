@@ -335,18 +335,8 @@ class AboutMojo extends BaseGroovyMojo
 
     String gitContent( String gitStatus )
     {
-        List<String> commitLines   = exec( 'git log -1' ).readLines().findAll { it }
-
-        assert commitLines.size() > 2, "Commit message is too short:\n$commitLines"
-
-        /**
-         * commit b2c9b4d360fbb7db27b123b16109d43853d5f378
-         * Author: Evgeny Goldin <evgenyg@gmail.com>
-         * Date:   Wed Aug 24 19:02:27 2011 +0300
-         *
-         * "About" title - "Created with"
-         */
-        List<String> commitMessage = ( commitLines.size() > 3 ) ? commitLines[ 3 .. -1 ]*.trim() : []
+        List<String> commitLines   = exec( 'git log -1 --format="format:%H%n%cD %n%cN <%ce>"' ).readLines()*.trim()
+        String       commitMessage = exec( 'git log -1 --format=format:%B' )
 
         """
         $SEPARATOR
@@ -355,10 +345,10 @@ class AboutMojo extends BaseGroovyMojo
         | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : ['.size()) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
         | Git Status     : [${ padLines( gitStatus, ' Git Status     : ['.size()) }]
-        | Last Commit    : [${ find( 'commit',      commitLines )}]
-        | Commit Date    : [${ find( 'Date:',       commitLines )}]
-        | Commit Author  : [${ find( 'Author:',     commitLines )}]
-        | Commit Message : [${ padLines( null, ' Commit Message : ['.size(), commitMessage ) }]"""
+        | Last Commit    : [${ commitLines[ 0 ] }]
+        | Commit Date    : [${ commitLines[ 1 ] }]
+        | Commit Author  : [${ commitLines[ 2 ] }]
+        | Commit Message : [${ padLines( commitMessage, ' Commit Message : ['.size()) }]"""
     }
 
 
