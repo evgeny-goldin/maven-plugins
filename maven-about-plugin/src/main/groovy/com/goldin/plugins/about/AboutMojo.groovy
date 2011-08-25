@@ -143,9 +143,9 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Jenkins Info
         $SEPARATOR
-        | Server        : [${ env[ 'JENKINS_URL' ] }]
-        | Job           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
-        | Log           : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
+        | Server         : [${ env[ 'JENKINS_URL' ] }]
+        | Job            : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Log            : [${ env[ 'JENKINS_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
@@ -157,9 +157,9 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Hudson Info
         $SEPARATOR
-        | Server        : [${ env[ 'HUDSON_URL' ] }]
-        | Job           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
-        | Log           : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
+        | Server         : [${ env[ 'HUDSON_URL' ] }]
+        | Job            : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/]
+        | Log            : [${ env[ 'HUDSON_URL' ] }job/${ env[ 'JOB_NAME' ] }/${ env[ 'BUILD_NUMBER' ]}/console]"""
     }
 
 
@@ -171,9 +171,9 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | TeamCity Info
         $SEPARATOR
-        | Project Name  : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
-        | Build Config  : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
-        | Build Number  : [${ env[ 'BUILD_NUMBER' ] }]"""
+        | Project Name   : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
+        | Build Config   : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
+        | Build Number   : [${ env[ 'BUILD_NUMBER' ] }]"""
     }
 
 
@@ -195,25 +195,25 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Build Info
         $SEPARATOR
-        | Host          : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
-        | Build Time    : Started         - [${ format.format( session.startTime ) }]
-        | Build Time    : "About" created - [${ format.format( new Date())         }]
-        | User          : [${ props[ 'user.name' ] }]
-        | ${ dumpPaths ? 'Directory     : [' + props[ 'user.dir' ] + ']': '' }
-        | Java          : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
-        | OS            : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
+        | Host           : [${ env[ 'COMPUTERNAME' ] ?: env[ 'HOSTNAME' ] ?: exec( 'hostname' ) ?: '' }]
+        | Build Time     : Started         - [${ format.format( session.startTime ) }]
+        | Build Time     : "About" created - [${ format.format( new Date())         }]
+        | User           : [${ props[ 'user.name' ] }]
+        | ${ dumpPaths ? 'Directory      : [' + props[ 'user.dir' ] + ']': '' }
+        | Java           : [${ props[ 'java.version' ] }][${ props[ 'java.vm.vendor' ] }]${ dumpPaths ? '[' + props[ 'java.home' ] + ']' : '' }[${ props[ 'java.vm.name' ] }]
+        | OS             : [${ props[ 'os.name' ] }][${ props[ 'os.arch' ] }][${ props[ 'os.version' ] }]
         $SEPARATOR
         | Maven Info
         $SEPARATOR
-        | ${ dumpPaths ? 'M2_HOME       : [' + env[ 'M2_HOME' ] + ']' : '' }
-        | MAVEN_OPTS    : [${ env[ 'MAVEN_OPTS' ] ?: '' }]
-        | Version       : [${ mavenVersion() }]
-        | Project       : [${ dumpPaths ? project.toString() : project.toString().replaceAll( /\s+@.+/, '' )}]
-        | Goals         : $session.goals
-        | ${ dumpPaths ? 'Basedir       : [' + basedir.canonicalPath + ']': '' }
-        | Name          : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
-        | Coordinates   : [$project.groupId:$project.artifactId:$project.version]
-        | ${ dumpDependencies ? 'Dependencies  : [' + padLines( dependencyTree(), ' Dependencies  : ['.size()) + ']' : '' }"""
+        | ${ dumpPaths ? 'M2_HOME        : [' + env[ 'M2_HOME' ] + ']' : '' }
+        | MAVEN_OPTS     : [${ env[ 'MAVEN_OPTS' ] ?: '' }]
+        | Version        : [${ mavenVersion() }]
+        | Project        : [${ dumpPaths ? project.toString() : project.toString().replaceAll( /\s+@.+/, '' )}]
+        | Goals          : $session.goals
+        | ${ dumpPaths ? 'Basedir        : [' + basedir.canonicalPath + ']': '' }
+        | Name           : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
+        | Coordinates    : [$project.groupId:$project.artifactId:$project.version]
+        | ${ dumpDependencies ? 'Dependencies   : [' + padLines( dependencyTree(), ' Dependencies   : ['.size()) + ']' : '' }"""
     }
 
 
