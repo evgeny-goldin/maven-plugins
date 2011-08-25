@@ -128,6 +128,8 @@ class AboutMojo extends BaseGroovyMojo
               basedir ).replace( '[INFO] ', '' ).
                         replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
                         replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+                        replaceAll( /(?m)Downloading: .+$/,         '' ). // Removing Maven 3 download progress indicator
+                        replaceAll( /(?m)Downloaded: .+$/,          '' ). // Removing Maven 3 download progress indicator
                         replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
                         trim()
     }
