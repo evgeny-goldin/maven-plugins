@@ -22,6 +22,12 @@ class Job
            'con',  'nul',  'prn' ])
 
     /**
+     * Error messages to display when jobs are not properly configured
+     */
+    private static final String NOT_CONFIGURED = 'is not configured correctly'
+    private static final String MIS_CONFIGURED = 'is mis-configured'
+
+    /**
      * Job types supported
      */
     static enum JOB_TYPE
@@ -320,69 +326,69 @@ class Job
      {
          if ( this.isAbstract ) { return }
 
-         assert this.id,            "[${ this }] is not configured: missing <id>"
-         assert this.jenkinsUrl,    "[${ this }] is not configured: missing <jenkinsUrl>"
-         assert this.generationPom, "[${ this }] is not configured: missing <generationPom>"
-         assert this.getScmClass(), "[${ this }] is not configured: unknown <scmType>?"
-         assert this.description,   "[${ this }] is not configured: missing <description>"
-         assert this.scmType,       "[${ this }] is not configured: missing <scmType>"
-         assert this.jobType,       "[${ this }] is not configured: missing <jobType>"
-         assert this.node,          "[${ this }] is not configured: missing <node>"
-         assert this.jdkName,       "[${ this }] is not configured: missing <jdkName>"
+         assert this.id,            "[${ this }] $NOT_CONFIGURED: missing <id>"
+         assert this.jenkinsUrl,    "[${ this }] $NOT_CONFIGURED: missing <jenkinsUrl>"
+         assert this.generationPom, "[${ this }] $NOT_CONFIGURED: missing <generationPom>"
+         assert this.getScmClass(), "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
+         assert this.description,   "[${ this }] $NOT_CONFIGURED: missing <description>"
+         assert this.scmType,       "[${ this }] $NOT_CONFIGURED: missing <scmType>"
+         assert this.jobType,       "[${ this }] $NOT_CONFIGURED: missing <jobType>"
+         assert this.node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
+         assert this.jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
 
-         assert ( this.authToken         != null ), "[${ this }] is not configured: 'authToken' is null?"
-         assert ( this.scm               != null ), "[${ this }] is not configured: 'scm' is null?"
-         assert ( this.properties        != null ), "[${ this }] is not configured: 'properties' is null?"
-         assert ( this.publishers        != null ), "[${ this }] is not configured: 'publishers' is null?"
-         assert ( this.buildWrappers     != null ), "[${ this }] is not configured: 'buildWrappers' is null?"
-         assert ( this.useUpdate         != null ), "[${ this }] is not configured: 'useUpdate' is null?"
-         assert ( this.doRevert          != null ), "[${ this }] is not configured: 'doRevert' is null?"
-         assert ( this.daysToKeep        != null ), "[${ this }] is not configured: 'daysToKeep' is null?"
-         assert ( this.numToKeep         != null ), "[${ this }] is not configured: 'numToKeep' is null?"
-         assert ( this.descriptionTable  != null ), "[${ this }] is not configured: 'descriptionTable' is null?"
-         assert ( this.mail              != null ), "[${ this }] is not configured: 'mail' is null?"
-         assert ( this.invoke            != null ), "[${ this }] is not configured: 'invoke' is null?"
+         assert ( this.authToken         != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
+         assert ( this.scm               != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
+         assert ( this.properties        != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
+         assert ( this.publishers        != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
+         assert ( this.buildWrappers     != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
+         assert ( this.useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
+         assert ( this.doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( this.daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
+         assert ( this.numToKeep         != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
+         assert ( this.descriptionTable  != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
+         assert ( this.mail              != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
+         assert ( this.invoke            != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
 
          verifyRepositories()
 
          if ( this.jobType == JOB_TYPE.free )
          {
-             assert this.tasks, "[${ this }] is not configured: missing '<tasks>'"
+             assert this.tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
              for ( task in this.tasks )
              {
                  assert ( task.hudsonClass && task.markup ), "Task [$task] - Hudson class or markup is missing"
              }
 
-             assert ! this.pom,        "[${ this }] is mis-configured: <pom> is not active in free-style jobs"
-             assert ! this.mavenGoals, "[${ this }] is mis-configured: <mavenGoals> is not active in free-style jobs"
-             assert ! this.mavenName,  "[${ this }] is mis-configured: <mavenName> is not active in free-style jobs"
-             assert ( this.mavenOpts         == null ), "[${ this }] is mis-configured: <mavenOpts> is not active in free-style jobs"
-             assert ( this.buildOnSNAPSHOT   == null ), "[${ this }] is mis-configured: <buildOnSNAPSHOT> is not active in free-style jobs"
-             assert ( this.privateRepository == null ), "[${ this }] is mis-configured: <privateRepository> is not active in free-style jobs"
-             assert ( this.archivingDisabled == null ), "[${ this }] is mis-configured: <archivingDisabled> is not active in free-style jobs"
-             assert ( this.reporters         == null ), "[${ this }] is mis-configured: <reporters> is not active in free-style jobs"
-             assert ( this.localRepoBase     == null ), "[${ this }] is mis-configured: <localRepoBase> is not active in free-style jobs"
-             assert ( this.localRepo         == null ), "[${ this }] is mis-configured: <localRepo> is not active in free-style jobs"
-             assert ( this.deploy            == null ), "[${ this }] is mis-configured: <deploy> is not active in free-style jobs"
-             assert ( this.artifactory       == null ), "[${ this }] is mis-configured: <artifactory> is not active in free-style jobs"
+             assert ! this.pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
+             assert ! this.mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
+             assert ! this.mavenName,  "[${ this }] $MIS_CONFIGURED: <mavenName> is not active in free-style jobs"
+             assert ( this.mavenOpts         == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
+             assert ( this.buildOnSNAPSHOT   == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
+             assert ( this.privateRepository == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
+             assert ( this.archivingDisabled == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
+             assert ( this.reporters         == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
+             assert ( this.localRepoBase     == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
+             assert ( this.localRepo         == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
+             assert ( this.deploy            == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
+             assert ( this.artifactory       == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
          }
          else if ( this.jobType == JOB_TYPE.maven )
          {
-             assert ! this.tasks, "[${ this }] is mis-configured: <tasks> is not active in maven jobs"
+             assert ! this.tasks, "[${ this }] $MIS_CONFIGURED: <tasks> is not active in maven jobs"
 
-             assert this.pom,        "[${ this }] is not configured: missing <pom>"
-             assert this.mavenGoals, "[${ this }] is not configured: missing <mavenGoals>"
-             assert this.mavenName,  "[${ this }] is not configured: missing <mavenName>"
+             assert this.pom,        "[${ this }] $NOT_CONFIGURED: missing <pom>"
+             assert this.mavenGoals, "[${ this }] $NOT_CONFIGURED: missing <mavenGoals>"
+             assert this.mavenName,  "[${ this }] $NOT_CONFIGURED: missing <mavenName>"
 
-             assert ( this.mavenOpts         != null ), "[${ this }] is not configured: 'mavenOpts' is null?"
-             assert ( this.buildOnSNAPSHOT   != null ), "[${ this }] is not configured: 'buildOnSNAPSHOT' is null?"
-             assert ( this.privateRepository != null ), "[${ this }] is not configured: 'privateRepository' is null?"
-             assert ( this.archivingDisabled != null ), "[${ this }] is not configured: 'archivingDisabled' is null?"
-             assert ( this.reporters         != null ), "[${ this }] is not configured: 'reporters' is null?"
-             assert ( this.localRepoBase     != null ), "[${ this }] is not configured: 'localRepoBase' is null?"
-             assert ( this.localRepo         != null ), "[${ this }] is not configured: 'localRepo' is null?"
-             assert ( this.deploy            != null ), "[${ this }] is not configured: 'deploy' is null?"
-             assert ( this.artifactory       != null ), "[${ this }] is not configured: 'artifactory' is null?"
+             assert ( this.mavenOpts         != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
+             assert ( this.buildOnSNAPSHOT   != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
+             assert ( this.privateRepository != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
+             assert ( this.archivingDisabled != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
+             assert ( this.reporters         != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
+             assert ( this.localRepoBase     != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
+             assert ( this.localRepo         != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
+             assert ( this.deploy            != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
+             assert ( this.artifactory       != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
 
              if ( this.deploy?.url || this.artifactory?.name )
              {
