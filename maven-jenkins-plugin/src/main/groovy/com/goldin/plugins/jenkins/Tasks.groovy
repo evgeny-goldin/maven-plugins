@@ -6,20 +6,23 @@ abstract class Task
     String getHudsonClass(){ "hudson.tasks.${ this.class.simpleName }" }
     abstract String getMarkup()
 
+    private final String space = ' ' * 8
+
+
     String buildMarkup( List<String> properties )
     {
-        StringBuilder builder = new StringBuilder()
-        
+        List<String> lines = []
+
         for ( property in properties )
         {
             String value = this[ property ] as String
             if ( value )
             {
-                builder.append( "<$property>$value</$property>\n" )
+                lines << "<$property>${ value.split( '\n' )*.trim().join( ' ' ) }</$property>"
             }
         }
 
-        builder.toString().readLines()*.trim().join( "\n" )
+        space + lines.join( "\n$space" )
     }
 }
 
@@ -37,8 +40,11 @@ class Maven extends Task
     String  jvmOptions           = ''
     String  properties           = ''
     boolean usePrivateRepository = false
-    
-    String getMarkup () { buildMarkup([ 'targets', 'mavenName', 'pom', 'jvmOptions', 'properties', 'usePrivateRepository' ])
+
+    String getMarkup ()
+    {
+        pom != 'false' ? buildMarkup([ 'targets', 'mavenName', 'pom', 'jvmOptions', 'properties', 'usePrivateRepository' ]) :
+                         buildMarkup([ 'targets', 'mavenName',        'jvmOptions', 'properties', 'usePrivateRepository' ])
     }
 }
 

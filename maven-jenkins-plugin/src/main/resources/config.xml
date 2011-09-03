@@ -231,7 +231,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }
             {
   %>
     <${ task.hudsonClass }>
-        ${ task.markup }
+${ task.markup }
     </${ task.hudsonClass }>
   <%
             }
