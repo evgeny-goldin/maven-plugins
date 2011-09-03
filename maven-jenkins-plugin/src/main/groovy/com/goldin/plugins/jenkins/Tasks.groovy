@@ -16,10 +16,7 @@ abstract class Task
         for ( property in properties )
         {
             String value = this[ property ] as String
-            if ( value )
-            {
-                lines << "<$property>${ value.split( '\n' )*.trim().join( ' ' ) }</$property>"
-            }
+            if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
         }
 
         space + lines.join( "\n$space" )
