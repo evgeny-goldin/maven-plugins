@@ -16,13 +16,13 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.jfrog.maven.annomojo.annotations.*
 
-
 /**
  * MOJO copying resources specified
  */
 @MojoGoal( 'copy' )
 @MojoPhase( 'package' )
 @MojoRequiresDependencyResolution( 'test' )
+@SuppressWarnings( 'StatelessClass' )
 class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.CopyMojo
 {
     @MojoComponent
@@ -98,7 +98,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Value - Groovy expression to use
      */
     private static final Map<String, String> FILTERS = [ '{{latest}}' :
-        """
+        '''
         assert files
         def file         = files[ 0 ]
         def lastModified = file.lastModified()
@@ -113,19 +113,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
             }
         }
-        file""" ]
-
-
-    public CopyMojo ()
-    {
-    }
+        file''' ]
 
 
     /**
      * Copies the Resources specified
      */
     @Override
-    public void execute() throws MojoExecutionException
+    void execute() throws MojoExecutionException
     {
         /**
          * See {@link com.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
@@ -149,38 +144,38 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.resolver    = artifactResolver
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
-        def e            = { String s -> s = s.trim()
-                                         (( s.startsWith( '{{' )) && ( s.endsWith( '}}' ))) ? eval( s, String ) : s }
+        def e            = { String s -> s.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }}
 
         for ( CopyResource resource in resources())
         {
             if ( resource.description ) { log.info( "==> Processing <resource> [${ e( resource.description )}]" )}
-            if ( ! runIf( resource.runIf )) { continue }
-
-            long    t               = System.currentTimeMillis()
-            boolean verbose         = generalBean().choose( resource.verbose,        verbose        )
-            boolean failIfNotFound  = generalBean().choose( resource.failIfNotFound, failIfNotFound )
-            boolean resourceHandled = false
-
-            resource.includes = update( resource.includes, resource.encoding )
-            resource.excludes = update( resource.excludes, resource.encoding )
-
-            if ( resource.mkdir || resource.directory )
+            if ( runIf( resource.runIf ))
             {
-                handleResource( resource, verbose, failIfNotFound )
-                resourceHandled = true
-            }
+                long    t               = System.currentTimeMillis()
+                boolean verbose         = generalBean().choose( resource.verbose,        verbose        )
+                boolean failIfNotFound  = generalBean().choose( resource.failIfNotFound, failIfNotFound )
+                boolean resourceHandled = false
 
-            if ( resource.dependencies())
-            {
-                handleDependencies( resource, verbose )
-                resourceHandled = true
-            }
+                resource.includes = update( resource.includes, resource.encoding )
+                resource.excludes = update( resource.excludes, resource.encoding )
 
-            assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
-            if ( resource.description )
-            {
-                log.info( "==> <resource> [${ e( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
+                if ( resource.mkdir || resource.directory )
+                {
+                    handleResource( resource, verbose, failIfNotFound )
+                    resourceHandled = true
+                }
+
+                if ( resource.dependencies())
+                {
+                    handleDependencies( resource, verbose )
+                    resourceHandled = true
+                }
+
+                assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
+                if ( resource.description )
+                {
+                    log.info( "==> <resource> [${ e( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
+                }
             }
         }
     }
@@ -267,10 +262,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             resolveDependencies( dependencies ).each {
                 CopyDependency d ->
 
-                File m2File = verifyBean().file( d.artifact.file )
-                assert m2File.name == "${d.artifactId}-${d.version}${ d.classifier ? '-' + d.classifier : '' }.${d.type}"
+                /**
+                 * http://evgeny-goldin.org/youtrack/issue/pl-469
+                 * This dependency may be resolved from other module "target",
+                 * not necessarily from ".m2"
+                 */
+                File dependencyFile = verifyBean().file( d.artifact.file )
 
-                if ( d.destFileName && ( d.destFileName != m2File.name ))
+                if ( d.destFileName && ( d.destFileName != dependencyFile.name ))
                 {
                     resourceCopy = (( CopyResource ) resource.clone())
                     resourceCopy.destFileName = d.destFileName
@@ -280,7 +279,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     resourceCopy = resource
                 }
 
-                handleResource( resourceCopy, m2File.parentFile, [ m2File.name ], null, verbose, true )
+                handleResource( resourceCopy, dependencyFile.parentFile, [ dependencyFile.name ], null, verbose, true )
             }
         }
         else
@@ -531,9 +530,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         assert filePath.startsWith( directoryPath ), \
                "File [$filePath] is not a child of [$directoryPath]"
 
-
         String relativePath = verifyBean().notNullOrEmpty( filePath.substring( directoryPath.length()))
-        assert ( relativePath.startsWith( "/" ) || relativePath.startsWith( "\\" ))
+        assert ( relativePath.startsWith( '/' ) || relativePath.startsWith( '\\' ))
 
         relativePath
     }
@@ -599,7 +597,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {
             String[] data = resource.deploy.split( /\|/ )
 
-            assert ( data?.size()?.with{( it == 3 ) || ( it == 4 )}), \
+            assert data?.size()?.with{( it == 3 ) || ( it == 4 )}, \
                    "Failed to split <deploy> tag data [$resource.deploy]. " +
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 
@@ -761,7 +759,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                                                         null )
         assert ( filesIncluded != null ), \
                "Executing Groovy expression [$expression] produced [$o] of type [${ o.class.name }]. " +
-               "It should be an instance of File or Collection<File>."
+               'It should be an instance of File or Collection<File>.'
 
         if ( verbose )
         {

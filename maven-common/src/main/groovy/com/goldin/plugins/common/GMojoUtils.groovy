@@ -170,10 +170,10 @@ class GMojoUtils
      * @return           expression evaluated and casted to the type specified
      *                   (after verifying compliance with {@link Class#isInstance(Object)}
      */
-    public static <T> T eval ( String       expression,
-                               Class<T>     resultType = null,
-                               GroovyConfig config     = new GroovyConfig(),
-                               Object ...   bindingObjects )
+    static <T> T eval ( String       expression,
+                        Class<T>     resultType = null,
+                        GroovyConfig config     = new GroovyConfig(),
+                        Object ...   bindingObjects )
     {
 
 
@@ -323,15 +323,15 @@ class GMojoUtils
      * @return destinationFile if file was copied,
      *         null            if file was skipped (identical)
      */
-    public static File copy ( File            sourceFile,
-                              File            destinationFile,
-                              boolean         skipIdentical,
-                              Replace[]       replaces,
-                              boolean         filtering,
-                              String          encoding,
-                              MavenFileFilter fileFilter,
-                              boolean         verbose,
-                              boolean         move )
+    static File copy ( File            sourceFile,
+                       File            destinationFile,
+                       boolean         skipIdentical,
+                       Replace[]       replaces,
+                       boolean         filtering,
+                       String          encoding,
+                       MavenFileFilter fileFilter,
+                       boolean         verbose,
+                       boolean         move )
     {
         verifyBean().file( sourceFile )
         verifyBean().notNull( destinationFile, replaces )
