@@ -32,12 +32,12 @@ class CopyMojoUtils
         Set<Artifact>         allArtifacts = getArtifacts( 'test', 'system' )
         List<CopyDependency>  dependencies = allArtifacts.findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                                                           collect { Artifact artifact -> new CopyDependency( artifact ) }
-
         Log log = ThreadLocals.get( Log )
 
         log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
         if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
+        assert dependencies, "Zero artifacts resolved from [$dependency]"
         dependencies
     }
 
@@ -75,7 +75,7 @@ class CopyMojoUtils
 
         // First filter is transitivity filter, it is always added
         assert ( filters.size() > 1 ) : \
-               "No filters found in <dependency>. Specify filters like <includeScope> or <includeGroupIds>."
+               'No filters found in <dependency>. Specify filters like <includeScope> or <includeGroupIds>.'
 
         filters
     }
