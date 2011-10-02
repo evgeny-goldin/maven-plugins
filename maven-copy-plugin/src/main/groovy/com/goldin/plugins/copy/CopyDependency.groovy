@@ -43,7 +43,7 @@ class CopyDependency extends ArtifactItem
     @Override
     String toString ()
     {
-        def allToString =
+        super.toString() + ', ' +
         [
             excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
             includeScope              ? "includeScope \"$includeScope\""             : '',
@@ -56,8 +56,6 @@ class CopyDependency extends ArtifactItem
             excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
             includeTypes              ? "includeTypes \"$includeTypes\""             : '',
             excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
-        ]
-
-        allToString.any() ? allToString.grep().join( ', ' ).capitalize() : super.toString()
+        ].grep().join( ', ' )
     }
 }
