@@ -24,7 +24,7 @@ class CopyResource extends Resource implements Cloneable
 
         if ( targetRoots )
         {
-            def  targetRootsSplit = targetRoots.split( ',' )*.trim().findAll{ it }
+            def  targetRootsSplit = targetRoots.split( ',' )*.trim().grep()
             if ( targetRootsSplit )
             {
                 paths = targetRootsSplit.collect{ String targetRoot -> paths.collect { targetRoot + '/' + it }}.flatten()

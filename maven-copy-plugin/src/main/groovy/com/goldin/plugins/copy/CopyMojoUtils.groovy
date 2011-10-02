@@ -1,12 +1,11 @@
 package com.goldin.plugins.copy
 
-import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.shared.artifact.filter.collection.*
-
 
 /**
  * {@link CopyMojo} helper class
@@ -21,17 +20,27 @@ class CopyMojoUtils
      * @param dependency filtering dependency
      * @return           project's dependencies that passed all filters
      */
-    static List<CopyDependency> getFilteredDependencies( CopyDependency dependency )
+    static List<CopyDependency> getDependencies ( CopyDependency dependency )
     {
+        assert dependency
+        def singleDependency = dependency.groupId && dependency.artifactId
+
+        if ( singleDependency && dependency.getExcludeTransitive( singleDependency ))
+        {
+            // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - dependency is returned
+            return [ dependency ]
+        }
+
         /**
          * Iterating over all project's artifacts and selecting those passing all filters.
          * "test" = "compile" + "provided" + "runtime" + "test"
          * (http://maven.apache.org/pom.html#Dependencies)
          */
-        List<ArtifactsFilter> filters      = getFilters( dependency )
-        Set<Artifact>         allArtifacts = getArtifacts( 'test', 'system' )
-        List<CopyDependency>  dependencies = allArtifacts.findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                                                          collect { Artifact artifact -> new CopyDependency( artifact ) }
+        List<ArtifactsFilter> filters      = getFilters( dependency, singleDependency )
+        List<CopyDependency>  dependencies = GMojoUtils.getArtifacts( 'test', 'system' ).
+                                             findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
+                                             collect { Artifact artifact -> new CopyDependency( artifact ) }
+
         Log log = ThreadLocals.get( Log )
 
         log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
@@ -42,11 +51,20 @@ class CopyMojoUtils
     }
 
 
-    private static List<ArtifactsFilter> getFilters( CopyDependency dependency )
+    private static List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean singleDependency )
     {
-        List<ArtifactsFilter> filters = [
-            new ProjectTransitivityFilter( ThreadLocals.get( MavenProject ).dependencyArtifacts,
-                                           dependency.isExcludeTransitive()) ]
+        /**
+         * If we got here it's either because dependency is not single (filtered) or because *it is* single
+         * with transitivity explicitly enabled
+         */
+        assert dependency
+        assert ( ! singleDependency ) || ( dependency.excludeTransitive == false )
+
+        List<ArtifactsFilter> filters = []
+        def directDependencies        = singleDependency ? [ dependency ] as Set :
+                                                           ThreadLocals.get( MavenProject ).dependencyArtifacts
+
+        filters << new ProjectTransitivityFilter( directDependencies, dependency.getExcludeTransitive( singleDependency ))
 
         if ( dependency.includeScope || dependency.excludeScope )
         {
@@ -73,8 +91,7 @@ class CopyMojoUtils
             filters << new TypeFilter( dependency.includeTypes, dependency.excludeTypes )
         }
 
-        // First filter is transitivity filter, it is always added
-        assert ( filters.size() > 1 ) : \
+        assert ( singleDependency || ( filters.size() > 1 )) : \
                'No filters found in <dependency>. Specify filters like <includeScope> or <includeGroupIds>.'
 
         filters

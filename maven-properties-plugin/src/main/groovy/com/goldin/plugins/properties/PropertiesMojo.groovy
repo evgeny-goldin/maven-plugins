@@ -10,6 +10,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
+@SuppressWarnings( 'StatelessClass' )
 class PropertiesMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )

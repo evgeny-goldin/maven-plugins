@@ -11,8 +11,9 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
-@MojoGoal ( "generate" )
-@MojoPhase ( "compile" )
+@MojoGoal ( 'generate' )
+@MojoPhase ( 'compile' )
+@SuppressWarnings( 'StatelessClass' )
 public class JenkinsMojo extends BaseGroovyMojo
 {
     public JenkinsMojo ()

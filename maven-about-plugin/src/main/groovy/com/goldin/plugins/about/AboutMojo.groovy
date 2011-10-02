@@ -16,6 +16,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'create-about' )
 @MojoPhase( 'package' )
+@SuppressWarnings( 'StatelessClass' )
 class AboutMojo extends BaseGroovyMojo
 {
     public static final String SEPARATOR = '|==============================================================================='
@@ -419,7 +420,7 @@ class AboutMojo extends BaseGroovyMojo
                     return
                 }
 
-                def split = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().findAll{ it } : null ) }
+                def split = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().grep() : null ) }
                 def files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
                 if ( files )

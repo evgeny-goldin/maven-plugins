@@ -12,8 +12,9 @@ import com.goldin.plugins.common.*
 /**
  * Spring Batch invoker
  */
-@MojoGoal  ( "run" )
-@MojoPhase ( "install" )
+@MojoGoal  ( 'run' )
+@MojoPhase ( 'install' )
+@SuppressWarnings( 'StatelessClass' )
 class SpringBatchMojo extends BaseGroovyMojo
 {
     SpringBatchMojo ()

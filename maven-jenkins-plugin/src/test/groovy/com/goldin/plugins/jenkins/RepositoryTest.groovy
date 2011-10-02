@@ -27,7 +27,7 @@ class RepositoryTest
         def    stream = RepositoryTest.class.getResourceAsStream( "/${ fileName }" )
         assert stream, "Failed to load [/${ fileName }] from [${ RepositoryTest }] classpath"
 
-        stream.text.splitWith( 'eachLine', String ).findAll{ it }*.trim().findAll{ ! it.startsWith( '#' ) }
+        stream.text.splitWith( 'eachLine', String ).grep()*.trim().findAll{ ! it.startsWith( '#' ) }
     }
 
 

@@ -13,6 +13,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'find' )
 @MojoPhase( 'validate' )
+@SuppressWarnings( 'StatelessClass' )
 class FindMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = true )

@@ -12,6 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'timestamp' )
 @MojoPhase( 'validate' )
+@SuppressWarnings( 'StatelessClass' )
 class TimestampMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )

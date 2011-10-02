@@ -6,6 +6,7 @@ import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
  /**
  * Presents a {@code <dependency>} to copy
  */
+@SuppressWarnings( 'StatelessClass' )
 class CopyDependency extends ArtifactItem
 {
     CopyDependency() {}
@@ -13,7 +14,15 @@ class CopyDependency extends ArtifactItem
 
 
     boolean optional          = false
-    boolean excludeTransitive = false
+    Boolean excludeTransitive
+    boolean getExcludeTransitive ( boolean singleDependency )
+    {
+        /**
+         * For single dependency resolution default "excludeTransitive" is true: single dependency is resolved without transitive dependencies by default
+         * For filtered dependencies default "excludeTransitive" is false: filtered dependencies are resolved with transitive dependencies by default
+         */
+        ( excludeTransitive == null ) ? singleDependency : excludeTransitive
+    }
 
     String  includeScope
     String  excludeScope
@@ -32,23 +41,23 @@ class CopyDependency extends ArtifactItem
 
 
     @Override
-    public String toString ()
+    String toString ()
     {
         def allToString =
         [
-            includeScope       ? "includeScope \"$includeScope\""             : '',
-            excludeScope       ? "excludeScope \"$excludeScope\""             : '',
-            includeGroupIds    ? "includeGroupIds \"$includeGroupIds\""       : '',
-            excludeGroupIds    ? "excludeGroupIds \"$excludeGroupIds\""       : '',
-            includeArtifactIds ? "includeArtifactIds \"$includeArtifactIds\"" : '',
-            excludeArtifactIds ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
-            includeClassifiers ? "includeClassifiers \"$includeClassifiers\"" : '',
-            excludeClassifiers ? "excludeClassifiers \"$excludeClassifiers\"" : '',
-            includeTypes       ? "includeTypes \"$includeTypes\""             : '',
-            excludeTypes       ? "excludeTypes \"$excludeTypes\""             : ''
+            excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
+            includeScope              ? "includeScope \"$includeScope\""             : '',
+            excludeScope              ? "excludeScope \"$excludeScope\""             : '',
+            includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
+            excludeGroupIds           ? "excludeGroupIds \"$excludeGroupIds\""       : '',
+            includeArtifactIds        ? "includeArtifactIds \"$includeArtifactIds\"" : '',
+            excludeArtifactIds        ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
+            includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
+            excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
+            includeTypes              ? "includeTypes \"$includeTypes\""             : '',
+            excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
         ]
 
-        allToString.any() ? "Exclude transitive \"$excludeTransitive\", ${ allToString.findAll{ it }.join( ', ' ) }" :
-                            super.toString()
+        allToString.any() ? allToString.grep().join( ', ' ).capitalize() : super.toString()
     }
 }

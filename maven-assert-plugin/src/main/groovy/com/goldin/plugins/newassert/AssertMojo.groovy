@@ -10,8 +10,9 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 /**
  * Asserts invoker
  */
-@MojoGoal  ( "assert" )
-@MojoPhase ( "install" )
+@MojoGoal  ( 'assert' )
+@MojoPhase ( 'install' )
+@SuppressWarnings( 'StatelessClass' )
 class AssertMojo extends BaseGroovyMojo
 {
     AssertMojo ()
@@ -106,7 +107,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            verifyBean().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().findAll{ it }.each { callback( it ) }
+            verifyBean().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().grep().each { callback( it ) }
         }
     }
 

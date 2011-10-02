@@ -224,7 +224,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
                     {
                         excludes = ( excludes ?: [] ) +
-                                   ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it }
+                                   ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep()
                     }
 
                     if ( isUpload )
@@ -314,18 +314,17 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param stripVersion    whether dependencies version should be stripped
      * @return                dependencies resolved and filtered
      */
-    private List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
-                                                       File                 outputDirectory = constantsBean().USER_DIR_FILE,
-                                                       boolean              stripVersion    = false )
+    private Collection<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
+                                                             File                 outputDirectory = constantsBean().USER_DIR_FILE,
+                                                             boolean              stripVersion    = false )
     {
         verifyBean().notNullOrEmpty( dependencies )
         verifyBean().directory( outputDirectory )
 
-        ( List<CopyDependency> ) dependencies.inject( [] ) {
-            List<CopyDependency> list, CopyDependency d ->
-            list.addAll( d.groupId ? [ d ] : CopyMojoUtils.getFilteredDependencies( d ))
-            list
-        }.
+        ( Collection<CopyDependency> ) dependencies.
+        collect {
+            CopyDependency d -> CopyMojoUtils.getDependencies( d ) }.
+        flatten().
         collect {
             CopyDependency d ->
 
@@ -334,10 +333,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             try
             {
                 d.outputDirectory = outputDirectory
-                setArtifactItems(( ArrayList ) [ d ] )
+                setArtifactItems([ d ])
                 ( CopyDependency ) ( getProcessedArtifactItems( stripVersion )[ 0 ] )
             }
-            catch ( Exception e )
+            catch ( MojoExecutionException e )
             {
                 if ( d.optional )
                 {
@@ -349,7 +348,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
             }
         }.
-        findAll{ it } // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
+        grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
     }
 
 
@@ -375,7 +374,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             newPatterns.addAll(
                 pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()            :
                 pattern.startsWith( 'classpath:' ) ? CopyMojo.class.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
-                pattern.contains( ',' )            ? pattern.split( ',' )*.trim().findAll{ it }                                                 :
+                pattern.contains( ',' )            ? pattern.split( ',' )*.trim().grep()                                                 :
                                                      [ pattern ] )
         }
 
@@ -577,7 +576,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
 
         fileBean().pack( filesDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
-                         ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().findAll{ it } as List,
+                         ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep() as List,
                          resource.destFileName, resource.prefix )
 
         if ( resource.move ) { fileBean().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).

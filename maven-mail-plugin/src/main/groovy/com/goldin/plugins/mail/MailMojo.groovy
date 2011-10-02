@@ -17,13 +17,14 @@ import javax.mail.*
  */
 @MojoGoal( 'send' )
 @MojoPhase( 'install' )
-public class MailMojo extends BaseGroovyMojo
+@SuppressWarnings( 'StatelessClass' )
+class MailMojo extends BaseGroovyMojo
 {
     @MojoParameter
-    public String smtp = "specify.your.SMTP.server"
+    public String smtp = 'specify.your.SMTP.server'
 
     @MojoParameter
-    public String from = "specify@your.mail"
+    public String from = 'specify@your.mail'
 
     @MojoParameter ( required = true )
     public Map<String, String> mails

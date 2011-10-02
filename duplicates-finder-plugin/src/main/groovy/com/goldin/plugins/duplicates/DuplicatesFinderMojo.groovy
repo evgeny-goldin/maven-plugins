@@ -20,6 +20,7 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoGoal ( 'find-duplicates' )
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )
+@SuppressWarnings( 'StatelessClass' )
 class DuplicatesFinderMojo extends BaseGroovyMojo
 {
     /**
@@ -172,7 +173,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
             violations.collect{ String artifacts, List<String> classes ->
                                 [ "-=-= $artifacts =-=-" ] + ( verbose ? classes.sort().collect { " --- [$it]" } : [] ) }.
                        flatten().
-                       findAll{ it }.
+                       grep().
                        join( constantsBean().CRLF )
 
         if ( fail ) { throw new MojoFailureException( message )}

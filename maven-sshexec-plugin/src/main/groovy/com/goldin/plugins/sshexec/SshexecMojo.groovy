@@ -16,7 +16,8 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'sshexec' )
 @MojoPhase( 'install' )
-public class SshexecMojo extends BaseGroovyMojo
+@SuppressWarnings( 'StatelessClass' )
+class SshexecMojo extends BaseGroovyMojo
 {
     /**
      * Server location in format:
@@ -57,16 +58,15 @@ public class SshexecMojo extends BaseGroovyMojo
     private String[] commands ()
     {
         String[] commands = generalBean().array( this.commands, this.command, String )
-        commands          = commands*.split( /,|;/ ).flatten()*.trim().findAll{ it }.
+        commands          = commands*.split( /,|;/ ).flatten()*.trim().grep().
                             collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
                             flatten()
 
-        ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).
-            flatten().findAll{ it }
+        ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).flatten().grep()
     }
 
 
-    public SshexecMojo ()
+    SshexecMojo ()
     {
     }
 
@@ -85,7 +85,7 @@ public class SshexecMojo extends BaseGroovyMojo
 
         log.info( "==> Running sshexec [$command] on [$host:$directory], " +
                   ( keyfile ? "key based authentication with [$keyfile.canonicalPath] private key" :
-                              "password based authentication" ))
+                              'password based authentication' ))
 
         /**
          * http://evgeny-goldin.org/youtrack/issue/pl-334:
