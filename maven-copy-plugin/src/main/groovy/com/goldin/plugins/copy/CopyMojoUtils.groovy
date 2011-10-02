@@ -1,11 +1,12 @@
 package com.goldin.plugins.copy
 
-import com.goldin.plugins.common.GMojoUtils
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.shared.artifact.filter.collection.*
+
 
 /**
  * {@link CopyMojo} helper class
@@ -32,12 +33,15 @@ class CopyMojoUtils
         }
 
         /**
-         * Iterating over all project's artifacts and selecting those passing all filters.
-         * "test" = "compile" + "provided" + "runtime" + "test"
-         * (http://maven.apache.org/pom.html#Dependencies)
+         * Iterating over all dependencies and selecting those passing the filters.
+         * "test" = "compile" + "provided" + "runtime" + "test" (http://maven.apache.org/pom.html#Dependencies)
          */
-        List<ArtifactsFilter> filters      = getFilters( dependency, singleDependency )
-        List<CopyDependency>  dependencies = GMojoUtils.getArtifacts( 'test', 'system' ).
+        List<ArtifactsFilter> filters   = getFilters( dependency, singleDependency )
+        Collection<Artifact>  artifacts = singleDependency ?
+            [ buildArtifact( dependency.groupId, dependency.artifactId, dependency.version, dependency.type ) ] :
+            ThreadLocals.get( MavenProject ).artifacts
+
+        List<CopyDependency>  dependencies = getArtifacts( artifacts, 'test', 'system' ).
                                              findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                                              collect { Artifact artifact -> new CopyDependency( artifact ) }
 

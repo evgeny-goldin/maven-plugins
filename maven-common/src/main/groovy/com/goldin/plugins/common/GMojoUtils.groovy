@@ -9,7 +9,6 @@ import org.apache.maven.Maven
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
-import org.apache.maven.artifact.resolver.ArtifactResolutionResult
 import org.apache.maven.artifact.resolver.ArtifactResolver
 import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter
 import org.apache.maven.execution.MavenSession
@@ -25,7 +24,6 @@ import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
 import com.goldin.gcommons.beans.*
-
 
 class GMojoUtils
 {
@@ -203,31 +201,36 @@ class GMojoUtils
     static String stars ( Collection c ) { "* [${ c.join( "]${ constantsBean().CRLF }* [") }]" }
 
 
+    /**
+     * {@link ArtifactFactory#createBuildArtifact} wrapper
+     */
+    static Artifact buildArtifact( String groupId, String artifactId, String version, String type )
+    {
+        assert groupId && artifactId && version && type
+        ThreadLocals.get( ArtifactFactory ).createBuildArtifact( groupId, artifactId, version, type )
+    }
 
 
     /**
      * Retrieves all artifacts from the scopes specified.
      */
-    static Set<Artifact> getArtifacts ( String ... scopes )
+    static Set<Artifact> getArtifacts ( Collection<Artifact> initialArtifacts, String ... scopes )
     {
-        def result = [] as Set
+        assert initialArtifacts && scopes
+
+        Set<Artifact> result  = [] as Set
+        MavenProject  project = ThreadLocals.get( MavenProject )
 
         for ( scope in scopes )
         {
-            MavenProject project       = ThreadLocals.get( MavenProject )
-            Artifact     buildArtifact = ThreadLocals.get( ArtifactFactory ).createBuildArtifact( project.groupId,
-                                                                                                  project.artifactId,
-                                                                                                  project.version,
-                                                                                                  project.packaging )
-            ArtifactResolutionResult resolutionResult =
-                ThreadLocals.get( ArtifactResolver ).resolveTransitively( project.artifacts,
-                                                                          buildArtifact,
-                                                                          project.managedVersionMap,
-                                                                          ThreadLocals.get( MavenSession ).localRepository,
-                                                                          project.remoteArtifactRepositories,
-                                                                          ThreadLocals.get( ArtifactMetadataSource ),
-                                                                          new ScopeArtifactFilter( verifyBean().notNullOrEmpty( scope )))
-            result.addAll( resolutionResult.artifacts )
+            result.addAll( ThreadLocals.get( ArtifactResolver ).resolveTransitively(
+                                initialArtifacts as Set,
+                                buildArtifact( project.groupId, project.artifactId, project.version, project.packaging ),
+                                project.managedVersionMap,
+                                ThreadLocals.get( MavenSession ).localRepository,
+                                project.remoteArtifactRepositories,
+                                ThreadLocals.get( ArtifactMetadataSource ),
+                                new ScopeArtifactFilter( verifyBean().notNullOrEmpty( scope ))).artifacts )
         }
 
         result

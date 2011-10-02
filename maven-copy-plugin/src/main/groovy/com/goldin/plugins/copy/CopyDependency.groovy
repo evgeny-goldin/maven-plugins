@@ -43,19 +43,19 @@ class CopyDependency extends ArtifactItem
     @Override
     String toString ()
     {
-        super.toString() + ', ' +
-        [
-            excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
-            includeScope              ? "includeScope \"$includeScope\""             : '',
-            excludeScope              ? "excludeScope \"$excludeScope\""             : '',
-            includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
-            excludeGroupIds           ? "excludeGroupIds \"$excludeGroupIds\""       : '',
-            includeArtifactIds        ? "includeArtifactIds \"$includeArtifactIds\"" : '',
-            excludeArtifactIds        ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
-            includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
-            excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
-            includeTypes              ? "includeTypes \"$includeTypes\""             : '',
-            excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
-        ].grep().join( ', ' )
+        def s = [ excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
+                  includeScope              ? "includeScope \"$includeScope\""             : '',
+                  excludeScope              ? "excludeScope \"$excludeScope\""             : '',
+                  includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
+                  excludeGroupIds           ? "excludeGroupIds \"$excludeGroupIds\""       : '',
+                  includeArtifactIds        ? "includeArtifactIds \"$includeArtifactIds\"" : '',
+                  excludeArtifactIds        ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
+                  includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
+                  excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
+                  includeTypes              ? "includeTypes \"$includeTypes\""             : '',
+                  excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
+                ].grep().join( ', ' )
+
+        super.toString() + ( s ? ", $s" : '' )
     }
 }
