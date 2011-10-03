@@ -1,18 +1,22 @@
 package com.goldin.plugins.common
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.GCommons
 import org.apache.maven.artifact.repository.ArtifactRepository
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.PluginManager
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
+import com.goldin.gcommons.beans.*
 
 
 /**
  * Base GroovyMojo class
  */
+@SuppressWarnings( 'StatelessClass' )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     @MojoParameter ( expression = '${project}', required = true )
@@ -43,7 +47,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     @Override
-    public void execute()
+    @Requires({ log && project && session })
+    final void execute()
     {
         ThreadLocals.set( log, project, session )
         mopInit()
@@ -58,4 +63,13 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * {@link #execute()} replacement to be overridden by subclasses
      */
     abstract void doExecute()
+
+
+    ConstantsBean constantsBean (){ GCommons.constants ()}
+    GeneralBean   generalBean ()  { GCommons.general   ()}
+    FileBean      fileBean ()     { GCommons.file      ()}
+    NetBean       netBean ()      { GCommons.net       ()}
+    IOBean        ioBean ()       { GCommons.io        ()}
+    VerifyBean    verifyBean ()   { GCommons.verify    ()}
+    GroovyBean    groovyBean ()   { GCommons.groovy    ()}
 }

@@ -1,6 +1,7 @@
 package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
@@ -14,7 +15,9 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
+import com.goldin.gcommons.beans.*
 import org.jfrog.maven.annomojo.annotations.*
+
 
 /**
  * MOJO copying resources specified
@@ -90,6 +93,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
     @MojoParameter
     public  String  runIf
+
+
+    ConstantsBean constantsBean (){ GCommons.constants ()}
+    GeneralBean   generalBean ()  { GCommons.general   ()}
+    FileBean      fileBean ()     { GCommons.file      ()}
+    NetBean       netBean ()      { GCommons.net       ()}
+    VerifyBean    verifyBean ()   { GCommons.verify    ()}
 
 
     /**
@@ -373,7 +383,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {
             newPatterns.addAll(
                 pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()            :
-                pattern.startsWith( 'classpath:' ) ? CopyMojo.class.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
+                pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
                 pattern.contains( ',' )            ? pattern.split( ',' )*.trim().grep()                                                 :
                                                      [ pattern ] )
         }

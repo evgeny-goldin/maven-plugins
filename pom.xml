@@ -93,7 +93,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.9</version>
+                    <version>2.10</version>
                     <configuration>
                         <useFile>false</useFile>
                     </configuration>
@@ -128,12 +128,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>2.8</version>
+                    <version>2.9</version>
                     <dependencies>
                         <dependency>
                           <groupId>org.apache.maven.plugin-tools</groupId>
                           <artifactId>maven-plugin-tools-api</artifactId>
-                          <version>2.8</version>
+                          <version>2.9</version>
                         </dependency>
                         <dependency>
                             <groupId>org.jfrog.maven.annomojo</groupId>
@@ -381,7 +381,7 @@
                                         <if>
                                             <available file="${project.basedir}/src/main/groovy" type="dir"/>
                                             <then>
-                                                <!-- A work in progress .. -->
+                                                <!-- http://evgeny-goldin.org/youtrack/issue/pl-435 -->
                                                 <codenarc ruleSetFiles           = "file:${project.basedir}/../codenarc.txt"
                                                           maxPriority1Violations = "200"
                                                           maxPriority2Violations = "200"
@@ -416,12 +416,6 @@
                                 <groupId>ant-contrib</groupId>
                                 <artifactId>ant-contrib</artifactId>
                                 <version>1.0b3</version>
-                            </dependency>
-                            <!-- Contains CodeNarc-specific "log4j.xml" -->
-                            <dependency>
-                                <groupId>com.goldin.plugins</groupId>
-                                <artifactId>gradle</artifactId>
-                                <version>0.1-RC3</version>
                             </dependency>
                         </dependencies>
                     </plugin>

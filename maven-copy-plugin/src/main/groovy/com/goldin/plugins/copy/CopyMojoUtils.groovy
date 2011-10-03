@@ -59,14 +59,15 @@ class CopyMojoUtils
     {
         /**
          * If we got here it's either because dependency is not single (filtered) or because *it is* single
-         * with transitivity explicitly enabled
+         * with transitivity explicitly enabled (excludeTransitive is set to "false").
          */
         assert dependency
         assert ( ! singleDependency ) || ( dependency.excludeTransitive == false )
 
         List<ArtifactsFilter> filters = []
-        def directDependencies        = singleDependency ? [ dependency ] as Set :
-                                                           ThreadLocals.get( MavenProject ).dependencyArtifacts
+        def directDependencies        = singleDependency ?
+            [ dependency ] as Set :                               // For single dependency it is it's own direct dependency
+            ThreadLocals.get( MavenProject ).dependencyArtifacts  // Direct project dependencies for filtered dependencies
 
         filters << new ProjectTransitivityFilter( directDependencies, dependency.getExcludeTransitive( singleDependency ))
 

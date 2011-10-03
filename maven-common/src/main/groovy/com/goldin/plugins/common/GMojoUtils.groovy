@@ -1,5 +1,6 @@
 package com.goldin.plugins.common
 
+
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
@@ -25,6 +26,11 @@ import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import org.xml.sax.ext.DefaultHandler2
 import com.goldin.gcommons.beans.*
 
+
+
+/**
+ * Various Mojo helper methods
+ */
 class GMojoUtils
 {
     private GMojoUtils ()
@@ -79,18 +85,15 @@ class GMojoUtils
      * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
      * @return instance of {@code OutputStream} ignoring everything that is written to it
      */
-    static OutputStream devNullOutputStream ()
-    {
-        new OutputStream() { void write( int b ) {}}
-    }
+    static OutputStream devNullOutputStream () { new OutputStream() { void write( int b ) {}}}
 
 
     /**
     * Retrieves {@link SimpleTemplateEngine} for the resource specified
     */
-    static Template getTemplate ( String templatePath, ClassLoader loader = GMojoUtils.class.classLoader )
+    static Template getTemplate ( String templatePath, ClassLoader loader = GMojoUtils.classLoader )
     {
-        URL    templateURL = GMojoUtils.class.getResource( templatePath )
+        URL    templateURL = GMojoUtils.getResource( templatePath )
         assert templateURL, "[${ templatePath }] could not be loaded from the classpath"
 
         Template template = new SimpleTemplateEngine( loader ).createTemplate( templateURL )
@@ -125,7 +128,7 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        InputStream is    = verifyBean().notNull( Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+        InputStream is    = verifyBean().notNull( Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
         Properties  props = new Properties()
         props.load( is )
         is.close()
@@ -497,7 +500,7 @@ class GMojoUtils
         {
             executeMojo( plugin( "org.apache.maven.plugins",
                                  "maven-deploy-plugin",
-                                 "2.5" ),
+                                 "2.7" ),
                          goal( "deploy-file" ),
                          configuration( config as Element[] ),
                          executionEnvironment( ThreadLocals.get( MavenProject ), ThreadLocals.get( MavenSession ), manager ))
@@ -524,19 +527,12 @@ class GMojoUtils
         if ( value && addDollar && ( 'false' != addDollar ))
         {
             String pattern = ( 'true' == addDollar ) ? '.+?' : addDollar.split( /,/ )*.trim().collect{ String token -> "\\Q$token\\E" }.join( '|' )
-            value = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
+            value          = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
         }
 
         value
     }
 
-
-    /**
-     * http://evgeny-goldin.org/youtrack/issue/gc-41
-     * "Load GCommons only once per Maven job execution when more than one plugin uses it"
-     *
-     * Using {@link MavenSession#executionProperties} as a Map where GCommons context and beans cache are stored.
-     */
 
     static ConstantsBean constantsBean (){ GCommons.constants ()}
     static GeneralBean   generalBean ()  { GCommons.general   ()}

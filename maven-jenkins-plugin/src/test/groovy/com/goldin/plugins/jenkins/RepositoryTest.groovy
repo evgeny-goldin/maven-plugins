@@ -24,7 +24,7 @@ class RepositoryTest
      */
     private static List<String> read( String fileName )
     {
-        def    stream = RepositoryTest.class.getResourceAsStream( "/${ fileName }" )
+        def    stream = RepositoryTest.getResourceAsStream( "/${ fileName }" )
         assert stream, "Failed to load [/${ fileName }] from [${ RepositoryTest }] classpath"
 
         stream.text.splitWith( 'eachLine', String ).grep()*.trim().findAll{ ! it.startsWith( '#' ) }
