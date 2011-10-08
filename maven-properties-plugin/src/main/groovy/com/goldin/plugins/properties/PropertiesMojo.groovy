@@ -46,8 +46,9 @@ class PropertiesMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        Map<String, String> props = ( rawProperties ? rawProperties()   : [:] ) +
-                                    ( properties()  ? namedProperties() : [:] )
+        Map<String, String> props = new LinkedHashMap (
+            ( properties()  ? namedProperties() : [:] ) +
+            ( rawProperties ? rawProperties()   : [:] ))
 
         assert props, 'No properties defined. Use <rawProperties> or <properties> to define them.'
 
@@ -75,11 +76,15 @@ class PropertiesMojo extends BaseGroovyMojo
                 String all, String expression ->
                 assert expression
                 assert expression != name, "Property [$name] has a circular definition dependency on itself"
-                String s = map[ expression ] ?: System.getProperty( expression )
-                if (( s == null ) && ( expression.startsWith( 'env.' )))
-                {
-                    s = System.getenv( expression.substring( 'env.'.size()))
-                }
+                String s = generalBean().choose (
+                    project.properties[ expression ],
+                    session.executionProperties[ expression ],
+                    session.userProperties[ expression ],
+                    map[ expression ],
+                    System.getProperty( expression ),
+                    ( expression.startsWith( 'env.' ) ? System.getenv( expression.substring( 'env.'.size())) : '' ),
+                    '' )
+
                 assert ( s != null ), "Unable to interpolate \${$expression} - unknown value"
                 s
             }
@@ -97,7 +102,7 @@ class PropertiesMojo extends BaseGroovyMojo
 
         Map<String, String> map = rawProperties.readLines().inject( [:] ) {
             Map m, String line ->
-            def ( String name, String value ) = line.split( /=/ )[ 0, 1 ]*.trim()
+            def ( String name, String value ) = line.split( /=/ ).with{ size() > 1 ? delegate[ 0, 1 ] : [ delegate[ 0 ], '' ] }*.trim()
             m[ name ] = addDollar( value, addDollar )
             m
         }
@@ -118,13 +123,17 @@ class PropertiesMojo extends BaseGroovyMojo
             Property p ->
 
             def name      = p.name?.trim()
-            def value     = addDollar( p.value?.trim(), addDollar )
+            def value     = addDollar( p.value?.trim() ?: '', addDollar )
             def isVerbose = generalBean().choose( p.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {
                 groovyConfig.verbose = isVerbose
                 value = eval( value, String, groovyConfig )
+            }
+            else
+            {
+                value = interpolate( name, value, [:] )
             }
 
             [ name, value ]
