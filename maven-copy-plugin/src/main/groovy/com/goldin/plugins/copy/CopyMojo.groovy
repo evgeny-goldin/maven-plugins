@@ -548,13 +548,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             // filesDirectory is temporal directory
 
             CopyResource newResource = new CopyResource()
-            newResource.targetPath   = filesDirectory
-            newResource.directory    = sourceDirectory
-            newResource.includes     = includes
-            newResource.excludes     = excludes
-            newResource.preservePath = true
-            newResource.replaces     = resource.replaces()
-            newResource.filtering    = resource.filtering
+            newResource.with {
+                setTargetPath( filesDirectory.canonicalPath )
+                setDirectory( sourceDirectory.canonicalPath )
+                setIncludes( includes )
+                setExcludes( excludes )
+                setPreservePath( true )
+                setReplaces( resource.replaces())
+                setFiltering( resource.filtering )
+            }
 
             handleResource( newResource, verbose, failIfNotFound )
         }
@@ -620,11 +622,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             // unpackDirectory is temporal directory
 
             CopyResource newResource = new CopyResource()
-            newResource.targetPath   = destinationDirectory.path
-            newResource.directory    = unpackDirectory.path
-            newResource.preservePath = true
-            newResource.replaces     = resource.replaces()
-            newResource.filtering    = resource.filtering
+            newResource.with {
+                setTargetPath( destinationDirectory.canonicalPath )
+                setDirectory( unpackDirectory.canonicalPath )
+                setPreservePath( true )
+                setReplaces( resource.replaces())
+                setFiltering( resource.filtering )
+            }
 
             handleResource( newResource, verbose, true )
 
