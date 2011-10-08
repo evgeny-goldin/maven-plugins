@@ -435,7 +435,7 @@ class AboutMojo extends BaseGroovyMojo
                         def aboutPath = "$file.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
 
                         log.info( "Adding \"about\" to [$aboutPath]" )
-                        fileBean().pack( aboutFile.parentFile, file, [ aboutFile.name ], null, true, true, true, null, null, prefix )
+                        fileBean().pack( aboutFile.parentFile, file, [ aboutFile.name ], null, false, true, true, null, null, prefix )
                         log.info( "Added  \"about\" to [$aboutPath]" )
                     }
 

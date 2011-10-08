@@ -559,7 +559,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             handleResource( newResource, verbose, failIfNotFound )
         }
 
-        fileBean().pack( filesDirectory, targetPath, includes, excludes, true, failIfNotFound, resource.update,
+        fileBean().pack( filesDirectory, targetPath, includes, excludes, false, failIfNotFound, resource.update,
                          ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep() as List,
                          resource.destFileName, resource.prefix )
 
