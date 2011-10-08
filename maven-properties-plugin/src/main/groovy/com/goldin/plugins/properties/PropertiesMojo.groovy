@@ -1,12 +1,13 @@
 package com.goldin.plugins.properties
 
-import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.BaseGroovyMojo
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-
+import static com.goldin.plugins.common.GMojoUtils.*
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
@@ -37,23 +38,53 @@ class PropertiesMojo extends BaseGroovyMojo
     private Property[] properties() { generalBean().array( this.properties, this.property, Property ) }
 
 
-    @Override
-    public void doExecute()
-    {
-        Map<String, String> props = [:]
-        def normalizePath         = { String value -> def file = new File( value )
-                                                      file.isAbsolute() ? file.canonicalPath.replace( '\\', '/' ) : value }
+    private String normalizePath( String s ){
+        new File( s ).with { absolute ? canonicalPath.replace( '\\', '/' ) : s }
+    }
 
-        if ( rawProperties ) { props += rawProperties()   }
-        if ( properties())   { props += namedProperties() }
+
+    @Override
+    void doExecute()
+    {
+        Map<String, String> props = ( rawProperties ? rawProperties()   : [:] ) +
+                                    ( properties()  ? namedProperties() : [:] )
+
+        assert props, 'No properties defined. Use <rawProperties> or <properties> to define them.'
 
         def padName = maxKeyLength( props )
 
         props.each {
             String name, String value ->
-            assert name && value
+            assert name && ( value != null )
             setProperty( name, ( normalizePath ? normalizePath( value ) : value ), '', verbose, padName )
         }
+    }
+
+
+    /**
+     * Interpolates the value specified: "aa${expression}${anotherExpression}" => "aabbcc"
+     */
+    @Requires({ name && ( value != null ) && ( map != null ) })
+    @Ensures({ result != null })
+    private String interpolate( String name, String value, Map map )
+    {
+        String newValue = value
+        while ( newValue.contains( '${' ))
+        {
+            newValue = newValue.replaceAll( /\$\{(.+?)\}/ ) {
+                String all, String expression ->
+                assert expression
+                assert expression != name, "Property [$name] has a circular definition dependency on itself"
+                String s = map[ expression ] ?: System.getProperty( expression )
+                if (( s == null ) && ( expression.startsWith( 'env.' )))
+                {
+                    s = System.getenv( expression.substring( 'env.'.size()))
+                }
+                assert ( s != null ), "Unable to interpolate \${$expression} - unknown value"
+                s
+            }
+        }
+        newValue
     }
 
 
@@ -71,30 +102,8 @@ class PropertiesMojo extends BaseGroovyMojo
             m
         }
 
-        /**
-         * Interpolates the value specified: "aa${expression}" => "aabb"
-         */
-        def interpolate = {
-            String name, String value ->
-            while ( value.contains( '${' ))
-            {
-                value = value.replaceAll( /\$\{(.+?)\}/ ){
-                    String all, String expression ->
-                    assert expression
-                    assert expression != name, "Property [$name] has a circular definition with itself"
-                    String newValue    = map[ expression ] ?: System.getProperty( expression )
-                    if (( ! newValue ) && ( expression.startsWith( 'env.' )))
-                    {
-                        newValue = System.getenv( expression.substring( 'env.'.size()))
-                    }
-                    assert newValue, "Unable to interpolate \${$expression} - unknown value"
-                    newValue
-                }
-            }
-            value
-        }
-
-        ( Map<String, String> ) map.collectEntries{ String name, String value -> [ name, interpolate( name, value ) ] }
+        map.each { String name, String value -> map[ name ] = interpolate( name, value, map )}
+        map
     }
 
 
@@ -104,13 +113,13 @@ class PropertiesMojo extends BaseGroovyMojo
     private Map<String, String> namedProperties()
     {
         assert properties()
-        def map = [:]
 
-        for ( property in properties())
-        {
-            def name      = property.name?.trim()
-            def value     = addDollar( property.value?.trim(), addDollar )
-            def isVerbose = generalBean().choose( property.verbose, verbose )
+        properties().collectEntries {
+            Property p ->
+
+            def name      = p.name?.trim()
+            def value     = addDollar( p.value?.trim(), addDollar )
+            def isVerbose = generalBean().choose( p.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {
@@ -118,9 +127,7 @@ class PropertiesMojo extends BaseGroovyMojo
                 value = eval( value, String, groovyConfig )
             }
 
-            map[ name ] = value
+            [ name, value ]
         }
-
-        map
     }
 }

@@ -38,12 +38,12 @@ abstract class BaseGroovyMojo extends GroovyMojo
     public String  runIf
 
     @MojoParameter ( expression = '${project.build.directory}', required = true )
-    public File buildDirectory
-    public File buildDirectory() { fileBean().mkdirs( this.buildDirectory ) }
+    public    File buildDirectory
+    protected File buildDirectory() { fileBean().mkdirs( this.buildDirectory ) }
 
     @MojoParameter ( expression = '${project.build.outputDirectory}' )
-    public File outputDirectory
-    public File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
+    public    File outputDirectory
+    protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
 
 
     @Override

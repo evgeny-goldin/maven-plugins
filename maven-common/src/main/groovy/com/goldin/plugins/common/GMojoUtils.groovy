@@ -295,16 +295,16 @@ class GMojoUtils
      */
     static void setProperty( String name, String value, String logMessage = '', boolean verbose = true, int padName = 0 )
     {
-        verifyBean().notNullOrEmpty( name, value )
+        assert name && ( value != null )
 
         MavenProject project = ThreadLocals.get( MavenProject )
         MavenSession session = ThreadLocals.get( MavenSession )
 
         [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
 
-        log.info( logMessage ?: ">> Maven property " +
+        log.info( logMessage ?: '>> Maven property ' +
                                 "\${$name}".padRight( padName + 3 ) +
-                                " is set" + ( verbose ? " to \"$value\"" : '' ))
+                                ' is set' + ( verbose ? " to \"$value\"" : '' ))
     }
 
 

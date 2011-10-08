@@ -38,7 +38,7 @@ class TimestampMojo extends BaseGroovyMojo
      */
     void doExecute()
     {
-        Date date = ( time ? eval( time, Date ) : new Date())
+        Date date = ( time ? (( Date ) eval( time, Date )) : new Date())
 
         for ( t in timestamps())
         {

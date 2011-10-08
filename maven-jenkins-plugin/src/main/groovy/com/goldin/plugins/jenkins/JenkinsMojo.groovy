@@ -64,11 +64,11 @@ public class JenkinsMojo extends BaseGroovyMojo
 
 
     @Override
-    public void doExecute ()
+    void doExecute ()
     {
         int             jobNamePad   = 0; // Number of characters to pad the job name, when logged
         int             jobParentPad = 0; // Number of characters to pad the job parent, when logged
-        def             jobParent    = { Job job -> job.parent ? "<parent>${ job.parent }</parent>" : "No <parent>" }
+        def             jobParent    = { Job job -> job.parent ? "<parent>${ job.parent }</parent>" : 'No <parent>' }
         Collection<Job> jobs         = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
 
         /**
