@@ -408,6 +408,11 @@
                                 <version>${ant-version}</version>
                             </dependency>
                             <dependency>
+                                <groupId>org.codehaus.groovy</groupId>
+                                <artifactId>groovy-all</artifactId>
+                                <version>1.7.10</version>
+                            </dependency>
+                            <dependency>
                                 <groupId>org.codenarc</groupId>
                                 <artifactId>CodeNarc</artifactId>
                                 <version>${codenarc-version}</version>
