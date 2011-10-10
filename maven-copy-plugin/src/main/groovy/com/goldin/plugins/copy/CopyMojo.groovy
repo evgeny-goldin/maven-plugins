@@ -83,6 +83,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean update = false
 
     @MojoParameter ( required = false )
+    public  boolean useTrueZipForPack = false
+
+    @MojoParameter ( required = false )
+    public  boolean useTrueZipForUnpack = true
+
+    @MojoParameter ( required = false )
     public  CopyResource[] resources
 
     @MojoParameter ( required = false )
@@ -561,7 +567,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             handleResource( newResource, verbose, failIfNotFound )
         }
 
-        fileBean().pack( filesDirectory, targetPath, includes, excludes, false, failIfNotFound, resource.update,
+        fileBean().pack( filesDirectory, targetPath, includes, excludes, useTrueZipForPack, failIfNotFound, resource.update,
                          ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep() as List,
                          resource.destFileName, resource.prefix )
 
@@ -615,7 +621,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         File unpackDirectory = ( resource.replaces() || resource.filtering ) ? fileBean().tempDirectory() : destinationDirectory
 
         zipEntries ? fileBean().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, resource.preservePath, verbose ) :
-                     fileBean().unpack( sourceArchive, unpackDirectory, true )
+                     fileBean().unpack( sourceArchive, unpackDirectory, useTrueZipForUnpack )
 
         if ( ! unpackDirectory.is( destinationDirectory ))
         {
