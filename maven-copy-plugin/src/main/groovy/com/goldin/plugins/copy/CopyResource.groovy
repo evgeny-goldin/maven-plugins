@@ -54,6 +54,8 @@ class CopyResource extends Resource implements Cloneable
     Boolean verbose
     Boolean failIfNotFound
     Boolean skipIdentical
+    Boolean useTrueZipForPack
+    Boolean useTrueZipForUnpack
 
     boolean preservePath          = false
     boolean stripVersion          = false
@@ -142,8 +144,8 @@ class CopyResource extends Resource implements Cloneable
      */
     boolean getDependenciesAtM2()
     {
-        ( this.@dependenciesAtM2 != null ) ? this.@dependenciesAtM2 :
-                                             ( ! ( this.@stripVersion || this.@filter || this.@process ))
+        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
+                                            ( ! ( this.stripVersion || this.filter || this.process ))
     }
 
 

@@ -106,7 +106,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
                                    updateMap( map, violatingArtifacts, className )
                                    map }
 
-        log.info( "[${ f2A.size() }] artifact${ generalBean().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
+        log.info( "[${ f2A.size() }] artifact${ general().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
         if ( violations ) { reportViolations( violations ) }
         else              { log.info( "No duplicate libraries found" ) }
     }
@@ -132,7 +132,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
                                                                 artifact.version ),
                                            remoteRepos, null )
 
-        FILES_CACHE[ artifact ] = verifyBean().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        FILES_CACHE[ artifact ] = verify().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
     }
 
 
@@ -153,9 +153,9 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
 
         try
         {
-            CLASSES_CACHE[ file ] = verifyBean().notNull( zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
-                                                                        collect{ ZipEntry entry -> entry.name.replace( '/', '.' ).
-                                                                                 replaceAll( /\.class$/, '' ) } )
+            CLASSES_CACHE[ file ] = verify().notNull( zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
+                                                                    collect{ ZipEntry entry -> entry.name.replace( '/', '.' ).
+                                                                                               replaceAll( /\.class$/, '' ) } )
         }
         finally { zip.close() }
     }
@@ -174,7 +174,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
                                 [ "-=-= $artifacts =-=-" ] + ( verbose ? classes.sort().collect { " --- [$it]" } : [] ) }.
                        flatten().
                        grep().
-                       join( constantsBean().CRLF )
+                       join( constants().CRLF )
 
         if ( fail ) { throw new MojoFailureException( message )}
         else        { log.error( message )}

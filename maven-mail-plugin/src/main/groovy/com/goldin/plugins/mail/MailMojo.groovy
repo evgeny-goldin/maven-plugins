@@ -51,8 +51,8 @@ class MailMojo extends BaseGroovyMojo
     void doExecute()
     {
         Properties props = new Properties()
-        props[ 'mail.smtp.host' ] = verifyBean().notNullOrEmpty( smtp )
-        props[ 'mail.from'      ] = verifyBean().notNullOrEmpty( from )
+        props[ 'mail.smtp.host' ] = verify().notNullOrEmpty( smtp )
+        props[ 'mail.from'      ] = verify().notNullOrEmpty( from )
 
         Message             message    = new MimeMessage( Session.getInstance( props, null ))
         Map<String, String> recipients = setRecipients( message, mails )

@@ -12,11 +12,11 @@ import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import com.goldin.gcommons.beans.*
 
-
 /**
  * Base GroovyMojo class
  */
 @SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( 'PublicInstanceField' )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     @MojoParameter ( expression = '${project}', required = true )
@@ -39,11 +39,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     @MojoParameter ( expression = '${project.build.directory}', required = true )
     public    File buildDirectory
-    protected File buildDirectory() { fileBean().mkdirs( this.buildDirectory ) }
+    protected File buildDirectory() { file().mkdirs( this.buildDirectory ) }
 
     @MojoParameter ( expression = '${project.build.outputDirectory}' )
     public    File outputDirectory
-    protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
+    protected File outputDirectory() { file().mkdirs( this.outputDirectory ) }
 
 
     @Override
@@ -65,11 +65,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
     abstract void doExecute()
 
 
-    ConstantsBean constantsBean (){ GCommons.constants ()}
-    GeneralBean   generalBean ()  { GCommons.general   ()}
-    FileBean      fileBean ()     { GCommons.file      ()}
-    NetBean       netBean ()      { GCommons.net       ()}
-    IOBean        ioBean ()       { GCommons.io        ()}
-    VerifyBean    verifyBean ()   { GCommons.verify    ()}
-    GroovyBean    groovyBean ()   { GCommons.groovy    ()}
+    ConstantsBean constants (){ GCommons.constants ()}
+    GeneralBean   general   (){ GCommons.general   ()}
+    FileBean      file      (){ GCommons.file      ()}
+    NetBean       net       (){ GCommons.net       ()}
+    IOBean        io        (){ GCommons.io        ()}
+    VerifyBean    verify    (){ GCommons.verify    ()}
+    GroovyBean    groovy    (){ GCommons.groovy    ()}
 }

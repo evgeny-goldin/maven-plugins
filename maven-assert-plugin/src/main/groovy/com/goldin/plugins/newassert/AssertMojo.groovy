@@ -107,7 +107,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            verifyBean().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().grep().each { callback( it ) }
+            verify().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().grep().each { callback( it ) }
         }
     }
 
@@ -155,10 +155,10 @@ class AssertMojo extends BaseGroovyMojo
 
                 File       basedir        = new File( line.substring( 0, j ))
                 String     includePattern = line.substring( j + 1 )
-                Collection c              = fileBean().files( basedir, [ includePattern ], [], true, false, false )
+                Collection c              = file().files( basedir, [ includePattern ], [], true, false, false )
                 assert     c, "File pattern [$line] - no files matched"
 
-                log.info( "File pattern [$line] - [${ c.size()}] file${ generalBean().s( c.size()) } matched" )
+                log.info( "File pattern [$line] - [${ c.size()}] file${ general().s( c.size()) } matched" )
             }
             else
             {
@@ -201,7 +201,7 @@ class AssertMojo extends BaseGroovyMojo
                 "Verifying [${ file1.canonicalPath }]/[$pattern] file(s) have corresponding and identical file(s) in [${ file2.canonicalPath }]" :
                 "Verifying [${ file1.canonicalPath }] is identical to [${ file2.canonicalPath }]" )
 
-            int filesChecked = verifyBean().equal( file1, file2, verifyChecksum, pattern, endOfLine )
+            int filesChecked = verify().equal( file1, file2, verifyChecksum, pattern, endOfLine )
 
             log.info( "[${ file1.canonicalPath }] is identical to [${ file2.canonicalPath }] " +
                            "($filesChecked file${ ( filesChecked == 1 ) ? '' : 's' } checked)" )

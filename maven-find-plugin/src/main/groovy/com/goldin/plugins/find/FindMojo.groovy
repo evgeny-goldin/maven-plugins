@@ -1,7 +1,5 @@
 package com.goldin.plugins.find
 
-
-import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
@@ -71,7 +69,7 @@ class FindMojo extends BaseGroovyMojo
      */
     private File find( File startDir )
     {
-        verifyBean().directory( startDir )
+        verify().directory( startDir )
 
         log.info( "Looking for [$file] starting from [$startDir.canonicalPath]" )
 

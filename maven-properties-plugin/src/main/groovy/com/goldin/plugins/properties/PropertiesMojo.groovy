@@ -35,7 +35,7 @@ class PropertiesMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig = new GroovyConfig()
 
-    private Property[] properties() { generalBean().array( this.properties, this.property, Property ) }
+    private Property[] properties() { general().array( this.properties, this.property, Property ) }
 
 
     private String normalizePath( String s ){
@@ -76,7 +76,7 @@ class PropertiesMojo extends BaseGroovyMojo
                 String all, String expression ->
                 assert expression
                 assert expression != name, "Property [$name] has a circular definition dependency on itself"
-                String s = generalBean().choose (
+                String s = general().choose (
                     project.properties[ expression ],
                     session.executionProperties[ expression ],
                     session.userProperties[ expression ],
@@ -124,7 +124,7 @@ class PropertiesMojo extends BaseGroovyMojo
 
             def name      = p.name?.trim()
             def value     = addDollar( p.value?.trim() ?: '', addDollar )
-            def isVerbose = generalBean().choose( p.verbose, verbose )
+            def isVerbose = general().choose( p.verbose, verbose )
 
             if ( value.startsWith( '{{' ) && value.endsWith( '}}' ))
             {

@@ -91,11 +91,11 @@ class AboutMojo extends BaseGroovyMojo
 
     private String exec ( String command, File directory = basedir, boolean failOnError = true )
     {
-        generalBean().executeWithResult( command,
-                                         ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
-                                         failOnError,
-                                         -1,
-                                         directory )
+        general().executeWithResult( command,
+                                     ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
+                                     failOnError,
+                                     -1,
+                                     directory )
     }
 
 
@@ -393,12 +393,12 @@ class AboutMojo extends BaseGroovyMojo
     @Ensures({ result == aboutFile })
     File writeAboutFile( File aboutFile )
     {
-        fileBean().delete( aboutFile )
+        file().delete( aboutFile )
 
         long t = System.currentTimeMillis()
 
         log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
-        fileBean().mkdirs( aboutFile.parentFile )
+        file().mkdirs( aboutFile.parentFile )
         aboutFile.write( allContent())
         log.info( "Generated  \"about\" in [$aboutFile.canonicalPath] (${ System.currentTimeMillis() - t } ms)" )
 
@@ -421,7 +421,7 @@ class AboutMojo extends BaseGroovyMojo
                 }
 
                 def split = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().grep() : null ) }
-                def files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
+                def files = file().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
                 if ( files )
                 {
@@ -430,16 +430,16 @@ class AboutMojo extends BaseGroovyMojo
 
                     writeAboutFile( aboutFile )
 
-                    for ( file in files )
+                    for ( f in files )
                     {
-                        def aboutPath = "$file.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
+                        def aboutPath = "$f.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
 
                         log.info( "Adding \"about\" to [$aboutPath]" )
-                        fileBean().pack( aboutFile.parentFile, file, [ aboutFile.name ], null, false, true, true, null, null, prefix )
+                        file().pack( aboutFile.parentFile, f, [ aboutFile.name ], null, false, true, true, null, null, prefix )
                         log.info( "Added  \"about\" to [$aboutPath]" )
                     }
 
-                    fileBean().delete( aboutFile )
+                    file().delete( aboutFile )
                 }
                 else
                 {

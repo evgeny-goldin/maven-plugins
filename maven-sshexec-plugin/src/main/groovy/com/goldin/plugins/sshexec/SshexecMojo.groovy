@@ -1,6 +1,5 @@
 package com.goldin.plugins.sshexec
 
-import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal
@@ -57,7 +56,7 @@ class SshexecMojo extends BaseGroovyMojo
      */
     private String[] commands ()
     {
-        String[] commands = generalBean().array( this.commands, this.command, String )
+        String[] commands = general().array( this.commands, this.command, String )
         commands          = commands*.split( /,|;/ ).flatten()*.trim().grep().
                             collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
                             flatten()
@@ -74,7 +73,7 @@ class SshexecMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        Map<String, String> data      = netBean().parseNetworkPath( location )
+        Map<String, String> data      = net().parseNetworkPath( location )
         String              username  = data[ 'username' ]
         String              password  = data[ 'password' ]
         String              host      = data[ 'host' ]
