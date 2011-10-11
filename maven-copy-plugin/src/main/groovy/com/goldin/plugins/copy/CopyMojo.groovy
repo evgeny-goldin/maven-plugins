@@ -100,6 +100,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  String  runIf
 
 
+    private final CopyMojoHelper helper = new CopyMojoHelper()
+
+
     /**
      * Predefined {@code <filter>} values:
      * Key   - {@code <filter>} value
@@ -331,7 +334,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         ( Collection<CopyDependency> ) dependencies.
         collect {
-            CopyDependency d -> CopyMojoUtils.getDependencies( d ) }.
+            CopyDependency d -> helper.getDependencies( d ) }.
         flatten().
         collect {
             CopyDependency d ->
@@ -476,14 +479,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      *
      * @param resource        current copy resource
      * @param sourceDirectory file base directory
-     * @param file            file to copy
+     * @param sourceFile      file to copy
      * @param targetPath      target location to copy the file to
      * @param verbose         verbose logging
      * @return file copied if copying was performed, null otherwise
      */
     private File copy( CopyResource resource,
                        File         sourceDirectory,
-                       File         file,
+                       File         sourceFile,
                        File         targetPath,
                        boolean      verbose )
     {
@@ -495,18 +498,18 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         /**
          * Location where the file will be copied to
          */
-        String filePath = new File( targetPath, resource.preservePath ? file().relativePath( sourceDirectory, file ) :
-                                                                        file.name ).canonicalPath
-        assert filePath.endsWith( file.name )
+        String filePath = new File( targetPath, resource.preservePath ? file().relativePath( sourceDirectory, sourceFile ) :
+                                                                        sourceFile.name ).canonicalPath
+        assert filePath.endsWith( sourceFile.name )
 
         if ( resource.destFileName )
         {
-            filePath = filePath.substring( 0, filePath.lastIndexOf( file.name )) + resource.destFileName
+            filePath = filePath.substring( 0, filePath.lastIndexOf( sourceFile.name )) + resource.destFileName
         }
 
         File  targetFile = new File( filePath )
 
-        copy( file,
+        copy( sourceFile,
               targetFile,
               skipIdentical,
               resource.replaces(),
@@ -566,7 +569,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                      resource.destFileName, resource.prefix )
 
         if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
-                                          each { file().delete( it ) }}
+                                      each { file().delete( it ) }}
 
         if ( ! filesDirectory.is( sourceDirectory )) { file().delete( filesDirectory ) }
 

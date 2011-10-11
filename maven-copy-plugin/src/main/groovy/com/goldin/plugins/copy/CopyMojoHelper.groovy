@@ -9,9 +9,13 @@ import org.apache.maven.shared.artifact.filter.collection.*
 
 
 /**
- * {@link CopyMojo} helper class
+ * {@link CopyMojo} helper class.
+ *
+ * Class is marked "final" as it's not meant for subclassing.
+ * Methods are marked as "protected" to allow package-access only.
  */
-class CopyMojoUtils
+@SuppressWarnings( 'FinalClassWithProtectedMember' )
+final class CopyMojoHelper
 {
 
     /**
@@ -21,7 +25,7 @@ class CopyMojoUtils
      * @param dependency filtering dependency
      * @return           project's dependencies that passed all filters
      */
-    static List<CopyDependency> getDependencies ( CopyDependency dependency )
+    protected List<CopyDependency> getDependencies ( CopyDependency dependency )
     {
         assert dependency
         def singleDependency = dependency.groupId && dependency.artifactId
@@ -55,13 +59,14 @@ class CopyMojoUtils
     }
 
 
-    private static List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean singleDependency )
+    private List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean singleDependency )
     {
         /**
          * If we got here it's either because dependency is not single (filtered) or because *it is* single
          * with transitivity explicitly enabled (excludeTransitive is set to "false").
          */
         assert dependency
+        // noinspection GroovyPointlessBoolean
         assert ( ! singleDependency ) || ( dependency.excludeTransitive == false )
 
         List<ArtifactsFilter> filters = []
