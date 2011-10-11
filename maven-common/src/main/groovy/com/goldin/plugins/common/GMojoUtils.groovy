@@ -227,13 +227,13 @@ class GMojoUtils
         for ( scope in scopes )
         {
             result.addAll( ThreadLocals.get( ArtifactResolver ).resolveTransitively(
-                                initialArtifacts as Set,
-                                buildArtifact( project.groupId, project.artifactId, project.version, project.packaging ),
-                                project.managedVersionMap,
-                                ThreadLocals.get( MavenSession ).localRepository,
-                                project.remoteArtifactRepositories,
-                                ThreadLocals.get( ArtifactMetadataSource ),
-                                new ScopeArtifactFilter( verifyBean().notNullOrEmpty( scope ))).artifacts )
+                           initialArtifacts as Set,
+                           buildArtifact( project.groupId, project.artifactId, project.version, project.packaging ),
+                           project.managedVersionMap,
+                           ThreadLocals.get( MavenSession ).localRepository,
+                           project.remoteArtifactRepositories,
+                           ThreadLocals.get( ArtifactMetadataSource ),
+                           new ScopeArtifactFilter( verifyBean().notNullOrEmpty( scope ))).artifacts )
         }
 
         result
