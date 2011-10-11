@@ -1,5 +1,6 @@
 package com.goldin.plugins.find
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
@@ -45,7 +46,7 @@ class FindMojo extends BaseGroovyMojo
         File foundFile = find( startDir )
         if ( foundFile )
         {
-            def path = foundFile.canonicalPath
+            String path = foundFile.canonicalPath
 
             if ( propertyName )
             {
