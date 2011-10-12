@@ -1,6 +1,7 @@
 package com.goldin.plugins.find
 
 import com.goldin.plugins.common.BaseGroovyMojo
+import com.goldin.plugins.common.GMojoUtils
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
@@ -49,7 +50,7 @@ class FindMojo extends BaseGroovyMojo
 
             if ( propertyName )
             {
-                setProperty( propertyName, path )
+                GMojoUtils.setProperty( propertyName, path )
             }
 
             if ( sysPropertyName )
