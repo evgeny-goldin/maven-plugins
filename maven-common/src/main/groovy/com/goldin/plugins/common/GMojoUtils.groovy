@@ -62,7 +62,7 @@ class GMojoUtils
           * Deletes empty lines from the String
           */
          String.metaClass.deleteEmptyLines ={->
-             (( String ) delegate ).readLines()*.trim().grep().join( constants().CRLF )
+             (( String ) delegate ).readLines().findAll{ it.trim() }.join( constants().CRLF )
          }
 
 
