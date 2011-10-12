@@ -2,3 +2,5 @@
 *.ipr
 *.iws
 target
+build
+codenarc.html
