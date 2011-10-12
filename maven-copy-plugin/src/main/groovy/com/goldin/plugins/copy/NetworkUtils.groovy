@@ -165,7 +165,7 @@ class NetworkUtils
         Map<String, String> ftpData  = net().parseNetworkPath( remotePath )
         String  remotePathLog        = "${ ftpData[ 'protocol' ] }://${ ftpData[ 'username' ] }@${ ftpData[ 'host' ] }${ ftpData[ 'directory' ] }"
         boolean isList               = ( resource.curl || resource.wget )
-        def     commandParts         = split(( resource.curl ?: resource.wget ?: '' ), '|' ) // "wget|ftp-list.txt|true|false"
+        def     commandParts         = split(( resource.curl ?: resource.wget ?: '' ), '\\|' ) // "wget|ftp-list.txt|true|false"
         def     command              = ( isList ? commandParts[ 0 ] : null )
         def     listFile             = ( isList ? (( commandParts.size() > 1 ) ? new File ( commandParts[ 1 ] ) :
                                                                                  new File ( constants().USER_DIR_FILE, 'ftp-list.txt' )) :
@@ -260,7 +260,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                     Map listFileMap = listFileText.readLines().inject( [:] ) {
                         Map map, String line ->
 
-                        def    ( String ftpUrl, String fileSize ) = split( line, '|' )
+                        def    ( String ftpUrl, String fileSize ) = split( line, '\\|' )
                         assert ( ftpUrl && fileSize )
 
                         assert ( ! map.containsKey( ftpUrl )) : "[$ftpUrl] appears more than once in [$listFilePath]"

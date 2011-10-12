@@ -351,8 +351,8 @@ class AboutMojo extends BaseGroovyMojo
         | Revision       : [${ find( 'Revision:', svnInfo )}]
         | Status         : [${ padLines( svnStatus, ' Status         : ['.size()) }]
         | Last Commit    : [$commit]
-        | Commit Date    : [${ split( commit, '|' )[ 2 ].trim() }]
-        | Commit Author  : [${ split( commit, '|' )[ 1 ].trim() }]
+        | Commit Date    : [${ split( commit, '\\|' )[ 2 ].trim() }]
+        | Commit Author  : [${ split( commit, '\\|' )[ 1 ].trim() }]
         | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : ['.size()) }]"""
     }
 

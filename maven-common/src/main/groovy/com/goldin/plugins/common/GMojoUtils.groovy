@@ -509,8 +509,10 @@ class GMojoUtils
 
     /**
      * Splits a delimiter-separated String.
-     * @param s String to split
-     * @return result of {@code s.split( delimiter )*.trim().grep()}
+     *
+     * @param s     String to split
+     * @param delim delimiter regex expression to split the String with
+     * @return result of {@code s.split( delim )*.trim().grep()}
      */
     static List<String> split( String s, String delim = ',' ) { s.split( delim )*.trim().grep() as List }
 

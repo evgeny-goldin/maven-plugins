@@ -141,7 +141,7 @@ class JenkinsMojo extends BaseGroovyMojo
         jobs().each
         {
             Job job ->
-            Job prevJob = ( allJobs[ job.id ] = job )
+            Job prevJob = allJobs.put( job.id, job )
             assert ( ! prevJob ), "[$job] is defined more than once"
 
             job.jenkinsUrl    = jenkinsUrl

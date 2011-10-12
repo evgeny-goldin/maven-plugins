@@ -184,7 +184,7 @@ class AssertMojo extends BaseGroovyMojo
 
             String line ->
 
-            def ( String file1Path, String file2Path, String pattern ) = [ *split( line, '|' ), null ]
+            def ( String file1Path, String file2Path, String pattern ) = [ *split( line, '\\|' ), null ]
 
             assert ( file1Path && file2Path ), \
                    'Each non-empty <assertEqual> line should be composed of two file entries witn an optional pattern, ' +

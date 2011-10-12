@@ -586,7 +586,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( resource.deploy )
         {
-            String[] data = split( resource.deploy, '|' )
+            String[] data = split( resource.deploy, '\\|' )
 
             assert data?.size()?.with{( it == 3 ) || ( it == 4 )}, \
                    "Failed to split <deploy> tag data [$resource.deploy]. " +
