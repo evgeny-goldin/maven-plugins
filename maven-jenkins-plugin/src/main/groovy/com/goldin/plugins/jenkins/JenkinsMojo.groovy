@@ -3,20 +3,21 @@ package com.goldin.plugins.jenkins
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
 import com.goldin.plugins.jenkins.Job.JOB_TYPE
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-
 
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
 @MojoGoal ( 'generate' )
 @MojoPhase ( 'compile' )
-@SuppressWarnings( 'StatelessClass' )
-public class JenkinsMojo extends BaseGroovyMojo
+@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier' ] )
+class JenkinsMojo extends BaseGroovyMojo
 {
-    public JenkinsMojo ()
+    JenkinsMojo ()
     {
     }
 
@@ -89,7 +90,7 @@ public class JenkinsMojo extends BaseGroovyMojo
         jobs.each {
             Job job ->
 
-            String configPath
+            String configPath = ''
 
             if ( job.isAbstract )
             {
@@ -125,11 +126,10 @@ public class JenkinsMojo extends BaseGroovyMojo
     *
     * Returns a mapping of "job ID" => job itself.
     */
+    @Requires({ jenkinsUrl && generationPom && svnRepositoryLocalBase })
     private Collection<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
-        verify().notNullOrEmpty( jenkinsUrl, generationPom, svnRepositoryLocalBase )
-
-        Map<String, Job> allJobs = new LinkedHashMap<String, Job>()
+        Map<String, Job> allJobs = [:]
 
         /**
          * - Reading all jobs,
@@ -141,7 +141,7 @@ public class JenkinsMojo extends BaseGroovyMojo
         jobs().each
         {
             Job job ->
-            Job prevJob = allJobs.put( job.id, job )
+            Job prevJob = ( allJobs[ job.id ] = job )
             assert ( ! prevJob ), "[$job] is defined more than once"
 
             job.jenkinsUrl    = jenkinsUrl
@@ -199,7 +199,7 @@ public class JenkinsMojo extends BaseGroovyMojo
             * Updating "Invoked By" list
             */
 
-            List<Job> invokedBy = new ArrayList<Job>()
+            List<Job> invokedBy = []
 
             jobs().findAll{ it.id != job.id }.each
             {
@@ -207,7 +207,7 @@ public class JenkinsMojo extends BaseGroovyMojo
                 if ( otherJob.invoke?.jobsSplit?.any{ it == job.id } ) { invokedBy << otherJob }
             }
 
-            job.setInvokedBy( invokedBy.toArray( new Job[ invokedBy.size() ] ))
+            job.invokedBy = invokedBy as Job[]
         }
 
         allJobs.values()
@@ -226,37 +226,35 @@ public class JenkinsMojo extends BaseGroovyMojo
      *                                           set by "nightly" one
      * @return composed job
      */
+    @Requires({ allJobs && parentJobs })
+    @Ensures({ result })
     private Job composeJob( Map<String, Job> allJobs, String parentJobs )
     {
         Job resultJob = null
 
-        if ( ! parentJobs.contains( ',' ))
-        {
-            /**
+        if ( parentJobs.contains( ',' ))
+        {   /**
+             * Multiple inheritance - we need to compose an "aggregator" job from all "base" jobs
+             */
+
+            resultJob = new Job( id: "Composition of jobs [$parentJobs]" )
+            split( parentJobs ).each {
+                String parentJobId ->
+                Job    parentJob = allJobs[ parentJobId ]
+                assert parentJob, "Parent job [$parentJobId] is undefined"
+
+                resultJob.extend( parentJob, true )
+            }
+        }
+        else
+        {   /**
              * No multiple inheritance
              */
 
             resultJob = allJobs[ parentJobs ]
             assert resultJob, "Parent job [$parentJobs] is undefined"
         }
-        else
-        {
-            /**
-             * Multiple inheritance - we need to compose an "aggregator" job from all "base" jobs
-             */
 
-            resultJob = new Job( id: "Composition of jobs [$parentJobs]" )
-            parentJobs.split( /\s*,\s*/ ).each
-            {
-                String parentJobId ->
-                Job    parentJob = allJobs[( parentJobId )]
-                assert parentJob, "Parent job [$parentJobId] is undefined"
-
-                resultJob.extend( parentJob, true )
-            }
-        }
-
-        assert resultJob
         resultJob
     }
 }

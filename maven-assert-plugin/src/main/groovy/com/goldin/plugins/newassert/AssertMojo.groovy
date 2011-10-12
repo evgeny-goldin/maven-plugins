@@ -107,7 +107,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            verify().notNullOrEmpty( data ).splitWith( 'eachLine', String )*.trim().grep().each { callback( it ) }
+            verify().notNullOrEmpty( data ).readLines()*.trim().grep().each { callback( it ) }
         }
     }
 
@@ -116,7 +116,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         def propertiesMap = [:]
 
-        verifyEachLine( properties, {
+        verifyEachLine( properties ) {
 
             String line ->
 
@@ -130,7 +130,7 @@ class AssertMojo extends BaseGroovyMojo
 
                 propertiesMap[ propertyName ] = propertyValue
             }
-        })
+        }
 
         if ( propertiesMap )
         {
@@ -142,7 +142,7 @@ class AssertMojo extends BaseGroovyMojo
 
     private verifyFiles( String files )
     {
-        verifyEachLine( files, {
+        verifyEachLine( files ) {
 
             String line ->
 
@@ -168,27 +168,27 @@ class AssertMojo extends BaseGroovyMojo
 
                 log.info ( "${ file.file ? 'File' : 'Directory' } [$path] exists${ file.file ?  ', [' + file.length() + '] bytes' : '' }" )
             }
-        })
+        }
     }
 
 
     private verifyFilesFails ( String files )
     {
-        verifyEachLine( files, { String line -> shouldFailAssert { verifyFiles( line ) }} )
+        verifyEachLine( files ) { String line -> shouldFailAssert { verifyFiles( line ) }}
     }
 
 
     private verifyEqual( String lines, boolean verifyChecksum )
     {
-        verifyEachLine( lines, {
+        verifyEachLine( lines ) {
 
             String line ->
 
-            def ( String file1Path, String file2Path, String pattern ) = [ *line.split( /\s*\|\s*/ ), null ]
+            def ( String file1Path, String file2Path, String pattern ) = [ *split( line, '|' ), null ]
 
             assert ( file1Path && file2Path ), \
-                   "Each non-empty <assertEqual> line should be composed of two file entries witn an optional pattern, " +
-                   "separated with a '|': \"path1 | path2 ( | pattern)\""
+                   'Each non-empty <assertEqual> line should be composed of two file entries witn an optional pattern, ' +
+                   'separated with a '|': "path1 | path2 ( | pattern)"'
 
             def file1 = new File( file1Path )
             def file2 = new File( file2Path )
@@ -205,18 +205,18 @@ class AssertMojo extends BaseGroovyMojo
 
             log.info( "[${ file1.canonicalPath }] is identical to [${ file2.canonicalPath }] " +
                            "($filesChecked file${ ( filesChecked == 1 ) ? '' : 's' } checked)" )
-        })
+        }
     }
 
 
     private verifyEqualFails ( String lines, boolean verifyChecksum )
     {
-        verifyEachLine( lines, { String line -> shouldFailAssert { verifyEqual( line, verifyChecksum ) }} )
+        verifyEachLine( lines ) { String line -> shouldFailAssert { verifyEqual( line, verifyChecksum ) }}
     }
 
 
     private verifyGroovy( String groovy )
     {
-        verifyEachLine( groovy, { String line -> eval( "assert $line" ) })
+        verifyEachLine( groovy ) { String line -> eval( "assert $line" ) }
     }
 }

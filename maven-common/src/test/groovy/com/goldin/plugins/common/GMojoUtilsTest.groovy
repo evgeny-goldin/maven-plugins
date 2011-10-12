@@ -9,6 +9,21 @@ import org.junit.Test
  */
 class GMojoUtilsTest
 {
+    @Test
+    void shouldSplit()
+    {
+        def check = { String input, List<String> expected -> assert expected == split( input ) }
+
+        check( '', [] )
+        check( '1', ['1'] )
+        check( '1, 2',                     ['1', '2'] )
+        check( ' 1 , 2 ',                  ['1', '2'] )
+        check( ' 1   ,      2    ',        ['1', '2'] )
+        check( '*.txt, *.pdf, *.sh|700',   ['*.txt', '*.pdf', '*.sh|700' ] )
+        check( '*.txt , *.pdf , *.sh|700', ['*.txt', '*.pdf', '*.sh|700' ] )
+        check( '*.txt,*.pdf,*.sh|700',     ['*.txt', '*.pdf', '*.sh|700' ] )
+    }
+
 
     @Test
     void shouldAddDollar()

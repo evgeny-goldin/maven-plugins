@@ -62,7 +62,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
-        assert mavenVersion().startsWith( '3' ), "This plugin only runs with Maven 3"
+        assert mavenVersion().startsWith( '3' ), 'This plugin only runs with Maven 3'
 
         /**
          * Mapping of File to Maven Artifact
@@ -80,7 +80,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
         /**
          * Mapping of class names to files they were found it
          */
-        Set<String>             scopes  = this.scopes.split( /,/ )*.trim() as Set
+        Set<String>             scopes  = split( this.scopes ) as Set
         Map<String, List<File>> classes =
             project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) && ( a.type != 'pom' ) }.
                               // Artifact => File
@@ -108,7 +108,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
 
         log.info( "[${ f2A.size() }] artifact${ general().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
         if ( violations ) { reportViolations( violations ) }
-        else              { log.info( "No duplicate libraries found" ) }
+        else              { log.info( 'No duplicate libraries found' ) }
     }
 
 

@@ -1,11 +1,12 @@
 package com.goldin.plugins.jenkins
 
-import static com.goldin.plugins.common.GMojoUtils.*
-
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 
 /**
  * Source repository location
  */
+@SuppressWarnings( 'StatelessClass' )
 class Repository
 {
     String  remote
@@ -130,10 +131,10 @@ class Repository
     * @param path project path
     * @return     remote HTTP link for the path specified
     */
+    @Requires({ path })
+    @Ensures({ result })
     String getRemotePathLink( String path )
     {
-        verifyBean().notNullOrEmpty( path )
-
         ( isGit() ? "${ remoteLink }/${ isGitorious() ? 'blobs' : 'blob' }/${ gitBranch }" :
                     remoteLink ) +
         "/$path"

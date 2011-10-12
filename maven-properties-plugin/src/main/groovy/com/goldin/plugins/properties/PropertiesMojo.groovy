@@ -1,5 +1,6 @@
 package com.goldin.plugins.properties
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.BaseGroovyMojo
 import org.gcontracts.annotations.Ensures
@@ -7,7 +8,7 @@ import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import static com.goldin.plugins.common.GMojoUtils.*
+
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
@@ -77,10 +78,10 @@ class PropertiesMojo extends BaseGroovyMojo
                 assert expression
                 assert expression != name, "Property [$name] has a circular definition dependency on itself"
                 String s = general().choose (
-                    project.properties[ expression ],
+                    project.properties         [ expression ],
                     session.executionProperties[ expression ],
-                    session.userProperties[ expression ],
-                    map[ expression ],
+                    session.userProperties     [ expression ],
+                    map                        [ expression ],
                     System.getProperty( expression ),
                     ( expression.startsWith( 'env.' ) ? System.getenv( expression.substring( 'env.'.size())) : '' ),
                     '' )

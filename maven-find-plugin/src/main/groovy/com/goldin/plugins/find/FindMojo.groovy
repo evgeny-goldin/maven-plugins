@@ -1,11 +1,10 @@
 package com.goldin.plugins.find
 
-import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-
 
 /**
  * MOJO that finds the file specified and sets the corresponding property
@@ -68,10 +67,9 @@ class FindMojo extends BaseGroovyMojo
      * @param startDir directory to start searching from
      * @return file found or <code>null</code>
      */
+    @Requires({ startDir.directory })
     private File find( File startDir )
     {
-        verify().directory( startDir )
-
         log.info( "Looking for [$file] starting from [$startDir.canonicalPath]" )
 
         if ( sysPropertyName )

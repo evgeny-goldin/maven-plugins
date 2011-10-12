@@ -1,6 +1,5 @@
 package com.goldin.plugins.common
 
-
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
 import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
@@ -27,7 +26,6 @@ import org.xml.sax.ext.DefaultHandler2
 import com.goldin.gcommons.beans.*
 
 
-
 /**
  * Various Mojo helper methods
  */
@@ -50,13 +48,13 @@ class GMojoUtils
      */
      static mopInit ()
      {
-         fileBean() // Triggers GCommons MOP replacements
+         file() // Triggers GCommons MOP replacements
 
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
           */
          String.metaClass.trimMultiline ={->
-             delegate.splitWith( 'eachLine', String )*.trim().join( constantsBean().CRLF )
+             (( String ) delegate ).readLines()*.trim().join( constants().CRLF )
          }
 
 
@@ -64,7 +62,7 @@ class GMojoUtils
           * Deletes empty lines from the String
           */
          String.metaClass.deleteEmptyLines ={->
-             delegate.splitWith( 'eachLine', String ).findAll{ it.trim() }.join( constantsBean().CRLF )
+             (( String ) delegate ).readLines()*.trim().grep().join( constants().CRLF )
          }
 
 
@@ -96,11 +94,8 @@ class GMojoUtils
         URL    templateURL = GMojoUtils.getResource( templatePath )
         assert templateURL, "[${ templatePath }] could not be loaded from the classpath"
 
-        Template template = new SimpleTemplateEngine( loader ).createTemplate( templateURL )
-        assert   template
-        return   template
+        verify().notNull( new SimpleTemplateEngine( loader ).createTemplate( templateURL ))
     }
-
 
 
    /**
@@ -116,7 +111,7 @@ class GMojoUtils
         if ( endOfLine        ) { content = content.replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )) }
         if ( deleteEmptyLines ) { content = content.deleteEmptyLines() }
 
-        verifyBean().notNullOrEmpty( content )
+        verify().notNullOrEmpty( content )
     }
 
 
@@ -128,11 +123,11 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        InputStream is    = verifyBean().notNull( Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+        InputStream is    = verify().notNull( Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
         Properties  props = new Properties()
         props.load( is )
         is.close()
-        verifyBean().notNullOrEmpty( props.getProperty( 'version', 'Unknown' ).trim())
+        verify().notNullOrEmpty( props.getProperty( 'version', 'Unknown' ).trim())
     }
 
 
@@ -185,10 +180,10 @@ class GMojoUtils
                                     mavenVersion : mavenVersion(),
                                     *:( project.properties + session.userProperties + session.executionProperties )]
 
-        groovyBean().eval( expression,
-                           resultType,
-                           groovyBean().binding( bindingMap, bindingObjects ),
-                           config )
+        groovy().eval( expression,
+                       resultType,
+                       groovy().binding( bindingMap, bindingObjects ),
+                       config )
     }
 
 
@@ -201,7 +196,7 @@ class GMojoUtils
      * @param c Collection to convert
      * @return String to use for log messages
      */
-    static String stars ( Collection c ) { "* [${ c.join( "]${ constantsBean().CRLF }* [") }]" }
+    static String stars ( Collection c ) { "* [${ c.join( "]${ constants().CRLF }* [") }]" }
 
 
     /**
@@ -233,7 +228,7 @@ class GMojoUtils
                            ThreadLocals.get( MavenSession ).localRepository,
                            project.remoteArtifactRepositories,
                            ThreadLocals.get( ArtifactMetadataSource ),
-                           new ScopeArtifactFilter( verifyBean().notNullOrEmpty( scope ))).artifacts )
+                           new ScopeArtifactFilter( verify().notNullOrEmpty( scope ))).artifacts )
         }
 
         result
@@ -256,9 +251,9 @@ class GMojoUtils
             {
                 assert parser.parse( configFile )
             }
-            catch ( Throwable t )
+            catch ( e )
             {
-                throw new RuntimeException( "Failed to validate [${ configFile.canonicalPath }]: $t", t )
+                throw new MojoExecutionException( "Failed to validate [${ configFile.canonicalPath }]", e )
             }
         }
 
@@ -321,45 +316,43 @@ class GMojoUtils
      *                        <a href="http://www.sonatype.com/books/maven-book/reference/resource-filtering-sect-description.html">filtering</a>
      *                        should be performed
      * @param encoding        Filtering/replacement encoding
-     * @param fileFilter      {@link org.apache.maven.shared.filtering.MavenFileFilter} instance,
-     *                        allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
+     * @param fileFilter      {@link MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
      * @param verbose         whether information is written to log with "INFO" level
      * @param move            whether file should be moved and not copied
      *
      * @return destinationFile if file was copied,
      *         null            if file was skipped (identical)
      */
-    static File copy ( File            sourceFile,
-                       File            destinationFile,
-                       boolean         skipIdentical,
-                       Replace[]       replaces,
-                       boolean         filtering,
-                       String          encoding,
-                       MavenFileFilter fileFilter,
-                       boolean         verbose,
-                       boolean         move )
+    static File copyFile ( File            sourceFile,
+                           File            destinationFile,
+                           boolean         skipIdentical,
+                           Replace[]       replaces,
+                           boolean         filtering,
+                           String          encoding,
+                           MavenFileFilter fileFilter,
+                           boolean         verbose,
+                           boolean         move )
     {
-        verifyBean().file( sourceFile )
-        verifyBean().notNull( destinationFile, replaces )
-        verifyBean().notNullOrEmpty( encoding )
+        verify().file( sourceFile )
+        verify().notNull( destinationFile, replaces )
+        verify().notNullOrEmpty( encoding )
 
-        def mavenProject = ThreadLocals.get( MavenProject )
-        def mavenSession = ThreadLocals.get( MavenSession )
+        MavenProject mavenProject = ThreadLocals.get( MavenProject )
+        MavenSession mavenSession = ThreadLocals.get( MavenSession )
+        File         fromFile     = sourceFile
+        List<File>   deleteFiles  = []
 
         try
         {
-            File       fromFile    = sourceFile
-            List<File> deleteFiles = []
-
             if ( filtering )
             {
-                verifyBean().notNull( fileFilter, mavenProject, mavenSession )
+                verify().notNull( fileFilter, mavenProject, mavenSession )
 
                 /**
                  * http://maven.apache.org/shared/maven-filtering/apidocs/index.html
                  */
 
-                File                  tempFile = fileBean().tempFile()
+                File                  tempFile = file().tempFile()
                 List<MavenFileFilter> wrappers = fileFilter.getDefaultFilterWrappers( mavenProject,
                                                                                       null,
                                                                                       false,
@@ -386,7 +379,7 @@ class GMojoUtils
                     data = replace.replace( data, fromFile.canonicalPath )
                 }
 
-                File tempFile = fileBean().tempFile()
+                File tempFile = file().tempFile()
                 tempFile.write( data, encoding )
 
                 if ( verbose )
@@ -412,13 +405,13 @@ class GMojoUtils
 
             copy( fromFile, destinationFile, verbose, move )
             if ( move && sourceFile.exists()) { deleteFiles << sourceFile }
-            fileBean().delete( *deleteFiles )
+            file().delete( *deleteFiles )
 
             destinationFile
         }
         catch ( e )
         {
-            throw new MojoExecutionException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]: $e",
+            throw new MojoExecutionException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]",
                                               e )
         }
     }
@@ -434,9 +427,9 @@ class GMojoUtils
      */
     private static void copy ( File sourceFile, File destinationFile, boolean verbose, boolean move )
     {
-        verifyBean().file( sourceFile )
-        verifyBean().notNull( destinationFile )
-        assert ! netBean().isNet( destinationFile.path )
+        verify().file( sourceFile )
+        verify().notNull( destinationFile )
+        assert ! net().isNet( destinationFile.path )
 
         String sourceFilePath      = sourceFile.canonicalPath
         String destinationFilePath = destinationFile.canonicalPath
@@ -448,15 +441,15 @@ class GMojoUtils
             return
         }
 
-        fileBean().delete( destinationFile )
-        fileBean().mkdirs( destinationFile.parentFile )
+        file().delete( destinationFile )
+        file().mkdirs( destinationFile.parentFile )
 
         if ( ! ( move && sourceFile.renameTo( destinationFile )))
         {
-            fileBean().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+            file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
         }
 
-        if ( move    ) { fileBean().delete( sourceFile ) }
+        if ( move    ) { file().delete( sourceFile ) }
         if ( verbose ) { log.info( "[$sourceFilePath] $operationName to [$destinationFilePath]" )}
     }
 
@@ -464,7 +457,7 @@ class GMojoUtils
     /**
      * Invokes "maven-deploy-plugin" to deploy the file specified.
      *
-     * @param file       file to deploy
+     * @param f          file to deploy
      * @param url        Maven repository URL
      * @param groupId    groupId
      * @param artifactId artifactId
@@ -474,44 +467,53 @@ class GMojoUtils
      * @param session    Maven session
      * @param manager    Maven plugin manager
      */
-    static void deploy ( File file, String url, String groupId, String artifactId, String version, String classifier,
+    static void deploy ( File f, String url, String groupId, String artifactId, String version, String classifier,
                          PluginManager manager )
     {
-        verifyBean().file( file )
-        verifyBean().notNullOrEmpty( url, groupId, artifactId, version )
-        assert mavenVersion().startsWith( "2" ): \
-               "<deploy> is only supported by Maven 2 for now, see http://evgeny-goldin.org/youtrack/issue/pl-258"
+        verify().file( f )
+        verify().notNullOrEmpty( url, groupId, artifactId, version )
+        assert mavenVersion().startsWith( '2' ): \
+               'Right now <deploy> is only supported by Maven 2, see http://evgeny-goldin.org/youtrack/issue/pl-258'
 
-        List<Element> config = [ element( "file",       file.canonicalPath ),
-                                 element( "url",        url         ),
-                                 element( "groupId",    groupId     ),
-                                 element( "artifactId", artifactId  ),
-                                 element( "version",    version     ),
-                                 element( "packaging",  fileBean().extension( file )) ]
-        if ( classifier != null )
+        List<Element> config = [ element( 'file',       f.canonicalPath ),
+                                 element( 'url',        url         ),
+                                 element( 'groupId',    groupId     ),
+                                 element( 'artifactId', artifactId  ),
+                                 element( 'version',    version     ),
+                                 element( 'packaging',  file().extension( f )) ]
+        if ( classifier )
         {
-            config << element( "classifier", classifier )
+            config << element( 'classifier', classifier )
         }
 
         String description =
-            "[$file.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
+            "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
 
         try
         {
-            executeMojo( plugin( "org.apache.maven.plugins",
-                                 "maven-deploy-plugin",
-                                 "2.7" ),
-                         goal( "deploy-file" ),
+            executeMojo( plugin( 'org.apache.maven.plugins',
+                                 'maven-deploy-plugin',
+                                 '2.7' ),
+                         goal( 'deploy-file' ),
                          configuration( config as Element[] ),
                          executionEnvironment( ThreadLocals.get( MavenProject ), ThreadLocals.get( MavenSession ), manager ))
 
             log.info( "Deployed $description" )
         }
-        catch ( Exception e )
+        catch ( e )
         {
-            throw new RuntimeException( "Failed to deploy $description: $e", e )
+            throw new MojoExecutionException( "Failed to deploy $description", e )
         }
     }
+
+
+    /**
+     * Splits a delimiter-separated String.
+     * @param s String to split
+     * @return result of {@code s.split( delimiter )*.trim().grep()}
+     */
+    static List<String> split( String s, String delim = ',' ) { s.split( delim )*.trim().grep() as List }
+
 
     /**
      * Add a '$' character to {..} expressions.
@@ -526,7 +528,7 @@ class GMojoUtils
     {
         if ( value && addDollar && ( 'false' != addDollar ))
         {
-            String pattern = ( 'true' == addDollar ) ? '.+?' : addDollar.split( /,/ )*.trim().collect{ String token -> "\\Q$token\\E" }.join( '|' )
+            String pattern = ( 'true' == addDollar ) ? '.+?' : split( addDollar ).collect{ String token -> "\\Q$token\\E" }.join( '|' )
             value          = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
         }
 
@@ -534,11 +536,11 @@ class GMojoUtils
     }
 
 
-    static ConstantsBean constantsBean (){ GCommons.constants ()}
-    static GeneralBean   generalBean ()  { GCommons.general   ()}
-    static FileBean      fileBean ()     { GCommons.file      ()}
-    static NetBean       netBean ()      { GCommons.net       ()}
-    static IOBean        ioBean ()       { GCommons.io        ()}
-    static VerifyBean    verifyBean ()   { GCommons.verify    ()}
-    static GroovyBean    groovyBean ()   { GCommons.groovy    ()}
+    static ConstantsBean constants (){ GCommons.constants ()}
+    static GeneralBean   general   (){ GCommons.general   ()}
+    static FileBean      file      (){ GCommons.file      ()}
+    static NetBean       net       (){ GCommons.net       ()}
+    static IOBean        io        (){ GCommons.io        ()}
+    static VerifyBean    verify    (){ GCommons.verify    ()}
+    static GroovyBean    groovy    (){ GCommons.groovy    ()}
 }

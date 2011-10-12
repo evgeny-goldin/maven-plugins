@@ -1,12 +1,14 @@
 package com.goldin.plugins.jenkins
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import org.apache.maven.plugin.MojoExecutionException
 import com.goldin.plugins.jenkins.beans.*
 
 
- /**
+/**
  * Class describing a Jenkins job
  */
+@SuppressWarnings( 'StatelessClass' )
 class Job
 {
    /**
@@ -56,7 +58,7 @@ class Job
          * (in Jenkins workspace - '.jenkins/jobs/JobId' )
          */
         this.originalId = id
-        this.id         = fixIllegalChars( id, "Job id" )
+        this.id         = fixIllegalChars( id, 'Job id' )
     }
 
     /**
@@ -76,7 +78,7 @@ class Job
     */
 
     JOB_TYPE             jobType
-    public void       setJobType( String jobType ){ this.jobType = JOB_TYPE.valueOf( jobType ) } // Maven 2 can't set String to Enum, Maven 3 can
+    void                 setJobType( String jobType ){ this.jobType = ( JOB_TYPE ) JOB_TYPE.valueOf( jobType ) } // Maven 2 can't set String to Enum, Maven 3 can
     Boolean              buildOnSNAPSHOT
     Boolean              useUpdate
     Boolean              doRevert
@@ -130,15 +132,15 @@ class Job
 
     Trigger[]            triggers
     Trigger              trigger
-    Trigger[]            triggers() { generalBean().array( this.triggers, this.trigger, Trigger ) }
+    Trigger[]            triggers() { general().array( this.triggers, this.trigger, Trigger ) }
 
     Parameter[]          parameters
     Parameter            parameter
-    Parameter[]          parameters() { generalBean().array( this.parameters, this.parameter, Parameter ) }
+    Parameter[]          parameters() { general().array( this.parameters, this.parameter, Parameter ) }
 
     Repository[]         repositories
     Repository           repository
-    Repository[]         repositories() { generalBean().array( this.repositories, this.repository, Repository ) }
+    Repository[]         repositories() { general().array( this.repositories, this.repository, Repository ) }
 
 
     /**
@@ -170,8 +172,8 @@ class Job
 
         if ( ILLEGAL_NAMES.contains( s.toLowerCase()))
         {
-            throw new RuntimeException( "$title [${ id }] is illegal! " +
-                                        "It becomes a folder name and the following names are illegal on Windows: ${ ILLEGAL_NAMES.sort() }" )
+            throw new MojoExecutionException( "$title [${ id }] is illegal! " +
+                                              "It becomes a folder name and the following names are illegal on Windows: ${ ILLEGAL_NAMES.sort() }" )
         }
 
         /**
@@ -179,7 +181,7 @@ class Job
          * Leaving only letters/digits, '-', '.' and '_' characters:
          * \w = word character: [a-zA-Z_0-9]
          */
-        return s.replaceAll( /[^\w\.-]+/, "-" )
+        s.replaceAll( /[^\w\.-]+/, '-' )
     }
 
 
@@ -190,11 +192,11 @@ class Job
     /**
      * Sets the property specified using the value of another job or default value
      */
-     def set( String  property,
-              Job     otherJob,
-              boolean override,
-              Closure verifyClosure,
-              Object  defaultValue )
+    private void set( String  property,
+                      Job     otherJob,
+                      boolean override,
+                      Closure verifyClosure,
+                      Object  defaultValue )
     {
         if (( this[ property ] == null ) || override )
         {
@@ -214,13 +216,13 @@ class Job
     * @param override  whether or not parentJob data is of higher priority than this job data,
     *                  usually it's not - only used when we want to "override" this job data
     */
-    void extend ( Job parentJob, override = false )
+    private void extend ( Job parentJob, boolean override = false )
     {
-        set( 'description',       parentJob, override, { verifyBean().notNullOrEmpty( it )}, '&nbsp;' )
-        set( 'scmType',           parentJob, override, { verifyBean().notNullOrEmpty( it )}, 'svn' )
-        set( 'jobType',           parentJob, override, { verifyBean().notNullOrEmpty( it.toString() )}, JOB_TYPE.maven )
-        set( 'node',              parentJob, override, { verifyBean().notNullOrEmpty( it )}, 'master' )
-        set( 'jdkName',           parentJob, override, { verifyBean().notNullOrEmpty( it )}, '(Default)' )
+        set( 'description',       parentJob, override, { verify().notNullOrEmpty( it )}, '&nbsp;' )
+        set( 'scmType',           parentJob, override, { verify().notNullOrEmpty( it )}, 'svn' )
+        set( 'jobType',           parentJob, override, { verify().notNullOrEmpty( it.toString() )}, JOB_TYPE.maven )
+        set( 'node',              parentJob, override, { verify().notNullOrEmpty( it )}, 'master' )
+        set( 'jdkName',           parentJob, override, { verify().notNullOrEmpty( it )}, '(Default)' )
         set( 'authToken',         parentJob, override, { it }, '' )
         set( 'scm',               parentJob, override, { it }, '' )
         set( 'properties',        parentJob, override, { it }, '' )
@@ -256,9 +258,9 @@ class Job
 
         if ( this.jobType == JOB_TYPE.maven )
         {
-            set( 'pom',               parentJob, override, { verifyBean().notNullOrEmpty( it )}, 'pom.xml' )
-            set( 'mavenGoals',        parentJob, override, { verifyBean().notNullOrEmpty( it )}, '-e clean install' )
-            set( 'mavenName',         parentJob, override, { verifyBean().notNullOrEmpty( it )}, '' )
+            set( 'pom',               parentJob, override, { verify().notNullOrEmpty( it )}, 'pom.xml' )
+            set( 'mavenGoals',        parentJob, override, { verify().notNullOrEmpty( it )}, '-e clean install' )
+            set( 'mavenName',         parentJob, override, { verify().notNullOrEmpty( it )}, '' )
             set( 'mavenOpts',         parentJob, override, { it }, ''    )
             set( 'buildOnSNAPSHOT',   parentJob, override, { it }, false )
             set( 'privateRepository', parentJob, override, { it }, false )
@@ -289,7 +291,7 @@ class Job
         /**
          * {..} => ${..}
          */
-        this.mavenGoals = verifyBean().notNullOrEmpty( this.mavenGoals ).addDollar()
+        this.mavenGoals = verify().notNullOrEmpty( this.mavenGoals ).addDollar()
 
         if ( this.privateRepository )
         {
@@ -303,7 +305,7 @@ class Job
              * or replacing it with updated value, if already exists
              */
 
-            this.localRepoPath = (( this.localRepoBase ?: "${ constantsBean().USER_HOME }/.m2/repository" ) +
+            this.localRepoPath = (( this.localRepoBase ?: "${ constants().USER_HOME }/.m2/repository" ) +
                                   '/' +
                                   ( this.localRepo     ?: '.' )).
                                  replace( '\\', '/' )
@@ -427,19 +429,18 @@ class Job
              {
                  String otherRepo ->
 
-                 if ( repoToCheck.equals( otherRepo ) && (( ++counter ) != 1 ))
+                 if (( repoToCheck == otherRepo ) && (( ++counter ) != 1 ))
                  {
                      /**
                       * Repository should only equal to itself once
                       */
 
-                     throw new RuntimeException(
-                         "[${ this }]: Repo [$repoToCheck] is duplicated" )
+                     throw new MojoExecutionException( "[${ this }]: Repo [$repoToCheck] is duplicated" )
                  }
 
-                 if (( ! repoToCheck.equals( otherRepo )) && ( otherRepo.toLowerCase().contains( repoToCheck.toLowerCase() + '/' )))
+                 if (( ! ( repoToCheck == otherRepo )) && ( otherRepo.toLowerCase().contains( repoToCheck.toLowerCase() + '/' )))
                  {
-                     throw new RuntimeException(
+                     throw new MojoExecutionException(
                          "[${ this }]: Repo [$repoToCheck] is duplicated in [$otherRepo] - you should remove [$otherRepo]" )
                  }
              }

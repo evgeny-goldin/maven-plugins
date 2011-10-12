@@ -4,12 +4,12 @@ import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.beans.ExecOption
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.text.SimpleDateFormat
+import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-
 
 /**
  * Updates files specified with "about" build metadata
@@ -125,7 +125,7 @@ class AboutMojo extends BaseGroovyMojo
         def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
 
         exec( "$mvn -e -B -f ${ new File( basedir, 'pom.xml' ).canonicalPath } " +
-              "org.apache.maven.plugins:maven-dependency-plugin:2.3:tree",
+              'org.apache.maven.plugins:maven-dependency-plugin:2.3:tree',
               basedir ).replace( '[INFO] ', '' ).
                         replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
                         replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
@@ -351,8 +351,8 @@ class AboutMojo extends BaseGroovyMojo
         | Revision       : [${ find( 'Revision:', svnInfo )}]
         | Status         : [${ padLines( svnStatus, ' Status         : ['.size()) }]
         | Last Commit    : [$commit]
-        | Commit Date    : [${ commit.split( '\\|' )[ 2 ].trim() }]
-        | Commit Author  : [${ commit.split( '\\|' )[ 1 ].trim() }]
+        | Commit Date    : [${ split( commit, '|' )[ 2 ].trim() }]
+        | Commit Author  : [${ split( commit, '|' )[ 1 ].trim() }]
         | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : ['.size()) }]"""
     }
 
@@ -420,7 +420,7 @@ class AboutMojo extends BaseGroovyMojo
                     return
                 }
 
-                def split = { String s -> ( List<String> )( s ? s.split( /,/ ).toList()*.trim().grep() : null ) }
+                def split = { String s -> s ? split( s ) : null }
                 def files = file().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
                 if ( files )
@@ -455,7 +455,7 @@ class AboutMojo extends BaseGroovyMojo
         catch ( e )
         {
             def message = "Failed to create \"about\" file"
-            if ( failOnError ) { throw new RuntimeException( message, e ) }
+            if ( failOnError ) { throw new MojoExecutionException( message, e ) }
             log.error( message + ':', e )
         }
     }

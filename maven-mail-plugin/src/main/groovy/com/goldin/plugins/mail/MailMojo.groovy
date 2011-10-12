@@ -10,6 +10,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import javax.mail.*
+import javax.mail.Message.RecipientType
 
 
 /**
@@ -42,7 +43,7 @@ class MailMojo extends BaseGroovyMojo
     public File[] files
 
 
-    public MailMojo ()
+    MailMojo ()
     {
     }
 
@@ -74,7 +75,7 @@ class MailMojo extends BaseGroovyMojo
      * @param mails   <code>Map</code> of recipients:
      *                key   - one of either "to", "cc" or "bcc"
      *                value - mail addresses, separated with ""
-     * @return recipients mapping, split and converted to {@link javax.mail.internet.InternetAddress} instances
+     * @return recipients mapping, split and converted to {@link InternetAddress} instances
      */
     private Map<String, String> setRecipients( Message message, Map<String, String> mails )
     {
@@ -82,10 +83,10 @@ class MailMojo extends BaseGroovyMojo
 
         for ( to in mails.keySet())
         {
-            Message.RecipientType recipientType = (( 'to'  == to ) ? Message.RecipientType.TO  :
-                                                   ( 'cc'  == to ) ? Message.RecipientType.CC  :
-                                                   ( 'bcc' == to ) ? Message.RecipientType.BCC :
-                                                                     null )
+            RecipientType recipientType = (( 'to'  == to ) ? RecipientType.TO  :
+                                           ( 'cc'  == to ) ? RecipientType.CC  :
+                                           ( 'bcc' == to ) ? RecipientType.BCC :
+                                                             null )
             assert recipientType, "Unknown recipient type [$to]. Known types are \"to\", \"cc\", and \"bcc\"."
 
             if ( ! mails[ to ] )
@@ -94,7 +95,7 @@ class MailMojo extends BaseGroovyMojo
                 continue
             }
 
-            List<Address> addresses = mails[ to ].split( /\s*;\s*/ ).collect{ new InternetAddress( it )}
+            List<Address> addresses = split( mails[ to ], ';' ).collect{ new InternetAddress( it )}
             message.setRecipients( recipientType, addresses as Address[] )
 
             assert ! recipients[ recipientType.toString() ], "<$recipientType> is specified more than once"
@@ -137,26 +138,26 @@ class MailMojo extends BaseGroovyMojo
 
 
     /**
-     * Convenience wrapper returning text {@link javax.mail.internet.MimeBodyPart}
+     * Convenience wrapper returning text {@link MimeBodyPart}
      *
-     * @param text text to put in {@link javax.mail.internet.MimeBodyPart}
+     * @param text text to put in {@link MimeBodyPart}
      * @param file file to add to text, may be <code>null</code>
      *
-     * @return {@link javax.mail.internet.MimeBodyPart} containing the text specified
+     * @return {@link MimeBodyPart} containing the text specified
      */
     private static MimeBodyPart textBodyPart( String text, File file )
     {
         MimeBodyPart mbp = new MimeBodyPart()
-        mbp.text = "$text${ constantsBean().CRLF }${ file ? file.text : '' }"
+        mbp.text = "$text${ constants().CRLF }${ file ? file.text : '' }"
         mbp
     }
 
 
     /**
-     * Convenience wrapper returning file {@link javax.mail.internet.MimeBodyPart}
+     * Convenience wrapper returning file {@link MimeBodyPart}
      *
-     * @param file file to attach to {@link javax.mail.internet.MimeBodyPart}
-     * @return {@link javax.mail.internet.MimeBodyPart} having attached the file specified
+     * @param file file to attach to {@link MimeBodyPart}
+     * @return {@link MimeBodyPart} having attached the file specified
      */
     private static MimeBodyPart fileBodyPart( File file )
     {

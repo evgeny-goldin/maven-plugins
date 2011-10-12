@@ -3,14 +3,16 @@ package com.goldin.plugins.copy
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.Replace
 import org.apache.maven.model.Resource
+import org.gcontracts.annotations.*
+
 
 
 /**
  * <resource> data container
  */
+@SuppressWarnings( [ 'CloneableWithoutClone', 'StatelessClass' ] )
 class CopyResource extends Resource implements Cloneable
 {
-
     String targetRoots
 
     /**
@@ -20,11 +22,11 @@ class CopyResource extends Resource implements Cloneable
     String[] targetPaths
     String[] targetPaths()
     {
-        def paths = generalBean().array( this.@targetPaths, targetPath, String )
+        def paths = general().array( this.targetPaths, targetPath, String )
 
         if ( targetRoots )
         {
-            def  targetRootsSplit = targetRoots.split( ',' )*.trim().grep()
+            def  targetRootsSplit = split( targetRoots )
             if ( targetRootsSplit )
             {
                 paths = targetRootsSplit.collect{ String targetRoot -> paths.collect { targetRoot + '/' + it }}.flatten()
@@ -36,16 +38,16 @@ class CopyResource extends Resource implements Cloneable
 
     Replace[] replaces
     Replace   replace
-    Replace[] replaces () { generalBean().array( this.replaces, this.replace, Replace ) }
+    Replace[] replaces () { general().array( this.replaces, this.replace, Replace ) }
 
 
     CopyDependency[] dependencies
     CopyDependency   dependency
-    CopyDependency[] dependencies () { generalBean().array( this.dependencies, this.dependency, CopyDependency ) }
+    CopyDependency[] dependencies () { general().array( this.dependencies, this.dependency, CopyDependency ) }
 
     String[] zipEntries
     String   zipEntry
-    String[] zipEntries () { generalBean().array( this.zipEntries, this.zipEntry, String ) }
+    String[] zipEntries () { general().array( this.zipEntries, this.zipEntry, String ) }
 
 
     /**
@@ -92,25 +94,29 @@ class CopyResource extends Resource implements Cloneable
     String  artifactClassifier
     String  defaultExcludes
     String  prefix
-
+    String  nonFilteredExtensions
 
     /**
      * Single {@code <include>} shortcut
      */
-    public void setInclude( String include ) { setIncludes([ include ]) }
-
+    @Requires({ include })
+    @Ensures({ includes == [ include ] })
+    void setInclude( String include ) { includes = [ include ] }
 
     /**
      * Single {@code <exclude>} shortcut
      */
-    public void setExclude( String exclude ) { setExcludes([ exclude ]) }
+    @Requires({ exclude })
+    @Ensures({ excludes == [ exclude ] })
+    void setExclude( String exclude ) { excludes = [ exclude ] }
 
 
     /**
      * {@code <file>} configuration shortcut instead of specifying {@code <directory>} and {@code <includes>}
      * @param filePath path of the file to be included
      */
-    public void setFile ( String filePath )
+    @Requires({ filePath })
+    void setFile ( String filePath )
     {
         assert filePath?.trim()?.length()
         def path = filePath.toLowerCase()
@@ -144,13 +150,14 @@ class CopyResource extends Resource implements Cloneable
      */
     boolean getDependenciesAtM2()
     {
+        // noinspection GroovyConditionalCanBeElvis
         ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
                                             ( ! ( this.stripVersion || this.filter || this.process ))
     }
 
 
     @Override
-    public String toString ()
+    String toString ()
     {
         "Target path(s) ${ targetPaths() }, directory [$directory], includes $includes, excludes $excludes, dependencies ${ dependencies() }, " +
         "clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"

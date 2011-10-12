@@ -1,7 +1,6 @@
 package com.goldin.plugins.common
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.gcommons.GCommons
 import org.apache.maven.artifact.repository.ArtifactRepository
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.PluginManager
@@ -10,7 +9,7 @@ import org.codehaus.gmaven.mojo.GroovyMojo
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
-import com.goldin.gcommons.beans.*
+
 
 /**
  * Base GroovyMojo class
@@ -63,13 +62,4 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * {@link #execute()} replacement to be overridden by subclasses
      */
     abstract void doExecute()
-
-
-    ConstantsBean constants (){ GCommons.constants ()}
-    GeneralBean   general   (){ GCommons.general   ()}
-    FileBean      file      (){ GCommons.file      ()}
-    NetBean       net       (){ GCommons.net       ()}
-    IOBean        io        (){ GCommons.io        ()}
-    VerifyBean    verify    (){ GCommons.verify    ()}
-    GroovyBean    groovy    (){ GCommons.groovy    ()}
 }

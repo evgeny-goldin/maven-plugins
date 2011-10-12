@@ -24,27 +24,28 @@ class RepositoryTest
      */
     private static List<String> read( String fileName )
     {
-        def    stream = RepositoryTest.getResourceAsStream( "/${ fileName }" )
+        def    stream = RepositoryTest.class.getResourceAsStream( "/$fileName" )
         assert stream, "Failed to load [/${ fileName }] from [${ RepositoryTest }] classpath"
 
-        stream.text.splitWith( 'eachLine', String ).grep()*.trim().findAll{ ! it.startsWith( '#' ) }
+        stream.text.readLines()*.trim().grep().findAll{ String s -> ! s.startsWith( '#' ) }
     }
 
 
     private static checkEquals( Object expected, Object result, String logMessage )
     {
-        assert expected == result
+        assert expected == result, logMessage
     }
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void getRemoteLink()
     {
-        log.info( "getRemoteLink()" )
+        log.info( 'getRemoteLink()' )
 
         read( 'getRemoteLink.txt' ).each {
-            def ( remoteUrl, httpUrl ) = it.split()
-            checkEquals( httpUrl, new Repository( remote : remoteUrl ).getRemoteLink(), "[$remoteUrl] => [$httpUrl]" )
+            def ( String remoteUrl, String httpUrl ) = it.split()
+            checkEquals( httpUrl, new Repository( remote : remoteUrl ).remoteLink, "[$remoteUrl] => [$httpUrl]" )
         }
     }
 
@@ -52,22 +53,23 @@ class RepositoryTest
     @Test
     void getGitRemoteBranchLink()
     {
-        log.info( "getGitRemoteBranchLink()" )
+        log.info( 'getGitRemoteBranchLink()' )
 
         read( 'getGitRemoteBranchLink.txt' ).each {
-            def ( remoteUrl, branchName, httpUrl ) = it.split()
+            def ( String remoteUrl, String branchName, String httpUrl ) = it.split()
             def repository                         = new Repository( remote: remoteUrl, gitBranch: branchName )
 
             assert repository.isGit()
-            checkEquals( httpUrl, repository.getGitRemoteBranchLink(), "[$remoteUrl] + [$branchName] => [$httpUrl]" )
+            checkEquals( httpUrl, repository.gitRemoteBranchLink, "[$remoteUrl] + [$branchName] => [$httpUrl]" )
         }
     }
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void getRemotePathLink()
     {
-        log.info( "getRemotePathLink()" )
+        log.info( 'getRemotePathLink()' )
 
         read( 'getRemotePathLink.txt' ).each {
             def split      = it.split()
@@ -76,7 +78,8 @@ class RepositoryTest
             def repository = ( split.size() == 3 ) ? new Repository( remote: split[ 0 ] ) :                      // SVN, no branch name
                                                      new Repository( remote: split[ 0 ], gitBranch: split[ 1 ] ) // Git
 
-            checkEquals( httpUrl, repository.getRemotePathLink( path ), "[${ repository.remote }]${ repository.isGit() ? ' + [' + repository.gitBranch + ']' : '' } + [$path] => [$httpUrl]" )
+            checkEquals( httpUrl, repository.getRemotePathLink( path ),
+                         "[${ repository.remote }]${ repository.isGit() ? ' + [' + repository.gitBranch + ']' : '' } + [$path] => [$httpUrl]" )
         }
     }
 }

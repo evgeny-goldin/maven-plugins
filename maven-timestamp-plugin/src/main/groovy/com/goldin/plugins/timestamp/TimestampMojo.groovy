@@ -31,11 +31,6 @@ class TimestampMojo extends BaseGroovyMojo
     }
 
 
-    /**
-     *
-     * @throws org.apache.maven.plugin.MojoExecutionException
-     * @throws org.apache.maven.plugin.MojoFailureException
-     */
     void doExecute()
     {
         Date date = ( time ? (( Date ) eval( time, Date )) : new Date())

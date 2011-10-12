@@ -1,9 +1,12 @@
 package com.goldin.plugins.jenkins.beans
 
+import static com.goldin.plugins.common.GMojoUtils.*
+
 
 /**
  * Specifies invocation of other jobs: "Trigger parameterized build on other projects" checkbox
  */
+@SuppressWarnings( 'StatelessClass' )
 class Invoke
 {
     String      jobs               // Comma-separated job IDs to invoke
@@ -16,7 +19,7 @@ class Invoke
     /**
      * Job parameters
      */
-    
+
     boolean     triggerWithoutParameters = false  // Trigger build without parameters
     boolean     currentBuildParams       = false  // Current build parameters
     boolean     subversionRevisionParam  = false  // Subversion revision parameters
@@ -33,7 +36,7 @@ class Invoke
     {
         assert jobs?.trim()?.length()
         this.jobs      = jobs
-        this.jobsSplit = new HashSet<String>( this.jobs.split( /\s*,\s*/ ).toList()).asImmutable()
+        this.jobsSplit = ( split( this.jobs ) as Set ).asImmutable()
     }
 
 

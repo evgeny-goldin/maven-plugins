@@ -1,12 +1,14 @@
 package com.goldin.plugins.springbatch
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.plugin.MojoFailureException
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.springframework.core.io.ClassPathResource
-import com.goldin.plugins.common.*
 
 
 /**
@@ -14,7 +16,7 @@ import com.goldin.plugins.common.*
  */
 @MojoGoal  ( 'run' )
 @MojoPhase ( 'install' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier' ] )
 class SpringBatchMojo extends BaseGroovyMojo
 {
     SpringBatchMojo ()
@@ -88,8 +90,8 @@ class SpringBatchMojo extends BaseGroovyMojo
     {
         long        l                    = System.currentTimeMillis()
         def         command              = new GoldinCommandLineJobRunner()
-        String[]    configLocationsSplit = configLocations().split( /\s*,\s*/ )
-        def         isSet                = { String s -> ( s != null ) && ( ! s.equalsIgnoreCase( "none" )) }
+        String[]    configLocationsSplit = split( configLocations())
+        def         isSet                = { String s -> ( s != null ) && ( ! s.equalsIgnoreCase( 'none' )) }
         String[]    paramsSplit          = isSet( params()) ? params().trim().split() : new String[ 0 ]
         Set<String> optsSplit            = ( isSet( opts()) ? opts().trim().split()   : [] ) as Set
 
@@ -103,9 +105,9 @@ class SpringBatchMojo extends BaseGroovyMojo
 
             String configLocation, int index ->
 
-            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constants().CRLF : "" )
+            def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constants().CRLF : '' )
             def location = ( configLocation.startsWith( 'classpath:' ) ?
-                                new ClassPathResource( configLocation.substring( 'classpath:'.length())).getURL() :
+                                new ClassPathResource( configLocation.substring( 'classpath:'.length())).URL :
                                 null );
             builder += ( " * [$configLocation]${ location ? ' - [' + location + ']' : '' }$n" )
         }
@@ -122,7 +124,7 @@ options         : $optsSplit
 
         if ( failIfExitCodeOtherThan())
         {
-            List okExitCodes = failIfExitCodeOtherThan().split( /\s*,\s*/ ).toList()
+            List okExitCodes = split( failIfExitCodeOtherThan())
 
             if ( ! okExitCodes.contains( String.valueOf( exitCode )))
             {
@@ -141,12 +143,12 @@ options         : $optsSplit
      * Generates Spring config file with properties specified
      * @return file location
      */
+    @Requires({ propertiesValue })
+    @Ensures({ result })
     private String propertiesConfigLocation( String propertiesValue )
     {
-        verify().notNullOrEmpty( propertiesValue )
-
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
-        def lines      = propertiesValue.splitWith( 'eachLine', String ).collect { it.trim().replace( '\\', '/' ) }
+        def lines      = propertiesValue.readLines().collect { it.trim().replace( '\\', '/' ) }
         def properties = [ '', *lines ].join( "${ constants().CRLF }${ ' ' * 16 }" )
         def text       = makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 

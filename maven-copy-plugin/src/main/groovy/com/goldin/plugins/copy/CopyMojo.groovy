@@ -1,6 +1,5 @@
 package com.goldin.plugins.copy
 
-import static com.goldin.gcommons.GCommons.*
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import com.goldin.gcommons.util.GroovyConfig
@@ -16,6 +15,7 @@ import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.jfrog.maven.annomojo.annotations.*
+import org.gcontracts.annotations.*
 
 
 /**
@@ -69,8 +69,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      */
     @MojoParameter ( required = false )
     public String  defaultExcludes =
-        ( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
-          FileUtils.defaultExcludes as List ).join( ',' )
+        (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
+           file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).join( ',' )
 
     @MojoParameter ( required = false )
     public  boolean verbose = true
@@ -86,6 +86,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
     @MojoParameter ( required = false )
     public  boolean useTrueZipForUnpack = true
+
+    @MojoParameter ( required = false )
+    public  String nonFilteredExtensions
 
     @MojoParameter ( required = false )
     public  CopyResource[] resources
@@ -234,8 +237,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                      */
                     if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
                     {
-                        excludes = ( excludes ?: [] ) +
-                                   ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep()
+                        excludes = ( excludes ?: [] ) + split(( resource.defaultExcludes ?: defaultExcludes ))
                     }
 
                     if ( isUpload )
@@ -329,8 +331,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                                              File                 outputDirectory = constants().USER_DIR_FILE,
                                                              boolean              stripVersion    = false )
     {
-        verify().notNullOrEmpty( dependencies )
-        verify().directory( outputDirectory )
+        assert dependencies && outputDirectory.directory
 
         ( Collection<CopyDependency> ) dependencies.
         collect {
@@ -355,7 +356,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
                 else
                 {
-                    throw new RuntimeException( "Failed to resolve dependency [$d]: $e", e )
+                    throw new MojoExecutionException( "Failed to resolve dependency [$d]", e )
                 }
             }
         }.
@@ -383,9 +384,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         for ( pattern in patterns*.trim().findAll { it })
         {
             newPatterns.addAll(
-                pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()            :
+                pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()      :
                 pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
-                pattern.contains( ',' )            ? pattern.split( ',' )*.trim().grep()                                                 :
+                pattern.contains( ',' )            ? split( pattern )                                                                     :
                                                      [ pattern ] )
         }
 
@@ -403,6 +404,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         whether verbose logging should be used when file is copied
      * @param failIfNotFound  whether execution should fail if no files were matched
      */
+    @Requires({ resource })
     private CopyResource handleResource ( CopyResource resource,
                                           File         sourceDirectory,
                                           List<String> includes        = null,
@@ -410,7 +412,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                           boolean      verbose         = true,
                                           boolean      failIfNotFound  = true )
     {
-        verify().notNull( resource )
         def zipEntries = resource.zipEntries() as List
 
         if ( zipEntries      ) { assert resource.unpack, '<zipEntry> or <zipEntries> can only be used with <unpack>true</unpack>' }
@@ -458,7 +459,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     }
                     else
                     {
-                        File fileCopied = copy( resource, sourceDirectory, file, targetPath, verbose )
+                        File fileCopied = copyResource( resource, sourceDirectory, file, targetPath, verbose )
                         if ( fileCopied ) { filesToProcess << fileCopied }
                     }
                 }
@@ -484,11 +485,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @return file copied if copying was performed, null otherwise
      */
-    private File copy( CopyResource resource,
-                       File         sourceDirectory,
-                       File         sourceFile,
-                       File         targetPath,
-                       boolean      verbose )
+    private File copyResource ( CopyResource resource,
+                                File         sourceDirectory,
+                                File         sourceFile,
+                                File         targetPath,
+                                boolean      verbose )
     {
         assert ! net().isNet( sourceDirectory.path )
         assert ! net().isNet( targetPath.path )
@@ -507,17 +508,19 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             filePath = filePath.substring( 0, filePath.lastIndexOf( sourceFile.name )) + resource.destFileName
         }
 
-        File  targetFile = new File( filePath )
-
-        copy( sourceFile,
-              targetFile,
-              skipIdentical,
-              resource.replaces(),
-              resource.filtering,
-              resource.encoding,
-              fileFilter,
-              verbose,
-              resource.move ) ? verify().file( targetFile ) : null
+        File         targetFile            = new File( filePath )
+        List<String> nonFilteredExtensions = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ))
+        boolean      filtering             = ( ! nonFilteredExtensions.contains( file().extension( sourceFile ))) &&
+                                             resource.filtering
+        copyFile( sourceFile,
+                  targetFile,
+                  skipIdentical,
+                  resource.replaces(),
+                  filtering,
+                  resource.encoding,
+                  fileFilter,
+                  verbose,
+                  resource.move ) ? verify().file( targetFile ) : null
     }
 
 
@@ -565,7 +568,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         file().pack( filesDirectory, targetPath, includes, excludes,
                      general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                      failIfNotFound, resource.update,
-                     ( resource.defaultExcludes ?: defaultExcludes ).split( ',' )*.trim().grep() as List,
+                     split(( resource.defaultExcludes ?: defaultExcludes )),
                      resource.destFileName, resource.prefix )
 
         if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
@@ -583,13 +586,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( resource.deploy )
         {
-            String[] data = resource.deploy.split( /\|/ )
+            String[] data = split( resource.deploy, '|' )
 
             assert data?.size()?.with{( it == 3 ) || ( it == 4 )}, \
                    "Failed to split <deploy> tag data [$resource.deploy]. " +
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 
-            def ( String url, String groupId, String artifactId, String version ) = data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
+            def ( String url, String groupId, String artifactId, String version ) =
+                data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
             def classifier = (( data.size() == 4 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
 
             deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
