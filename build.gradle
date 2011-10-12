@@ -1,0 +1,29 @@
+
+apply plugin: 'groovy'
+
+/**
+ * CodeNarc runner task
+ */
+
+def groovyModules = '''
+duplicates-finder-plugin
+groovydoc
+maven-about-plugin
+maven-assert-plugin
+maven-common
+maven-copy-plugin
+maven-find-plugin
+maven-jenkins-plugin
+maven-mail-plugin
+maven-properties-plugin
+maven-spring-batch-plugin
+maven-sshexec-plugin
+maven-timestamp-plugin
+'''
+
+codenarcRuleSetFiles        = [ 'codenarc.groovy' ]
+codenarcPriority1Violations = 0   // Work in progress ..
+codenarcPriority2Violations = 251 // ~~~~~~~~~~~~~~~~~~~
+codenarcPriority3Violations = 156 // http://evgeny-goldin.org/youtrack/issue/pl-435
+codenarcSources             = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
+apply from: 'https://raw.github.com/evgeny-goldin/gradle-plugins/dev/src/main/groovy/CodeNarc.gradle'

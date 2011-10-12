@@ -1,4 +1,7 @@
 *.iml
 *.ipr
 *.iws
+.gradle
 target
+build
+codenarc.html
