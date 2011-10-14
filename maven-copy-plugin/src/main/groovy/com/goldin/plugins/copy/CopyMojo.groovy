@@ -70,7 +70,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( required = false )
     public String  defaultExcludes =
         (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
-           file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).join( ',' )
+           file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
 
     @MojoParameter ( required = false )
     public  boolean verbose = true
@@ -169,8 +169,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 boolean verbose         = general().choose( resource.verbose,        verbose        )
                 boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
                 boolean resourceHandled = false
-                resource.includes       = helper.updatePatterns( new File( resource.directory ), resource.includes, resource.encoding )
-                resource.excludes       = helper.updatePatterns( new File( resource.directory ), resource.excludes, resource.encoding )
+                resource.includes       = helper.updatePatterns( resource.directory, resource.includes, resource.encoding )
+                resource.excludes       = helper.updatePatterns( resource.directory, resource.excludes, resource.encoding )
 
                 if ( resource.mkdir || resource.directory )
                 {

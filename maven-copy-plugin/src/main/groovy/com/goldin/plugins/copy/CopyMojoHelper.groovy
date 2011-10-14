@@ -1,12 +1,13 @@
 package com.goldin.plugins.copy
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.gcontracts.annotations.Requires
-import static com.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.shared.artifact.filter.collection.*
+
 
 /**
  * {@link CopyMojo} helper class.
@@ -30,7 +31,7 @@ final class CopyMojoHelper
      * @return updated patterns list
      */
     @Requires({ directory && encoding })
-    protected List<String> updatePatterns( File directory, List<String> patterns, String encoding )
+    protected List<String> updatePatterns( String directory, List<String> patterns, String encoding )
     {
         if ( ! patterns ) { return patterns }
 
@@ -38,12 +39,13 @@ final class CopyMojoHelper
             String pattern ->
             pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()      :
             pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
-            pattern.contains( ',' )            ? split( pattern ) : [ pattern ]
+            pattern.contains( ',' )            ? split( pattern ) :
+                                                 pattern
         }.
         flatten().
         collect {
             String pattern ->
-            new File( directory, pattern ).directory ? "$pattern/**" : pattern
+            ( directory && new File( directory, pattern ).directory ) ? "$pattern/**" : pattern
         }
     }
 
