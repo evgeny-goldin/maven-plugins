@@ -16,14 +16,9 @@ import org.springframework.core.io.ClassPathResource
  */
 @MojoGoal  ( 'run' )
 @MojoPhase ( 'install' )
-@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier' ] )
+@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class SpringBatchMojo extends BaseGroovyMojo
 {
-    SpringBatchMojo ()
-    {
-    }
-
-
    /**
     * Comma-separated Spring context files
     */
@@ -108,7 +103,7 @@ class SpringBatchMojo extends BaseGroovyMojo
             def n        = (( index < ( configLocationsSplit.size() - 1 )) ? constants().CRLF : '' )
             def location = ( configLocation.startsWith( 'classpath:' ) ?
                                 new ClassPathResource( configLocation.substring( 'classpath:'.length())).URL :
-                                null );
+                                null )
             builder += ( " * [$configLocation]${ location ? ' - [' + location + ']' : '' }$n" )
         }
 
@@ -131,7 +126,7 @@ options         : $optsSplit
                 throw new MojoFailureException(
                     "Job [${ jobId() }] exit code is [$exitCode], " +
                     (( okExitCodes.size() == 1 ) ? "not [${ okExitCodes.first() }]" :
-                                                   "none of $okExitCodes" ));
+                                                   "none of $okExitCodes" ))
             }
         }
 

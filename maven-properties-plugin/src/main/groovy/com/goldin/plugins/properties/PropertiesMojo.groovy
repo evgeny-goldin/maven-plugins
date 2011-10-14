@@ -12,7 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class PropertiesMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )

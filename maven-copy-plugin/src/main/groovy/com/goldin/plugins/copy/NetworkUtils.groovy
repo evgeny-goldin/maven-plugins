@@ -314,8 +314,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                      */
                     newList                  = false
                     List<String> sessionList = listFile.readLines() - previousList.readLines()
-                    excludes +=  sessionList.collect{ // "ftp://server//path/to/file|size" => "path/to/file"
-                                                      it.replaceAll( /^ftp:\/\/[^\/]+\/+|\|\d+$/, '' ) }
+                    excludes += sessionList*.replaceAll( /^ftp:\/\/[^\/]+\/+|\|\d+$/, '' ) // "ftp://server//path/to/file|size" => "path/to/file"
 
                     log.info( "Files listed in this session are added to excludes: ${ constants().CRLF }${ stars( sessionList ) }" )
                 }

@@ -15,7 +15,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
  * Base GroovyMojo class
  */
 @SuppressWarnings( 'StatelessClass' )
-@SuppressWarnings( 'PublicInstanceField' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     @MojoParameter ( expression = '${project}', required = true )

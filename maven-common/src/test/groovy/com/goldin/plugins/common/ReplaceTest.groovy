@@ -9,8 +9,8 @@ import org.junit.Test
  */
 class ReplaceTest
 {
-    def String MAIL         = 'someone@somewhere.com'
-    def String MAIL_PATTERN = /(\w+)@(\w+)\.(\w+)/
+    private static final String MAIL         = 'someone@somewhere.com'
+    private static final String MAIL_PATTERN = /(\w+)@(\w+)\.(\w+)/
 
 
     ReplaceTest ()
@@ -53,6 +53,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReturnEmptyStringWhenNoFromNoTo()
     {
         replace( '', new Replace(), '' )
@@ -60,6 +61,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceAllInputWhenNoFrom()
     {
         replace( '',              new Replace( to: 'aaa' ), 'aaa' )
@@ -71,6 +73,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenFromAndTo()
     {
         replace( '123456789',         new Replace( from: /\d/,     to: '!' ), '!' * 9 )
@@ -83,6 +86,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenReference()
     {
         replace( 'aaa{bbb}ccc{ddd}',
@@ -115,6 +119,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenReferenceAndQuote()
     {
         replace( MAIL, new Replace( from            : MAIL_PATTERN,
@@ -139,6 +144,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenEscape()
     {
         replace( MAIL, new Replace( from     : MAIL_PATTERN,
@@ -174,6 +180,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenEscapeAndQuote()
     {
         replace( MAIL, new Replace( from            : MAIL_PATTERN,
@@ -194,6 +201,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenAddDollar()
     {
         replace( 'aaa{bbb}ccc{ddd}', new Replace( from     : /\w+/,
@@ -256,6 +264,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceWhenReplaceAll()
     {
         replace( 'aaabbbcccddd', new Replace( from      : /\w/,
@@ -303,6 +312,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldFailIfNotFound()
     {
         replace( 'aaabbbcccddd', new Replace( from : /\d/,
@@ -329,6 +339,7 @@ class ReplaceTest
 
 
     @Test
+    @SuppressWarnings( 'JUnitTestMethodWithoutAssert' )
     void shouldReplaceGroovy()
     {
         replace( 'aaabb454641bcccddd', new Replace( from : /\d+/, to : 'qwe {{ 1 + 2 }} rty' ),

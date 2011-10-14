@@ -20,7 +20,7 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoGoal ( 'find-duplicates' )
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class DuplicatesFinderMojo extends BaseGroovyMojo
 {
     /**

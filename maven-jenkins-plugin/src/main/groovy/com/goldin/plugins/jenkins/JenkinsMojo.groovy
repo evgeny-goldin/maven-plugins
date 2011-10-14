@@ -14,14 +14,9 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal ( 'generate' )
 @MojoPhase ( 'compile' )
-@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier' ] )
+@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class JenkinsMojo extends BaseGroovyMojo
 {
-    JenkinsMojo ()
-    {
-    }
-
-
     @MojoParameter ( required = true )
     public String jenkinsUrl
     public String jenkinsUrl() { verify().notNullOrEmpty( this.jenkinsUrl ) }

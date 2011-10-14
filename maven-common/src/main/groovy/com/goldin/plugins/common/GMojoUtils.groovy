@@ -83,7 +83,11 @@ class GMojoUtils
      * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
      * @return instance of {@code OutputStream} ignoring everything that is written to it
      */
-    static OutputStream devNullOutputStream () { new OutputStream() { void write( int b ) {}}}
+    static OutputStream devNullOutputStream () { new OutputStream() {
+        @Override
+        @SuppressWarnings( 'EmptyMethod' )
+        void write( int b ) {}
+    }}
 
 
     /**

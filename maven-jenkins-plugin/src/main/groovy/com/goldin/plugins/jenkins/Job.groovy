@@ -35,7 +35,7 @@ class Job
     static enum JOB_TYPE
     {
         free  ( 'Free-Style' ),
-        maven ( 'Maven'      );
+        maven ( 'Maven'      )
 
         final String description
         JOB_TYPE ( String description ) { this.description = description }
@@ -117,7 +117,7 @@ class Job
         /**
          * Local repo should never have any illegal characters in it since it becomes a folder name later
          */
-        this.localRepo = fixIllegalChars( localRepo, "Local repo" )
+        this.localRepo = fixIllegalChars( localRepo, 'Local repo' )
     }
 
     String               mavenGoals
@@ -331,7 +331,7 @@ class Job
          assert this.id,            "[${ this }] $NOT_CONFIGURED: missing <id>"
          assert this.jenkinsUrl,    "[${ this }] $NOT_CONFIGURED: missing <jenkinsUrl>"
          assert this.generationPom, "[${ this }] $NOT_CONFIGURED: missing <generationPom>"
-         assert this.getScmClass(), "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
+         assert this.scmClass,      "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
          assert this.description,   "[${ this }] $NOT_CONFIGURED: missing <description>"
          assert this.scmType,       "[${ this }] $NOT_CONFIGURED: missing <scmType>"
          assert this.jobType,       "[${ this }] $NOT_CONFIGURED: missing <jobType>"

@@ -18,7 +18,7 @@ import javax.mail.Message.RecipientType
  */
 @MojoGoal( 'send' )
 @MojoPhase( 'install' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class MailMojo extends BaseGroovyMojo
 {
     @MojoParameter
@@ -41,11 +41,6 @@ class MailMojo extends BaseGroovyMojo
 
     @MojoParameter
     public File[] files
-
-
-    MailMojo ()
-    {
-    }
 
 
     @Override

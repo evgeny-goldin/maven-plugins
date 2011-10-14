@@ -16,7 +16,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'create-about' )
 @MojoPhase( 'package' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class AboutMojo extends BaseGroovyMojo
 {
     public static final String SEPARATOR = '|==============================================================================='

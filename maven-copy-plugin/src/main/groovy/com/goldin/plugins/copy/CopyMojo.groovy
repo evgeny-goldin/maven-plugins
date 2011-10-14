@@ -24,7 +24,7 @@ import org.gcontracts.annotations.*
 @MojoGoal( 'copy' )
 @MojoPhase( 'package' )
 @MojoRequiresDependencyResolution( 'test' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField' ] )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.CopyMojo
 {
     @MojoComponent

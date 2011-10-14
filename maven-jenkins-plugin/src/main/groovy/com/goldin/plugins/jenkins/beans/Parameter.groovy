@@ -4,10 +4,10 @@ package com.goldin.plugins.jenkins.beans
 enum  ParameterType { bool, choice, string, password, run, file, jira }
 class Parameter
 {
-    String        name        = "UNDEFINED"
+    String        name        = 'UNDEFINED'
     ParameterType type        = null
-    String        value       = ""
-    String        description = ""
+    String        value       = ''
+    String        description = ''
 
     void setType( String type ) { this.type = ParameterType.valueOf( type ) }
 

@@ -22,6 +22,7 @@ class RepositoryTest
      *
      * @param fileName name of the file to read
      */
+    @SuppressWarnings( 'UnnecessaryDotClass' )
     private static List<String> read( String fileName )
     {
         def    stream = RepositoryTest.class.getResourceAsStream( "/$fileName" )

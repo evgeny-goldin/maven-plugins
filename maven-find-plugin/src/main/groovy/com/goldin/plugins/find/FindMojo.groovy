@@ -12,7 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'find' )
 @MojoPhase( 'validate' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class FindMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = true )
@@ -29,11 +29,6 @@ class FindMojo extends BaseGroovyMojo
 
     @MojoParameter
     public boolean failIfNotFound = true
-
-
-    FindMojo ()
-    {
-    }
 
 
     /**

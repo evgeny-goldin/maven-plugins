@@ -8,6 +8,7 @@ import java.util.regex.Pattern
 /**
  * <replace> data container
  */
+@SuppressWarnings( 'StatelessClass' )
 class Replace
 {
     /**
@@ -16,10 +17,6 @@ class Replace
      * @see #replaceAll
      */
     private static final Pattern GROOVY_EXPRESSION_PATTERN = ~/\{\{(.*?)\}\}/
-
-    Replace ()
-    {
-    }
 
     String  from                          // "From" Regexp pattern
     String  to                            // "To" value to replace the data matched with {@link #from}
@@ -44,7 +41,8 @@ class Replace
      *         <code>pattern</code> is {@code Pattern.compile( getFrom())} and
      *         <code>replacement</code> is {@code quoteReplacement() ? Matcher.quoteReplacement( getTo()) : getTo()}
      */
-    public String replace( String data, String filePath = '' )
+    @SuppressWarnings( [ 'ConfusingTernary', 'UnnecessarySemicolon' ] )
+    String replace( String data, String filePath = '' )
     {
         String result = ( to                     ? to   :  // If we have <to>, then replacement starts with it
                         ( 'false' != addDollar ) ? data :  // If we have no <to> but <addDollar>, replacement starts with data specified

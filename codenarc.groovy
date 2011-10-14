@@ -13,6 +13,8 @@ ruleset {
         BracesForForLoop         ( enabled : false )
         BracesForTryCatchFinally ( enabled : false )
         JavaIoPackageAccess      ( enabled : false )
+        ConfusingMethodName      ( enabled : false )
+        UnnecessarySubstring     ( enabled : false )
 
         LineLength               ( length  : 160   )
         MethodName               ( regex   : /[a-z][\w\s'\(\)]*/ ) // Spock method names

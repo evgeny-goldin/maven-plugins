@@ -16,7 +16,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal( 'sshexec' )
 @MojoPhase( 'install' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class SshexecMojo extends BaseGroovyMojo
 {
     /**
@@ -63,11 +63,6 @@ class SshexecMojo extends BaseGroovyMojo
                             flatten()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).flatten().grep()
-    }
-
-
-    SshexecMojo ()
-    {
     }
 
 

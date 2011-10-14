@@ -23,37 +23,37 @@ package com.goldin.plugins.springbatch
  * limitations under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
-import org.springframework.batch.core.JobParameter;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersIncrementer;
-import org.springframework.batch.core.configuration.JobLocator;
-import org.springframework.batch.core.converter.DefaultJobParametersConverter;
-import org.springframework.batch.core.converter.JobParametersConverter;
-import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.core.launch.JobExecutionNotFailedException;
-import org.springframework.batch.core.launch.JobExecutionNotRunningException;
-import org.springframework.batch.core.launch.JobExecutionNotStoppedException;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.launch.JobParametersNotFoundException;
-import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.beans.factory.BeanDefinitionStoreException;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.util.Assert;
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
+import org.springframework.batch.core.BatchStatus
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.Job
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.JobInstance
+import org.springframework.batch.core.JobParameter
+import org.springframework.batch.core.JobParameters
+import org.springframework.batch.core.JobParametersIncrementer
+import org.springframework.batch.core.configuration.JobLocator
+import org.springframework.batch.core.converter.DefaultJobParametersConverter
+import org.springframework.batch.core.converter.JobParametersConverter
+import org.springframework.batch.core.explore.JobExplorer
+import org.springframework.batch.core.launch.JobExecutionNotFailedException
+import org.springframework.batch.core.launch.JobExecutionNotRunningException
+import org.springframework.batch.core.launch.JobExecutionNotStoppedException
+import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.JobParametersNotFoundException
+import org.springframework.batch.core.repository.JobRepository
+import org.springframework.beans.factory.BeanDefinitionStoreException
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory
+import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.support.ClassPathXmlApplicationContext
+import org.springframework.util.Assert
 import org.springframework.util.StringUtils
 import org.springframework.batch.core.launch.support.ExitCodeMapper
 import org.springframework.batch.core.launch.support.CommandLineJobRunner
 import org.springframework.batch.core.launch.support.SimpleJvmExitCodeMapper
 import org.springframework.batch.core.launch.support.SystemExiter
-import org.springframework.batch.core.launch.support.JvmSystemExiter;
+import org.springframework.batch.core.launch.support.JvmSystemExiter
 
 /**
  * <p>
@@ -157,9 +157,10 @@ import org.springframework.batch.core.launch.support.JvmSystemExiter;
  * @author Lucas Ward
  * @since 1.0
  */
-public class GoldinCommandLineJobRunner
+@SuppressWarnings( 'StatelessClass' )
+class GoldinCommandLineJobRunner
 {
-    protected static final Log logger = LogFactory.getLog( GoldinCommandLineJobRunner )
+    private static final Log LOGGER = LogFactory.getLog( GoldinCommandLineJobRunner )
 
     private ExitCodeMapper exitCodeMapper = new SimpleJvmExitCodeMapper()
 
@@ -170,7 +171,7 @@ public class GoldinCommandLineJobRunner
     // Package private for unit test
     private static SystemExiter systemExiter = new JvmSystemExiter()
 
-    private static String message = ""
+    private static String message = ''
 
     private JobParametersConverter jobParametersConverter = new DefaultJobParametersConverter()
 
@@ -183,14 +184,14 @@ public class GoldinCommandLineJobRunner
      *
      * @param launcher the launcher to set
      */
-    public void setLauncher(JobLauncher launcher) {
+    void setLauncher(JobLauncher launcher) {
         this.launcher = launcher
     }
 
     /**
      * @param jobRepository the jobRepository to set
      */
-    public void setJobRepository(JobRepository jobRepository) {
+    void setJobRepository(JobRepository jobRepository) {
         this.jobRepository = jobRepository
     }
 
@@ -199,7 +200,7 @@ public class GoldinCommandLineJobRunner
      *
      * @param jobExplorer the {@link JobExplorer} to set
      */
-    public void setJobExplorer(JobExplorer jobExplorer) {
+    void setJobExplorer(JobExplorer jobExplorer) {
         this.jobExplorer = jobExplorer
     }
 
@@ -208,7 +209,7 @@ public class GoldinCommandLineJobRunner
      *
      * @param exitCodeMapper the exitCodeMapper to set
      */
-    public void setExitCodeMapper(ExitCodeMapper exitCodeMapper) {
+    void setExitCodeMapper(ExitCodeMapper exitCodeMapper) {
         this.exitCodeMapper = exitCodeMapper
     }
 
@@ -219,7 +220,7 @@ public class GoldinCommandLineJobRunner
      *
      * @param systemExitor
      */
-    public static void presetSystemExiter(SystemExiter systemExiter) {
+    static void presetSystemExiter(SystemExiter systemExiter) {
         GoldinCommandLineJobRunner.systemExiter = systemExiter
     }
 
@@ -230,16 +231,14 @@ public class GoldinCommandLineJobRunner
      *
      * @return the error message
      */
-    public static String getErrorMessage() {
-        return message
-    }
+    static String getErrorMessage() { message }
 
     /**
      * Injection setter for the {@link SystemExiter}.
      *
      * @param systemExitor
      */
-    public void setSystemExiter(SystemExiter systemExiter) {
+    void setSystemExiter(SystemExiter systemExiter) {
         GoldinCommandLineJobRunner.systemExiter = systemExiter
     }
 
@@ -248,7 +247,7 @@ public class GoldinCommandLineJobRunner
      *
      * @param jobParametersConverter
      */
-    public void setJobParametersConverter(JobParametersConverter jobParametersConverter) {
+    void setJobParametersConverter(JobParametersConverter jobParametersConverter) {
         this.jobParametersConverter = jobParametersConverter
     }
 
@@ -257,7 +256,7 @@ public class GoldinCommandLineJobRunner
      *
      * @param status
      */
-    public void exit(int status) {
+    void exit(int status) {
         systemExiter.exit(status)
     }
 
@@ -265,7 +264,7 @@ public class GoldinCommandLineJobRunner
      * {@link JobLocator} to find a job to run.
      * @param jobLocator a {@link JobLocator}
      */
-    public void setJobLocator(JobLocator jobLocator) {
+    void setJobLocator(JobLocator jobLocator) {
         this.jobLocator = jobLocator
     }
 
@@ -285,55 +284,54 @@ public class GoldinCommandLineJobRunner
 
         try {
             context = new ClassPathXmlApplicationContext(jobPaths)
-            context.getAutowireCapableBeanFactory().autowireBeanProperties(this,
-                    AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false)
+            context.autowireCapableBeanFactory.autowireBeanProperties(this, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false)
 
-            Assert.state(launcher != null, "A JobLauncher must be provided.  Please add one to the configuration.")
-            if (opts.contains("-restart") || opts.contains("-next")) {
+            Assert.state(launcher != null, 'A JobLauncher must be provided.  Please add one to the configuration.')
+            if (opts.contains('-restart') || opts.contains('-next')) {
                 Assert.state(jobExplorer != null,
-                        "A JobExplorer must be provided for a restart or start next operation.  Please add one to the configuration.")
+                        'A JobExplorer must be provided for a restart or start next operation.  Please add one to the configuration.')
             }
 
             String jobName = jobIdentifier
 
             JobParameters jobParameters = jobParametersConverter.getJobParameters(StringUtils
-                    .splitArrayElementsIntoProperties(parameters, "="))
+                    .splitArrayElementsIntoProperties(parameters, '='))
             Assert.isTrue(parameters == null || parameters.length == 0 || !jobParameters.isEmpty(),
-                    "Invalid JobParameters " + Arrays.asList(parameters)
-                            + ". If parameters are provided they should be in the form name=value (no whitespace).")
+                    'Invalid JobParameters ' + Arrays.asList(parameters)
+                            + '. If parameters are provided they should be in the form name=value (no whitespace).')
 
-            if (opts.contains("-stop")) {
+            if (opts.contains('-stop')) {
                 List<JobExecution> jobExecutions = getRunningJobExecutions(jobIdentifier)
                 if (jobExecutions == null) {
-                    throw new JobExecutionNotRunningException("No running execution found for job=" + jobIdentifier)
+                    throw new JobExecutionNotRunningException('No running execution found for job=' + jobIdentifier)
                 }
                 for (JobExecution jobExecution : jobExecutions) {
-                    jobExecution.setStatus(BatchStatus.STOPPING)
+                    jobExecution.status = BatchStatus.STOPPING
                     jobRepository.update(jobExecution)
                 }
-                return exitCodeMapper.intValue(ExitStatus.COMPLETED.getExitCode())
+                return exitCodeMapper.intValue(ExitStatus.COMPLETED.exitCode)
             }
 
-            if (opts.contains("-abandon")) {
+            if (opts.contains('-abandon')) {
                 List<JobExecution> jobExecutions = getStoppedJobExecutions(jobIdentifier)
                 if (jobExecutions == null) {
-                    throw new JobExecutionNotStoppedException("No stopped execution found for job=" + jobIdentifier)
+                    throw new JobExecutionNotStoppedException('No stopped execution found for job=' + jobIdentifier)
                 }
                 for (JobExecution jobExecution : jobExecutions) {
-                    jobExecution.setStatus(BatchStatus.ABANDONED)
+                    jobExecution.status = BatchStatus.ABANDONED
                     jobRepository.update(jobExecution)
                 }
-                return exitCodeMapper.intValue(ExitStatus.COMPLETED.getExitCode())
+                return exitCodeMapper.intValue(ExitStatus.COMPLETED.exitCode)
             }
 
-            if (opts.contains("-restart")) {
+            if (opts.contains('-restart')) {
                 JobExecution jobExecution = getLastFailedJobExecution(jobIdentifier)
                 if (jobExecution == null) {
-                    throw new JobExecutionNotFailedException("No failed or stopped execution found for job="
+                    throw new JobExecutionNotFailedException('No failed or stopped execution found for job='
                             + jobIdentifier)
                 }
-                jobParameters = jobExecution.getJobInstance().getJobParameters()
-                jobName = jobExecution.getJobInstance().getJobName()
+                jobParameters = jobExecution.jobInstance.jobParameters
+                jobName = jobExecution.jobInstance.jobName
             }
 
             Job job
@@ -344,22 +342,22 @@ public class GoldinCommandLineJobRunner
                 job = (Job) context.getBean(jobName)
             }
 
-            if (opts.contains("-next")) {
+            if (opts.contains('-next')) {
                 JobParameters nextParameters = getNextJobParameters(job)
-                Map<String, JobParameter> map = new HashMap<String, JobParameter>(nextParameters.getParameters())
-                map.putAll(jobParameters.getParameters())
+                Map<String, JobParameter> map = new HashMap<String, JobParameter>(nextParameters.parameters)
+                map.putAll(jobParameters.parameters)
                 jobParameters = new JobParameters(map)
             }
 
             JobExecution jobExecution = launcher.run(job, jobParameters)
-            return exitCodeMapper.intValue(jobExecution.getExitStatus().getExitCode())
+            return exitCodeMapper.intValue(jobExecution.exitStatus.exitCode)
 
         }
         catch (Throwable e) {
-            String message = "Job Terminated in error: " + e.getMessage()
-            logger.error(message, e)
+            String message = 'Job Terminated in error: ' + e.message
+            LOGGER.error(message, e)
             GoldinCommandLineJobRunner.message = message
-            return exitCodeMapper.intValue(ExitStatus.FAILED.getExitCode())
+            return exitCodeMapper.intValue(ExitStatus.FAILED.exitCode)
         }
         finally {
             if (context != null) {
@@ -378,7 +376,7 @@ public class GoldinCommandLineJobRunner
         Long executionId = getLongIdentifier(jobIdentifier)
         if (executionId != null) {
             JobExecution jobExecution = jobExplorer.getJobExecution(executionId)
-            if (jobExecution.getStatus().isGreaterThan(minStatus)) {
+            if ( jobExecution.status.isGreaterThan(minStatus)) {
                 return Arrays.asList(jobExecution)
             }
             return Collections.emptyList()
@@ -386,7 +384,7 @@ public class GoldinCommandLineJobRunner
 
         int start = 0
         int count = 100
-        List<JobExecution> executions = new ArrayList<JobExecution>()
+        List<JobExecution> executions   = []
         List<JobInstance> lastInstances = jobExplorer.getJobInstances(jobIdentifier, start, count)
 
         while (!lastInstances.isEmpty()) {
@@ -397,7 +395,7 @@ public class GoldinCommandLineJobRunner
                     continue
                 }
                 for (JobExecution jobExecution : jobExecutions) {
-                    if (jobExecution.getStatus().isGreaterThan(minStatus)) {
+                    if ( jobExecution.status.isGreaterThan(minStatus)) {
                         executions.add(jobExecution)
                     }
                 }
@@ -408,7 +406,7 @@ public class GoldinCommandLineJobRunner
 
         }
 
-        return executions
+        executions
 
     }
 
@@ -417,35 +415,37 @@ public class GoldinCommandLineJobRunner
         if (jobExecutions.isEmpty()) {
             return null
         }
-        return jobExecutions.get(0)
+        jobExecutions.first()
     }
 
+    @SuppressWarnings( 'ReturnsNullInsteadOfEmptyCollection' )
     private List<JobExecution> getStoppedJobExecutions(String jobIdentifier) {
         List<JobExecution> jobExecutions = getJobExecutionsWithStatusGreaterThan(jobIdentifier, BatchStatus.STARTED)
-        if (jobExecutions.isEmpty()) {
+        if ( jobExecutions.empty ) {
             return null
         }
-        List<JobExecution> result = new ArrayList<JobExecution>()
+        List<JobExecution> result = []
         for (JobExecution jobExecution : jobExecutions) {
-            if (jobExecution.getStatus() != BatchStatus.ABANDONED) {
+            if ( jobExecution.status != BatchStatus.ABANDONED) {
                 result.add(jobExecution)
             }
         }
-        return result.isEmpty() ? null : result
+        result.empty ? null : result
     }
 
+    @SuppressWarnings( 'ReturnsNullInsteadOfEmptyCollection' )
     private List<JobExecution> getRunningJobExecutions(String jobIdentifier) {
         List<JobExecution> jobExecutions = getJobExecutionsWithStatusGreaterThan(jobIdentifier, BatchStatus.COMPLETED)
-        if (jobExecutions.isEmpty()) {
+        if (jobExecutions.empty) {
             return null
         }
-        List<JobExecution> result = new ArrayList<JobExecution>()
+        List<JobExecution> result = []
         for (JobExecution jobExecution : jobExecutions) {
             if (jobExecution.isRunning()) {
                 result.add(jobExecution)
             }
         }
-        return result.isEmpty() ? null : result
+        result.empty ? null : result
     }
 
     private Long getLongIdentifier(String jobIdentifier) {
@@ -464,26 +464,26 @@ public class GoldinCommandLineJobRunner
      * @throws JobParametersNotFoundException if there is a problem
      */
     private JobParameters getNextJobParameters(Job job) throws JobParametersNotFoundException {
-        String jobIdentifier = job.getName()
+        String jobIdentifier = job.name
         JobParameters jobParameters
         List<JobInstance> lastInstances = jobExplorer.getJobInstances(jobIdentifier, 0, 1)
 
-        JobParametersIncrementer incrementer = job.getJobParametersIncrementer()
+        JobParametersIncrementer incrementer = job.jobParametersIncrementer
         if (incrementer == null) {
-            throw new JobParametersNotFoundException("No job parameters incrementer found for job=" + jobIdentifier)
+            throw new JobParametersNotFoundException('No job parameters incrementer found for job=' + jobIdentifier)
         }
 
-        if (lastInstances.isEmpty()) {
+        if (lastInstances.empty) {
             jobParameters = incrementer.getNext(new JobParameters())
             if (jobParameters == null) {
-                throw new JobParametersNotFoundException("No bootstrap parameters found from incrementer for job="
+                throw new JobParametersNotFoundException('No bootstrap parameters found from incrementer for job='
                         + jobIdentifier)
             }
         }
         else {
-            jobParameters = incrementer.getNext(lastInstances.get(0).getJobParameters())
+            jobParameters = incrementer.getNext(lastInstances.first().jobParameters )
         }
-        return jobParameters
+        jobParameters
     }
 
     /**
@@ -514,7 +514,8 @@ public class GoldinCommandLineJobRunner
      * command line.
      * </p>
      */
-    public static void main(String[] args) throws Exception {
+    static void main(String[] args) throws Exception
+    {
 
         GoldinCommandLineJobRunner command = new GoldinCommandLineJobRunner()
 
@@ -522,25 +523,25 @@ public class GoldinCommandLineJobRunner
 
         if (System.in.available() > 0) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))
-            String line = " "
+            String line = ' '
             while (StringUtils.hasLength(line)) {
-                if (!line.startsWith("#") && StringUtils.hasText(line)) {
-                    logger.debug("Stdin arg: "+line)
+                if (!line.startsWith('#') && StringUtils.hasText(line)) {
+                    LOGGER.debug('Stdin arg: '+line)
                     newargs.add(line)
                 }
                 line = reader.readLine()
             }
         }
 
-        Set<String> opts = new HashSet<String>()
-        List<String> params = new ArrayList<String>()
+        Set<String>  opts   = [:] as Set
+        List<String> params = []
 
         int count = 0
         String jobPath = null
         String jobIdentifier = null
 
         for (String arg : newargs) {
-            if (arg.startsWith("-")) {
+            if (arg.startsWith('-')) {
                 opts.add(arg)
             }
             else {
@@ -560,8 +561,8 @@ public class GoldinCommandLineJobRunner
         }
 
         if (jobPath == null || jobIdentifier == null) {
-            String message = "At least 2 arguments are required: JobPath and jobIdentifier."
-            logger.error(message)
+            String message = 'At least 2 arguments are required: JobPath and jobIdentifier.'
+            LOGGER.error(message)
             GoldinCommandLineJobRunner.message = message
             command.exit(1)
         }

@@ -12,14 +12,9 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  */
 @MojoGoal  ( 'assert' )
 @MojoPhase ( 'install' )
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class AssertMojo extends BaseGroovyMojo
 {
-    AssertMojo ()
-    {
-    }
-
-
    /**
     * Multi-line parameter.
     * Each line - name of the Maven property to verify for existence.

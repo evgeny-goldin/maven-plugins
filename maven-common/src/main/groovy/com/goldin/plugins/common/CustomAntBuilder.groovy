@@ -1,18 +1,16 @@
-package com.goldin.plugins.common;
+package com.goldin.plugins.common
 
 
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 
 /**
- * {@link groovy.util.AntBuilder} extension to override a definition of "ftp" task
- * to
- * {@link com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP}
+ * {@link AntBuilder} extension to override a definition of "ftp" task to {@link FTP}
  */
-public class CustomAntBuilder extends AntBuilder
+class CustomAntBuilder extends AntBuilder
 {
-    public CustomAntBuilder ()
+    CustomAntBuilder ()
     {
         super()
-        project.addTaskDefinition( "ftp", FTP )
+        project.addTaskDefinition( 'ftp', FTP )
     }
 }
