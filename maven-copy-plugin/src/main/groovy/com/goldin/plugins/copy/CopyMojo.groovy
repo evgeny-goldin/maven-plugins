@@ -158,11 +158,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         this.resolver    = artifactResolver
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
-        def e            = { String s -> s.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }}
+        def groovyEval   = { String s -> s.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }}
 
         for ( CopyResource resource in resources())
         {
-            if ( resource.description ) { log.info( "==> Processing <resource> [${ e( resource.description )}]" )}
+            if ( resource.description ) { log.info( "==> Processing <resource> [${ groovyEval( resource.description )}]" )}
             if ( runIf( resource.runIf ))
             {
                 long    t               = System.currentTimeMillis()
@@ -188,7 +188,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
                 if ( resource.description )
                 {
-                    log.info( "==> <resource> [${ e( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
+                    log.info( "==> <resource> [${ groovyEval( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
                 }
             }
         }
@@ -443,14 +443,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, verbose, failIfNotFound )
             }
             else if ( sourceDirectory /* null when mkdir is performed */ )
-            {   /**
-                 * Taking each <include> separately to make sure it doesn't come out empty
-                 * (if we take all <includes> at once and some patterns come empty - no exception will be thrown)
-                 */
-                def files = []
-                if ( includes ) { includes.each{ files.addAll( file().files( sourceDirectory, [ it ], excludes, true, false, failIfNotFound )) }}
-                else            {                files.addAll( file().files( sourceDirectory, null,   excludes, true, false, failIfNotFound ))  }
-
+            {
+                def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
                 for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
                 {
                     if ( resource.unpack )
@@ -459,7 +453,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     }
                     else
                     {
-                        File fileCopied = copyResource( resource, sourceDirectory, file, targetPath, verbose )
+                        File fileCopied = copyResourceFile( resource, sourceDirectory, file, targetPath, verbose )
                         if ( fileCopied ) { filesToProcess << fileCopied }
                     }
                 }
@@ -485,11 +479,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @return file copied if copying was performed, null otherwise
      */
-    private File copyResource ( CopyResource resource,
-                                File         sourceDirectory,
-                                File         sourceFile,
-                                File         targetPath,
-                                boolean      verbose )
+    private File copyResourceFile ( CopyResource resource,
+                                    File         sourceDirectory,
+                                    File         sourceFile,
+                                    File         targetPath,
+                                    boolean      verbose )
     {
         assert ! net().isNet( sourceDirectory.path )
         assert ! net().isNet( targetPath.path )
@@ -733,34 +727,29 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                boolean    verbose,
                                boolean    failIfNotFound )
     {
-        if  (( ! failIfNotFound ) && ( ! files ))
+        if  ( files && filterExpression )
         {
-            // Do not "failIfNotFound" and no files found
-            return files
+            verify().exists( *files )
+
+            String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
+            Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', files.first())
+            Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
+                                              ( o instanceof Collection ) ? (( Collection<File> ) o ) :
+                                                                            null )
+            assert ( filesIncluded != null ), \
+                   "Executing Groovy expression [$expression] produced [$o] of type [${ o.class.name }]. " +
+                   'It should be an instance of File or Collection<File>.'
+
+            if ( verbose )
+            {
+                log.info( "Files left after applying <filter>:${ constants().CRLF }${ stars( filesIncluded ) }" )
+            }
+
+            return filesIncluded as List
         }
 
-        verify().exists( files as File[] )
-
-        if ( ! filterExpression )
-        {
-            return files
-        }
-
-        String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
-        Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', ( files ? files.first() : null ))
-        Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
-                                          ( o instanceof Collection ) ? (( Collection<File> ) o ) :
-                                                                        null )
-        assert ( filesIncluded != null ), \
-               "Executing Groovy expression [$expression] produced [$o] of type [${ o.class.name }]. " +
-               'It should be an instance of File or Collection<File>.'
-
-        if ( verbose )
-        {
-            log.info( "Files left after applying <filter>:${ constants().CRLF }${ stars( filesIncluded ) }" )
-        }
-
-        filesIncluded
+        assert (( files ) || ( ! failIfNotFound )) // If not files are found - it should be handled by GCommons already
+        files
     }
 
 
@@ -773,19 +762,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      */
     private void process( List<File> files, String processExpression )
     {
-        if ( ! files )
+        if ( files && processExpression )
         {   /**
-             * There may be no files to process if all of them were skipped
-             * ("skipIdentical" calculated to "true" for specific <resource>)
+             * There may be no files to process if all of them were skipped due to "skipIdentical"
              */
-            return
-        }
-
-        verify().exists( files as File[] )
-
-        if ( processExpression )
-        {
-            eval( processExpression, null, groovyConfig, 'files', files, 'file', ( files ? files.first() : null ))
+            verify().exists( *files )
+            eval( processExpression, null, groovyConfig, 'files', files, 'file', files.first())
         }
     }
 }
