@@ -169,9 +169,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 boolean verbose         = general().choose( resource.verbose,        verbose        )
                 boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
                 boolean resourceHandled = false
-
-                resource.includes = update( resource.includes, resource.encoding )
-                resource.excludes = update( resource.excludes, resource.encoding )
+                resource.includes       = helper.updatePatterns( new File( resource.directory ), resource.includes, resource.encoding )
+                resource.excludes       = helper.updatePatterns( new File( resource.directory ), resource.excludes, resource.encoding )
 
                 if ( resource.mkdir || resource.directory )
                 {
@@ -361,36 +360,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
         }.
         grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
-    }
-
-
-    /**
-     * Analyzes patterns specified and updates them if required:
-     * - if any of them is comma or space-separated, splits it to additional patterns
-     * - if any of them starts with "file:" or "classpath:", each line in the resource
-     *   loaded is converted to a pattern
-     *
-     * @param patterns patterns to analyze
-     * @param files    encoding
-     *
-     * @return updated patterns list
-     */
-    private List<String> update( List<String> patterns, String encoding )
-    {
-        if ( ! patterns ) { return patterns }
-
-        List<String> newPatterns = []
-
-        for ( pattern in patterns*.trim().findAll { it })
-        {
-            newPatterns.addAll(
-                pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()      :
-                pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
-                pattern.contains( ',' )            ? split( pattern )                                                                     :
-                                                     [ pattern ] )
-        }
-
-        newPatterns*.trim()
     }
 
 

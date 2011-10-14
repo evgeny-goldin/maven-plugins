@@ -332,7 +332,7 @@ class AboutMojo extends BaseGroovyMojo
          * ------------------------------------------------------------------------
          */
 
-        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().findAll { it }
+        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().grep()
 
         assert commitLines.size() > 2, \
                "Commit message is too short:\n$commitLines"
@@ -384,7 +384,7 @@ class AboutMojo extends BaseGroovyMojo
           buildContent()    +
           optionalContent() + '\n' +
           SEPARATOR ).
-        stripMargin().readLines()*.replaceAll( /\s+$/, '' ).findAll { it }. // Deleting empty lines
+        stripMargin().readLines()*.replaceAll( /\s+$/, '' ).grep(). // Deleting empty lines
         join(( 'windows' == endOfLine ) ? '\r\n' : '\n' )
     }
 
@@ -454,7 +454,7 @@ class AboutMojo extends BaseGroovyMojo
         }
         catch ( e )
         {
-            def message = "Failed to create \"about\" file"
+            def message = 'Failed to create "about" file'
             if ( failOnError ) { throw new MojoExecutionException( message, e ) }
             log.error( message + ':', e )
         }
