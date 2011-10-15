@@ -58,6 +58,15 @@ class CopyResource extends Resource implements Cloneable
     Boolean skipIdentical
     Boolean useTrueZipForPack
     Boolean useTrueZipForUnpack
+    Boolean filterWithDollarOnly
+    Boolean dependenciesAtM2  // "false" - all <dependencies> are copied to temp directory first,
+                              //          "stripVersion" is active
+                              //          <filter> and <process> operate on all of them at once
+                              //          dependencies are not processes in the same order they are declared
+                              // "true" - every dependency is served from local Maven repo,
+                              //          "stripVersion" is not active
+                              //          <filter> and <process> operate on each dependency individually
+                              //          dependencies are processes in the same order they are declared
 
     boolean preservePath          = false
     boolean stripVersion          = false
@@ -69,21 +78,13 @@ class CopyResource extends Resource implements Cloneable
     boolean update                = false
     boolean attachArtifact        = false
     boolean move                  = false
-    Boolean dependenciesAtM2               // "false" - all <dependencies> are copied to temp directory first,
-                                           //          "stripVersion" is active
-                                           //          <filter> and <process> operate on all of them at once
-                                           //          dependencies are not processes in the same order they are declared
-                                           // "true" - every dependency is served from local Maven repo,
-                                           //          "stripVersion" is not active
-                                           //          <filter> and <process> operate on each dependency individually
-                                           //          dependencies are processes in the same order they are declared
 
-    int     retries        = 5          // Number of retries for FTP download
-    long    timeout        = 3600       // FTP download timeout (in seconds)
+    int     retries = 5     // Number of retries for FTP download
+    long    timeout = 3600  // FTP download timeout (in seconds)
 
     String  description
     String  runIf
-    String  encoding       = 'UTF-8'
+    String  encoding = 'UTF-8'
     String  wget
     String  curl
     String  destFileName

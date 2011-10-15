@@ -88,6 +88,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean useTrueZipForUnpack = true
 
     @MojoParameter ( required = false )
+    public  boolean filterWithDollarOnly = false
+
+    @MojoParameter ( required = false )
     public  String nonFilteredExtensions
 
     @MojoParameter ( required = false )
@@ -473,8 +476,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         File         targetFile            = new File( filePath )
         List<String> nonFilteredExtensions = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ))
-        boolean      filtering             = ( ! nonFilteredExtensions.contains( file().extension( sourceFile ))) &&
-                                             resource.filtering
+        boolean      filtering             = ( ! nonFilteredExtensions.contains( file().extension( sourceFile ))) && resource.filtering
+        boolean      filterWithDollarOnly  = general().choose( resource.filterWithDollarOnly, filterWithDollarOnly )
+
         copyFile( sourceFile,
                   targetFile,
                   skipIdentical,
@@ -483,7 +487,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                   resource.encoding,
                   fileFilter,
                   verbose,
-                  resource.move ) ? verify().file( targetFile ) : null
+                  resource.move,
+                  filterWithDollarOnly ) ? verify().file( targetFile ) : null
     }
 
 

@@ -323,6 +323,7 @@ class GMojoUtils
      * @param fileFilter      {@link MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
      * @param verbose         whether information is written to log with "INFO" level
      * @param move            whether file should be moved and not copied
+     * @param filterWithDollarOnly whether only ${ .. } expressions should be recognized as delimiters when files are filtered
      *
      * @return destinationFile if file was copied,
      *         null            if file was skipped (identical)
@@ -335,7 +336,8 @@ class GMojoUtils
                            String          encoding,
                            MavenFileFilter fileFilter,
                            boolean         verbose,
-                           boolean         move )
+                           boolean         move,
+                           boolean         filterWithDollarOnly )
     {
         verify().file( sourceFile )
         verify().notNull( destinationFile, replaces )
@@ -352,19 +354,19 @@ class GMojoUtils
             {
                 verify().notNull( fileFilter, mavenProject, mavenSession )
 
-                /**
-                 * http://maven.apache.org/shared/maven-filtering/apidocs/index.html
-                 */
-
                 File                  tempFile = file().tempFile()
                 List<MavenFileFilter> wrappers = fileFilter.getDefaultFilterWrappers( mavenProject,
                                                                                       null,
                                                                                       false,
                                                                                       mavenSession,
                                                                                       new MavenResourcesExecution())
-                wrappers.each {
-                    // noinspection GroovyUnresolvedAccess
-                    it.delimiters = new LinkedHashSet<String>([ '${*}' ])
+                if ( filterWithDollarOnly )
+                {
+                    wrappers.each {
+                        // http://evgeny-goldin.org/youtrack/issue/pl-233
+                        // noinspection GroovyUnresolvedAccess
+                        it.delimiters = new LinkedHashSet<String>([ '${*}' ])
+                    }
                 }
 
                 fileFilter.copyFile( fromFile, tempFile, true, wrappers, encoding, true )
