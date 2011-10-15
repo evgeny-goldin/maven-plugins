@@ -362,6 +362,10 @@ class GMojoUtils
                                                                                       false,
                                                                                       mavenSession,
                                                                                       new MavenResourcesExecution())
+                wrappers.each {
+                    // noinspection GroovyUnresolvedAccess
+                    it.delimiters = new LinkedHashSet<String>([ '${*}' ])
+                }
 
                 fileFilter.copyFile( fromFile, tempFile, true, wrappers, encoding, true )
 
