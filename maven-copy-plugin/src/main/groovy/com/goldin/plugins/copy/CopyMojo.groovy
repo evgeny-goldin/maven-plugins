@@ -540,7 +540,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         file().pack( filesDirectory, targetPath, includes, excludes,
                      general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                      failIfNotFound, resource.update,
-                     split(( resource.defaultExcludes ?: defaultExcludes())),
+                     split( resource.defaultExcludes ?: defaultExcludes()),
                      resource.destFileName, resource.prefix )
 
         if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
