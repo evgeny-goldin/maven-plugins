@@ -68,9 +68,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Not active for Net operations
      */
     @MojoParameter ( required = false )
-    public String  defaultExcludes =
+    public String  defaultExcludes
+
+    private String  defaultExcludes() {
+        this.defaultExcludes ?:
         (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
            file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
+    }
 
     @MojoParameter ( required = false )
     public  boolean verbose = true
@@ -237,9 +241,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {   /**
                      * Default excludes are not active for downloaded files: all of them are included, none is excluded
                      */
-                    if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes != 'false' ))
+                    if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes() != 'false' ))
                     {
-                        excludes = ( excludes ?: [] ) + split(( resource.defaultExcludes ?: defaultExcludes ))
+                        excludes = ( excludes ?: [] ) + split( resource.defaultExcludes ?: defaultExcludes())
                     }
 
                     if ( isUpload )
@@ -536,7 +540,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         file().pack( filesDirectory, targetPath, includes, excludes,
                      general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                      failIfNotFound, resource.update,
-                     split(( resource.defaultExcludes ?: defaultExcludes )),
+                     split(( resource.defaultExcludes ?: defaultExcludes())),
                      resource.destFileName, resource.prefix )
 
         if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).

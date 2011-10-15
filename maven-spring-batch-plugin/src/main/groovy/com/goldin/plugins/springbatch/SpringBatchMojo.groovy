@@ -79,20 +79,18 @@ class SpringBatchMojo extends BaseGroovyMojo
     public String failIfExitCodeOtherThan(){ this.failIfExitCodeOtherThan }
 
 
-
-
     void doExecute ()
     {
-        long        l                    = System.currentTimeMillis()
-        def         command              = new GoldinCommandLineJobRunner()
-        String[]    configLocationsSplit = split( configLocations())
-        def         isSet                = { String s -> ( s != null ) && ( ! s.equalsIgnoreCase( 'none' )) }
-        String[]    paramsSplit          = isSet( params()) ? params().trim().split() : new String[ 0 ]
-        Set<String> optsSplit            = ( isSet( opts()) ? opts().trim().split()   : [] ) as Set
+        def          isSet                = { String s -> (( s ) && ( ! s.equalsIgnoreCase( 'none' ))) }
+        long         l                    = System.currentTimeMillis()
+        def          command              = new GoldinCommandLineJobRunner()
+        List<String> configLocationsSplit = split( configLocations())
+        List<String> paramsSplit          = isSet( params()) ? ( params().trim().split()) as List : [ 0 ]
+        Set<String>  optsSplit            = ( isSet( opts()) ? opts().trim().split() : [] ) as Set
 
         if ( isSet( props()))
         {
-            configLocationsSplit = [ *configLocationsSplit, propertiesConfigLocation( props()) ] as String[]
+            configLocationsSplit += propertiesConfigLocation( props())
         }
 
         def builder = new StringBuilder()
@@ -115,7 +113,7 @@ parameters      : $paramsSplit
 options         : $optsSplit
 """ )
 
-        int exitCode = command.start( configLocationsSplit, jobId(), paramsSplit, optsSplit )
+        int exitCode = command.start( configLocationsSplit as String[], jobId(), paramsSplit as String[], optsSplit )
 
         if ( failIfExitCodeOtherThan())
         {
