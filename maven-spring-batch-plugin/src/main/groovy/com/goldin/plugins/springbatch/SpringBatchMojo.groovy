@@ -85,8 +85,8 @@ class SpringBatchMojo extends BaseGroovyMojo
         long         l                    = System.currentTimeMillis()
         def          command              = new GoldinCommandLineJobRunner()
         List<String> configLocationsSplit = split( configLocations())
-        List<String> paramsSplit          = isSet( params()) ? ( params().trim().split()) as List : [ 0 ]
-        Set<String>  optsSplit            = ( isSet( opts()) ? opts().trim().split() : [] ) as Set
+        List<String> paramsSplit          = ( isSet( params()) ? params().trim().split() : [] ) as List
+        Set<String>  optsSplit            = ( isSet( opts())   ?   opts().trim().split() : [] ) as Set
 
         if ( isSet( props()))
         {
