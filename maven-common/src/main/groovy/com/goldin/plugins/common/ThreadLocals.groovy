@@ -56,7 +56,7 @@ class ThreadLocals
 
         assert ( t != null ) : \
                "ThreadLocals doesn't contain object of type [${ requiredClass.name }]. " +
-               "Available objects are ${ TL.get().keySet().collect{ it.name } }"
+               "Available objects are ${ TL.get().keySet()*.name }"
         t
     }
 }

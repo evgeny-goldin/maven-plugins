@@ -548,11 +548,18 @@ class GMojoUtils
     }
 
 
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static ConstantsBean constants (){ GCommons.constants ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static GeneralBean   general   (){ GCommons.general   ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static FileBean      file      (){ GCommons.file      ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static NetBean       net       (){ GCommons.net       ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static IOBean        io        (){ GCommons.io        ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static VerifyBean    verify    (){ GCommons.verify    ()}
+    @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static GroovyBean    groovy    (){ GCommons.groovy    ()}
 }

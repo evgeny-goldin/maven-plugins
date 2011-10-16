@@ -23,7 +23,7 @@ maven-timestamp-plugin
 
 codenarcRuleSetFiles        = [ 'codenarc.groovy' ]
 codenarcPriority1Violations = 0  // Work in progress ..
-codenarcPriority2Violations = 16 // ~~~~~~~~~~~~~~~~~~~
-codenarcPriority3Violations = 5  // http://evgeny-goldin.org/youtrack/issue/pl-435
+codenarcPriority2Violations = 15 // ~~~~~~~~~~~~~~~~~~~
+codenarcPriority3Violations = 1  // http://evgeny-goldin.org/youtrack/issue/pl-435
 codenarcSources             = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
 apply from: 'https://raw.github.com/evgeny-goldin/gradle-plugins/dev/src/main/groovy/CodeNarc.gradle'

@@ -23,12 +23,14 @@ abstract class Task
     }
 }
 
+@SuppressWarnings( 'StatelessClass' )
 class Shell extends Task
 {
     String command
     String getMarkup () { buildMarkup([ 'command' ]) }
 }
 
+@SuppressWarnings( 'StatelessClass' )
 class Maven extends Task
 {
     String  mavenName            = '(Default)'
@@ -40,17 +42,19 @@ class Maven extends Task
 
     String getMarkup ()
     {
-        pom != 'false' ? buildMarkup([ 'targets', 'mavenName', 'pom', 'jvmOptions', 'properties', 'usePrivateRepository' ]) :
-                         buildMarkup([ 'targets', 'mavenName',        'jvmOptions', 'properties', 'usePrivateRepository' ])
+        buildMarkup([ 'targets', 'mavenName', 'jvmOptions', 'properties', 'usePrivateRepository' ] +
+                    (( pom == 'false' ) ? [] : 'pom' ))
     }
 }
 
+@SuppressWarnings( 'StatelessClass' )
 class BatchFile extends Task
 {
     String command
     String getMarkup () { buildMarkup([ 'command' ]) }
 }
 
+@SuppressWarnings( 'StatelessClass' )
 class Ant extends Task
 {
     String targets

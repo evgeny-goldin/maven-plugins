@@ -216,7 +216,7 @@ class Job
     * @param override  whether or not parentJob data is of higher priority than this job data,
     *                  usually it's not - only used when we want to "override" this job data
     */
-    private void extend ( Job parentJob, boolean override = false )
+    void extend ( Job parentJob, boolean override = false )
     {
         set( 'description',       parentJob, override, { verify().notNullOrEmpty( it )}, '&nbsp;' )
         set( 'scmType',           parentJob, override, { verify().notNullOrEmpty( it )}, 'svn' )
