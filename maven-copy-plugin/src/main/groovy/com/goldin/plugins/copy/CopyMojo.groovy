@@ -176,6 +176,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 boolean verbose         = general().choose( resource.verbose,        verbose        )
                 boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
                 boolean resourceHandled = false
+                resource.targetPath     = helper.updatePath( resource.targetPath )
+                resource.directory      = helper.updatePath( resource.directory )
                 resource.includes       = helper.updatePatterns( resource.directory, resource.includes, resource.encoding )
                 resource.excludes       = helper.updatePatterns( resource.directory, resource.excludes, resource.encoding )
 
@@ -187,7 +189,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 if ( resource.dependencies())
                 {
-                    handleDependencies( resource, verbose )
+                    handleDependencies( resource, verbose, failIfNotFound )
                     resourceHandled = true
                 }
 
@@ -269,36 +271,33 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param resource resource to handle
      * @param verbose  verbose logging
      */
-    private void handleDependencies ( CopyResource resource, boolean verbose )
+    private void handleDependencies ( CopyResource resource, boolean verbose, boolean failIfNotFound )
     {
         List<CopyDependency> dependencies = resource.dependencies() as List
         verify().notNullOrEmpty( dependencies )
 
-        if ( resource.dependenciesAtM2 )
-        {
-            CopyResource resourceCopy
+        CopyResource resourceClone = ( CopyResource ) resource.clone()
 
+        if ( resource.dependenciesAtM2())
+        {
             resolveDependencies( dependencies ).each {
                 CopyDependency d ->
-
                 /**
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
-                 * This dependency may be resolved from other module "target",
-                 * not necessarily from ".m2"
+                 * This dependency may be resolved from other module "target", not necessarily from ".m2"
                  */
-                File dependencyFile = verify().file( d.artifact.file )
+                File         file          = verify().file( d.artifact.file ).canonicalFile
+                resourceClone.directory    = file.parent
+                resourceClone.includes     = [ file.name ]
+                resourceClone.dependencies = null
+                resourceClone.dependency   = null
 
-                if ( d.destFileName && ( d.destFileName != dependencyFile.name ))
+                if ( d.destFileName && ( d.destFileName != file.name ))
                 {
-                    resourceCopy = (( CopyResource ) resource.clone())
-                    resourceCopy.destFileName = d.destFileName
-                }
-                else
-                {
-                    resourceCopy = resource
+                    resourceClone.destFileName = d.destFileName
                 }
 
-                handleResource( resourceCopy, dependencyFile.parentFile, [ dependencyFile.name ], null, verbose, true )
+                handleResource( resourceClone, verbose, failIfNotFound )
             }
         }
         else
@@ -311,15 +310,22 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 resolveDependencies( dependencies, tempDirectory, resource.stripVersion ).each {
                     CopyDependency d ->
                     copyArtifact( d )    // Copies <dependency> to temp directory
-                    dependenciesCopied++
+                    dependenciesCopied++ // Zero dependencies can be copied if some of them are optional and can't be resolved.
                 }
 
-                // Zero dependencies can be copied if some of them are optional and are not resolved.
-                handleResource( resource, tempDirectory, null, null, verbose, ( dependenciesCopied > 0 ))
+                if ( dependenciesCopied > 0 )
+                {
+                    resourceClone.directory    = tempDirectory
+                    resourceClone.includes     = [ '**' ]
+                    resourceClone.dependencies = null
+                    resourceClone.dependency   = null
+
+                    handleResource( resourceClone, verbose, failIfNotFound )
+                }
             }
             finally
             {
-                file().delete( tempDirectory )
+                file().delete(( File ) /* Fails with "wrong number of arguments" sometimes */ tempDirectory )
             }
         }
     }

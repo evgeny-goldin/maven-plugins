@@ -120,22 +120,21 @@ class CopyResource extends Resource implements Cloneable
     void setFile ( String filePath )
     {
         assert filePath?.trim()?.length()
-        def path = filePath.toLowerCase()
 
-        if ( path.startsWith( 'ftp://' ) || path.startsWith( 'scp://' ) || path.startsWith( 'http://' ))
+        if ( net().isNet( filePath ))
         {
-            setDirectory( filePath )
+            directory = filePath
         }
         else
         {   /**
              * Not verifying file or its parent for existence - it may not be available
              * when plugin is configured if created by previous <resource> at run-time
              */
-            File file = new File( filePath )
-            assert file.parent, "File [$file] has no parent directory"
-
-            setDirectory( file.parent )
-            setInclude( file.name )
+            new File( filePath ).canonicalFile.with {
+                assert parent, "File [$delegate] has no parent directory"
+                directory = parent
+                include   = name
+            }
         }
     }
 
@@ -149,11 +148,10 @@ class CopyResource extends Resource implements Cloneable
      *
      * @return
      */
-    boolean getDependenciesAtM2()
+    boolean dependenciesAtM2 ()
     {
         // noinspection GroovyConditionalCanBeElvis
-        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
-                                            ( ! ( this.stripVersion || this.filter || this.process ))
+        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 : ( ! ( this.stripVersion || this.filter || this.process ))
     }
 
 

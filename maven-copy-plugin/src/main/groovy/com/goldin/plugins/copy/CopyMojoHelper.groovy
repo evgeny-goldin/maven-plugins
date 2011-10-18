@@ -19,6 +19,18 @@ import org.apache.maven.shared.artifact.filter.collection.*
 final class CopyMojoHelper
 {
 
+   /**
+    * Convert path to its canonical form.
+    *
+    * @param s path to convert
+    * @return path in canonical form
+    */
+    protected String updatePath( String s )
+    {
+        ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+    }
+
+
     /**
      * Analyzes patterns specified and updates them if required:
      * - if any of them is comma or space-separated, splits it to additional patterns
