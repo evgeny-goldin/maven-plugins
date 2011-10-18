@@ -29,7 +29,7 @@
         <annomojo-version>1.4.0</annomojo-version>
         <spring-version>3.1.0.RC1</spring-version>
         <spring-batch-version>2.1.8.RELEASE</spring-batch-version>
-        <junit-version>4.8.2</junit-version>
+        <junit-version>4.10.0</junit-version>
         <plexus-utils-version>3.0</plexus-utils-version>
         <ant-version>1.8.2</ant-version>
         <codenarc-version>0.15</codenarc-version>
@@ -97,6 +97,13 @@
                     <configuration>
                         <useFile>false</useFile>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>junit</groupId>
+                            <artifactId>junit</artifactId>
+                            <version>${junit-version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
 
 
