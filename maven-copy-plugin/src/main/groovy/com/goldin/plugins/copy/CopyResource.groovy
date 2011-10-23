@@ -21,21 +21,21 @@ class CopyResource extends Resource implements Cloneable
     {
         if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        String[] paths = general().array( this.targetPaths, targetPath, String )
-        assert   paths || clean, \
-                 '<targetPath> or <targetPaths> need to be defined for resources that do not perform <clean> operation'
+        List<String> paths = general().array( this.targetPaths, targetPath, String ) as List
+        assert       paths || clean, \
+                     '<targetPath> or <targetPaths> need to be defined for resources that do not perform <clean> operation'
 
         if ( paths && targetRoots )
         {
             List<String> targetRootsSplit = split( targetRoots )
             if ( targetRootsSplit )
             {
-                paths = [ targetRootsSplit, paths as List ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
+                paths = [ targetRootsSplit, paths ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
             }
         }
 
-        targetPathsResolved = paths ? new CopyMojoHelper().with { paths.collect { canonicalPath( it ) }} as String[] :
-                                      [] as String[]
+        targetPathsResolved = ( paths ? new CopyMojoHelper().with { paths.collect { String path -> canonicalPath( path ) }} :
+                                        [] ) as String[]
     }
 
 
