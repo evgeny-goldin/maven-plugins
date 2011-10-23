@@ -276,8 +276,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         List<CopyDependency> dependencies = resource.dependencies() as List
         verify().notNullOrEmpty( dependencies )
 
-        CopyResource resourceClone = ( CopyResource ) resource.clone()
-
         if ( resource.dependenciesAtM2())
         {
             resolveDependencies( dependencies ).each {
@@ -286,6 +284,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
                  * This dependency may be resolved from other module "target", not necessarily from ".m2"
                  */
+                CopyResource resourceClone = ( CopyResource ) resource.clone()
                 File         file          = verify().file( d.artifact.file ).canonicalFile
                 resourceClone.directory    = file.parent
                 resourceClone.includes     = [ file.name ]
@@ -315,6 +314,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 if ( dependenciesCopied > 0 )
                 {
+                    CopyResource resourceClone = ( CopyResource ) resource.clone()
                     resourceClone.directory    = tempDirectory
                     resourceClone.includes     = [ '**' ]
                     resourceClone.dependencies = null
