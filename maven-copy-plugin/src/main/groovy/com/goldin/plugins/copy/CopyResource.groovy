@@ -19,11 +19,13 @@ class CopyResource extends Resource implements Cloneable
 
     String[] targetPaths()
     {
-        if ( targetPathsResolved ) { return targetPathsResolved }
+        if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        def paths = general().array( this.targetPaths, targetPath, String )
+        String[] paths = general().array( this.targetPaths, targetPath, String )
+        assert   paths || clean, \
+                 '<targetPath> or <targetPaths> need to be defined for resources that do not perform <clean> operation'
 
-        if ( targetRoots )
+        if ( paths && targetRoots )
         {
             List<String> targetRootsSplit = split( targetRoots )
             if ( targetRootsSplit )
@@ -32,10 +34,8 @@ class CopyResource extends Resource implements Cloneable
             }
         }
 
-        assert paths
-        targetPathsResolved = new CopyMojoHelper().with { paths.collect { canonicalPath( it ) }} as String[]
-        assert targetPathsResolved
-        targetPathsResolved
+        targetPathsResolved = paths ? new CopyMojoHelper().with { paths.collect { canonicalPath( it ) }} as String[] :
+                                      [] as String[]
     }
 
 
