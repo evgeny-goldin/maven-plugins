@@ -1,8 +1,9 @@
 package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.plugins.common.ThreadLocals
 import com.goldin.gcommons.util.GroovyConfig
+import com.goldin.plugins.common.Replace
+import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
 import org.apache.maven.artifact.repository.ArtifactRepository
@@ -14,8 +15,8 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.*
-import org.gcontracts.annotations.*
 
 
 /**
@@ -69,8 +70,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      */
     @MojoParameter ( required = false )
     public String  defaultExcludes
-
-    private String  defaultExcludes() {
+    String         defaultExcludes()
+    {
         this.defaultExcludes ?:
         (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
            file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
@@ -284,19 +285,22 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
                  * This dependency may be resolved from other module "target", not necessarily from ".m2"
                  */
-                CopyResource resourceClone = ( CopyResource ) resource.clone()
-                File         file          = verify().file( d.artifact.file ).canonicalFile
-                resourceClone.directory    = file.parent
-                resourceClone.includes     = [ file.name ]
-                resourceClone.dependencies = null
-                resourceClone.dependency   = null
+                File file = verify().file( d.artifact.file ).canonicalFile
 
-                if ( d.destFileName && ( d.destFileName != file.name ))
-                {
-                    resourceClone.destFileName = d.destFileName
+                (( CopyResource ) resource.clone()).with {
+
+                    directory    = file.parent
+                    includes     = [ file.name ]
+                    dependencies = null
+                    dependency   = null
+
+                    if ( d.destFileName && ( d.destFileName != file.name ))
+                    {
+                        destFileName = d.destFileName
+                    }
+
+                    handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
                 }
-
-                handleResource( resourceClone, verbose, failIfNotFound )
             }
         }
         else
@@ -314,13 +318,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 if ( dependenciesCopied > 0 )
                 {
-                    CopyResource resourceClone = ( CopyResource ) resource.clone()
-                    resourceClone.directory    = tempDirectory
-                    resourceClone.includes     = [ '**' ]
-                    resourceClone.dependencies = null
-                    resourceClone.dependency   = null
+                    (( CopyResource ) resource.clone()).with {
 
-                    handleResource( resourceClone, verbose, failIfNotFound )
+                        directory    = tempDirectory
+                        includes     = [ '**' ]
+                        dependencies = null
+                        dependency   = null
+
+                        handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
+                    }
                 }
             }
             finally
@@ -484,21 +490,19 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             filePath = filePath.substring( 0, filePath.lastIndexOf( sourceFile.name )) + resource.destFileName
         }
 
-        File         targetFile            = new File( filePath )
-        List<String> nonFilteredExtensions = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ))
-        boolean      filtering             = ( ! nonFilteredExtensions.contains( file().extension( sourceFile ))) && resource.filtering
-        boolean      filterWithDollarOnly  = general().choose( resource.filterWithDollarOnly, filterWithDollarOnly )
-
+        File    targetFile        = new File( filePath )
+        boolean nonFilterableFile = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' )).
+                                    contains( file().extension( sourceFile ))
         copyFile( sourceFile,
                   targetFile,
                   skipIdentical,
-                  resource.replaces(),
-                  filtering,
+                  ( nonFilterableFile ? [] as Replace[] : resource.replaces()),
+                  (( ! nonFilterableFile ) && resource.filtering ),
                   resource.encoding,
                   fileFilter,
                   verbose,
                   resource.move,
-                  filterWithDollarOnly ) ? verify().file( targetFile ) : null
+                  general().choose( resource.filterWithDollarOnly, filterWithDollarOnly )) ? verify().file( targetFile ) : null
     }
 
 
@@ -507,7 +511,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      *
      * @param resource        current copy resource
      * @param sourceDirectory directory to pack
-     * @param targetPath      target archie to pack the directory to
+     * @param targetArchive   target archie to pack the directory to
      * @param includes        files to include, may be <code>null</code>
      * @param excludes        files to exclude, may be <code>null</code>
      * @param verbose         whether verbose logging should be used
@@ -518,33 +522,22 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @SuppressWarnings( 'AbcComplexity' )
     private File pack( CopyResource resource,
                        File         sourceDirectory,
-                       File         targetPath,
+                       File         targetArchive,
                        List<String> includes,
                        List<String> excludes,
                        boolean      verbose,
                        boolean      failIfNotFound )
     {
-        File filesDirectory = ( resource.replaces() || resource.filtering ) ? file().tempDirectory() : sourceDirectory
+        boolean packUsingTemp  = ( resource.replaces() || resource.filtering )
+        File    filesDirectory = packUsingTemp ? file().tempDirectory() : sourceDirectory
 
-        if ( ! filesDirectory.is( sourceDirectory ))
+        if ( packUsingTemp )
         {
-            // filesDirectory is temporal directory
-
-            CopyResource newResource = new CopyResource()
-            newResource.with {
-                setTargetPath( filesDirectory.canonicalPath )
-                setDirectory( sourceDirectory.canonicalPath )
-                setIncludes( includes )
-                setExcludes( excludes )
-                setPreservePath( true )
-                setReplaces( resource.replaces())
-                setFiltering( resource.filtering )
-            }
-
-            handleResource( newResource, verbose, failIfNotFound )
+            handleResource( resource.makeCopy( this, filesDirectory, sourceDirectory, includes, excludes ),
+                            false, failIfNotFound )
         }
 
-        file().pack( filesDirectory, targetPath, includes, excludes,
+        file().pack( filesDirectory, targetArchive, includes, excludes,
                      general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                      failIfNotFound, resource.update,
                      split( resource.defaultExcludes ?: defaultExcludes()),
@@ -553,14 +546,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
                                       each { file().delete( it ) }}
 
-        if ( ! filesDirectory.is( sourceDirectory )) { file().delete( filesDirectory ) }
+        if ( packUsingTemp ) { file().delete( filesDirectory ) }
 
         if ( resource.attachArtifact )
         {
             mavenProjectHelper.attachArtifact( mavenProject,
-                                               file().extension( targetPath ),
+                                               file().extension( targetArchive ),
                                                resource.artifactClassifier,
-                                               targetPath )
+                                               targetArchive )
         }
 
         if ( resource.deploy )
@@ -575,10 +568,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
             def classifier = (( data.size() == 4 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
 
-            deploy( targetPath, url, groupId, artifactId, version, classifier, pluginManager )
+            deploy( targetArchive, url, groupId, artifactId, version, classifier, pluginManager )
         }
 
-        verify().file( targetPath )
+        verify().file( targetArchive )
     }
 
 
@@ -598,26 +591,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                 List<String> zipEntries,
                                 boolean      verbose )
     {
-        File unpackDirectory = ( resource.replaces() || resource.filtering ) ? file().tempDirectory() : destinationDirectory
+        boolean unpackUsingTemp = ( resource.replaces() || resource.filtering )
+        File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
 
         zipEntries ? file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, resource.preservePath, verbose ) :
                      file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
 
-        if ( ! unpackDirectory.is( destinationDirectory ))
+        if ( unpackUsingTemp )
         {
-            // unpackDirectory is temporal directory
-
-            CopyResource newResource = new CopyResource()
-            newResource.with {
-                setTargetPath( destinationDirectory.canonicalPath )
-                setDirectory( unpackDirectory.canonicalPath )
-                setPreservePath( true )
-                setReplaces( resource.replaces())
-                setFiltering( resource.filtering )
-            }
-
-            handleResource( newResource, verbose, true )
-
+            handleResource( resource.makeCopy( this, destinationDirectory, unpackDirectory, null, null ), false, true )
             file().delete( unpackDirectory )
         }
 

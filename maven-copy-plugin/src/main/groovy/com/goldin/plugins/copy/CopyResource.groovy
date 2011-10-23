@@ -11,8 +11,49 @@ import org.gcontracts.annotations.*
  * <resource> data container
  */
 @SuppressWarnings( [ 'CloneableWithoutClone', 'StatelessClass' ] )
-class CopyResource extends Resource implements Cloneable
+final class CopyResource extends Resource implements Cloneable
 {
+    /**
+     * Provides a copy of this resource for copying files from {@code targetPathFile} to {@code directoryFile}.
+     *
+     * @param mojo            plugin instance to read its configurations
+     * @param targetPathFile  path to copy the files to
+     * @param directoryFile   directory to copy the files from
+     * @param includePatterns include patterns
+     * @param excludePatterns exclude patterns
+     *
+     * @return copy of this resource for copying files from {@code targetPath} to {@code directory}
+     */
+    @Requires({ targetPathFile && directoryFile })
+    CopyResource makeCopy ( CopyMojo     mojo,
+                            File         targetPathFile,
+                            File         directoryFile,
+                            List<String> includePatterns,
+                            List<String> excludePatterns )
+    {
+        CopyResource newResource = new CopyResource()
+
+        newResource.with { general().with {
+            targetPath            = targetPathFile.canonicalPath
+            directory             = directoryFile.canonicalPath
+            includes              = includePatterns
+            excludes              = excludePatterns
+            preservePath          = true
+            skipIdentical         = false
+            replaces              = this.replaces()
+            filtering             = this.filtering
+            filter                = this.filter
+            encoding              = this.encoding
+            defaultExcludes       = choose( this.defaultExcludes,      mojo.defaultExcludes())
+            failIfNotFound        = choose( this.failIfNotFound,       mojo.failIfNotFound )
+            filterWithDollarOnly  = choose( this.filterWithDollarOnly, mojo.filterWithDollarOnly )
+            nonFilteredExtensions = this.nonFilteredExtensions ?:      mojo.nonFilteredExtensions
+        }}
+
+        newResource
+    }
+
+
     String   targetRoots
     String[] targetPaths
     String[] targetPathsResolved
