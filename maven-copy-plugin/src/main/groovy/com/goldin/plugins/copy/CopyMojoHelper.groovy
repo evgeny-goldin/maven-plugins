@@ -25,7 +25,7 @@ final class CopyMojoHelper
     * @param s path to convert
     * @return path in canonical form
     */
-    protected String updatePath( String s )
+    protected String canonicalPath ( String s )
     {
         ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
     }

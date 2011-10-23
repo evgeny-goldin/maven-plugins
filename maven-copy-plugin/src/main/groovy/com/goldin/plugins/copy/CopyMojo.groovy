@@ -177,8 +177,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 boolean verbose         = general().choose( resource.verbose,        verbose        )
                 boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
                 boolean resourceHandled = false
-                resource.targetPath     = helper.updatePath( resource.targetPath )
-                resource.directory      = helper.updatePath( resource.directory )
+                resource.directory      = helper.canonicalPath ( resource.directory )
                 resource.includes       = helper.updatePatterns( resource.directory, resource.includes, resource.encoding )
                 resource.excludes       = helper.updatePatterns( resource.directory, resource.excludes, resource.encoding )
 

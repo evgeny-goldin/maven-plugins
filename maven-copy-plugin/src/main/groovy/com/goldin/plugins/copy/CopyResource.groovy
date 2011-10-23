@@ -13,28 +13,31 @@ import org.gcontracts.annotations.*
 @SuppressWarnings( [ 'CloneableWithoutClone', 'StatelessClass' ] )
 class CopyResource extends Resource implements Cloneable
 {
-    String targetRoots
-
-    /**
-     * Single/plural configuration shortcuts
-     */
-
+    String   targetRoots
     String[] targetPaths
+    String[] targetPathsResolved
+
     String[] targetPaths()
     {
+        if ( targetPathsResolved ) { return targetPathsResolved }
+
         def paths = general().array( this.targetPaths, targetPath, String )
 
         if ( targetRoots )
         {
-            def  targetRootsSplit = split( targetRoots )
+            List<String> targetRootsSplit = split( targetRoots )
             if ( targetRootsSplit )
             {
-                paths = targetRootsSplit.collect{ String targetRoot -> paths.collect { targetRoot + '/' + it }}.flatten()
+                paths = [ targetRootsSplit, paths as List ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
             }
         }
 
-        paths
+        assert paths
+        targetPathsResolved = new CopyMojoHelper().with { paths.collect { canonicalPath( it ) }} as String[]
+        assert targetPathsResolved
+        targetPathsResolved
     }
+
 
     Replace[] replaces
     Replace   replace
