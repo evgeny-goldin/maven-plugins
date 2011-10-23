@@ -428,7 +428,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             if ( resource.pack )
             {
-                filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, verbose, failIfNotFound )
+                filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )
             }
             else if ( sourceDirectory /* null when mkdir is performed */ )
             {
@@ -514,7 +514,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param targetArchive   target archie to pack the directory to
      * @param includes        files to include, may be <code>null</code>
      * @param excludes        files to exclude, may be <code>null</code>
-     * @param verbose         whether verbose logging should be used
      * @param failIfNotFound  fail if directory not found or no files were included
      *
      * @return target archive packed
@@ -525,7 +524,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetArchive,
                        List<String> includes,
                        List<String> excludes,
-                       boolean      verbose,
                        boolean      failIfNotFound )
     {
         boolean packUsingTemp  = ( resource.replaces() || resource.filtering )
