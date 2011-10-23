@@ -78,7 +78,8 @@ class Job
     */
 
     JOB_TYPE             jobType
-    void                 setJobType( String jobType ){ this.jobType = ( JOB_TYPE ) JOB_TYPE.valueOf( jobType ) } // Maven 2 can't set String to Enum, Maven 3 can
+    // Maven 2 can't set String to Enum, Maven 3 can
+    void                 setJobType( String jobType ){ this.jobType = ( JOB_TYPE ) JOB_TYPE.valueOf( jobType ) }
     Boolean              buildOnSNAPSHOT
     Boolean              useUpdate
     Boolean              doRevert
@@ -216,6 +217,7 @@ class Job
     * @param override  whether or not parentJob data is of higher priority than this job data,
     *                  usually it's not - only used when we want to "override" this job data
     */
+    @SuppressWarnings( 'AbcComplexity' )
     void extend ( Job parentJob, boolean override = false )
     {
         set( 'description',       parentJob, override, { verify().notNullOrEmpty( it )}, '&nbsp;' )
@@ -324,6 +326,7 @@ class Job
      * All job properties used "as-is" (without "if" and safe navigation operator)
      * in "config.xml" and "descriptionTable.html" are verified to be defined
      */
+     @SuppressWarnings( 'AbcComplexity' )
      void verifyAll ()
      {
          if ( this.isAbstract ) { return }

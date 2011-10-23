@@ -187,6 +187,7 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
+    @SuppressWarnings( 'LineLength' )
     String buildContent ()
     {
         def props  = System.properties

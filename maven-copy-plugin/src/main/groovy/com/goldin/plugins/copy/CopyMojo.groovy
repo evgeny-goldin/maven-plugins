@@ -141,6 +141,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Copies the Resources specified
      */
     @Override
+    @SuppressWarnings( 'AbcComplexity' )
     void execute() throws MojoExecutionException
     {
         /**
@@ -515,6 +516,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      *
      * @return target archive packed
      */
+    @SuppressWarnings( 'AbcComplexity' )
     private File pack( CopyResource resource,
                        File         sourceDirectory,
                        File         targetPath,

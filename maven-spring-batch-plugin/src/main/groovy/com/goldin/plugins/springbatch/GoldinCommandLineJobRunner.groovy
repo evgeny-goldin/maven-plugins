@@ -1,9 +1,7 @@
 package com.goldin.plugins.springbatch
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Copied from
-// https://src.springframework.org/svn/spring-batch/tags/2.1.5.RELEASE/spring-batch-core/src/main/java/org/springframework/batch/core/launch/support/CommandLineJobRunner.java
-// and modified by evgenyg@gmail.com
+// Copied from http://goo.gl/Y2inx and modified by evgenyg@gmail.com
 // See https://jira.springframework.org/browse/BATCH-1583
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -278,6 +276,7 @@ class GoldinCommandLineJobRunner
      * job paths. If a JobLocator has been set, then use it to obtain an actual
      * job, if not ask the context for it.
      */
+    @SuppressWarnings([ 'CatchThrowable', 'AbcComplexity' ])
     int start(String[] jobPaths, String jobIdentifier, String[] parameters, Set<String> opts) {
 
         ConfigurableApplicationContext context = null
@@ -448,6 +447,7 @@ class GoldinCommandLineJobRunner
         result.empty ? null : result
     }
 
+    @SuppressWarnings( 'ReturnNullFromCatchBlock' )
     private Long getLongIdentifier(String jobIdentifier) {
         try {
             return new Long(jobIdentifier)

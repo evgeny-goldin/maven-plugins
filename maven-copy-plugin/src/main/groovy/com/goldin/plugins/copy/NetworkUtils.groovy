@@ -151,6 +151,7 @@ class NetworkUtils
     }
 
 
+    @SuppressWarnings([ 'AbcComplexity', 'CyclomaticComplexity', 'MethodSize' ])
     static void ftpDownload ( File         localDirectory,
                               String       remotePath,
                               CopyResource resource,
@@ -303,7 +304,8 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
             {
                 log.info( "Attempt [$retryCount]: failed: $e", e )
                 assert (( retryCount++ ) < resource.retries ), \
-                       "Failed to download files from [$remotePathLog] to [$localDirectoryPath] after [${ retryCount - 1 }] attempt${ ( retryCount == 2 ) ? '' : 's' }"
+                       "Failed to download files from [$remotePathLog] to [$localDirectoryPath] after " +
+                       "[${ retryCount - 1 }] attempt${ ( retryCount == 2 ) ? '' : 's' }"
 
                 log.info( 'Trying again ..' )
 

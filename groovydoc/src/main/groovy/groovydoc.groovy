@@ -36,7 +36,6 @@ def sourcePaths     = path( '' )
   'maven-timestamp-plugin',
 ].each { sourcePaths.add( path( new File( "$basedir/../$it/src/main/groovy/" ).canonicalPath )) }
 
-println "Generating GroovyDoc: [$sourcePaths] => [$destinationDir]"
 
 def ant = new AntBuilder()
 ant.taskdef(name: 'groovydoc', classname: 'org.codehaus.groovy.ant.Groovydoc' )
@@ -78,6 +77,3 @@ ant.groovydoc(
        link( packages :'org.apache.maven.',                  href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs" )
        link( packages :'com.goldin.gcommons.',               href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
     }
-
-
-println 'Generating GroovyDoc: Done'

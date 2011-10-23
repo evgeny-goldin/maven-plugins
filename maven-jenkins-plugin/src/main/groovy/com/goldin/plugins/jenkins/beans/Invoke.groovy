@@ -47,12 +47,17 @@ class Invoke
     List<String> getCondition ()
     {
         def condition =
-            (( always ) || ( stable && unstable && failed ))  ? [ 'ALWAYS',             'is <strong>complete</strong> (always trigger)'                ] :
-            ( stable && unstable )                            ? [ 'UNSTABLE_OR_BETTER', 'is <strong>stable</strong> or <strong>unstable</strong> but not failed' ] :
-            ( failed   )                                      ? [ 'FAILED',             'has <strong>failed</strong>'   ]                          :
-            ( unstable )                                      ? [ 'UNSTABLE',           'is <strong>unstable</strong>' ]                          :
-            ( stable   )                                      ? [ 'SUCCESS',            'is <strong>stable</strong>'   ]                          :
-                                                                null
+            ( always  || ( stable && unstable && failed )) ?
+                [ 'ALWAYS', 'is <strong>complete</strong> (always trigger)' ] :
+            ( stable && unstable ) ?
+                [ 'UNSTABLE_OR_BETTER', 'is <strong>stable</strong> or <strong>unstable</strong> but not failed' ] :
+            ( failed ) ?
+                [ 'FAILED',   'has <strong>failed</strong>'  ] :
+            ( unstable ) ?
+                [ 'UNSTABLE', 'is <strong>unstable</strong>' ] :
+            ( stable ) ?
+                [ 'SUCCESS',  'is <strong>stable</strong>'   ] :
+            null
 
         assert condition, 'At least one of <stable>, <unstable> or <failed> should be set to "true" to enable invocation of [$jobs]'
         condition
