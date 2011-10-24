@@ -165,14 +165,16 @@ final class CopyResource extends Resource implements Cloneable
     {
         assert filePath?.trim()?.length()
 
-        if ( net().isNet( filePath ))
+        /**
+         * It is not possible to use GCommons.net().isNet() - it is not available in Maven 2 when setter is called
+         */
+        if ( [ 'ftp', 'scp', 'http' ].any{ filePath.startsWith( "$it://" ) })
         {
             directory = filePath
         }
         else
         {   /**
-             * Not verifying file or its parent for existence - it may not be available
-             * when plugin is configured if created by previous <resource> at run-time
+             * File may not be available yet
              */
             new File( filePath ).canonicalFile.with {
                 assert parent, "File [$delegate] has no parent directory"
@@ -202,7 +204,7 @@ final class CopyResource extends Resource implements Cloneable
     @Override
     String toString ()
     {
-        "Target path(s) ${ targetPaths() }, directory [$directory], includes $includes, excludes $excludes, dependencies ${ dependencies() }, " +
-        "clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
+        "Target path(s) [$targetPaths ?: $targetPath], directory [$directory], includes $includes, excludes $excludes, " +
+        "dependencies ${ dependencies() }, clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
     }
 }
