@@ -15,9 +15,9 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.*
-
 
 /**
  * MOJO copying resources specified
@@ -63,6 +63,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
     @MojoParameter ( required = false )
     public boolean skipIdentical = false
+
+    @MojoParameter ( required = false )
+    public boolean skipUnpacked = false
 
     /**
      * "false" or comma-separated list of default excludes
@@ -584,12 +587,27 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose              whether verbose logging is enabled
      * @return                     list of files unpacked
      */
+    @Requires({ resource && sourceArchive && destinationDirectory })
+    @Ensures({ result != null })
     private List<File> unpack ( CopyResource resource,
                                 File         sourceArchive,
                                 File         destinationDirectory,
                                 List<String> zipEntries,
                                 boolean      verbose )
     {
+        boolean skipUnpacked = general().choose( resource.skipUnpacked, skipUnpacked )
+
+        if ( skipUnpacked && destinationDirectory.directory && destinationDirectory.listFiles())
+        {
+            if ( verbose )
+            {
+                log.info( "<skipUnpacked> is true, directory [$destinationDirectory.canonicalPath] is not empty - " +
+                          "unpacking of [$sourceArchive.canonicalPath] was cancelled" )
+            }
+
+            return []
+        }
+
         boolean unpackUsingTemp = ( resource.replaces() || resource.filtering )
         File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
 
