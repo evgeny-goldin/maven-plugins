@@ -706,17 +706,18 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @return new {@code Collection<File>} returned by Groovy
      *         or original <code>files</code> if <code>filterExpression</code> is null
      */
+    @Requires({ files != null })
     private List<File> filter( List<File> files,
                                String     filterExpression,
                                boolean    verbose,
                                boolean    failIfNotFound )
     {
-        if  ( files && filterExpression )
+        if  ( filterExpression )
         {
             verify().exists( *files )
 
             String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
-            Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', files.first())
+            Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', files ? files.first() : null )
             Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                               ( o instanceof Collection ) ? (( Collection<File> ) o ) :
                                                                             null )
@@ -744,14 +745,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param processExpression Groovy expression, if <code>null</code> - no processing is executed
      * @param verbose           whether logging should be verbose
      */
+    @Requires({ files != null })
     private void process( List<File> files, String processExpression )
     {
-        if ( files && processExpression )
+        if ( processExpression )
         {   /**
              * There may be no files to process if all of them were skipped due to "skipIdentical"
              */
             verify().exists( *files )
-            eval( processExpression, null, groovyConfig, 'files', files, 'file', files.first())
+            eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null )
         }
     }
 }
