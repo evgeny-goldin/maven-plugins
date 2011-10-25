@@ -1,13 +1,14 @@
 package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.beans.ExecOption
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.goldin.plugins.common.CustomAntBuilder
 import com.goldin.plugins.common.ThreadLocals
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugin.logging.Log
 
 
 /**
@@ -85,7 +86,7 @@ class NetworkUtils
                 throw new MojoExecutionException( 'HTTP upload is not implemented yet, see http://evgeny-goldin.org/youtrack/issue/pl-312' )
             }
 
-            for ( file in file().files( directory, includes, excludes, true, false, failIfNotFound ))
+            for ( file in GCommons.file().files( directory, includes, excludes, true, false, failIfNotFound ))
             {
                 if ( net().isScp( remotePath ))
                 {
