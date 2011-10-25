@@ -261,7 +261,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }
         finally
         {
-            if ( isDownload ){ file().delete( sourceDirectory )}
+            /* Sometimes fails with "IllegalArgumentException: wrong number of arguments" */
+            if ( isDownload ){ file().delete(( File ) sourceDirectory )}
         }
     }
 
