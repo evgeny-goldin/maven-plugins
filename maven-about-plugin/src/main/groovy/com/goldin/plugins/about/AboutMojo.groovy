@@ -360,8 +360,8 @@ class AboutMojo extends BaseGroovyMojo
 
     String gitContent( String gitStatus )
     {
-        List<String> commitLines   = exec( 'git log -1 --format="format:%H%n%cD %n%cN <%ce>"' ).readLines()*.trim()
-        String       commitMessage = exec( 'git log -1 --format=format:%B' )
+        List<String> commitLines   = exec( "git log -1 --format=format:%H%n%cD%n%cN<%ce> ${basedir.canonicalPath}" ).readLines()*.trim()
+        String       commitMessage = exec( "git log -1 --format=format:%B ${basedir.canonicalPath}" )
 
         """
         $SEPARATOR
