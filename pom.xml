@@ -37,6 +37,20 @@
     </properties>
 
 
+<!--
+    <distributionManagement>
+        <repository>
+            <id>plugins-releases-local</id>
+            <url>http://wart/artifactory/plugins-releases-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>plugins-snapshots-local</id>
+            <url>http://wart/artifactory/plugins-snapshots-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+-->
+
+
     <modules>
 
         <!-- ~~~~~ -->

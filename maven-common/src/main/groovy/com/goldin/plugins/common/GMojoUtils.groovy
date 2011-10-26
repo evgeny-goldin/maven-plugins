@@ -127,7 +127,7 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        InputStream is    = verify().notNull( Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+        InputStream is    = verify().notNull([ Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ) ] as InputStream[] )
         Properties  props = new Properties()
         props.load( is )
         is.close()
