@@ -372,7 +372,7 @@ class AboutMojo extends BaseGroovyMojo
         | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : [' ) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
         | Git Status     : [${ padLines( gitStatus, ' Git Status     : [' ) }]
-        | Last Commit    : [${ log[ 0 ] } (${ log[ 1 ] })]
+        | Commit         : [${ log[ 0 ] }][${ log[ 1 ] }]
         | Commit Date    : [${ log[ 2 ] }]
         | Commit Author  : [${ log[ 3 ] } <${ log[ 4 ] }>]
         | Commit Message : [${ padLines( log[ 5 .. -1 ].join( '\n' ), ' Commit Message : [' ) }]"""
