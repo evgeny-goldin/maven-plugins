@@ -250,12 +250,11 @@ class AboutMojo extends BaseGroovyMojo
     {
         if ( ! dumpSCM ) { return '' }
 
-        File   svnDir           = new File( basedir, '.svn' )
-        String svnVersion       = null
-        String svnStatus        = null
-        String gitVersion       = null
-        String gitStatusCommand = null
-        String gitStatus        = null
+        File   svnDir     = new File( basedir, '.svn' )
+        String svnVersion = null
+        String svnStatus  = null
+        String gitVersion = null
+        String gitStatus  = null
 
         /**
          * Trying SVN
@@ -266,7 +265,7 @@ class AboutMojo extends BaseGroovyMojo
             svnVersion = exec( 'svn --version', basedir, false )
             if ( svnVersion.contains( 'svn, version' ))
             {
-                svnStatus = exec( "svn status $basedir.canonicalPath" )
+                svnStatus = exec( "svn status $basedir.canonicalPath", basedir, false )
                 if (( ! svnStatus.contains( 'is not a working copy' )) &&
                     ( ! svnStatus.contains( 'containing working copy admin area is missing' )))
                 {
@@ -283,7 +282,7 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( gitVersion.contains( 'git version' ))
         {
-            gitStatus = exec( 'git status' )
+            gitStatus = exec( 'git status', basedir, false )
 
             if ( ! gitStatus.contains( 'fatal: Not a git repository' ))
             {
@@ -304,7 +303,7 @@ class AboutMojo extends BaseGroovyMojo
         | Tried Git:
         | ~~~~~~~~~~
         | ${ gitVersion ? '"git --version" returned [' + gitVersion + ']'                            : '' }
-        | ${ gitStatus  ? '"' + gitStatusCommand + '" returned [' + gitStatus + ']'                  : '' }"""
+        | ${ gitStatus  ? '"git status" returned [' + gitStatus + ']'                                : '' }"""
     }
 
 
