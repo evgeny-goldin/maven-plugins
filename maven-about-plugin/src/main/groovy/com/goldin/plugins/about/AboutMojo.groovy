@@ -77,13 +77,13 @@ class AboutMojo extends BaseGroovyMojo
     private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
 
 
-    @Requires({ ( s != null ) && ( padWidth > 0 ) })
+    @Requires({ ( s != null ) && prefix })
     @Ensures({ result != null })
-    private String padLines ( String s, int padWidth )
+    private String padLines ( String s, String prefix )
     {
         List<String> lines = s.readLines()
 
-        ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * padWidth ) + it }.join( '\n' ) :
+        ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * prefix.size()) + it }.join( '\n' ) :
                                                          '' )) :
                   '' )
     }
@@ -215,7 +215,7 @@ class AboutMojo extends BaseGroovyMojo
         | ${ dumpPaths ? 'Basedir        : [' + basedir.canonicalPath + ']': '' }
         | Name           : ${ ( project.name.startsWith( '[' ) ? '' : '[' ) + project.name + ( project.name.endsWith( ']' ) ? '' : ']' ) }
         | Coordinates    : [$project.groupId:$project.artifactId:$project.version]
-        | ${ dumpDependencies ? 'Dependencies   : [' + padLines( dependencyTree(), ' Dependencies   : ['.size()) + ']' : '' }"""
+        | ${ dumpDependencies ? 'Dependencies   : [' + padLines( dependencyTree(), ' Dependencies   : [' ) + ']' : '' }"""
     }
 
 
@@ -350,30 +350,32 @@ class AboutMojo extends BaseGroovyMojo
         $SEPARATOR
         | Repository     : [${ find( 'URL:',      svnInfo )}]
         | Revision       : [${ find( 'Revision:', svnInfo )}]
-        | Status         : [${ padLines( svnStatus, ' Status         : ['.size()) }]
+        | Status         : [${ padLines( svnStatus, ' Status         : [' ) }]
         | Last Commit    : [$commit]
         | Commit Date    : [${ split( commit, '\\|' )[ 2 ].trim() }]
         | Commit Author  : [${ split( commit, '\\|' )[ 1 ].trim() }]
-        | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : ['.size()) }]"""
+        | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : [' ) }]"""
     }
 
 
     String gitContent( String gitStatus )
     {
-        List<String> commitLines   = exec( "git log -1 --format='format:%H%n%cD%n%cN <%ce>' ${basedir.canonicalPath}" ).readLines()*.trim()
-        String       commitMessage = exec( "git log -1 --format=format:%B ${basedir.canonicalPath}" )
+        /**
+         * http://schacon.github.com/git/git-log.html
+         */
+        List<String> log = exec( "git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B ${basedir.canonicalPath}" ).readLines()*.trim()
 
         """
         $SEPARATOR
         | Git Info
         $SEPARATOR
-        | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : ['.size()) }]
+        | Repositories   : [${ padLines( exec( 'git remote -v' ), ' Repositories   : [' ) }]
         | Branch         : [${ find( '# On branch', 'git status' ) }]
-        | Git Status     : [${ padLines( gitStatus, ' Git Status     : ['.size()) }]
-        | Last Commit    : [${ commitLines[ 0 ] }]
-        | Commit Date    : [${ commitLines[ 1 ] }]
-        | Commit Author  : [${ commitLines[ 2 ] }]
-        | Commit Message : [${ padLines( commitMessage, ' Commit Message : ['.size()) }]"""
+        | Git Status     : [${ padLines( gitStatus, ' Git Status     : [' ) }]
+        | Last Commit    : [${ log[ 0 ] } (${ log[ 1 ] })]
+        | Commit Date    : [${ log[ 2 ] }]
+        | Commit Author  : [${ log[ 3 ] } <${ log[ 4 ] }>]
+        | Commit Message : [${ padLines( log[ 5 .. -1 ].join( '\n' ), ' Commit Message : [' ) }]"""
     }
 
 
