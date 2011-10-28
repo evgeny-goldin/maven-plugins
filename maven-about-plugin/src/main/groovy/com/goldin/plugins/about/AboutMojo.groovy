@@ -350,7 +350,7 @@ class AboutMojo extends BaseGroovyMojo
         | Repository     : [${ find( 'URL:',      svnInfo )}]
         | Revision       : [${ find( 'Revision:', svnInfo )}]
         | Status         : [${ padLines( svnStatus, ' Status         : [' ) }]
-        | Last Commit    : [$commit]
+        | Commit         : [$commit]
         | Commit Date    : [${ split( commit, '\\|' )[ 2 ].trim() }]
         | Commit Author  : [${ split( commit, '\\|' )[ 1 ].trim() }]
         | Commit Message : [${ padLines( commitMessage.join( '\n' ), ' Commit Message : [' ) }]"""
