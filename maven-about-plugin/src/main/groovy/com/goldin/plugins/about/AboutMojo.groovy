@@ -362,7 +362,7 @@ class AboutMojo extends BaseGroovyMojo
         /**
          * http://schacon.github.com/git/git-log.html
          */
-        List<String> log = exec( "git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B ${basedir.canonicalPath}" ).readLines()*.trim()
+        List<String> log = exec( 'git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B' ).readLines()*.trim()
 
         """
         $SEPARATOR
