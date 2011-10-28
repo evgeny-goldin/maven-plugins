@@ -1,15 +1,11 @@
 package com.goldin.plugins.common
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import org.apache.maven.artifact.repository.ArtifactRepository
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.PluginManager
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
-
 
 /**
  * Base GroovyMojo class
@@ -18,32 +14,25 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    @MojoParameter ( expression = '${project}', required = true )
+    @MojoParameter ( required = true, expression = '${project}' )
     public MavenProject project
 
-    @MojoParameter ( expression = '${session}', required = true )
+    @MojoParameter ( required = true, expression = '${session}' )
     public MavenSession session
 
-    @MojoParameter ( expression = '${project.basedir}', required = true )
+    @MojoParameter ( required = true, expression = '${project.basedir}' )
     public File basedir
 
-    @MojoParameter ( defaultValue = '${localRepository}' )
-    public ArtifactRepository localRepository
-
-    @MojoComponent
-    public PluginManager pluginManager
-
-    @MojoParameter
-    public String  runIf
-
-    @MojoParameter ( expression = '${project.build.directory}', required = true )
+    @MojoParameter ( required = true, expression = '${project.build.directory}' )
     public    File buildDirectory
     protected File buildDirectory() { file().mkdirs( this.buildDirectory ) }
 
-    @MojoParameter ( expression = '${project.build.outputDirectory}' )
+    @MojoParameter ( required = true, expression = '${project.build.outputDirectory}' )
     public    File outputDirectory
     protected File outputDirectory() { file().mkdirs( this.outputDirectory ) }
 
+    @MojoParameter
+    public String  runIf
 
     @Override
     @Requires({ log && project && session })

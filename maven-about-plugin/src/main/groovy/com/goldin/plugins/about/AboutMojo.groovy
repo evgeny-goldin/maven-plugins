@@ -472,7 +472,7 @@ class AboutMojo extends BaseGroovyMojo
             }
             else
             {
-                def aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory, fileName )}
+                def aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory(), fileName )}
                 writeAboutFile( aboutFile )
             }
         }
