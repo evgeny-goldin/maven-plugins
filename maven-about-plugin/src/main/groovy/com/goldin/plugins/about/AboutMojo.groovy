@@ -22,29 +22,19 @@ class AboutMojo extends BaseGroovyMojo
     public static final String SEPARATOR = '|==============================================================================='
 
     @MojoParameter
+    public boolean updateArchives = true
+
+    @MojoParameter
     public String  prefix = 'META-INF'
 
     @MojoParameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
     public String  fileName
 
     @MojoParameter
-    public boolean updateArchives = true
-
-    @MojoParameter
-    public  String addContent = ''
-    private String evaluateAddContent()
-    {
-        addContent.trim().with { ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
-    }
-
-    @MojoParameter
-    public boolean failOnError = true
-
-    @MojoParameter
-    public boolean failIfNotFound = true
-
-    @MojoParameter
     public boolean dumpSCM    = true
+
+    @MojoParameter
+    public boolean dumpMaven  = false
 
     @MojoParameter
     public boolean dumpEnv    = false
@@ -53,13 +43,17 @@ class AboutMojo extends BaseGroovyMojo
     public boolean dumpSystem = false
 
     @MojoParameter
-    public boolean dumpMaven  = false
-
-    @MojoParameter
     public boolean dumpPaths  = false
 
     @MojoParameter
     public boolean dumpDependencies = false
+
+    @MojoParameter
+    public  String addContent = ''
+    private String evaluateAddContent()
+    {
+        addContent.trim().with { ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
+    }
 
     @MojoParameter
     public String  endOfLine   = 'windows'
@@ -72,6 +66,14 @@ class AboutMojo extends BaseGroovyMojo
 
     @MojoParameter
     public String  exclude
+
+    @MojoParameter
+    public boolean failOnError = true
+
+    @MojoParameter
+    public boolean failIfNotFound = true
+
+
 
     private env       = System.getenv()
     private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
