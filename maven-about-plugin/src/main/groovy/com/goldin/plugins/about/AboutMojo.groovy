@@ -93,17 +93,22 @@ class AboutMojo extends BaseGroovyMojo
     {
         assert command && directory
 
+        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath]" ) }
+
         String result =  general().executeWithResult( command,
                                                       ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
                                                       failOnError,
                                                       -1,
                                                       directory )
+
+        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath] - result is [$result]" ) }
+
         if ( minimalListSize > 0 )
         {
             result.readLines().with {
                 assert size() >= minimalListSize, \
-                       "Received not enough data when running [$command] - expected list of size [$minimalListSize] at least, " +
-                       "received $delegate of size [${ size() }]"
+                       "Received not enough data when running [$command] in [$basedir.canonicalPath] - " +
+                       "expected list of size [$minimalListSize] at least, received $delegate of size [${ size() }]"
             }
         }
 
