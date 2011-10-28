@@ -89,10 +89,10 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    @Requires({ command && directory })
-    @Ensures({ result != null })
     private String exec ( String command, File directory = basedir, boolean failOnError = true, int minimalListSize = -1 )
     {
+        assert command && directory
+
         String result =  general().executeWithResult( command,
                                                       ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
                                                       failOnError,
