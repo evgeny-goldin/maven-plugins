@@ -89,13 +89,25 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    private String exec ( String command, File directory = basedir, boolean failOnError = true )
+    @Requires({ command && directory })
+    @Ensures({ result != null })
+    private String exec ( String command, File directory = basedir, boolean failOnError = true, int minimalListSize = -1 )
     {
-        general().executeWithResult( command,
-                                     ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
-                                     failOnError,
-                                     -1,
-                                     directory )
+        String result =  general().executeWithResult( command,
+                                                      ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
+                                                      failOnError,
+                                                      -1,
+                                                      directory )
+        if ( minimalListSize > 0 )
+        {
+            result.readLines().with {
+                assert size() >= minimalListSize, \
+                       "Received not enough data when running [$command] - expected list of size [$minimalListSize] at least, " +
+                       "received $delegate of size [${ size() }]"
+            }
+        }
+
+        result
     }
 
 
@@ -322,7 +334,7 @@ class AboutMojo extends BaseGroovyMojo
          * Last Changed Date: 2011-08-24 09:28:06 +0300 (Wed, 24 Aug 2011)
          */
 
-        List<String> svnInfo = exec( "svn info ${basedir.canonicalPath}" ).readLines()
+        List<String> svnInfo = exec( "svn info ${basedir.canonicalPath}", basedir, true, 2 ).readLines()
 
         /**
          * ------------------------------------------------------------------------
@@ -332,10 +344,7 @@ class AboutMojo extends BaseGroovyMojo
          * ------------------------------------------------------------------------
          */
 
-        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1" ).readLines().grep()
-
-        assert commitLines.size() > 2, \
-               "Commit message is too short:\n$commitLines"
+        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1", basedir, true, 3 ).readLines().grep()
 
         assert [ commitLines[ 0 ], commitLines[ -1 ]].each { it.with { startsWith( '---' ) && endsWith( '---' ) }}, \
                "Unknown commit format:\n$commitLines"
@@ -361,8 +370,16 @@ class AboutMojo extends BaseGroovyMojo
     {
         /**
          * http://schacon.github.com/git/git-log.html
+         * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         * dc38954
+         * dc389541c4aa7f72f07f11236b1c632a919de61c
+         * Fri, 28 Oct 2011 15:40:03 +0200
+         * Evgeny Goldin
+         * evgenyg@gmail.com
+         * <version>0.2.3.5-SNAPSHOT</version>
+         * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          */
-        List<String> log = exec( 'git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B' ).readLines()*.trim()
+        List<String> log = exec( 'git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B', basedir, true, 5 ).readLines()*.trim()
 
         """
         $SEPARATOR
@@ -374,7 +391,7 @@ class AboutMojo extends BaseGroovyMojo
         | Commit         : [${ log[ 0 ] }][${ log[ 1 ] }]
         | Commit Date    : [${ log[ 2 ] }]
         | Commit Author  : [${ log[ 3 ] } <${ log[ 4 ] }>]
-        | Commit Message : [${ padLines( log[ 5 .. -1 ].join( '\n' ), ' Commit Message : [' ) }]"""
+        | Commit Message : [${ log.size() > 5 ? padLines( log[ 5 .. -1 ].join( '\n' ), ' Commit Message : [' ) : '' }]"""
     }
 
 
