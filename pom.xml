@@ -9,7 +9,7 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.3.4-about-fix</version>
+    <version>0.2.3.5-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
