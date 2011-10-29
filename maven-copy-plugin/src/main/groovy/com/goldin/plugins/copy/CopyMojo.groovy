@@ -28,6 +28,10 @@ import org.jfrog.maven.annomojo.annotations.*
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.CopyMojo
 {
+    /**
+     * Container-injected fields
+     */
+
     @MojoComponent
     public ArtifactFactory artifactFactory
 
@@ -58,8 +62,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( expression = '${project.remoteArtifactRepositories}', readonly = true, required = true )
     public  List<ArtifactRepository> remoteArtifactRepositories
 
-    @MojoParameter ( required = false )
-    public GroovyConfig groovyConfig
+    /**
+     * User-provided fields
+     */
+
+    @MojoParameter
+    public  String  runIf
 
     @MojoParameter ( required = false )
     public boolean skipIdentical = false
@@ -84,6 +92,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean verbose = true
 
     @MojoParameter ( required = false )
+    public  boolean filterWithDollarOnly = false
+
+    @MojoParameter ( required = false )
+    public  String nonFilteredExtensions
+
+    @MojoParameter ( required = false )
     public  boolean failIfNotFound = true
 
     @MojoParameter ( required = false )
@@ -93,12 +107,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean useTrueZipForUnpack = true
 
     @MojoParameter ( required = false )
-    public  boolean filterWithDollarOnly = false
-
-    @MojoParameter ( required = false )
-    public  String nonFilteredExtensions
-
-    @MojoParameter ( required = false )
     public  CopyResource[] resources
 
     @MojoParameter ( required = false )
@@ -106,9 +114,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
     private CopyResource[] resources () { general().array( this.resources, this.resource, CopyResource ) }
 
-
-    @MojoParameter
-    public  String  runIf
+    @MojoParameter ( required = false )
+    public GroovyConfig groovyConfig
 
 
     private final CopyMojoHelper helper = new CopyMojoHelper()
