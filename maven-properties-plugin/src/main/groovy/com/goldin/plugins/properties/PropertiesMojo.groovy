@@ -16,6 +16,14 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 class PropertiesMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = false )
+    public Property   property
+
+    @MojoParameter ( required = false )
+    public Property[] properties
+
+    private Property[] properties() { general().array( this.properties, this.property, Property ) }
+
+    @MojoParameter ( required = false )
     public String rawProperties
 
     @MojoParameter ( required = false )
@@ -25,18 +33,10 @@ class PropertiesMojo extends BaseGroovyMojo
     public boolean normalizePath = true
 
     @MojoParameter ( required = false )
-    public Property[] properties
-
-    @MojoParameter ( required = false )
-    public Property   property
-
-    @MojoParameter ( required = false )
     public boolean verbose = true
 
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig = new GroovyConfig()
-
-    private Property[] properties() { general().array( this.properties, this.property, Property ) }
 
 
     private String normalizePath( String s ){
