@@ -148,10 +148,10 @@ class Job
      * Extension points - tags accepting raw XML content wrapped in <![CDATA[ ... ]]>
      */
     String               scm
-    String               properties
     String               reporters
     String               publishers
     String               buildWrappers
+    String               properties
 
 
 
