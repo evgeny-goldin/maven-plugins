@@ -30,6 +30,15 @@ class JenkinsMojo extends BaseGroovyMojo
     @MojoParameter ( required = true, defaultValue = '${project.build.directory}' )
     public File outputDirectory
 
+    /**
+     * When no repository local path is specified - the remote one starting from this value is used
+     * For example: for remote repository      "http://google-guice.googlecode.com/svn/trunk/"
+     *              and svnRepositoryLocalBase "svn"
+     *              local repo path will be    "svn/trunk/"
+     */
+    @MojoParameter ( required = false )
+    public String svnRepositoryLocalBase = 'svn'
+
     @MojoParameter ( required = false )
     public String endOfLine = 'windows'
 
@@ -40,14 +49,6 @@ class JenkinsMojo extends BaseGroovyMojo
     public String timestampFormat = 'MMMM dd, yyyy (HH:mm:ss, \'GMT\'Z)'
 
 
-    /**
-     * When no repository local path is specified - the remote one starting from this value is used
-     * For example: for remote repository      "http://google-guice.googlecode.com/svn/trunk/"
-     *              and svnRepositoryLocalBase "svn"
-     *              local repo path will be    "svn/trunk/"
-     */
-    @MojoParameter ( required = false )
-    public String svnRepositoryLocalBase = 'svn'
 
 
     @MojoParameter
