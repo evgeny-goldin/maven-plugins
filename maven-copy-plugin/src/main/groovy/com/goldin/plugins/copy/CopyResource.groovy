@@ -133,6 +133,9 @@ final class CopyResource extends Resource implements Cloneable
     String  wget
     String  curl
     String  destFileName
+    String  destFilePrefix
+    String  destFileSuffix
+    String  destFileExtension
     String  filter
     String  listFilter
     String  process
@@ -206,7 +209,7 @@ final class CopyResource extends Resource implements Cloneable
     String toString ()
     {
         // Do not use any of GCommons calls here - it will fail Maven 2 build running with "-X" flag
-        "Target path(s) [$targetPaths ?: $targetPath], directory [$directory], includes $includes, excludes $excludes, " +
-        "dependencies [${ dependencies ?: dependency }], clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
+        "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], includes $includes, excludes $excludes, " +
+        "dependencies [${ dependencies  ?: dependency }], clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
     }
 }

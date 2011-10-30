@@ -19,6 +19,7 @@ import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.*
 
+
 /**
  * MOJO copying resources specified
  */
@@ -475,6 +476,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @return file copied if copying was performed, null otherwise
      */
+    @Requires({ resource && sourceDirectory && sourceFile && targetPath })
     private File copyResourceFile ( CopyResource resource,
                                     File         sourceDirectory,
                                     File         sourceFile,
@@ -484,33 +486,42 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         assert ! net().isNet( sourceDirectory.path )
         assert ! net().isNet( targetPath.path )
 
-        boolean skipIdentical = (( ! resource.process ) && /* If file is processed - it is not skipped */
-                                 general().choose( resource.skipIdentical, skipIdentical ))
-        /**
-         * Location where the file will be copied to
-         */
-        String filePath = new File( targetPath, resource.preservePath ? file().relativePath( sourceDirectory, sourceFile ) :
-                                                                        sourceFile.name ).canonicalPath
-        assert filePath.endsWith( sourceFile.name )
+        String fileName      = resource.destFileName ?: sourceFile.name
+        String fileExtension = file().extension( new File( fileName ))
 
-        if ( resource.destFileName )
-        {
-            filePath = filePath.substring( 0, filePath.lastIndexOf( sourceFile.name )) + resource.destFileName
+        resource.with {
+            if (( ! destFileName ) && ( destFilePrefix || destFileSuffix || destFileExtension ))
+            {
+                String nameBody   = fileName.replaceAll( /\.[^\.]+$/, '' )
+                String namePrefix = destFilePrefix    ?: ''
+                String nameSuffix = destFileSuffix    ?: ''
+                fileExtension     = destFileExtension ?: fileExtension
+                fileName          = "${ namePrefix }${ nameBody }${ nameSuffix }${ fileExtension ? '.' + fileExtension : '' }"
+            }
         }
 
-        File    targetFile        = new File( filePath )
-        boolean nonFilterableFile = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' )).
-                                    contains( file().extension( sourceFile ))
+        assert fileName
+
+        boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).
+                           contains( fileExtension.toLowerCase())
+        String  newPath  = resource.preservePath ?
+                               file().relativePath( sourceDirectory, new File( sourceFile.parentFile, fileName )) :
+                               fileName
+
+        String  filePath = new File( targetPath, newPath ).canonicalPath
+
+        assert filePath.endsWith( fileName )
+
         copyFile( sourceFile,
-                  targetFile,
-                  skipIdentical,
-                  ( nonFilterableFile ? [] as Replace[] : resource.replaces()),
-                  (( ! nonFilterableFile ) && resource.filtering ),
+                  new File( filePath ),
+                  general().choose( resource.skipIdentical, skipIdentical ),
+                  ( noFilter ? [] as Replace[] : resource.replaces()),
+                  (( ! noFilter ) && resource.filtering ),
                   resource.encoding,
                   fileFilter,
                   verbose,
                   resource.move,
-                  general().choose( resource.filterWithDollarOnly, filterWithDollarOnly )) ? verify().file( targetFile ) : null
+                  general().choose( resource.filterWithDollarOnly, filterWithDollarOnly ))
     }
 
 

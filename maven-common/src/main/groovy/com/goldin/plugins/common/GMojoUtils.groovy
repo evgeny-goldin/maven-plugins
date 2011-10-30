@@ -415,9 +415,8 @@ class GMojoUtils
 
             copy( fromFile, destinationFile, verbose, move )
             if ( move && sourceFile.exists()) { deleteFiles << sourceFile }
-            file().delete( *deleteFiles )
-
-            destinationFile
+            file().delete( deleteFiles as File[] )
+            verify().file( destinationFile )
         }
         catch ( e )
         {
@@ -524,7 +523,7 @@ class GMojoUtils
      * @param delim delimiter regex expression to split the String with
      * @return result of {@code s.split( delim )*.trim().grep()}
      */
-    static List<String> split( String s, String delim = ',' ) { s.split( delim )*.trim().grep() as List }
+    static List<String> split( String s, String delim = ',' ) { ( s ?: '' ).split( delim )*.trim().grep() as List }
 
 
     /**
