@@ -521,7 +521,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         assert ! net().isNet( targetPath.path )
 
         String  newName  = newName( sourceFile, resource )
-        boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).contains( file().extension( new File( newName )).toLowerCase())
+        boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).
+                           contains( file().extension( new File( newName )).toLowerCase())
         String  newPath  = resource.preservePath ? file().relativePath( sourceDirectory, new File( sourceFile.parentFile, newName )) : newName
         File    file     = new File( targetPath, newPath )
 
