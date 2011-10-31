@@ -2,6 +2,7 @@ package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.util.GroovyConfig
+import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.Replace
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.factory.ArtifactFactory
@@ -467,6 +468,39 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
 
     /**
+     * Calculates new name of the file to copy taking its resource into consideration.
+     *
+     * @param file     file to copy
+     * @param resource file's <resource>
+     * @return         file's new name
+     */
+    @Requires({ file && resource })
+    @Ensures({ result })
+    private String newName ( File file, CopyResource resource )
+    {
+        resource.with {
+
+            if ( destFileName ) { return destFileName }
+
+            String newName = file.name
+
+            if ( destFilePrefix || destFileSuffix || destFileExtension )
+            {
+                assert ( targetPaths() && directory && ( ! ( pack || unpack ))), \
+                       '<destFilePrefix>, <destFileSuffix>, <destFileExtension> can only be used when files are copied from <targetPath> to <directory>'
+
+                String extension = GMojoUtils.file().extension( file )
+                String body      = ( extension ? newName.substring( 0, newName.size() - extension.size() - 1 ) : newName )
+                extension        = destFileExtension  ?: extension
+                newName          = "${ destFilePrefix ?: '' }${ body }${ destFileSuffix ?: '' }${ extension ? '.' + extension : '' }"
+            }
+
+            verify().notNullOrEmpty( newName )
+        }
+    }
+
+
+    /**
      * Copies the file specified.
      *
      * @param resource        current copy resource
@@ -486,34 +520,15 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         assert ! net().isNet( sourceDirectory.path )
         assert ! net().isNet( targetPath.path )
 
-        String fileName      = resource.destFileName ?: sourceFile.name
-        String fileExtension = file().extension( new File( fileName ))
+        String  newName  = newName( sourceFile, resource )
+        boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).contains( file().extension( new File( newName )).toLowerCase())
+        String  newPath  = resource.preservePath ? file().relativePath( sourceDirectory, new File( sourceFile.parentFile, newName )) : newName
+        File    file     = new File( targetPath, newPath )
 
-        resource.with {
-            if (( ! destFileName ) && ( destFilePrefix || destFileSuffix || destFileExtension ))
-            {
-                String nameBody   = fileName.replaceAll( /\.[^\.]+$/, '' )
-                String namePrefix = destFilePrefix    ?: ''
-                String nameSuffix = destFileSuffix    ?: ''
-                fileExtension     = destFileExtension ?: fileExtension
-                fileName          = "${ namePrefix }${ nameBody }${ nameSuffix }${ fileExtension ? '.' + fileExtension : '' }"
-            }
-        }
-
-        assert fileName
-
-        boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).
-                           contains( fileExtension.toLowerCase())
-        String  newPath  = resource.preservePath ?
-                               file().relativePath( sourceDirectory, new File( sourceFile.parentFile, fileName )) :
-                               fileName
-
-        String  filePath = new File( targetPath, newPath ).canonicalPath
-
-        assert filePath.endsWith( fileName )
+        assert file.canonicalPath.endsWith( newName )
 
         copyFile( sourceFile,
-                  new File( filePath ),
+                  file,
                   general().choose( resource.skipIdentical, skipIdentical ),
                   ( noFilter ? [] as Replace[] : resource.replaces()),
                   (( ! noFilter ) && resource.filtering ),
