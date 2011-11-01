@@ -107,11 +107,10 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( minimalListSize > 0 )
         {
-            result.readLines().with {
-                assert size() >= minimalListSize, \
-                       "Received not enough data when running [$command] in [$basedir.canonicalPath] - " +
-                       "expected list of size [$minimalListSize] at least, received $delegate of size [${ size() }]"
-            }
+            List lines = result.readLines()
+            assert lines.size() >= minimalListSize, \
+                   "Received not enough data when running [$command] in [$basedir.canonicalPath] - " +
+                   "expected list of size [$minimalListSize] at least, received [$result]$lines of size [${ lines.size() }]"
         }
 
         result
