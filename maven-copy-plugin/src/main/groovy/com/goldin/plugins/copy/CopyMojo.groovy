@@ -647,7 +647,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
 
         ( zipEntries || zipEntriesExclude ) ?
-            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, verbose ) :
+            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath ) :
             file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
 
         if ( unpackUsingTemp )
