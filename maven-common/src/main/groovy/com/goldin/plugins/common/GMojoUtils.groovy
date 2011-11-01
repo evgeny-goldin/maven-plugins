@@ -119,6 +119,20 @@ class GMojoUtils
     }
 
 
+    static Properties properties( String path, ClassLoader cl = GMojoUtils.classLoader )
+    {
+        assert path && cl
+
+        InputStream is = cl.getResourceAsStream( path )
+        assert      is, "Failed to load resource [$path] using ClassLoader [$cl]"
+
+        Properties props = new Properties()
+        props.load( is )
+        is.close()
+
+        props
+    }
+
 
     /**
      * Retrieves Maven version as appears in "pom.properties" inside Maven jar.
@@ -127,11 +141,9 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        InputStream is    = verify().notNull([ Maven.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ) ] as InputStream[] )
-        Properties  props = new Properties()
-        props.load( is )
-        is.close()
-        verify().notNullOrEmpty( props.getProperty( 'version', 'Unknown' ).trim())
+        verify().notNullOrEmpty(
+            properties( 'META-INF/maven/org.apache.maven/maven-core/pom.properties', Maven.classLoader ).
+            getProperty( 'version', 'Unknown' ).trim())
     }
 
 

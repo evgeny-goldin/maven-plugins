@@ -403,7 +403,10 @@ class AboutMojo extends BaseGroovyMojo
 
     String allContent()
     {
-        ( ' Created with http://evgeny-goldin.com/wiki/Maven-about-plugin\n' +
+        def version = properties( 'META-INF/maven/com.goldin.plugins/maven-about-plugin/pom.properties', AboutMojo.classLoader ).
+                      getProperty( 'version', '' )
+
+        ( " Created with http://evgeny-goldin.com/wiki/Maven-about-plugin${ version ? ', version "' + version + '"' : '' }\n" +
           serverContent()   +
           scmContent()      +
           buildContent()    +
