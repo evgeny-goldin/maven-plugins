@@ -410,10 +410,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                           boolean      verbose         = true,
                                           boolean      failIfNotFound  = true )
     {
-        def zipEntries = resource.zipEntries() as List
+        List<String> zipEntries        = resource.zipEntries()        as List
+        List<String> zipEntriesExclude = resource.zipEntriesExclude() as List
 
-        if ( zipEntries      ) { assert resource.unpack, '<zipEntry> or <zipEntries> can only be used with <unpack>true</unpack>' }
-        if ( resource.prefix ) { assert resource.pack,   '<prefix> can only be used with <pack>true</pack>' }
+        if ( zipEntries        ) { assert resource.unpack, '<zipEntry> or <zipEntries> can only be used with <unpack>true</unpack>' }
+        if ( zipEntriesExclude ) { assert resource.unpack, '<zipEntryExclude> or <zipEntriesExclude> can only be used with <unpack>true</unpack>' }
+        if ( resource.prefix   ) { assert resource.pack,   '<prefix> can only be used with <pack>true</pack>' }
+
         if ( resource.clean  )
         {
             clean( sourceDirectory, includes, excludes, resource.cleanEmptyDirectories, resource.filter, verbose, failIfNotFound )
@@ -447,7 +450,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {
                     if ( resource.unpack )
                     {
-                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, verbose ))
+                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose ))
                     }
                     else
                     {
@@ -609,21 +612,22 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
 
     /**
-     * Unpacks archive specified and retrieves files unpacked.
      *
+     * @param resource             resource to unpack
      * @param sourceArchive        archive to unpack
      * @param destinationDirectory directory to unpack the archive to
-     * @param zipEntries           Zip entries to unpack, can be null or empty
-     * @param preservePath         whether to preserve files archive path when unpacking them
-     * @param verbose              whether verbose logging is enabled
-     * @return                     list of files unpacked
+     * @param zipEntries           Zip entries to unpack, can be empty
+     * @param zipEntriesExclude    Zip entries to unpack, can be empty
+     * @param verbose
+     * @return
      */
-    @Requires({ resource && sourceArchive && destinationDirectory })
+    @Requires({ resource && sourceArchive && destinationDirectory && ( zipEntries != null ) && ( zipEntriesExclude != null ) })
     @Ensures({ result != null })
     private List<File> unpack ( CopyResource resource,
                                 File         sourceArchive,
                                 File         destinationDirectory,
                                 List<String> zipEntries,
+                                List<String> zipEntriesExclude,
                                 boolean      verbose )
     {
         boolean skipUnpacked = general().choose( resource.skipUnpacked, skipUnpacked )
@@ -642,8 +646,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         boolean unpackUsingTemp = ( resource.replaces() || resource.filtering )
         File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
 
-        zipEntries ? file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, resource.preservePath, verbose ) :
-                     file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
+        ( zipEntries || zipEntriesExclude ) ?
+            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, verbose ) :
+            file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
 
         if ( unpackUsingTemp )
         {

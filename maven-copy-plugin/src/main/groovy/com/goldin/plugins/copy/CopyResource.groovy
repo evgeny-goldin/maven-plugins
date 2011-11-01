@@ -93,6 +93,10 @@ final class CopyResource extends Resource implements Cloneable
     String   zipEntry
     String[] zipEntries () { general().array( this.zipEntries, this.zipEntry, String ) }
 
+    String[] zipEntriesExclude
+    String   zipEntryExclude
+    String[] zipEntriesExclude () { general().array( this.zipEntriesExclude, this.zipEntryExclude, String ) }
+
 
     /**
      * Boolean flags that we need 3 states for: true, false, not initialized
