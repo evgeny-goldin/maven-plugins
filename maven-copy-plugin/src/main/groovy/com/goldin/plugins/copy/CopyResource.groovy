@@ -91,11 +91,11 @@ final class CopyResource extends Resource implements Cloneable
 
     String[] zipEntries
     String   zipEntry
-    String[] zipEntries () { general().array( this.zipEntries, this.zipEntry, String ) }
-
     String[] zipEntriesExclude
     String   zipEntryExclude
-    String[] zipEntriesExclude () { general().array( this.zipEntriesExclude, this.zipEntryExclude, String ) }
+
+    String[] zipEntries ()        { split( general().array( this.zipEntries,        this.zipEntry,        String ).join( ', ' )) as String[] }
+    String[] zipEntriesExclude () { split( general().array( this.zipEntriesExclude, this.zipEntryExclude, String ).join( ', ' )) as String[] }
 
 
     /**
