@@ -428,7 +428,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             verify().directory( sourceDirectory )
         }
 
-        Set<File> filesToProcess = [] as Set
+        def filesToProcess = []
 
         for ( path in resource.targetPaths())
         {
@@ -445,8 +445,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
             else if ( sourceDirectory /* null when mkdir is performed */ )
             {
-                Set<File> files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ) as Set
-                for ( file in filter( files as List, resource.filter, verbose, failIfNotFound ))
+                def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+                for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
                 {
                     if ( resource.unpack )
                     {
@@ -463,7 +463,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( ! resource.clean )
         {
-            process( filesToProcess as List, resource.process )
+            process( filesToProcess, resource.process )
         }
 
         resource
@@ -750,7 +750,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         if  ( filterExpression )
         {
-            verify().exists( *files )
+            verify().file( files as File[] )
 
             String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
             Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', files ? files.first() : null )
@@ -788,7 +788,13 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {   /**
              * There may be no files to process if all of them were skipped due to "skipIdentical"
              */
-            verify().exists( *files )
+            Set<File> filesSet = files as Set
+            assert    filesSet.size() <= files.size()
+
+            // noinspection GroovyAssignmentToMethodParameter
+            files = ( filesSet.size() < files.size() ? filesSet as List /* Duplicates found */ : files )
+            verify().file( files as File[] )
+
             eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null )
         }
     }
