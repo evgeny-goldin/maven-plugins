@@ -428,7 +428,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             verify().directory( sourceDirectory )
         }
 
-        def filesToProcess = []
+        Set<File> filesToProcess = [] as Set
 
         for ( path in resource.targetPaths())
         {
@@ -445,8 +445,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
             else if ( sourceDirectory /* null when mkdir is performed */ )
             {
-                def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
-                for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
+                Set<File> files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ) as Set
+                for ( file in filter( files as List, resource.filter, verbose, failIfNotFound ))
                 {
                     if ( resource.unpack )
                     {
@@ -463,7 +463,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( ! resource.clean )
         {
-            process( filesToProcess, resource.process )
+            process( filesToProcess as List, resource.process )
         }
 
         resource
