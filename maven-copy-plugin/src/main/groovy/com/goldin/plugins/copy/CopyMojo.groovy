@@ -450,7 +450,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {
                     if ( resource.unpack )
                     {
-                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose ))
+                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose, failIfNotFound ))
                     }
                     else
                     {
@@ -618,7 +618,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param destinationDirectory directory to unpack the archive to
      * @param zipEntries           Zip entries to unpack, can be empty
      * @param zipEntriesExclude    Zip entries to unpack, can be empty
-     * @param verbose
+     * @param verbose              whether logging should be verbose
+     * @param failIfNotFound       whether execution should fail if no files were matched
+     *
      * @return
      */
     @Requires({ resource && sourceArchive && destinationDirectory && ( zipEntries != null ) && ( zipEntriesExclude != null ) })
@@ -628,7 +630,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                 File         destinationDirectory,
                                 List<String> zipEntries,
                                 List<String> zipEntriesExclude,
-                                boolean      verbose )
+                                boolean      verbose,
+                                boolean      failIfNotFound )
     {
         boolean skipUnpacked = general().choose( resource.skipUnpacked, skipUnpacked )
 
@@ -647,7 +650,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
 
         ( zipEntries || zipEntriesExclude ) ?
-            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath ) :
+            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, failIfNotFound ) :
             file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
 
         if ( unpackUsingTemp )
