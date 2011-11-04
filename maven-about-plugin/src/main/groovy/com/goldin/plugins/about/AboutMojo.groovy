@@ -73,10 +73,7 @@ class AboutMojo extends BaseGroovyMojo
     @MojoParameter
     public boolean failIfNotFound = true
 
-
-
-    private env       = System.getenv()
-    private isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
+    private env = System.getenv()
 
 
     @Requires({ ( s != null ) && prefix })
@@ -84,7 +81,6 @@ class AboutMojo extends BaseGroovyMojo
     private String padLines ( String s, String prefix )
     {
         List<String> lines = s.readLines()
-
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * prefix.size()) + it }.join( '\n' ) :
                                                          '' )) :
                   '' )
@@ -132,25 +128,36 @@ class AboutMojo extends BaseGroovyMojo
      *
      * @return Result of running "mvn dependency:tree" for the current project.
      */
+    @Ensures({ result })
     private String dependencyTree()
     {
+        String plugin           = 'maven-dependency-plugin:2.3:tree'
+        String coordinatesShort = "${project.groupId}:${project.artifactId}:${project.version}"
+        String coordinatesLong  = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
+
         String mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
 
-        File mvnHomeFile = new File( mvnHome )
-        mvnHomeFile.with{ assert isDirectory() && new File(( File ) delegate, 'bin' ).directory }
+        File mvn = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
+        assert mvn.file, "[$mvn] - not found"
 
-        def mvn = new File( mvnHomeFile, 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalPath
+        def mdt = exec( "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin" )
 
-        exec( "$mvn -e -B -f ${ new File( basedir, 'pom.xml' ).canonicalPath } " +
-              'org.apache.maven.plugins:maven-dependency-plugin:2.3:tree',
-              basedir ).replace( '[INFO] ', '' ).
-                        replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
-                        replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
-                        replaceAll( /(?m)Downloading: .+$/,         '' ). // Removing Maven 3 download progress indicator
-                        replaceAll( /(?m)Downloaded: .+$/,          '' ). // Removing Maven 3 download progress indicator
-                        replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
-                        trim()
+        assert [ plugin, "[$coordinatesShort]", coordinatesLong ].every { mdt.contains( it ) }, \
+               "Failed to run [$plugin] - data received doesn't contain enough information: [$mdt]"
+
+        def mdtStripped = mdt.replace( '[INFO] ', '' ).
+                              replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
+                              replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+                              replaceAll( /(?m)Downloading: .+$/,         '' ). // Removing Maven 3 download progress indicator
+                              replaceAll( /(?m)Downloaded: .+$/,          '' ). // Removing Maven 3 download progress indicator
+                              replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
+                              trim()
+
+        assert mdtStripped.startsWith( coordinatesLong ), \
+               "Failed to run [$plugin] - cleaned up data should start with [$coordinatesLong]: [$mdtStripped]"
+
+        mdtStripped
     }
 
 

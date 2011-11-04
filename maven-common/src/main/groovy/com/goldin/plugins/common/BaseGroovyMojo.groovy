@@ -14,6 +14,10 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
+    protected final boolean isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
+    protected final boolean isLinux   = System.getProperty( 'os.name' ).toLowerCase().contains( 'linux' )
+    protected final boolean isMac     = System.getProperty( 'os.name' ).toLowerCase().contains( 'mac os' )
+
     @MojoParameter ( required = true, expression = '${project}' )
     public MavenProject project
 
