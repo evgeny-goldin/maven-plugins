@@ -394,6 +394,7 @@ class GMojoUtils
 
                 assert ! samePath()
                 fileFilter.copyFile( fromFile, destinationFile, true, wrappers, encoding, true )
+                assert destinationFile.setLastModified( System.currentTimeMillis())
                 file().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
 
                 if ( verbose ) { log.info( "[$fromFile] filtered to [$destinationFile]" ) }
