@@ -357,6 +357,9 @@ class GMojoUtils
         boolean operationPerformed = false
         boolean copyToItself       = ( sourceFile.canonicalPath == destinationFile.canonicalPath )
 
+        assert ! ( move && copyToItself ), \
+               "It is not possible to <move> [$sourceFile] into itself - <move> means source file is deleted"
+
         if ( ! ( skipIdentical || copyToItself )) { file().mkdirs( file().delete( destinationFile ).parentFile )}
 
         try
