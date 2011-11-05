@@ -42,7 +42,7 @@ class Replace
      *         <code>replacement</code> is {@code quoteReplacement() ? Matcher.quoteReplacement( getTo()) : getTo()}
      */
     @SuppressWarnings( [ 'ConfusingTernary', 'UnnecessarySemicolon' ] )
-    String replace( String data, String filePath = '' )
+    String replace( String data, File file = null )
     {
         String result = ( to                     ? to   :  // If we have <to>, then replacement starts with it
                         ( 'false' != addDollar ) ? data :  // If we have no <to> but <addDollar>, replacement starts with data specified
@@ -68,7 +68,7 @@ class Replace
             Matcher matcher     = ( data =~ /$from/ )
 
             assert ( matcher.find() || ( ! failIfNotFound )) : \
-                   "Failed to match [$from] pattern in [${ filePath ?: data }]"
+                   "Failed to match [$from] pattern in [${ file ?: data }]"
 
             result = replaceAll ? matcher.replaceAll  ( replacement ) :
                                   matcher.replaceFirst( replacement )

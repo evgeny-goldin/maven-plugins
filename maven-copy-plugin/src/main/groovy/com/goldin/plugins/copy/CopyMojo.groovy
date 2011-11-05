@@ -531,8 +531,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         assert file.canonicalPath.endsWith( newName )
 
-        copyFile( sourceFile,
-                  file,
+        copyFile( sourceFile.canonicalFile,
+                  file.canonicalFile,
                   general().choose( resource.skipIdentical, skipIdentical ),
                   ( noFilter ? [] as Replace[] : resource.replaces()),
                   (( ! noFilter ) && resource.filtering ),

@@ -351,83 +351,93 @@ class GMojoUtils
                            boolean         move,
                            boolean         filterWithDollarOnly )
     {
-        verify().file( sourceFile )
-        verify().notNull( destinationFile, replaces )
-        verify().notNullOrEmpty( encoding )
+        assert sourceFile.file && destinationFile && ( ! net().isNet( destinationFile.path ))
+        assert ( replaces != null ) && encoding
 
-        MavenProject mavenProject = ThreadLocals.get( MavenProject )
-        MavenSession mavenSession = ThreadLocals.get( MavenSession )
-        File         fromFile     = sourceFile
-        List<File>   deleteFiles  = []
+        List<File> deleteFiles        = []
+        boolean    operationPerformed = false
+
+        if (( ! skipIdentical ) && ( sourceFile.canonicalPath != destinationFile.canonicalPath ))
+        {
+            file().mkdirs( file().delete( destinationFile ).parentFile )
+        }
 
         try
         {
-            if ( filtering )
+            if ( filtering && (( ! filterWithDollarOnly ) || sourceFile.getText( encoding ).contains( '${' )))
             {
-                verify().notNull( fileFilter, mavenProject, mavenSession )
-
-                File                  tempFile = file().tempFile()
-                List<MavenFileFilter> wrappers = fileFilter.getDefaultFilterWrappers( mavenProject,
-                                                                                      null,
-                                                                                      false,
-                                                                                      mavenSession,
-                                                                                      new MavenResourcesExecution())
+                File                  targetFile = replaces ? file().tempFile() : destinationFile
+                List<MavenFileFilter> wrappers   = fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ),
+                                                                                        null,
+                                                                                        false,
+                                                                                        ThreadLocals.get( MavenSession ),
+                                                                                        new MavenResourcesExecution())
                 if ( filterWithDollarOnly )
-                {
-                    wrappers.each {
-                        // http://evgeny-goldin.org/youtrack/issue/pl-233
-                        // noinspection GroovyUnresolvedAccess
-                        it.delimiters = new LinkedHashSet<String>([ '${*}' ])
-                    }
+                {   // http://evgeny-goldin.org/youtrack/issue/pl-233
+                    // noinspection GroovyUnresolvedAccess
+                    wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
                 }
 
-                fileFilter.copyFile( fromFile, tempFile, true, wrappers, encoding, true )
+                fileFilter.copyFile( sourceFile, targetFile, true, wrappers, encoding, true )
 
-                if ( verbose )
+                if ( verbose  ) { log.info( "[$sourceFile] filtered to [$targetFile]" ) }
+                if ( replaces )
                 {
-                    log.info( "[$fromFile.canonicalPath] copied to [$tempFile.canonicalPath] (with <filtering>)" )
+                    deleteFiles << targetFile // Will be deleted in the end
+                    sourceFile   = targetFile // File created becomes input file for the replacement operation
                 }
-
-                deleteFiles << tempFile
-                fromFile = tempFile
+                else
+                {
+                    operationPerformed = true
+                }
             }
 
             if ( replaces )
             {
-                String data = fromFile.getText( encoding )
-
-                for ( replace in replaces )
-                {
-                    data = replace.replace( data, fromFile.canonicalPath )
-                }
-
-                File tempFile = file().tempFile()
-                tempFile.write( data, encoding )
-
+                destinationFile.write(( String ) replaces.inject( sourceFile.getText( encoding )){ String s, Replace r -> r.replace( s, sourceFile ) },
+                                       encoding )
                 if ( verbose )
                 {
-                    log.info( "[$fromFile.canonicalPath] copied to [$tempFile.canonicalPath] (with <replaces>)" )
+                    log.info( "[$sourceFile] content written to [$destinationFile], [$replaces] replace${ general().s( replaces.size()) } made" )
                 }
 
-                deleteFiles << tempFile
-                fromFile = tempFile
+                operationPerformed = true
             }
 
-            if ( skipIdentical )
+            boolean identical = ( ! operationPerformed )                                 &&
+                                skipIdentical                                            &&
+                                ( destinationFile.file )                                 &&
+                                ( destinationFile.length()       == sourceFile.length()) &&
+                                ( destinationFile.lastModified() == sourceFile.lastModified())
+            if ( identical )
             {
-                boolean identicalFiles = (( destinationFile.file )                               &&
-                                          ( destinationFile.length()       == fromFile.length()) &&
-                                          ( destinationFile.lastModified() == fromFile.lastModified()))
-                if ( identicalFiles )
+                log.info( "[$sourceFile] skipped - identical to destination [$destinationFile]" )
+                operationPerformed = true
+            }
+
+            if ( ! operationPerformed )
+            {
+                if ( sourceFile.canonicalPath == destinationFile.canonicalPath )
                 {
-                    log.info( "[$fromFile.canonicalPath] skipped - identical to [$destinationFile.canonicalPath]" )
-                    return null
+                    log.warn( "[$sourceFile] skipped - same as destination [$destinationFile]" )
+                    operationPerformed = true
+                }
+                else if ( move )
+                {
+                    operationPerformed = sourceFile.renameTo( destinationFile )
+                    if ( verbose && operationPerformed ) { log.info( "[$sourceFile] moved to [$destinationFile]" )}
+                }
+
+                if ( ! operationPerformed )
+                {
+                    file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
+                    if ( verbose ) { log.info( "[$sourceFile] copied to [$destinationFile]" )}
                 }
             }
 
-            copy( fromFile, destinationFile, verbose, move )
-            if ( move && sourceFile.exists()) { deleteFiles << sourceFile }
+            if ( move && sourceFile.file ) { deleteFiles << sourceFile }
             file().delete( deleteFiles as File[] )
+
             verify().file( destinationFile )
         }
         catch ( e )
@@ -435,43 +445,6 @@ class GMojoUtils
             throw new MojoExecutionException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]",
                                               e )
         }
-    }
-
-
-    /**
-     * Copies file to the destination file specified.
-     *
-     * @param sourceFile      source file to copy
-     * @param destinationFile destination file to copy the source to,
-     * @param verbose         verbose logging
-     * @param verbose         whether file should be moved and not copied
-     */
-    private static void copy ( File sourceFile, File destinationFile, boolean verbose, boolean move )
-    {
-        verify().file( sourceFile )
-        verify().notNull( destinationFile )
-        assert ! net().isNet( destinationFile.path )
-
-        String sourceFilePath      = sourceFile.canonicalPath
-        String destinationFilePath = destinationFile.canonicalPath
-        String operationName       = ( move ? 'moved' : 'copied' )
-
-        if ( sourceFilePath == destinationFilePath )
-        {
-            log.warn( "Source [$sourceFilePath] and destination [$destinationFilePath] are the same. File is not $operationName." )
-            return
-        }
-
-        file().delete( destinationFile )
-        file().mkdirs( destinationFile.parentFile )
-
-        if ( ! ( move && sourceFile.renameTo( destinationFile )))
-        {
-            file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-        }
-
-        if ( move    ) { file().delete( sourceFile ) }
-        if ( verbose ) { log.info( "[$sourceFilePath] $operationName to [$destinationFilePath]" )}
     }
 
 
