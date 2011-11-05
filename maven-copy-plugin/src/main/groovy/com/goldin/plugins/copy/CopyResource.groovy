@@ -62,9 +62,9 @@ final class CopyResource extends Resource implements Cloneable
     {
         if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        List<String> paths = general().array( this.targetPaths, targetPath, String ) as List
+        List<String> paths = general().array( this.targetPaths, targetPath, String ).collect { split( it ) }.flatten()
         assert       paths || clean, \
-                     '<targetPath> or <targetPaths> need to be defined for resources that do not perform <clean> operation'
+                     '<targetPath>/<targetPaths> need to be defined for the resources that do not perform <clean> operation'
 
         if ( paths && targetRoots )
         {
