@@ -322,18 +322,17 @@ class GMojoUtils
      *
      * Copies source file to destination applying replacements and filtering.
      *
-     * @param sourceFile      source file to copy
-     * @param destinationFile destination file to copy the source to,
-     *                        <code><b>scp://user:password@host:location</b></code> URLs are supported
-     * @param skipIdentical   whether identical files should be skipped (not copied)
-     * @param replaces        replacements to make
-     * @param filtering       whether Maven
-     *                        <a href="http://www.sonatype.com/books/maven-book/reference/resource-filtering-sect-description.html">filtering</a>
-     *                        should be performed
-     * @param encoding        Filtering/replacement encoding
-     * @param fileFilter      {@link MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
-     * @param verbose         whether information is written to log with "INFO" level
-     * @param move            whether file should be moved and not copied
+     * @param sourceFile           source file to copy
+     * @param destinationFile      destination file to copy the source to
+     * @param skipIdentical        whether identical files should be skipped (not copied)
+     * @param replaces             replacements to make
+     * @param filtering            whether Maven
+     *                             <a href="http://www.sonatype.com/books/maven-book/reference/resource-filtering-sect-description.html">filtering</a>
+     *                             should be performed
+     * @param encoding             Filtering/replacement encoding
+     * @param fileFilter           {@link MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
+     * @param verbose              whether information is written to log with "INFO" level
+     * @param move                 whether file should be moved and not copied
      * @param filterWithDollarOnly whether only ${ .. } expressions should be recognized as delimiters when files are filtered
      *
      * @return destinationFile if file was copied,
@@ -413,9 +412,9 @@ class GMojoUtils
                 operationPerformed = true
             }
 
-            boolean identical = destinationFile.file && [ ( ! operationPerformed ), skipIdentical,
-                                                          destinationFile.length()       == sourceFile.length(),
-                                                          destinationFile.lastModified() == sourceFile.lastModified() ].every()
+            final boolean identical = destinationFile.file && [ ( ! operationPerformed ), skipIdentical,
+                                                                destinationFile.length()       == sourceFile.length(),
+                                                                destinationFile.lastModified() == sourceFile.lastModified() ].every()
             if ( identical )
             {
                 log.info( "[$sourceFile] skipped - content is identical to destination [$destinationFile]" )
@@ -446,7 +445,7 @@ class GMojoUtils
              * If it's a "move" operation and renameTo() call fails - source file is deleted
              */
             if ( move && sourceFile.file && ( ! samePath())) { file().delete( sourceFile ) }
-            verify().file( destinationFile )
+            ( identical ? null : verify().file( destinationFile ))
         }
         catch ( e )
         {
