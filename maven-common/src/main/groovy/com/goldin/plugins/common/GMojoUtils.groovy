@@ -378,8 +378,8 @@ class GMojoUtils
                 }
                 else if ( file().extension( fromFile ).toLowerCase() == 'bat' )
                 {
-                    log.warn( "[$fromFile] - filtering bat files without <filterWithDollarOnly> may not work correctly due to '@' character, " +
-                              "see http://evgeny-goldin.org/youtrack/issue/pl-233" )
+                    log.warn( "[$fromFile] - filtering *.bat files without <filterWithDollarOnly> may not work correctly due to '@' character, " +
+                              "see http://evgeny-goldin.org/youtrack/issue/pl-233." )
                 }
 
                 File tempFile = null
