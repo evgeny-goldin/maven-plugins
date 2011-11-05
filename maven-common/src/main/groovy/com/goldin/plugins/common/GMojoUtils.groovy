@@ -340,6 +340,7 @@ class GMojoUtils
      * @return destinationFile if file was copied,
      *         null            if file was skipped (identical)
      */
+    @SuppressWarnings([ 'MethodSize', 'AbcComplexity', 'CyclomaticComplexity' ])
     static File copyFile ( File            sourceFile,
                            File            destinationFile,
                            boolean         skipIdentical,
@@ -367,11 +368,9 @@ class GMojoUtils
             if ( filtering && (( ! filterWithDollarOnly ) || sourceFile.getText( encoding ).contains( '${' )))
             {
                 File                  targetFile = replaces ? file().tempFile() : destinationFile
-                List<MavenFileFilter> wrappers   = fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ),
-                                                                                        null,
-                                                                                        false,
-                                                                                        ThreadLocals.get( MavenSession ),
-                                                                                        new MavenResourcesExecution())
+                List<MavenFileFilter> wrappers   =
+                    fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
+                                                         ThreadLocals.get( MavenSession ), new MavenResourcesExecution())
                 if ( filterWithDollarOnly )
                 {   // http://evgeny-goldin.org/youtrack/issue/pl-233
                     // noinspection GroovyUnresolvedAccess
@@ -395,23 +394,17 @@ class GMojoUtils
             if ( replaces )
             {
                 destinationFile.write(( String ) replaces.inject( sourceFile.getText( encoding )){ String s, Replace r -> r.replace( s, sourceFile ) },
-                                       encoding )
-                if ( verbose )
-                {
-                    log.info( "[$sourceFile] content written to [$destinationFile], [$replaces] replace${ general().s( replaces.size()) } made" )
-                }
-
+                                      encoding )
+                if ( verbose ) { log.info( "[$sourceFile] content written to [$destinationFile], [$replaces] replace${ general().s( replaces.size()) } made" )}
                 operationPerformed = true
             }
 
-            boolean identical = ( ! operationPerformed )                                 &&
-                                skipIdentical                                            &&
-                                ( destinationFile.file )                                 &&
-                                ( destinationFile.length()       == sourceFile.length()) &&
-                                ( destinationFile.lastModified() == sourceFile.lastModified())
+            boolean identical = destinationFile.file && [ ( ! operationPerformed ), skipIdentical,
+                                                          destinationFile.length()       == sourceFile.length(),
+                                                          destinationFile.lastModified() == sourceFile.lastModified() ].every()
             if ( identical )
             {
-                log.info( "[$sourceFile] skipped - identical to destination [$destinationFile]" )
+                log.info( "[$sourceFile] skipped - content is identical to destination [$destinationFile]" )
                 operationPerformed = true
             }
 
@@ -419,7 +412,7 @@ class GMojoUtils
             {
                 if ( sourceFile.canonicalPath == destinationFile.canonicalPath )
                 {
-                    log.warn( "[$sourceFile] skipped - same as destination [$destinationFile]" )
+                    log.warn( "[$sourceFile] skipped - path is identical to destination [$destinationFile]" )
                     operationPerformed = true
                 }
                 else if ( move )
@@ -431,7 +424,7 @@ class GMojoUtils
                 if ( ! operationPerformed )
                 {
                     file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-                    if ( verbose ) { log.info( "[$sourceFile] copied to [$destinationFile]" )}
+                    if ( verbose ) { log.info( "[$sourceFile] ${ move ? 'moved' : 'copied' } to [$destinationFile]" )}
                 }
             }
 
