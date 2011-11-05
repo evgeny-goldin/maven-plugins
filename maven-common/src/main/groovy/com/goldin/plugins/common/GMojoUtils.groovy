@@ -340,27 +340,30 @@ class GMojoUtils
      *         null            if file was skipped (identical)
      */
     @SuppressWarnings([ 'MethodSize', 'AbcComplexity', 'CyclomaticComplexity' ])
-    static File copyFile ( File            sourceFile,
-                           final File      destinationFile,
-                           boolean         skipIdentical,
-                           Replace[]       replaces,
-                           boolean         filtering,
-                           String          encoding,
-                           MavenFileFilter fileFilter,
-                           boolean         verbose,
-                           boolean         move,
-                           boolean         filterWithDollarOnly )
+    static File copyFile ( File                  sourceFile, // Occasionally modified, see below
+                           final File            destinationFile,
+                           final boolean         skipIdentical,
+                           final Replace[]       replaces,
+                           final boolean         filtering,
+                           final String          encoding,
+                           final MavenFileFilter fileFilter,
+                           final boolean         verbose,
+                           final boolean         move,
+                           final boolean         filterWithDollarOnly )
     {
         assert sourceFile.file && destinationFile && ( ! net().isNet( destinationFile.path ))
         assert ( replaces != null ) && encoding
 
-        boolean operationPerformed = false
-        boolean copyToItself       = ( sourceFile.canonicalPath == destinationFile.canonicalPath )
+        Closure<Boolean> samePath           = { sourceFile.canonicalPath == destinationFile.canonicalPath }
+        boolean          operationPerformed = false
 
-        assert ! ( move && copyToItself ), \
+        assert ! ( move && samePath()), \
                "It is not possible to <move> [$sourceFile] into itself - <move> means source file is deleted"
 
-        if ( ! ( skipIdentical || copyToItself )) { file().mkdirs( file().delete( destinationFile ).parentFile )}
+        /**
+         * Deleting destination file if possible
+         */
+        if ( ! ( skipIdentical || samePath())) { file().mkdirs( file().delete( destinationFile ).parentFile )}
 
         try
         {
@@ -376,16 +379,17 @@ class GMojoUtils
                 }
 
                 File tempFile = null
-                if ( copyToItself )
+                if ( samePath())
                 {
-                    tempFile   = file().tempFile()
+                    tempFile = file().tempFile()
                     file().copy( sourceFile, tempFile.parentFile, tempFile.name )
-                    if ( verbose ) { log.info( "[$sourceFile] copied to [$tempFile]" ) }
+                    if ( verbose ) { log.info( "[$sourceFile] copied to [$tempFile] (in order to filter it into itself)" ) }
 
+                    assert ! move
                     sourceFile = tempFile
                 }
 
-                assert ( sourceFile.canonicalPath != destinationFile.canonicalPath )
+                assert ! samePath()
                 fileFilter.copyFile( sourceFile, destinationFile, true, wrappers, encoding, true )
                 file().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
 
@@ -395,6 +399,7 @@ class GMojoUtils
                  * - Destination file created becomes input file for the following operations
                  * - If no replacements should be made - we're done
                  */
+                if ( move ) { assert ! samePath(); file().delete( sourceFile )}
                 sourceFile         = destinationFile
                 operationPerformed = ( ! replaces )
             }
@@ -417,11 +422,9 @@ class GMojoUtils
                 operationPerformed = true
             }
 
-            copyToItself = ( sourceFile.canonicalPath == destinationFile.canonicalPath )
-
             if ( ! operationPerformed )
             {
-                if ( copyToItself )
+                if ( samePath())
                 {
                     log.warn( "[$sourceFile] skipped - path is identical to destination [$destinationFile]" )
                     operationPerformed = true
@@ -440,9 +443,9 @@ class GMojoUtils
             }
 
             /**
-             * If "move" and renameTo() fails - source file is deleted
+             * If it's a "move" operation and renameTo() call fails - source file is deleted
              */
-            if ( move && sourceFile.file && ( ! copyToItself )) { file().delete( sourceFile ) }
+            if ( move && sourceFile.file && ( ! samePath())) { file().delete( sourceFile ) }
             verify().file( destinationFile )
         }
         catch ( e )
