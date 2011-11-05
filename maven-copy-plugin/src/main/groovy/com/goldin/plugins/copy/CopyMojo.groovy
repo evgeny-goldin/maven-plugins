@@ -573,23 +573,21 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                             false, failIfNotFound )
         }
 
-        file().pack( filesDirectory, targetArchive, includes, excludes,
-                     general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
-                     failIfNotFound, resource.update,
-                     split( resource.defaultExcludes ?: defaultExcludes()),
-                     resource.destFileName, resource.prefix )
+        file().with {
 
-        if ( resource.move ) { file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ).
-                                      each { file().delete( it ) }}
+            pack( filesDirectory, targetArchive, includes, excludes,
+                  general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
+                  failIfNotFound, resource.update,
+                  split( resource.defaultExcludes ?: defaultExcludes()),
+                  resource.destFileName, resource.prefix )
 
-        if ( packUsingTemp ) { file().delete( filesDirectory ) }
+            if ( resource.move ) { delete( files( sourceDirectory, includes, excludes, true, false, failIfNotFound, true ) as File[] ) }
+            if ( packUsingTemp ) { delete( filesDirectory ) }
 
-        if ( resource.attachArtifact )
-        {
-            mavenProjectHelper.attachArtifact( mavenProject,
-                                               file().extension( targetArchive ),
-                                               resource.artifactClassifier,
-                                               targetArchive )
+            if ( resource.attachArtifact )
+            {
+                mavenProjectHelper.attachArtifact( mavenProject, extension( targetArchive ), resource.artifactClassifier, targetArchive )
+            }
         }
 
         if ( resource.deploy )
