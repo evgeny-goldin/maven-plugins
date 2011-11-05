@@ -16,7 +16,8 @@ ruleset {
         ConfusingMethodName      ( enabled : false )
         UnnecessarySubstring     ( enabled : false )
 
-        LineLength               ( length  : 160   )
-        MethodName               ( regex   : /[a-z][\w\s'\(\)]*/ ) // Spock method names
+        VariableName             ( finalRegex : /[a-zA-Z0-9_]+/ )
+        LineLength               ( length     : 160   )
+        MethodName               ( regex      : /[a-z][\w\s'\(\)]*/ ) // Spock method names
     }
 }

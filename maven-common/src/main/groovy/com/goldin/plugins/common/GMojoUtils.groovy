@@ -339,7 +339,7 @@ class GMojoUtils
      *         null            if file was skipped (identical)
      */
     @SuppressWarnings([ 'MethodSize', 'AbcComplexity', 'CyclomaticComplexity' ])
-    static File copyFile ( File                  sourceFile, // Occasionally modified, see below
+    static File copyFile ( final File            sourceFile,
                            final File            destinationFile,
                            final boolean         skipIdentical,
                            final Replace[]       replaces,
@@ -353,11 +353,12 @@ class GMojoUtils
         assert sourceFile.file && destinationFile && ( ! net().isNet( destinationFile.path ))
         assert ( replaces != null ) && encoding
 
-        Closure<Boolean> samePath           = { sourceFile.canonicalPath == destinationFile.canonicalPath }
+        File             fromFile           = sourceFile
         boolean          operationPerformed = false
+        Closure<Boolean> samePath           = { fromFile.canonicalPath == destinationFile.canonicalPath }
 
         assert ! ( move && samePath()), \
-               "It is not possible to <move> [$sourceFile] into itself - <move> means source file is deleted"
+               "It is not possible to <move> [$fromFile] into itself - <move> means source file is deleted"
 
         /**
          * Deleting destination file if possible
@@ -366,7 +367,7 @@ class GMojoUtils
 
         try
         {
-            if ( filtering && (( ! filterWithDollarOnly ) || sourceFile.getText( encoding ).contains( '${' )))
+            if ( filtering && (( ! filterWithDollarOnly ) || fromFile.getText( encoding ).contains( '${' )))
             {
                 List<MavenFileFilter> wrappers   =
                     fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
@@ -381,43 +382,41 @@ class GMojoUtils
                 if ( samePath())
                 {
                     tempFile = file().tempFile()
-                    file().copy( sourceFile, tempFile.parentFile, tempFile.name )
-                    if ( verbose ) { log.info( "[$sourceFile] copied to [$tempFile] (in order to filter it into itself)" ) }
+                    file().copy( fromFile, tempFile.parentFile, tempFile.name )
+                    if ( verbose ) { log.info( "[$fromFile] copied to [$tempFile] (to filter it into itself)" ) }
 
-                    assert ! move
-                    sourceFile = tempFile
+                    fromFile = tempFile
                 }
 
                 assert ! samePath()
-                fileFilter.copyFile( sourceFile, destinationFile, true, wrappers, encoding, true )
+                fileFilter.copyFile( fromFile, destinationFile, true, wrappers, encoding, true )
                 file().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
 
-                if ( verbose ) { log.info( "[$sourceFile] filtered to [$destinationFile]" ) }
+                if ( verbose ) { log.info( "[$fromFile] filtered to [$destinationFile]" ) }
 
                 /**
                  * - Destination file created becomes input file for the following operations
                  * - If no replacements should be made - we're done
                  */
-                if ( move ) { assert ! samePath(); file().delete( sourceFile )}
-                sourceFile         = destinationFile
-                operationPerformed = ( ! replaces )
+                fromFile           = destinationFile
+                operationPerformed = ( replaces.size() < 1 )
             }
 
             if ( replaces )
             {
-                destinationFile.write(( String ) replaces.inject( sourceFile.getText( encoding )){ String s, Replace r -> r.replace( s, sourceFile ) },
+                destinationFile.write(( String ) replaces.inject( fromFile.getText( encoding )){ String s, Replace r -> r.replace( s, fromFile ) },
                                       encoding )
-                if ( verbose ) { log.info( "[$sourceFile] content written to [$destinationFile], " +
+                if ( verbose ) { log.info( "[$fromFile] content written to [$destinationFile], " +
                                            "[${ replaces.size()}] replace${ general().s( replaces.size()) } made" )}
                 operationPerformed = true
             }
 
             final boolean identical = destinationFile.file && [ ( ! operationPerformed ), skipIdentical,
-                                                                destinationFile.length()       == sourceFile.length(),
-                                                                destinationFile.lastModified() == sourceFile.lastModified() ].every()
+                                                                destinationFile.length()       == fromFile.length(),
+                                                                destinationFile.lastModified() == fromFile.lastModified() ].every()
             if ( identical )
             {
-                log.info( "[$sourceFile] skipped - content is identical to destination [$destinationFile]" )
+                log.info( "[$fromFile] skipped - content is identical to destination [$destinationFile]" )
                 operationPerformed = true
             }
 
@@ -425,32 +424,31 @@ class GMojoUtils
             {
                 if ( samePath())
                 {
-                    log.warn( "[$sourceFile] skipped - path is identical to destination [$destinationFile]" )
+                    log.warn( "[$fromFile] skipped - path is identical to destination [$destinationFile]" )
                     operationPerformed = true
                 }
                 else if ( move )
                 {
-                    operationPerformed = sourceFile.renameTo( destinationFile )
-                    if ( verbose && operationPerformed ) { log.info( "[$sourceFile] renamed to [$destinationFile]" )}
+                    operationPerformed = fromFile.renameTo( destinationFile )
+                    if ( verbose && operationPerformed ) { log.info( "[$fromFile] renamed to [$destinationFile]" )}
                 }
 
                 if ( ! operationPerformed )
                 {
-                    file().copy( sourceFile, destinationFile.parentFile, destinationFile.name )
-                    if ( verbose ) { log.info( "[$sourceFile] ${ move ? 'moved' : 'copied' } to [$destinationFile]" )}
+                    file().copy( fromFile, destinationFile.parentFile, destinationFile.name )
+                    if ( verbose ) { log.info( "[$fromFile] ${ move ? 'moved' : 'copied' } to [$destinationFile]" )}
                 }
             }
 
             /**
-             * If it's a "move" operation and renameTo() call fails - source file is deleted
+             * If it's a "move" operation and renameTo() call doesn't succeed - source file is deleted
              */
-            if ( move && sourceFile.file && ( ! samePath())) { file().delete( sourceFile ) }
+            if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { file().delete( sourceFile ) }
             ( identical ? null : verify().file( destinationFile ))
         }
         catch ( e )
         {
-            throw new MojoExecutionException( "Failed to copy [$sourceFile.canonicalPath] to [$destinationFile.canonicalPath]",
-                                              e )
+            throw new MojoExecutionException( "Failed to copy [$sourceFile] to [$destinationFile]", e )
         }
     }
 
