@@ -391,7 +391,7 @@ class GMojoUtils
                 destinationFile.write(( String ) replaces.inject( sourceFile.getText( encoding )){ String s, Replace r -> r.replace( s, sourceFile ) },
                                       encoding )
                 if ( verbose ) { log.info( "[$sourceFile] content written to [$destinationFile], " +
-                                           "[$replaces] replace${ general().s( replaces.size()) } made" )}
+                                           "[${ replaces.size()}] replace${ general().s( replaces.size()) } made" )}
                 operationPerformed = true
             }
 
