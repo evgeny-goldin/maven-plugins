@@ -446,7 +446,8 @@ class GMojoUtils
             }
 
             /**
-             * If it's a "move" operation and renameTo() call doesn't succeed - source file is deleted
+             * If it's a "move" operation and file content was filtered/replaced or renameTo() call
+             * doesn't succeed - source file is deleted
              */
             if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { file().delete( sourceFile ) }
             ( identical ? null : verify().file( destinationFile ))
