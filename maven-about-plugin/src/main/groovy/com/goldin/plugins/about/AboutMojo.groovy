@@ -4,18 +4,22 @@ import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.beans.ExecOption
 import com.goldin.plugins.common.BaseGroovyMojo
 import java.text.SimpleDateFormat
+import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
+
 
 /**
  * Updates files specified with "about" build metadata
  */
 @MojoGoal( 'create-about' )
 @MojoPhase( 'package' )
+@MojoRequiresDependencyResolution( 'test' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class AboutMojo extends BaseGroovyMojo
 {
@@ -138,10 +142,17 @@ class AboutMojo extends BaseGroovyMojo
         String mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
 
-        File mvn = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
+        File   mvn     = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
+        String command = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin"
+        long   t       = System.currentTimeMillis()
+
         assert mvn.file, "[$mvn] - not found"
 
-        def mdt = exec( "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin" )
+        log.info( "Running [$command]" )
+
+        def mdt = exec( command  )
+
+        log.info( "Running [$command] - done, [${ System.currentTimeMillis() - t }] ms" )
 
         assert [ plugin, "[$coordinatesShort]", coordinatesLong ].every { mdt.contains( it ) }, \
                "Failed to run [$plugin] - data received doesn't contain enough information: [$mdt]"
@@ -156,6 +167,14 @@ class AboutMojo extends BaseGroovyMojo
 
         assert mdtStripped.startsWith( coordinatesLong ), \
                "Failed to run [$plugin] - cleaned up data should start with [$coordinatesLong]: [$mdtStripped]"
+
+        project.artifacts.each {
+            Artifact a ->
+            "$a.groupId:$a.artifactId:$a.type${ a.classifier ? ':' + a.classifier : '' }:$a.version:".with {
+                assert mdtStripped.contains(( String ) delegate ), \
+                       "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
+            }
+        }
 
         mdtStripped
     }
