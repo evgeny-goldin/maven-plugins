@@ -160,7 +160,7 @@ class GMojoUtils
 
         if ( s )
         {
-            run = Boolean.valueOf( eval( s, String ))
+            run = Boolean.valueOf(( String ) eval( s, String ))
             log.info( "<runIf>: [$s] evaluated to [$run] - ${ run ? 'continuing' : 'returning' }" )
         }
 
@@ -195,7 +195,6 @@ class GMojoUtils
                                     session      : session,
                                     mavenVersion : mavenVersion(),
                                     *:( project.properties + session.userProperties + session.executionProperties )]
-
         groovy().eval( expression,
                        resultType,
                        groovy().binding( bindingMap, bindingObjects ),
@@ -355,8 +354,7 @@ class GMojoUtils
         assert sourceFile.file && destinationFile && ( ! net().isNet( destinationFile.path ))
         assert ( replaces != null ) && encoding
 
-        List<File> deleteFiles        = []
-        boolean    operationPerformed = false
+        boolean operationPerformed = false
 
         if (( ! skipIdentical ) && ( sourceFile.canonicalPath != destinationFile.canonicalPath ))
         {
@@ -367,7 +365,6 @@ class GMojoUtils
         {
             if ( filtering && (( ! filterWithDollarOnly ) || sourceFile.getText( encoding ).contains( '${' )))
             {
-                File                  targetFile = replaces ? file().tempFile() : destinationFile
                 List<MavenFileFilter> wrappers   =
                     fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
                                                          ThreadLocals.get( MavenSession ), new MavenResourcesExecution())
@@ -377,25 +374,24 @@ class GMojoUtils
                     wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
                 }
 
-                fileFilter.copyFile( sourceFile, targetFile, true, wrappers, encoding, true )
+                fileFilter.copyFile( sourceFile, destinationFile, true, wrappers, encoding, true )
 
-                if ( verbose  ) { log.info( "[$sourceFile] filtered to [$targetFile]" ) }
-                if ( replaces )
-                {
-                    deleteFiles << targetFile // Will be deleted in the end
-                    sourceFile   = targetFile // File created becomes input file for the replacement operation
-                }
-                else
-                {
-                    operationPerformed = true
-                }
+                if ( verbose  ) { log.info( "[$sourceFile] filtered to [$destinationFile]" ) }
+
+                /**
+                 * - Destination file created becomes input file for the following operations
+                 * - If no replacements should be made - we're done
+                 */
+                sourceFile         = destinationFile
+                operationPerformed = ( ! replaces )
             }
 
             if ( replaces )
             {
                 destinationFile.write(( String ) replaces.inject( sourceFile.getText( encoding )){ String s, Replace r -> r.replace( s, sourceFile ) },
                                       encoding )
-                if ( verbose ) { log.info( "[$sourceFile] content written to [$destinationFile], [$replaces] replace${ general().s( replaces.size()) } made" )}
+                if ( verbose ) { log.info( "[$sourceFile] content written to [$destinationFile], " +
+                                           "[$replaces] replace${ general().s( replaces.size()) } made" )}
                 operationPerformed = true
             }
 
@@ -428,9 +424,7 @@ class GMojoUtils
                 }
             }
 
-            if ( move && sourceFile.file ) { deleteFiles << sourceFile }
-            file().delete( deleteFiles as File[] )
-
+            if ( move && sourceFile.file ) { file().delete( sourceFile ) } // renameTo() could fail and return "false"
             verify().file( destinationFile )
         }
         catch ( e )
