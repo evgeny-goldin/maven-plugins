@@ -341,7 +341,7 @@ class GMojoUtils
      */
     @SuppressWarnings([ 'MethodSize', 'AbcComplexity', 'CyclomaticComplexity' ])
     static File copyFile ( File            sourceFile,
-                           File            destinationFile,
+                           final File      destinationFile,
                            boolean         skipIdentical,
                            Replace[]       replaces,
                            boolean         filtering,
@@ -417,9 +417,11 @@ class GMojoUtils
                 operationPerformed = true
             }
 
+            copyToItself = ( sourceFile.canonicalPath == destinationFile.canonicalPath )
+
             if ( ! operationPerformed )
             {
-                if ( sourceFile.canonicalPath == destinationFile.canonicalPath )
+                if ( copyToItself )
                 {
                     log.warn( "[$sourceFile] skipped - path is identical to destination [$destinationFile]" )
                     operationPerformed = true
@@ -427,7 +429,7 @@ class GMojoUtils
                 else if ( move )
                 {
                     operationPerformed = sourceFile.renameTo( destinationFile )
-                    if ( verbose && operationPerformed ) { log.info( "[$sourceFile] moved to [$destinationFile]" )}
+                    if ( verbose && operationPerformed ) { log.info( "[$sourceFile] renamed to [$destinationFile]" )}
                 }
 
                 if ( ! operationPerformed )
@@ -437,7 +439,10 @@ class GMojoUtils
                 }
             }
 
-            if ( move && sourceFile.file ) { file().delete( sourceFile ) } // renameTo() could fail and return "false"
+            /**
+             * If "move" and renameTo() fails - source file is deleted
+             */
+            if ( move && sourceFile.file && ( ! copyToItself )) { file().delete( sourceFile ) }
             verify().file( destinationFile )
         }
         catch ( e )
