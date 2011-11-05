@@ -355,11 +355,9 @@ class GMojoUtils
         assert ( replaces != null ) && encoding
 
         boolean operationPerformed = false
+        boolean copyToItself       = ( sourceFile.canonicalPath == destinationFile.canonicalPath )
 
-        if (( ! skipIdentical ) && ( sourceFile.canonicalPath != destinationFile.canonicalPath ))
-        {
-            file().mkdirs( file().delete( destinationFile ).parentFile )
-        }
+        if ( ! ( skipIdentical || copyToItself )) { file().mkdirs( file().delete( destinationFile ).parentFile )}
 
         try
         {
@@ -374,9 +372,21 @@ class GMojoUtils
                     wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
                 }
 
-                fileFilter.copyFile( sourceFile, destinationFile, true, wrappers, encoding, true )
+                File tempFile = null
+                if ( copyToItself )
+                {
+                    tempFile   = file().tempFile()
+                    file().copy( sourceFile, tempFile.parentFile, tempFile.name )
+                    if ( verbose ) { log.info( "[$sourceFile] copied to [$tempFile]" ) }
 
-                if ( verbose  ) { log.info( "[$sourceFile] filtered to [$destinationFile]" ) }
+                    sourceFile = tempFile
+                }
+
+                assert ( sourceFile.canonicalPath != destinationFile.canonicalPath )
+                fileFilter.copyFile( sourceFile, destinationFile, true, wrappers, encoding, true )
+                file().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
+
+                if ( verbose ) { log.info( "[$sourceFile] filtered to [$destinationFile]" ) }
 
                 /**
                  * - Destination file created becomes input file for the following operations
