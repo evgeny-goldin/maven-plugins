@@ -355,6 +355,7 @@ class GMojoUtils
 
         File             fromFile           = sourceFile
         boolean          operationPerformed = false
+        boolean          operationSkipped   = false
         Closure<Boolean> samePath           = { fromFile.canonicalPath == destinationFile.canonicalPath }
 
         assert ! ( move && samePath()), \
@@ -423,6 +424,7 @@ class GMojoUtils
             {
                 log.info( "[$fromFile] skipped - content is identical to destination [$destinationFile]" )
                 operationPerformed = true
+                operationSkipped   = true
             }
 
             if ( ! operationPerformed )
@@ -431,6 +433,7 @@ class GMojoUtils
                 {
                     log.warn( "[$fromFile] skipped - path is identical to destination [$destinationFile]" )
                     operationPerformed = true
+                    operationSkipped   = true
                 }
                 else if ( move )
                 {
@@ -450,7 +453,7 @@ class GMojoUtils
              * doesn't succeed - source file is deleted
              */
             if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { file().delete( sourceFile ) }
-            ( identical ? null : verify().file( destinationFile ))
+            ( operationSkipped ? null : verify().file( destinationFile ))
         }
         catch ( e )
         {
