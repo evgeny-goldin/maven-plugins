@@ -200,11 +200,15 @@ final class CopyResource extends Resource implements Cloneable
      * as it is safe not to copy dependencies to the temporal folder.
      * Otherwise, false is returned.
      *
-     * @return
+     * @return whether dependencies for the current resource should be served from the local Maven repo
      */
     @SuppressWarnings( 'GroovyConditionalCanBeElvis' )
     boolean dependenciesAtM2 ()
     {
+        /**
+         * See http://evgeny-goldin.org/youtrack/issue/pl-506
+         */
+
         ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
         ( this.stripVersion             ) ? false :
         ( dependencies().size()  < 2    ) ? true  :
