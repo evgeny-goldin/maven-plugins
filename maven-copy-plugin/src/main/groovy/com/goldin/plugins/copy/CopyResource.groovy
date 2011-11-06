@@ -206,8 +206,9 @@ final class CopyResource extends Resource implements Cloneable
     boolean dependenciesAtM2 ()
     {
         ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
+        ( this.stripVersion             ) ? false :
         ( dependencies().size()  < 2    ) ? true  :
-                                            ( ! ( this.stripVersion || this.filter || this.process ))
+                                            ( ! ( this.filter || this.process ))
     }
 
 

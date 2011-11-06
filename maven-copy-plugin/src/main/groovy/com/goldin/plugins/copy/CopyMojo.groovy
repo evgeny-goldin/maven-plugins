@@ -289,7 +289,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( resource.dependenciesAtM2())
         {
-            resolveDependencies( dependencies ).each {
+            resolve( dependencies ).each {
                 CopyDependency d ->
                 /**
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
@@ -320,7 +320,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             try
             {
                 int  dependenciesCopied = 0
-                resolveDependencies( dependencies, tempDirectory, resource.stripVersion ).each {
+                resolve( dependencies, tempDirectory, resource.stripVersion ).each {
                     CopyDependency d ->
                     copyArtifact( d )    // Copies <dependency> to temp directory
                     dependenciesCopied++ // Zero dependencies can be copied if some of them are optional and can't be resolved.
@@ -355,24 +355,22 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param stripVersion    whether dependencies version should be stripped
      * @return                dependencies resolved and filtered
      */
-    private Collection<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
-                                                             File                 outputDirectory = constants().USER_DIR_FILE,
-                                                             boolean              stripVersion    = false )
+    private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
+                                                 File                 outputDirectory = constants().USER_DIR_FILE,
+                                                 boolean              stripVersion    = false )
     {
         assert dependencies && outputDirectory.directory
 
-        ( Collection<CopyDependency> ) dependencies.
-        collect {
-            CopyDependency d -> helper.getDependencies( d ) }.
+        Collection<CopyDependency> result = dependencies.
+        collect { CopyDependency d -> helper.getDependencies( d ) }.
         flatten().
-        collect {
-            CopyDependency d ->
+        collect { CopyDependency d ->
 
             verify().notNullOrEmpty( d.groupId, d.artifactId )
 
             try
             {
-                d.outputDirectory = outputDirectory
+                d.outputDirectory = file().mkdirs( outputDirectory )
                 setArtifactItems([ d ])
                 ( CopyDependency ) ( getProcessedArtifactItems( stripVersion )[ 0 ] )
             }
@@ -380,15 +378,18 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             {
                 if ( d.optional )
                 {
-                    log.warn( "Failed to resolve optional dependency [$d]: $e" )
+                    log.warn( "Failed to resolve optional <dependency> [$d]: $e" )
                 }
                 else
                 {
-                    throw new MojoExecutionException( "Failed to resolve dependency [$d]", e )
+                    throw new MojoExecutionException( "Failed to resolve <dependency> [$d]", e )
                 }
             }
         }.
         grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
+
+        assert result
+        result
     }
 
 
