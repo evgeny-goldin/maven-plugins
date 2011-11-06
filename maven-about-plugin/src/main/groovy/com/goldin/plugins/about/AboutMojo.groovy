@@ -170,9 +170,9 @@ class AboutMojo extends BaseGroovyMojo
 
         project.artifacts.each {
             Artifact a ->
-            "$a.groupId:$a.artifactId:$a.type${ a.classifier ? ':' + a.classifier : '' }:$a.version:".with {
+            "$a.groupId:$a.artifactId:$a.type".with {
                 assert mdtStripped.contains(( String ) delegate ), \
-                       "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
+                "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
             }
         }
 
