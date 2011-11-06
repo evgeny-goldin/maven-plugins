@@ -109,12 +109,12 @@ final class CopyResource extends Resource implements Cloneable
     Boolean useTrueZipForUnpack
     Boolean filterWithDollarOnly
     Boolean dependenciesAtM2  // "false" - all <dependencies> are copied to temp directory first,
-                              //          "stripVersion" is active
-                              //          <filter> and <process> operate on all of them at once
+                              //          "stripVersion" is active,
+                              //          <filter> and <process> operate on all of them at once,
                               //          dependencies are not processes in the same order they are declared
                               // "true" - every dependency is served from local Maven repo,
-                              //          "stripVersion" is not active
-                              //          <filter> and <process> operate on each dependency individually
+                              //          "stripVersion" is not active,
+                              //          <filter> and <process> operate on each dependency individually,
                               //          dependencies are processes in the same order they are declared
 
     boolean preservePath          = false
@@ -202,17 +202,20 @@ final class CopyResource extends Resource implements Cloneable
      *
      * @return
      */
+    @SuppressWarnings( 'GroovyConditionalCanBeElvis' )
     boolean dependenciesAtM2 ()
     {
-        // noinspection GroovyConditionalCanBeElvis
-        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 : ( ! ( this.stripVersion || this.filter || this.process ))
+        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
+        ( dependencies().size()  < 2    ) ? true  :
+                                            ( ! ( this.stripVersion || this.filter || this.process ))
     }
 
 
     @Override
     String toString ()
-    {
-        // Do not use any of GCommons calls here - it will fail Maven 2 build running with "-X" flag
+    {   /**
+         * Do not use any GCommons calls here ! It fails when Maven 2 build runs with "-X" flag.
+         */
         "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], includes $includes, excludes $excludes, " +
         "dependencies [${ dependencies  ?: dependency }], clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
     }
