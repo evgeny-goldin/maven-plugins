@@ -213,6 +213,9 @@ class AboutMojo extends BaseGroovyMojo
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
         // http://confluence.jetbrains.net/display/TCD7/Predefined+Build+Parameters
 
+        log.info( System.getenv().toString())
+        log.info( System.properties.toString())
+
         """
         $SEPARATOR
         | TeamCity Info
