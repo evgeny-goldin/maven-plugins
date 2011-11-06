@@ -194,6 +194,8 @@ class GMojoUtils
         Map          bindingMap = [ project      : project,
                                     session      : session,
                                     mavenVersion : mavenVersion(),
+                                    startTime    : session.startTime,
+                                    ant          : new AntBuilder(),
                                     *:( project.properties + session.userProperties + session.executionProperties )]
         groovy().eval( expression,
                        resultType,
