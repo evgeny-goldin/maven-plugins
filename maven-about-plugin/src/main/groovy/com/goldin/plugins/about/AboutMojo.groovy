@@ -211,13 +211,16 @@ class AboutMojo extends BaseGroovyMojo
     String teamcityContent()
     {
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
+        // http://confluence.jetbrains.net/display/TCD7/Predefined+Build+Parameters
 
         """
         $SEPARATOR
         | TeamCity Info
         $SEPARATOR
-        | Project Name   : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
-        | Build Config   : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
+        | Server URL     : [${ env[ 'TEAMCITY_URL' ] ?: 'Define \'TEAMCITY_URL\' environment variable' }]
+        | Server Version : [${ env[ 'TEAMCITY_VERSION' ] }]
+        | Project        : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
+        | Configuration  : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
         | Build Number   : [${ env[ 'BUILD_NUMBER' ] }]"""
     }
 
