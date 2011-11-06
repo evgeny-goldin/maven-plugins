@@ -213,14 +213,19 @@ class AboutMojo extends BaseGroovyMojo
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
         // http://confluence.jetbrains.net/display/TCD7/Predefined+Build+Parameters
 
-        log.info( System.getenv().toString())
-        log.info( System.properties.toString())
+        def urlMessage  = 'Define \'TEAMCITY_URL\' environment variable and make sure \'-Dteamcity.build.id\' specified when job starts'
+        def teamCityUrl = env[ 'TEAMCITY_URL' ]
+        def buildId     = System.getProperty( 'teamcity.build.id' )
+        def buildUrl    = ( teamCityUrl && buildId ? "${ teamCityUrl.replaceAll( /(\\|\/)*$/, '' ) }/viewLog.html?buildId=$buildId" : '' )
+        def logUrl      = ( buildUrl               ? "$buildUrl&tab=buildLog"                                                       : '' )
 
         """
         $SEPARATOR
         | TeamCity Info
         $SEPARATOR
-        | Server URL     : [${ env[ 'TEAMCITY_URL' ] ?: 'Define \'TEAMCITY_URL\' environment variable' }]
+        | Server         : [${ teamCityUrl ?: urlMessage }]
+        | Job            : [${ buildUrl    ?: urlMessage }]
+        | Log            : [${ logUrl      ?: urlMessage }]
         | Server Version : [${ env[ 'TEAMCITY_VERSION' ] }]
         | Project        : [${ env[ 'TEAMCITY_PROJECT_NAME' ] }]
         | Configuration  : [${ env[ 'TEAMCITY_BUILDCONF_NAME' ] }]
