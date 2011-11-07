@@ -332,7 +332,7 @@
                                 new File( project.build.outputDirectory ).with{ directory &amp;&amp; listFiles() }
                             }}
                             </runIf>
-                            <dumpDependencies>false</dumpDependencies>
+                            <dumpDependencies>true</dumpDependencies>
                             <dumpMaven>true</dumpMaven>
                             <fileName>${project.build.outputDirectory}/META-INF/about~${project.groupId}~${project.artifactId}~${project.version}.txt</fileName>
                             <updateArchives>false</updateArchives>
