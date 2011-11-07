@@ -142,8 +142,10 @@ class AboutMojo extends BaseGroovyMojo
         String mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
 
-        File   mvn     = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
-        String command = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin"
+        File   mvn       = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
+        String mavenRepo = System.getProperty( 'maven.repo.local' )
+        String command   = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin" +
+                           ( mavenRepo ? " -Dmaven.repo.local=$mavenRepo" : '' )
         long   t       = System.currentTimeMillis()
 
         assert mvn.file, "[$mvn] - not found"
