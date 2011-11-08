@@ -40,8 +40,31 @@ class Repository
     String  gitName    = 'origin'
     String  gitBranch  = 'master'
     String  gitRefspec = '+refs/heads/*:refs/remotes/origin/*'
-    boolean gitorious  = false
 
+    /**
+     * Git branch "Advanced" options
+     */
+
+    String  gitExcludedRegions
+    String  gitExcludedUsers
+    String  gitLocalBranch
+    String  gitLocalSubdirectory
+    String  gitScmName
+    String  gitConfigName
+    String  gitConfigEmail
+    String  gitMergeRepo
+    String  gitMergeBranch
+    String  gitRepoBrowser
+    String  gitRepoBrowserUrl
+
+    boolean gitPruneBranches      = false
+    boolean gitSkipTag            = false
+    boolean gitCleanAfterCheckout = false
+    boolean gitRemotePoll         = false
+    boolean gitUpdateSubmodules   = false
+    boolean gitCommitAuthor       = false
+    boolean gitWipeOutWorkspace   = false
+    boolean gitorious             = false
 
     /**
     * Whether this repository is a Git/Gitorious/SVN/CVS repository
