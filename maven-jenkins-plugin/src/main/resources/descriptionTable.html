@@ -113,7 +113,10 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
                     Trigger trigger ->
             %>
 
-            <li> <strong><code>${ trigger.type }:</code></strong> <a href="http://linuxmanpages.com/man5/crontab.5.php"><strong><code>&quot;${ trigger.expression }&quot;</code></strong></a>
+            <li> <strong><code>${ trigger.type }:</code></strong>
+                 <a href="http://www.manpagez.com/man/5/crontab/">
+                 <strong><code>&quot;${ trigger.expression }&quot;</code></strong>
+                 </a>
                 ${ trigger.description ? '<i>(' + trigger.description + ')</i>' : '' }
             <%
                 }
@@ -134,9 +137,13 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
                     Repository repo ->
             %>
 
-            <li><a href="${ repo.remoteLink }/"><strong><code>${ repo.remote }</code></strong></a>
+            <li><a href="${ repo.remoteLink }/">
+                <strong><code>${ repo.remote }</code></strong>
+                </a>
                 <% if ( repo.git ) { %>
-                : <a href="${ repo.gitRemoteBranchLink }/"><strong><code>${ repo.gitBranch }</code></strong></a>
+                : <a href="${ repo.gitRemoteBranchLink }/">
+                  <strong><code>${ repo.gitBranch }</code></strong>
+                  </a>
             <%
                    }
 
