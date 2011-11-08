@@ -4,7 +4,12 @@ import com.goldin.plugins.jenkins.beans.*
 import com.goldin.plugins.jenkins.Job.*
 import com.goldin.plugins.jenkins.Job.JOB_TYPE
 
-def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job/${ jobId }\"><strong>${ jobId }</strong></a>" }
+def jobLink ( String jenkinsUrl, String jobId ) {
+    """<a href=\"${ jenkinsUrl }/job/${ jobId }\">
+    <strong>${ jobId }</strong>
+    </a>""".stripIndent()
+}
+
 %>
 
 <table border="1" width="100%" cellpadding="3" cellspacing="3">
