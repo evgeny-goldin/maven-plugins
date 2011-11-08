@@ -117,7 +117,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     private CopyResource[] resources () { general().array( this.resources, this.resource, CopyResource ) }
 
     @MojoParameter ( required = false )
-    public GroovyConfig groovyConfig = new GroovyConfig()
+    public GroovyConfig groovyConfig
 
 
     private final CopyMojoHelper helper = new CopyMojoHelper()
