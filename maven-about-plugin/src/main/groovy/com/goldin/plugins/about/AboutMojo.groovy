@@ -135,11 +135,10 @@ class AboutMojo extends BaseGroovyMojo
     @Ensures({ result })
     private String dependencyTree()
     {
-        String plugin           = 'maven-dependency-plugin:2.3:tree'
-        String coordinatesShort = "${project.groupId}:${project.artifactId}:${project.version}"
-        String coordinatesLong  = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
+        String plugin      = 'maven-dependency-plugin:2.3:tree'
+        String coordinates = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
+        String mvnHome     = env[ 'M2_HOME' ]
 
-        String mvnHome = env[ 'M2_HOME' ]
         assert mvnHome, "'M2_HOME' environment variable is not defined"
 
         File   mvn       = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
@@ -156,7 +155,7 @@ class AboutMojo extends BaseGroovyMojo
 
         log.info( "Running [$command] - done, [${ System.currentTimeMillis() - t }] ms" )
 
-        assert [ plugin, "[$coordinatesShort]", coordinatesLong ].every { mdt.contains( it ) }, \
+        assert [ plugin, coordinates ].every { mdt.contains( it ) }, \
                "Failed to run [$plugin] - data received doesn't contain enough information: [$mdt]"
 
         def mdtStripped = mdt.replace( '[INFO] ', '' ).
@@ -167,8 +166,8 @@ class AboutMojo extends BaseGroovyMojo
                               replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
                               trim()
 
-        assert mdtStripped.startsWith( coordinatesLong ), \
-               "Failed to run [$plugin] - cleaned up data should start with [$coordinatesLong]: [$mdtStripped]"
+        assert mdtStripped.startsWith( coordinates ), \
+               "Failed to run [$plugin] - cleaned up data should start with [$coordinates]: [$mdtStripped]"
 
         project.artifacts.each {
             Artifact a ->
