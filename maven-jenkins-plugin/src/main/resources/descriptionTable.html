@@ -70,8 +70,12 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
     %>
     <tr>
         <td valign="top">Deployed to Artifactory</td>
-        <td><a href="${ job.artifactory.name }"><strong><code>${ job.artifactory.name }</code></strong></a> =>
-            <a href="${ job.artifactory.name }/${ job.artifactory.repository }/"><strong><code>"${ job.artifactory.repository }"</code></strong></a>
+        <td><a href="${ job.artifactory.name }">
+            <strong><code>${ job.artifactory.name }</code></strong>
+            </a> =>
+            <a href="${ job.artifactory.name }/${ job.artifactory.repository }/">
+            <strong><code>"${ job.artifactory.repository }"</code></strong>
+            </a>
         </td>
     </tr>
     <%
@@ -98,7 +102,9 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
     %>
     <tr>
         <td valign="top">Node</td>
-        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/"><strong>${ job.node }</strong></a></td>
+        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/">
+            <strong>${ job.node }</strong>
+            </a></td>
     </tr>
     <%
       if ( job.triggers())
@@ -157,7 +163,9 @@ def jobLink ( String jenkinsUrl, String jobId ) { "<a href=\"${ jenkinsUrl }/job
     <tr>
         <td valign="top">POM</td>
         <td>
-            <li><a href="${ pomUrl }"><strong><code>${ pomUrl }</code></strong></a>
+            <li><a href="${ pomUrl }">
+                <strong><code>${ pomUrl }</code></strong>
+                </a>
         </td>
     </tr>
     <%
