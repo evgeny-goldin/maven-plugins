@@ -113,6 +113,7 @@ final class CopyMojoHelper
         // noinspection GroovyPointlessBoolean
         assert ( ! singleDependency ) || ( dependency.excludeTransitive == false )
 
+        def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
         def directDependencies        = singleDependency ?
             [ dependency ] as Set :                               // For single dependency it is it's own direct dependency
@@ -122,27 +123,27 @@ final class CopyMojoHelper
 
         if ( dependency.includeScope || dependency.excludeScope )
         {
-            filters << new ScopeFilter( dependency.includeScope, dependency.excludeScope )
+            filters << new ScopeFilter( c ( dependency.includeScope ), c ( dependency.excludeScope ))
         }
 
         if ( dependency.includeGroupIds || dependency.excludeGroupIds )
         {
-            filters << new GroupIdFilter( dependency.includeGroupIds, dependency.excludeGroupIds )
+            filters << new GroupIdFilter( c ( dependency.includeGroupIds ), c ( dependency.excludeGroupIds ))
         }
 
         if ( dependency.includeArtifactIds || dependency.excludeArtifactIds )
         {
-            filters << new ArtifactIdFilter( dependency.includeArtifactIds, dependency.excludeArtifactIds )
+            filters << new ArtifactIdFilter( c ( dependency.includeArtifactIds ), c ( dependency.excludeArtifactIds ))
         }
 
         if ( dependency.includeClassifiers || dependency.excludeClassifiers )
         {
-            filters << new ClassifierFilter( dependency.includeClassifiers, dependency.excludeClassifiers)
+            filters << new ClassifierFilter( c ( dependency.includeClassifiers ), c ( dependency.excludeClassifiers ))
         }
 
         if ( dependency.includeTypes || dependency.excludeTypes )
         {
-            filters << new TypeFilter( dependency.includeTypes, dependency.excludeTypes )
+            filters << new TypeFilter( c ( dependency.includeTypes ), c ( dependency.excludeTypes ))
         }
 
         assert ( singleDependency || ( filters.size() > 1 )) : \
