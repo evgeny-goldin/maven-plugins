@@ -91,7 +91,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
         %>
       <${ job.scmClass }_-ModuleLocation>
         <remote>${ repository.remote }</remote>
-        ${ repository.local ? ( "<local>" + repository.local + "</local>" ) :  "" }
+        ${ repository.local ? ( '<local>' + repository.local + '</local>' ) :  '' }
       </${ job.scmClass }_-ModuleLocation>
         <%
            }
@@ -108,56 +108,83 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
     <!-- Git repository -->
     <!-- ~~~~~~~~~~~~~~ -->
 
-    <configVersion>1</configVersion>
-    <remoteRepositories>
-        <%
-           job.repositories().each
-           {
-                repository ->
-        %>
-      <org.spearce.jgit.transport.RemoteConfig>
-        <string>${ repository.gitName }</string>
-        <int>5</int>
-        <string>fetch</string>
-        <string>${ repository.gitRefspec }</string>
-        <string>receivepack</string>
-        <string>git-upload-pack</string>
-        <string>uploadpack</string>
-        <string>git-upload-pack</string>
-        <string>url</string>
-        <string>${ repository.remote }</string>
-        <string>tagopt</string>
-        <string></string>
-      </org.spearce.jgit.transport.RemoteConfig>
-        <%
-           }
-        %>
-    </remoteRepositories>
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+    <%
+        job.repositories().each
+        {
+            repository ->
+    %>
+        <hudson.plugins.git.UserRemoteConfig>
+            <name>${ repository.gitName }</name>
+            <refspec>${ repository.gitRefspec }</refspec>
+            <url>${ repository.remote }</url>
+        </hudson.plugins.git.UserRemoteConfig>
+    <%
+        }
+    %>
+    </userRemoteConfigs>
     <branches>
-      <hudson.plugins.git.BranchSpec>
-        <name>${ job.repositories().first().gitBranch }</name>
-      </hudson.plugins.git.BranchSpec>
+    <%
+        job.repositories().each
+        {
+            repository ->
+    %>
+        <hudson.plugins.git.BranchSpec>
+            <name>${ repository.gitBranch }</name>
+        </hudson.plugins.git.BranchSpec>
+    <%
+        }
+
+        def gitRepo = job.repositories().first()
+    %>
     </branches>
-    <localBranch></localBranch>
-    <mergeOptions/>
+    ${ gitRepo.gitLocalBranch ? '<localBranch>' + gitRepo.gitLocalBranch + '</localBranch>' : '' }
+    <%
+        if ( gitRepo.gitMergeRepo || gitRepo.gitMergeBranch )
+        {
+    %>
+    <userMergeOptions>
+      <mergeRemote>${ gitRepo.gitMergeRepo }</mergeRemote>
+      <mergeTarget>${ gitRepo.gitMergeBranch }</mergeTarget>
+    </userMergeOptions>
+    <%
+        }
+    %>
+    <recursiveSubmodules>${ gitRepo.gitUpdateSubmodules }</recursiveSubmodules>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-    <authorOrCommitter>false</authorOrCommitter>
-    <clean>false</clean>
-    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <authorOrCommitter>${ gitRepo.gitCommitAuthor }</authorOrCommitter>
+    <clean>${ gitRepo.gitCleanAfterCheckout }</clean>
+    <wipeOutWorkspace>${ gitRepo.gitWipeOutWorkspace }</wipeOutWorkspace>
+    <pruneBranches>${ gitRepo.gitPruneBranches }</pruneBranches>
+    <remotePoll>${ gitRepo.gitRemotePolling }</remotePoll>
     <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
     <gitTool>Default</gitTool>
+    <%
+        if ( gitRepo.gitRepoBrowserClass() && gitRepo.gitRepoBrowserUrl )
+        {
+    %>
+    <browser class="${ gitRepo.gitRepoBrowserClass() }">
+      <url>${ gitRepo.gitRepoBrowserUrl }</url>
+    </browser>
+    <%
+        }
+    %>
     <submoduleCfg class="list"/>
-    <relativeTargetDir></relativeTargetDir>
-    <excludedRegions></excludedRegions>
-    <excludedUsers></excludedUsers>
-  <%
+    <relativeTargetDir>${ gitRepo.gitLocalSubdirectory }</relativeTargetDir>
+    <excludedRegions>${ gitRepo.gitExcludedRegions }</excludedRegions>
+    <excludedUsers>${ gitRepo.gitExcludedUsers }</excludedUsers>
+    <gitConfigName>${ gitRepo.gitConfigName }</gitConfigName>
+    <gitConfigEmail>${ gitRepo.gitConfigEmail }</gitConfigEmail>
+    <skipTag>${ gitRepo.gitSkipTag }</skipTag>
+    <scmName>${ gitRepo.gitScmName }</scmName>
+     <%
      }
-
      if ( job.scm )
      {
         print job.scm.addDollar()
      }
-  %>
+     %>
   </scm>
 
   <assignedNode>${ job.node ?: '' }</assignedNode>

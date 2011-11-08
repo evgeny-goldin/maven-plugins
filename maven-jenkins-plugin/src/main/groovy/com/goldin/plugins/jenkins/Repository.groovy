@@ -37,30 +37,37 @@ class Repository
      * Git-specific properties
      */
 
-    String  gitName    = 'origin'
-    String  gitBranch  = 'master'
-    String  gitRefspec = '+refs/heads/*:refs/remotes/origin/*'
+    String  gitName    = ''
+    String  gitRefspec = ''
+    String  gitBranch  = '**'
 
     /**
      * Git branch "Advanced" options
      */
 
-    String  gitExcludedRegions
-    String  gitExcludedUsers
-    String  gitLocalBranch
-    String  gitLocalSubdirectory
-    String  gitScmName
-    String  gitConfigName
-    String  gitConfigEmail
-    String  gitMergeRepo
-    String  gitMergeBranch
-    String  gitRepoBrowser
-    String  gitRepoBrowserUrl
+    String  gitExcludedRegions    = ''
+    String  gitExcludedUsers      = ''
+    String  gitLocalBranch        = ''
+    String  gitLocalSubdirectory  = ''
+    String  gitScmName            = ''
+    String  gitConfigName         = ''
+    String  gitConfigEmail        = ''
+    String  gitMergeRepo          = ''
+    String  gitMergeBranch        = ''
+    String  gitRepoBrowser        = ''
+    String  gitRepoBrowserUrl     = ''
+    String  gitRepoBrowserClass() {
+        gitRepoBrowser == 'githubweb'    ? 'hudson.plugins.git.browser.GithubWeb'    :
+        gitRepoBrowser == 'gitoriousweb' ? 'hudson.plugins.git.browser.GitoriousWeb' :
+        gitRepoBrowser == 'gitweb'       ? 'hudson.plugins.git.browser.GitWeb'       :
+        gitRepoBrowser == 'redmineweb'   ? 'hudson.plugins.git.browser.RedmineWeb'   :
+                                           ''
+    }
 
     boolean gitPruneBranches      = false
     boolean gitSkipTag            = false
     boolean gitCleanAfterCheckout = false
-    boolean gitRemotePoll         = false
+    boolean gitRemotePolling      = false
     boolean gitUpdateSubmodules   = false
     boolean gitCommitAuthor       = false
     boolean gitWipeOutWorkspace   = false
