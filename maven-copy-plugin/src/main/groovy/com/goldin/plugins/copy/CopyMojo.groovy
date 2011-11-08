@@ -424,7 +424,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             return resource
         }
 
-        if ( ! resource.mkdir )
+        if (( ! resource.mkdir ) && failIfNotFound )
         {
             verify().directory( sourceDirectory )
         }
