@@ -312,7 +312,7 @@ class Job
                                   ( this.localRepo     ?: '.' )).
                                  replace( '\\', '/' )
 
-            String localRepoArg = "-Dmaven.repo.local=\"${ this.localRepoPath }\""
+            String localRepoArg = "-Dmaven.repo.local=&quot;${ this.localRepoPath }&quot;"
             this.mavenGoals     = ( this.mavenGoals.contains( '-Dmaven.repo.local' )) ?
                                       ( this.mavenGoals.replaceAll( /-Dmaven.repo.local\S+/, localRepoArg )) :
                                       ( this.mavenGoals +  ' ' + localRepoArg )

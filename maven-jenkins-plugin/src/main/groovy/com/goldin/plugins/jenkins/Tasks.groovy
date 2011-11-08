@@ -8,7 +8,6 @@ abstract class Task
 
     private final String space = ' ' * 8
 
-
     String buildMarkup( List<String> properties )
     {
         List<String> lines = []
@@ -33,17 +32,18 @@ class Shell extends Task
 @SuppressWarnings( 'StatelessClass' )
 class Maven extends Task
 {
-    String  mavenName            = '(Default)'
     String  targets              = '-e clean install'
-    String  pom                  = 'pom.xml'
+    String  mavenName            = '(Default)'
     String  jvmOptions           = ''
+    String  pom                  = 'pom.xml'
     String  properties           = ''
     boolean usePrivateRepository = false
 
     String getMarkup ()
     {
-        buildMarkup([ 'targets', 'mavenName', 'jvmOptions', 'properties', 'usePrivateRepository' ] +
-                    (( pom == 'false' ) ? [] : 'pom' ))
+        buildMarkup( ( List<String> ) [ 'targets', 'mavenName', 'jvmOptions' ] +
+                                      ( pom == 'false' ? [] : [ 'pom' ] ) +
+                                      [ 'properties', 'usePrivateRepository' ] )
     }
 }
 
@@ -58,8 +58,8 @@ class BatchFile extends Task
 class Ant extends Task
 {
     String targets
-    String buildFile  = 'build.xml'
     String antOpts    = ''
+    String buildFile  = 'build.xml'
     String properties = ''
-    String getMarkup () { buildMarkup([ 'targets', 'buildFile',  'antOpts', 'properties' ]) }
+    String getMarkup () { buildMarkup([ 'targets', 'antOpts', 'buildFile', 'properties' ]) }
 }

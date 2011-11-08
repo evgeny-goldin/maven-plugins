@@ -63,8 +63,6 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
         ${ repository.cvsRsh    ? '<cvsRsh>' + repository.cvsRsh    + '</cvsRsh>' : '' }
         <canUseUpdate>${ repository.cvsUpdate }</canUseUpdate>
         <flatten>${ ! repository.cvsLegacy }</flatten>
-        <isTag>${ repository.cvsTag }</isTag>
-        <excludedRegions>${ repository.cvsExcludedRegions }</excludedRegions>
   <%
             if ( repository.cvsRepositoryBrowser && repository.cvsRepositoryBrowserUrl )
             {
@@ -74,6 +72,10 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
         </repositoryBrowser>
   <%
             }
+  %>
+        <isTag>${ repository.cvsTag }</isTag>
+        <excludedRegions>${ repository.cvsExcludedRegions }</excludedRegions>
+  <%
         }
      }
      else if ( job.scmClass.contains( 'SubversionSCM' ))
@@ -190,7 +192,9 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <assignedNode>${ job.node ?: '' }</assignedNode>
   <canRoam>${ job.node ? false : true }</canRoam>
   <disabled>${ job.disabled }</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <jdk>${ job.jdkName }</jdk>
   <%
      if ( job.authToken )
      {
@@ -212,7 +216,6 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
      }
   %>
   </triggers>
-  <jdk>${ job.jdkName }</jdk>
   <concurrentBuild>false</concurrentBuild>
   <%
         if ( job.jobType == JOB_TYPE.maven )
@@ -227,6 +230,10 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <usePrivateRepository>${ job.privateRepository }</usePrivateRepository>
   <ignoreUpstremChanges>${ ! job.buildOnSNAPSHOT }</ignoreUpstremChanges>
   <archivingDisabled>${ job.archivingDisabled }</archivingDisabled>
+  <resolveDependencies>false</resolveDependencies>
+  <processPlugins>false</processPlugins>
+  <mavenValidationLevel>0</mavenValidationLevel>
+  <runHeadless>false</runHeadless>
   <reporters>
   <%
             if ( job.reporters )
