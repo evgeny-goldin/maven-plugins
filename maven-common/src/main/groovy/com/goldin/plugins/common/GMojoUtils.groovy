@@ -187,8 +187,6 @@ class GMojoUtils
                         GroovyConfig config     = new GroovyConfig(),
                         Object ...   bindingObjects )
     {
-
-
         MavenProject project    = ThreadLocals.get( MavenProject )
         MavenSession session    = ThreadLocals.get( MavenSession )
         Map          bindingMap = [ project      : project,
