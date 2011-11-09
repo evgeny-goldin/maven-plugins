@@ -261,7 +261,7 @@ class Job
         if ( this.jobType == JOB_TYPE.maven )
         {
             set( 'pom',               parentJob, override, { verify().notNullOrEmpty( it )}, 'pom.xml' )
-            set( 'mavenGoals',        parentJob, override, { verify().notNullOrEmpty( it )}, '-e clean install' )
+            set( 'mavenGoals',        parentJob, override, { verify().notNullOrEmpty( it )}, '-B -e clean install' )
             set( 'mavenName',         parentJob, override, { verify().notNullOrEmpty( it )}, '' )
             set( 'mavenOpts',         parentJob, override, { it }, ''    )
             set( 'buildOnSNAPSHOT',   parentJob, override, { it }, false )
