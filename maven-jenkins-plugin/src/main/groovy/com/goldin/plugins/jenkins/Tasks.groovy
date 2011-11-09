@@ -32,7 +32,7 @@ class Shell extends Task
 @SuppressWarnings( 'StatelessClass' )
 class Maven extends Task
 {
-    String  targets              = '-e clean install'
+    String  targets              = '-B -e clean install'
     String  mavenName            = '(Default)'
     String  jvmOptions           = ''
     String  pom                  = 'pom.xml'
