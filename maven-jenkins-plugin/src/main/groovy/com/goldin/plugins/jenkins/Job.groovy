@@ -153,6 +153,11 @@ class Job
     String               buildWrappers
     String               properties
 
+    /**
+     * Groovy extension point
+     */
+    String               process
+
 
 
    /**
@@ -230,6 +235,7 @@ class Job
         set( 'properties',        parentJob, override, { it }, '' )
         set( 'publishers',        parentJob, override, { it }, '' )
         set( 'buildWrappers',     parentJob, override, { it }, '' )
+        set( 'process',           parentJob, override, { it }, '' )
         set( 'useUpdate',         parentJob, override, { it }, false )
         set( 'doRevert',          parentJob, override, { it }, false )
         set( 'daysToKeep',        parentJob, override, { it }, -1 )
@@ -346,6 +352,7 @@ class Job
          assert ( this.properties        != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
          assert ( this.publishers        != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
          assert ( this.buildWrappers     != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
+         assert ( this.process           != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
          assert ( this.useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
          assert ( this.doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
          assert ( this.daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"

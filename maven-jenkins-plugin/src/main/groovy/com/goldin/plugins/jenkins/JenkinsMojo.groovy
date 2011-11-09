@@ -9,6 +9,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 
+
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
@@ -47,9 +48,6 @@ class JenkinsMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = false )
     public String timestampFormat = 'MMMM dd, yyyy (HH:mm:ss, \'GMT\'Z)'
-
-
-
 
     @MojoParameter
     public Job[] jobs
@@ -94,16 +92,31 @@ class JenkinsMojo extends BaseGroovyMojo
             }
             else
             {
-                File   configFile = new File( outputDirectory, "${ job.id }/config.xml" )
+                File configFile = new File( outputDirectory, "${ job.id }/config.xml" )
+                configPath      = configFile.canonicalPath.replace( '\\', '/' )
+                def  timestamp  = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
+                def  config     = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
+                Node n          = verify().notNull( new XmlParser().parseText( config ))
+
                 file().mkdirs( configFile.parentFile )
 
-                def timestamp = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
-                def config    = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
+                if ( job.process )
+                {
+                    def printer                = new XmlNodePrinter( configFile.newPrintWriter( 'UTF-8' ))
+                    printer.preserveWhitespace = true
+                    String expression          = job.process.trim().with {
+                        endsWith( '.groovy' ) ? new File(( String ) delegate ).getText( 'UTF-8' ) : delegate
+                    }
 
-                configFile.write( verify().notNullOrEmpty( config ))
-                assert (( configFile.file ) && ( configFile.size() == config.size()) && ( configFile.text == config ))
-
-                configPath = validate( configFile ).canonicalPath
+                    printer.print( eval( expression, Node, null, 'config', config,
+                                                                  'node',  n,
+                                                                  'file',  configFile ))
+                }
+                else
+                {
+                    configFile.write( config )
+                    assert verify().file( configFile ).size() == config.size()
+                }
             }
 
             assert configPath
