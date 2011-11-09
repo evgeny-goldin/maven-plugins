@@ -9,7 +9,6 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 
-
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
@@ -105,7 +104,7 @@ class JenkinsMojo extends BaseGroovyMojo
                     def printer                = new XmlNodePrinter( configFile.newPrintWriter( 'UTF-8' ))
                     printer.preserveWhitespace = true
                     String expression          = job.process.trim().with {
-                        endsWith( '.groovy' ) ? new File(( String ) delegate ).getText( 'UTF-8' ) : delegate
+                        endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
                     }
 
                     printer.print( eval( expression, Node, null, 'config', config,
@@ -123,7 +122,6 @@ class JenkinsMojo extends BaseGroovyMojo
             log.info( "${ job.toString().padRight( jobNamePad ) }  ${ jobParent( job ).padRight( jobParentPad ) }  ==>  [${ configPath }]" )
         }
     }
-
 
 
     /**
