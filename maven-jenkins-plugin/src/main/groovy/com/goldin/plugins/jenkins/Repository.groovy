@@ -37,9 +37,9 @@ class Repository
      * Git-specific properties
      */
 
-    String  gitName    = ''
-    String  gitRefspec = ''
-    String  gitBranch  = '**'
+    String  gitName    = 'origin'
+    String  gitRefspec = '+refs/heads/*:refs/remotes/origin/*'
+    String  gitBranch  = 'master'
 
     /**
      * Git branch "Advanced" options
