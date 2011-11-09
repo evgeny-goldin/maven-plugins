@@ -91,7 +91,11 @@ class AboutMojo extends BaseGroovyMojo
     }
 
 
-    private String exec ( String command, File directory = basedir, boolean failOnError = true, int minimalListSize = -1 )
+    private String exec ( String  command,
+                          File    directory       = basedir,
+                          boolean failOnError     = true,
+                          boolean failIfEmpty     = true,
+                          int     minimalListSize = -1 )
     {
         assert command && directory
 
@@ -113,6 +117,8 @@ class AboutMojo extends BaseGroovyMojo
                    "expected list of size [$minimalListSize] at least, received [$result]$lines of size [${ lines.size() }]"
         }
 
+        assert ( result || ( ! failIfEmpty )), \
+               "Failed to run [$command] in [$basedir.canonicalPath] - result is [$result]"
         result
     }
 
@@ -151,7 +157,7 @@ class AboutMojo extends BaseGroovyMojo
 
         log.info( "Running [$command]" )
 
-        def mdt = exec( command  )
+        def mdt = exec( command )
 
         log.info( "Running [$command] - done, [${ System.currentTimeMillis() - t }] ms" )
 
@@ -378,7 +384,7 @@ class AboutMojo extends BaseGroovyMojo
          * Last Changed Date: 2011-08-24 09:28:06 +0300 (Wed, 24 Aug 2011)
          */
 
-        List<String> svnInfo = exec( "svn info ${basedir.canonicalPath}", basedir, true, 2 ).readLines()
+        List<String> svnInfo = exec( "svn info ${basedir.canonicalPath}", basedir, true, true, 2 ).readLines()
 
         /**
          * ------------------------------------------------------------------------
@@ -388,7 +394,7 @@ class AboutMojo extends BaseGroovyMojo
          * ------------------------------------------------------------------------
          */
 
-        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1", basedir, true, 3 ).readLines().grep()
+        List<String> commitLines = exec( "svn log  ${basedir.canonicalPath} -l 1", basedir, true, true, 3 ).readLines().grep()
 
         assert [ commitLines[ 0 ], commitLines[ -1 ]].each { it.with { startsWith( '---' ) && endsWith( '---' ) }}, \
                "Unknown commit format:\n$commitLines"
@@ -423,7 +429,7 @@ class AboutMojo extends BaseGroovyMojo
          * <version>0.2.3.5-SNAPSHOT</version>
          * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          */
-        List<String> log = exec( 'git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B', basedir, true, 5 ).readLines()*.trim()
+        List<String> log = exec( 'git log -1 --format=format:%h%n%H%n%cD%n%cN%n%ce%n%B', basedir, true, true, 5 ).readLines()*.trim()
 
         """
         $SEPARATOR
