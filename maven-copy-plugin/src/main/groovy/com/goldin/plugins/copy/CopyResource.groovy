@@ -127,6 +127,7 @@ final class CopyResource extends Resource implements Cloneable
     boolean update                = false
     boolean attachArtifact        = false
     boolean move                  = false
+    boolean stop                  = false
 
     int     retries = 5     // Number of retries for FTP download
     long    timeout = 3600  // FTP download timeout (in seconds)

@@ -208,6 +208,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {
                     log.info( "==> <resource> [${ groovyEval( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
                 }
+
+                if ( resource.stop )
+                {
+                    throw new MojoExecutionException( 'Build stopped with <stop>true</stop>!' )
+                }
             }
         }
     }
