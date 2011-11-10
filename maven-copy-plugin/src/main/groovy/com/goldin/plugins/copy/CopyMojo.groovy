@@ -206,7 +206,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
                 if ( resource.description )
                 {
-                    log.info( "==> <resource> [${ groovyEval( resource.description )}] processed, [${ System.currentTimeMillis() - t }] ms" )
+                    log.info( "==> Processing <resource> [${ groovyEval( resource.description )}] - done, " +
+                              "[${ System.currentTimeMillis() - t }] ms" )
                 }
 
                 if ( resource.stop )
