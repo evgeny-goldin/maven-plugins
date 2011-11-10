@@ -306,10 +306,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 (( CopyResource ) resource.clone()).with {
 
-                    directory    = file.parent
-                    includes     = [ file.name ]
-                    dependencies = null
-                    dependency   = null
+                    directory      = file.parent
+                    includes       = [ file.name ]
+                    dependencies   = null
+                    dependency     = null
+                    failIfNotFound = failIfNotFound
 
                     if ( d.destFileName && ( d.destFileName != file.name ))
                     {
@@ -326,24 +327,19 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             try
             {
-                int  dependenciesCopied = 0
                 resolve( dependencies, failIfNotFound, tempDirectory, resource.stripVersion ).each {
-                    CopyDependency d ->
-                    copyArtifact( d )    // Copies <dependency> to temp directory
-                    dependenciesCopied++ // Zero dependencies can be copied if all of them are excluded or optional and can't be resolved.
+                    CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
                 }
 
-                if ( dependenciesCopied > 0 )
-                {
-                    (( CopyResource ) resource.clone()).with {
+                (( CopyResource ) resource.clone()).with {
 
-                        directory    = tempDirectory
-                        includes     = [ '**' ]
-                        dependencies = null
-                        dependency   = null
+                    directory      = tempDirectory
+                    includes       = [ '**' ]
+                    dependencies   = null
+                    dependency     = null
+                    failIfNotFound = failIfNotFound
 
-                        handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
-                    }
+                    handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
                 }
             }
             finally
