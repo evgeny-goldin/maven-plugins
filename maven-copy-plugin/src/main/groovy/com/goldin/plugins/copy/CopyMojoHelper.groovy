@@ -66,10 +66,11 @@ final class CopyMojoHelper
      * Scans all dependencies that this project has (including transitive ones) and filters them with scoping
      * and transitivity filters provided in dependency specified.
      *
-     * @param dependency filtering dependency
-     * @return           project's dependencies that passed all filters
+     * @param dependency     filtering dependency
+     * @param failIfNotFound whether execution should fail if zero dependencies are resolved
+     * @return               project's dependencies that passed all filters
      */
-    protected List<CopyDependency> getDependencies ( CopyDependency dependency )
+    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNotFound )
     {
         assert dependency
         def singleDependency = dependency.groupId && dependency.artifactId
@@ -98,7 +99,7 @@ final class CopyMojoHelper
         log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
         if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-        assert dependencies, "Zero artifacts resolved from [$dependency]"
+        assert ( dependencies || ( ! failIfNotFound )), "Zero artifacts resolved from [$dependency]"
         dependencies
     }
 

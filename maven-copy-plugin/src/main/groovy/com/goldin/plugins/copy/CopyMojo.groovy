@@ -285,8 +285,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Handles resource {@code <dependencies>}.
      *
-     * @param resource resource to handle
-     * @param verbose  verbose logging
+     * @param resource       resource to handle
+     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
+     * @param verbose        verbose logging
      */
     private void handleDependencies ( CopyResource resource, boolean verbose, boolean failIfNotFound )
     {
@@ -295,7 +296,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( resource.dependenciesAtM2())
         {
-            resolve( dependencies ).each {
+            resolve( dependencies, failIfNotFound ).each {
                 CopyDependency d ->
                 /**
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
@@ -326,10 +327,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             try
             {
                 int  dependenciesCopied = 0
-                resolve( dependencies, tempDirectory, resource.stripVersion ).each {
+                resolve( dependencies, failIfNotFound, tempDirectory, resource.stripVersion ).each {
                     CopyDependency d ->
                     copyArtifact( d )    // Copies <dependency> to temp directory
-                    dependenciesCopied++ // Zero dependencies can be copied if some of them are optional and can't be resolved.
+                    dependenciesCopied++ // Zero dependencies can be copied if all of them are excluded or optional and can't be resolved.
                 }
 
                 if ( dependenciesCopied > 0 )
@@ -356,19 +357,21 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Resolves and filters resource dependencies.
      *
-     * @param dependencies    dependencies to resolve and filter
-     * @param outputDirectory dependencies output directory to set
-     * @param stripVersion    whether dependencies version should be stripped
-     * @return                dependencies resolved and filtered
+     * @param dependencies   dependencies to resolve and filter
+     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
+     * @param directory      dependencies output directory to set
+     * @param stripVersion   whether dependencies version should be stripped
+     * @return               dependencies resolved and filtered
      */
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
-                                                 File                 outputDirectory = constants().USER_DIR_FILE,
-                                                 boolean              stripVersion    = false )
+                                                 boolean              failIfNotFound,
+                                                 File                 directory    = constants().USER_DIR_FILE,
+                                                 boolean              stripVersion = false )
     {
-        assert dependencies && outputDirectory.directory
+        assert dependencies && directory.directory
 
         Collection<CopyDependency> result = dependencies.
-        collect { CopyDependency d -> helper.getDependencies( d ) }.
+        collect { CopyDependency d -> helper.getDependencies( d, failIfNotFound ) }.
         flatten().
         collect { CopyDependency d ->
 
@@ -376,7 +379,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             try
             {
-                d.outputDirectory = file().mkdirs( outputDirectory )
+                d.outputDirectory = file().mkdirs( directory )
                 setArtifactItems([ d ])
                 ( CopyDependency ) ( getProcessedArtifactItems( stripVersion )[ 0 ] )
             }
@@ -394,7 +397,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }.
         grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
 
-        assert result
+        assert ( result || ( ! failIfNotFound )), "Failed to resolve $dependencies - no results received"
         result
     }
 
