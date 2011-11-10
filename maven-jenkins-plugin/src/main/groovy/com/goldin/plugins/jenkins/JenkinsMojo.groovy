@@ -95,7 +95,7 @@ class JenkinsMojo extends BaseGroovyMojo
                 configPath      = configFile.canonicalPath.replace( '\\', '/' )
                 def  timestamp  = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
                 def  config     = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
-                Node n          = verify().notNull( new XmlParser().parseText( config ))
+                Node rootNode   = verify().notNull( new XmlParser().parseText( config ))
 
                 file().mkdirs( configFile.parentFile )
 
@@ -107,9 +107,8 @@ class JenkinsMojo extends BaseGroovyMojo
                         endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
                     }
 
-                    printer.print( eval( expression, Node, null, 'config', config,
-                                                                  'node',  n,
-                                                                  'file',  configFile ))
+                    eval( expression, null, null, 'config', config, 'node', rootNode, 'file', configFile )
+                    printer.print( rootNode )
                 }
                 else
                 {
