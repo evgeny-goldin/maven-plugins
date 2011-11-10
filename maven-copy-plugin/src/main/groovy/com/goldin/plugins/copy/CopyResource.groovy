@@ -103,6 +103,7 @@ final class CopyResource extends Resource implements Cloneable
      */
     Boolean verbose
     Boolean failIfNotFound
+    Boolean failOnError
     Boolean skipIdentical
     Boolean skipUnpacked
     Boolean useTrueZipForPack
@@ -127,7 +128,9 @@ final class CopyResource extends Resource implements Cloneable
     boolean update                = false
     boolean attachArtifact        = false
     boolean move                  = false
-    boolean stop                  = false
+
+    boolean stop                  = false // For troubleshooting only: halt build execution after resource is processed
+    String  shouldFailWith        = ''    // For troubleshooting only: resource processing should fail with exception specified
 
     int     retries = 5     // Number of retries for FTP download
     long    timeout = 3600  // FTP download timeout (in seconds)

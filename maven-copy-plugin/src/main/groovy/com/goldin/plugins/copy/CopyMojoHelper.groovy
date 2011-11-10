@@ -3,8 +3,10 @@ package com.goldin.plugins.copy
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.apache.maven.shared.artifact.filter.collection.*
 
@@ -66,11 +68,13 @@ final class CopyMojoHelper
      * Scans all dependencies that this project has (including transitive ones) and filters them with scoping
      * and transitivity filters provided in dependency specified.
      *
-     * @param dependency     filtering dependency
-     * @param failIfNotFound whether execution should fail if zero dependencies are resolved
-     * @return               project's dependencies that passed all filters
+     * @param dependency           filtering dependency
+     * @param failIfNoDependencies whether execution should fail if zero dependencies are resolved
+     * @return                     project's dependencies that passed all filters
      */
-    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNotFound )
+    @Requires({ dependency })
+    @Ensures({ result != null })
+    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNoDependencies )
     {
         assert dependency
         def singleDependency = dependency.groupId && dependency.artifactId
@@ -90,17 +94,35 @@ final class CopyMojoHelper
             [ buildArtifact( dependency.groupId, dependency.artifactId, dependency.version, dependency.type ) ] :
             ThreadLocals.get( MavenProject ).artifacts
 
-        List<CopyDependency>  dependencies = getArtifacts( artifacts, 'test', 'system' ).
-                                             findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                                             collect { Artifact artifact -> new CopyDependency( artifact ) }
+        try
+        {
+            List<CopyDependency>  dependencies = getArtifacts( artifacts, 'test', 'system' ).
+                                                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
+                                                 collect { Artifact artifact -> new CopyDependency( artifact ) }
 
-        Log log = ThreadLocals.get( Log )
+            Log log = ThreadLocals.get( Log )
 
-        log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
-        if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
+            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
+            if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-        assert ( dependencies || ( ! failIfNotFound )), "Zero artifacts resolved from [$dependency]"
-        dependencies
+            assert ( dependencies || ( ! failIfNoDependencies )), "No dependencies resolved using [$dependency]"
+            return dependencies
+        }
+        catch( e )
+        {
+            String errorMessage =
+                'Failed to resolve and filter dependencies' +
+                ( singleDependency ? " using ${ dependency.optional ? 'optional ' : '' }<dependency> [$dependency]" : '' )
+
+            if ( dependency.optional )
+            {
+
+                log.warn( "$errorMessage: $e" )
+                return []
+            }
+
+            throw new MojoExecutionException( errorMessage, e )
+        }
     }
 
 

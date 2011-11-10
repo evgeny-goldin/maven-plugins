@@ -103,6 +103,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public  boolean failIfNotFound = true
 
     @MojoParameter ( required = false )
+    public  boolean failOnError = true
+
+    @MojoParameter ( required = false )
     public  boolean useTrueZipForPack = false
 
     @MojoParameter ( required = false )
@@ -171,48 +174,75 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
          */
 
         verify().isNull( this.project, this.factory, this.resolver, this.local, this.remoteRepos )
+
         this.project     = mavenProject
         this.factory     = artifactFactory
         this.resolver    = artifactResolver
         this.local       = artifactRepository
         this.remoteRepos = remoteArtifactRepositories
-        def groovyEval   = { String s -> s.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }}
 
         for ( CopyResource resource in resources())
         {
-            if ( resource.description ) { log.info( "==> Processing <resource> [${ groovyEval( resource.description )}]" )}
-            if ( runIf( resource.runIf ))
-            {
-                long    t               = System.currentTimeMillis()
-                boolean verbose         = general().choose( resource.verbose,        verbose        )
-                boolean failIfNotFound  = general().choose( resource.failIfNotFound, failIfNotFound )
-                boolean resourceHandled = false
-                resource.directory      = helper.canonicalPath ( resource.directory )
-                resource.includes       = helper.updatePatterns( resource.directory, resource.includes, resource.encoding )
-                resource.excludes       = helper.updatePatterns( resource.directory, resource.excludes, resource.encoding )
+            resource.with {
 
-                if ( resource.mkdir || resource.directory )
-                {
-                    handleResource( resource, verbose, failIfNotFound )
-                    resourceHandled = true
+                def descriptionEval = {
+                    description.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }
                 }
 
-                if ( resource.dependencies())
+                try
                 {
-                    handleDependencies( resource, verbose, failIfNotFound )
-                    resourceHandled = true
-                }
+                    if ( description ) { log.info( "==> Processing <resource> [${ descriptionEval() }]" )}
+                    if ( runIf( runIf ))
+                    {
+                        long    t               = System.currentTimeMillis()
+                        boolean verbose         = general().choose( verbose,        this.verbose        )
+                        boolean failIfNotFound  = general().choose( failIfNotFound, this.failIfNotFound )
+                        boolean resourceHandled = false
+                        directory               = helper.canonicalPath ( directory )
+                        includes                = helper.updatePatterns( directory, includes, encoding )
+                        excludes                = helper.updatePatterns( directory, excludes, encoding )
 
-                assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
-                if ( resource.description )
-                {
-                    log.info( "==> Processing <resource> [${ groovyEval( resource.description )}] - done, " +
-                              "[${ System.currentTimeMillis() - t }] ms" )
-                }
+                        if ( mkdir || resource.directory )
+                        {
+                            handleResource( resource, verbose, failIfNotFound )
+                            resourceHandled = true
+                        }
 
-                if ( resource.stop )
+                        if ( dependencies())
+                        {
+                            handleDependencies( resource, verbose, failIfNotFound )
+                            resourceHandled = true
+                        }
+
+                        assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
+                        if ( description )
+                        {
+                            log.info( "==> Processing <resource> [${ descriptionEval() }] - done, " +
+                                      "[${ System.currentTimeMillis() - t }] ms" )
+                        }
+
+                        assert ( ! shouldFailWith ), "Resource should have failed with [$shouldFailWith]"
+
+                        if ( stop )
+                        {
+                            throw new MojoExecutionException( 'Build stopped using <stop>true</stop>' )
+                        }
+                    }
+                }
+                catch( e )
                 {
-                    throw new MojoExecutionException( 'Build stopped with <stop>true</stop>!' )
+                    String errorMessage = "Processing <resource> failed with [${ e.class.name }]"
+
+                    if ( shouldFailWith )
+                    {
+                        assert shouldFailWith == e.class.name
+                    }
+                    else if ( general().choose( failOnError, this.failOnError ))
+                    {
+                        throw new MojoExecutionException( errorMessage, e )
+                    }
+
+                    ( shouldFailWith ? log.&info : log.&error )( errorMessage )
                 }
             }
         }
@@ -285,67 +315,78 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Handles resource {@code <dependencies>}.
      *
-     * @param resource       resource to handle
-     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
-     * @param verbose        verbose logging
+     * @param resource             resource to handle
+     * @param failIfNoDependencies whether execution should fail if zero dependencies were resolved
+     * @param verbose              verbose logging
      */
-    private void handleDependencies ( CopyResource resource, boolean verbose, boolean failIfNotFound )
+    private void handleDependencies ( CopyResource resource, boolean verbose, boolean failIfNoDependencies )
     {
-        List<CopyDependency> dependencies = resource.dependencies() as List
-        verify().notNullOrEmpty( dependencies )
+        List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
 
         if ( resource.dependenciesAtM2())
         {
-            resolve( dependencies, failIfNotFound ).each {
+            boolean dependenciesResolved = false // Whether any dependency was resolved
+
+            resolve( resourceDependencies, failIfNoDependencies ).each {
                 CopyDependency d ->
+
+                dependenciesResolved = true
+
                 /**
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
-                 * This dependency may be resolved from other module "target", not necessarily from ".m2"
+                 * File may be resolved from other module "target" (that is built in the same reactor),
+                 * not necessarily from ".m2"
                  */
                 File file = verify().file( d.artifact.file ).canonicalFile
 
                 (( CopyResource ) resource.clone()).with {
 
-                    directory      = file.parent
-                    includes       = [ file.name ]
-                    dependencies   = null
-                    dependency     = null
-                    failIfNotFound = failIfNotFound
+                    directory    = file.parent
+                    includes     = [ file.name ]
+                    dependencies = null
+                    dependency   = null
 
                     if ( d.destFileName && ( d.destFileName != file.name ))
                     {
                         destFileName = d.destFileName
                     }
 
-                    handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
+                    handleResource(( CopyResource ) delegate, verbose, true )
                 }
+            }
+
+            if ( dependenciesResolved ) { return }
+        }
+
+
+        File tempDirectory = file().tempDirectory()
+
+        try
+        {
+            resolve( resourceDependencies, failIfNoDependencies, tempDirectory, resource.stripVersion ).each {
+                CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
+            }
+
+            /**
+             * Even if zero dependencies were copied to temp (they were all excluded or
+             * optional that failed to resolve) we still copy them to the destination due
+             * to possible <process> or any other post-processing involved.
+             */
+
+            (( CopyResource ) resource.clone()).with {
+
+                directory    = tempDirectory
+                includes     = [ '**' ]
+                dependencies = null
+                dependency   = null
+
+                handleResource(( CopyResource ) delegate, verbose,
+                               ( failIfNoDependencies && resourceDependencies.any{ ! it.optional } ))
             }
         }
-        else
+        finally
         {
-            File tempDirectory = file().tempDirectory()
-
-            try
-            {
-                resolve( dependencies, failIfNotFound, tempDirectory, resource.stripVersion ).each {
-                    CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
-                }
-
-                (( CopyResource ) resource.clone()).with {
-
-                    directory      = tempDirectory
-                    includes       = [ '**' ]
-                    dependencies   = null
-                    dependency     = null
-                    failIfNotFound = failIfNotFound
-
-                    handleResource(( CopyResource ) delegate, verbose, failIfNotFound )
-                }
-            }
-            finally
-            {
-                file().delete(( File ) /* Fails with "wrong number of arguments" sometimes */ tempDirectory )
-            }
+            file().delete(( File ) /* May fail with "Wrong number of arguments" otherwise */ tempDirectory )
         }
     }
 
@@ -353,21 +394,21 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Resolves and filters resource dependencies.
      *
-     * @param dependencies   dependencies to resolve and filter
-     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
-     * @param directory      dependencies output directory to set
-     * @param stripVersion   whether dependencies version should be stripped
-     * @return               dependencies resolved and filtered
+     * @param dependencies         dependencies to resolve and filter
+     * @param failIfNoDependencies whether execution should fail if zero artifacts were resolved
+     * @param directory            dependencies output directory to set
+     * @param stripVersion         whether dependencies version should be stripped
+     * @return                     dependencies resolved and filtered
      */
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
-                                                 boolean              failIfNotFound,
+                                                 boolean              failIfNoDependencies,
                                                  File                 directory    = constants().USER_DIR_FILE,
                                                  boolean              stripVersion = false )
     {
         assert dependencies && directory.directory
 
         Collection<CopyDependency> result = dependencies.
-        collect { CopyDependency d -> helper.getDependencies( d, failIfNotFound ) }.
+        collect { CopyDependency d -> helper.getDependencies( d, failIfNoDependencies ) }.
         flatten().
         collect { CopyDependency d ->
 
@@ -381,19 +422,21 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
             catch ( MojoExecutionException e )
             {
+                String errorMessage = "Failed to resolve ${ d.optional ? 'optional ' : '' }<dependency> [$d]"
                 if ( d.optional )
                 {
-                    log.warn( "Failed to resolve optional <dependency> [$d]: $e" )
+                    log.warn( "$errorMessage: $e" )
                 }
                 else
                 {
-                    throw new MojoExecutionException( "Failed to resolve <dependency> [$d]", e )
+                    throw new MojoExecutionException( errorMessage, e )
                 }
             }
         }.
         grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
 
-        assert ( result || ( ! failIfNotFound )), "Failed to resolve $dependencies - no results received"
+        assert ( result || ( ! failIfNoDependencies ) || dependencies.every { it.optional }), \
+               "No dependencies resolved using [$dependencies]"
         result
     }
 
