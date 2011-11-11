@@ -813,7 +813,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( cleanEmptyDirectories )
         {
-            List<File> directoriesDeleted = file().recurse( sourceDirectory, [ type : FileType.DIRECTORIES ], {} ).
+            List<File> directoriesDeleted = ( file().recurse( sourceDirectory, [ type : FileType.DIRECTORIES ], {} ) + sourceDirectory ).
                                             findAll{ File f -> assert f.directory
                                                                file().directorySize( f ) == 0 } /* Not all files could be deleted */
             file().delete( directoriesDeleted as File[] )

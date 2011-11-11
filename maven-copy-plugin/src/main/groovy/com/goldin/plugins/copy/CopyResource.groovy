@@ -53,8 +53,9 @@ final class CopyResource extends Resource implements Cloneable
         newResource
     }
 
+    String[] targetRoots
+    String   targetRoot
 
-    String   targetRoots
     String[] targetPaths
     String[] targetPathsResolved
 
@@ -62,21 +63,21 @@ final class CopyResource extends Resource implements Cloneable
     {
         if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        List<String> paths = general().array( this.targetPaths, targetPath, String ).collect { split( it ) }.flatten()
-        assert       paths || clean, \
-                     '<targetPath>/<targetPaths> need to be defined for the resources that do not perform <clean> operation'
+        List<String> paths = split( general().array( targetPaths, targetPath, String ).join( ',' ))
+        assert     ( paths || clean ), \
+                     '<targetPath>/<targetPaths> need to be defined for resources that do not perform <clean> operation'
 
-        if ( paths && targetRoots )
+        if ( paths && ( targetRoots || targetRoot ))
         {
-            List<String> targetRootsSplit = split( targetRoots )
+            List<String> targetRootsSplit = split( general().array( targetRoots, targetRoot, String ).join( ',' ))
             if ( targetRootsSplit )
             {
                 paths = [ targetRootsSplit, paths ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
             }
         }
 
-        targetPathsResolved = ( paths ? new CopyMojoHelper().with { paths.collect { String path -> canonicalPath( path ) }} :
-                                        [] ) as String[]
+        assert ( targetPathsResolved == null )
+        targetPathsResolved = paths.collect { String path -> new CopyMojoHelper().canonicalPath( path ) } as String[]
     }
 
 
