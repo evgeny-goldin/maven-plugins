@@ -99,7 +99,7 @@ final class CopyResource extends Resource implements Cloneable
 
 
     /**
-     * Boolean flags that we need 3 states for: true, false, not initialized
+     * Boolean flags that we need 3 states for: true, false, undefined
      */
     Boolean verbose
     Boolean failIfNotFound
@@ -235,7 +235,6 @@ final class CopyResource extends Resource implements Cloneable
     {   /**
          * Do not use any GCommons calls here ! It fails when Maven 2 build runs with "-X" flag.
          */
-        "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], includes $includes, excludes $excludes, " +
-        "dependencies [${ dependencies  ?: dependency }], clean [$clean], mkdir [$mkdir], pack [$pack], unpack [$unpack]"
+        "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], dependencies [${ dependencies ?: dependency }]"
     }
 }

@@ -3,6 +3,7 @@ package com.goldin.plugins.copy
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
@@ -39,12 +40,14 @@ final class CopyMojoHelper
      * - if any of them starts with "file:" or "classpath:", each line in the resource
      *   loaded is converted to a pattern
      *
-     * @param patterns patterns to analyze
-     * @param files    encoding
+     * @param  directory resource directory
+     * @param patterns   patterns to analyze
+     * @param files      encoding
      *
      * @return updated patterns list
      */
-    @Requires({ directory && encoding })
+    @Requires({ encoding })
+    @Ensures({ result != null })
     protected List<String> updatePatterns( String directory, List<String> patterns, String encoding )
     {
         if ( ! patterns ) { return patterns }
@@ -53,14 +56,10 @@ final class CopyMojoHelper
             String pattern ->
             pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()      :
             pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
-            pattern.contains( ',' )            ? split( pattern ) :
-                                                 pattern
+                                                 split( pattern )
         }.
         flatten().
-        collect {
-            String pattern ->
-            ( directory && new File( directory, pattern ).directory ) ? "$pattern/**" : pattern
-        }
+        collect { String pattern -> ( directory && new File( directory, pattern ).directory ? "$pattern/**" : pattern )}
     }
 
 
@@ -116,8 +115,10 @@ final class CopyMojoHelper
 
             if ( dependency.optional )
             {
-
-                log.warn( "$errorMessage: $e" )
+                String exceptionMessage =  ( e instanceof MultipleArtifactsNotFoundException ) ?
+                    "${ e.missingArtifacts.size() } missing dependenc${ e.missingArtifacts.size() == 1 ? 'y' : 'ies' } - " +
+                    "${ e.missingArtifacts }" : e.toString()
+                log.warn( "$errorMessage: $exceptionMessage" )
                 return []
             }
 

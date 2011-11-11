@@ -154,7 +154,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Copies the Resources specified
      */
     @Override
-    @SuppressWarnings( 'AbcComplexity' )
+    @SuppressWarnings([ 'AbcComplexity', 'CatchThrowable' ])
     void execute() throws MojoExecutionException
     {
         /**
@@ -185,57 +185,20 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {
             resource.with {
 
-                def descriptionEval = {
-                    description.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval( delegate, String ) : delegate }
-                }
+                boolean failed = false
 
                 try
                 {
-                    if ( description ) { log.info( "==> Processing <resource> [${ descriptionEval() }]" )}
-                    if ( runIf( runIf ))
-                    {
-                        long    t               = System.currentTimeMillis()
-                        boolean verbose         = general().choose( verbose,        this.verbose        )
-                        boolean failIfNotFound  = general().choose( failIfNotFound, this.failIfNotFound )
-                        boolean resourceHandled = false
-                        directory               = helper.canonicalPath ( directory )
-                        includes                = helper.updatePatterns( directory, includes, encoding )
-                        excludes                = helper.updatePatterns( directory, excludes, encoding )
-
-                        if ( mkdir || resource.directory )
-                        {
-                            handleResource( resource, verbose, failIfNotFound )
-                            resourceHandled = true
-                        }
-
-                        if ( dependencies())
-                        {
-                            handleDependencies( resource, verbose, failIfNotFound )
-                            resourceHandled = true
-                        }
-
-                        assert resourceHandled, "Couldn't handle <resource> [$resource] - is it configured properly?"
-                        if ( description )
-                        {
-                            log.info( "==> Processing <resource> [${ descriptionEval() }] - done, " +
-                                      "[${ System.currentTimeMillis() - t }] ms" )
-                        }
-
-                        assert ( ! shouldFailWith ), "Resource should have failed with [$shouldFailWith]"
-
-                        if ( stop )
-                        {
-                            throw new MojoExecutionException( 'Build stopped using <stop>true</stop>' )
-                        }
-                    }
+                    processResource( resource )
                 }
-                catch( e )
+                catch( Throwable e )
                 {
-                    String errorMessage = "Processing <resource> failed with [${ e.class.name }]"
+                    failed              = true
+                    String errorMessage = "Processing <resource> [$resource] ${ shouldFailWith ? 'expectedly ' : '' }failed with [${ e.class.name }]"
 
                     if ( shouldFailWith )
                     {
-                        assert shouldFailWith == e.class.name
+                        assert e.class.name.endsWith( shouldFailWith )
                     }
                     else if ( general().choose( failOnError, this.failOnError ))
                     {
@@ -243,6 +206,66 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     }
 
                     ( shouldFailWith ? log.&info : log.&error )( errorMessage )
+                }
+
+                if ( shouldFailWith && ( ! failed ))
+                {
+                    throw new MojoExecutionException( "Resource [$resource] should have failed with [$shouldFailWith]" )
+                }
+
+                if ( stop )
+                {
+                    log.info( '''
+                              ------------------------------------------------
+                              *** Build stopped using <stop>true</stop> ***
+                              ------------------------------------------------'''.stripIndent())
+                    System.exit( 0 )
+                }
+            }
+        }
+    }
+
+
+    @Requires({ resource })
+    private void processResource( CopyResource resource )
+    {
+        resource.with {
+            if ( runIf( runIf ))
+            {
+                Closure d      = {
+                    description.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
+                }
+
+                if ( description )
+                {
+                    log.info( "==> Processing <resource> [${ d() }]" )
+                }
+
+                long    t              = System.currentTimeMillis()
+                boolean processed      = false
+                boolean verbose        = general().choose( verbose,        this.verbose        )
+                boolean failIfNotFound = general().choose( failIfNotFound, this.failIfNotFound )
+                directory              = helper.canonicalPath ( directory )
+                includes               = helper.updatePatterns( directory, includes, encoding )
+                excludes               = helper.updatePatterns( directory, excludes, encoding )
+
+                if ( mkdir || directory )
+                {
+                    processFilesResource( resource, verbose, failIfNotFound )
+                    processed = true
+                }
+
+                if ( dependencies())
+                {
+                    processDependenciesResource( resource, verbose, failIfNotFound )
+                    processed = true
+                }
+
+                assert processed, "Don't know how to process <resource> [$resource] - is it configured properly?"
+
+                if ( description )
+                {
+                    log.info( "==> Processing <resource> [${ d() }] - done, [${ System.currentTimeMillis() - t }] ms" )
                 }
             }
         }
@@ -256,7 +279,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @param failIfNotFound  whether execution should fail if no files were matched
      */
-    private void handleResource ( CopyResource resource, boolean verbose, boolean failIfNotFound )
+    private void processFilesResource ( CopyResource resource, boolean verbose, boolean failIfNotFound )
     {
         assert ( resource.mkdir || resource.directory )
 
@@ -302,7 +325,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
             }
 
-            handleResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
+            processFilesResource( resource, sourceDirectory, includes, excludes, verbose, failIfNotFound )
         }
         finally
         {
@@ -319,7 +342,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param failIfNoDependencies whether execution should fail if zero dependencies were resolved
      * @param verbose              verbose logging
      */
-    private void handleDependencies ( CopyResource resource, boolean verbose, boolean failIfNoDependencies )
+    private void processDependenciesResource ( CopyResource resource, boolean verbose, boolean failIfNoDependencies )
     {
         List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
 
@@ -351,7 +374,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                         destFileName = d.destFileName
                     }
 
-                    handleResource(( CopyResource ) delegate, verbose, true )
+                    processFilesResource(( CopyResource ) delegate, verbose, true )
                 }
             }
 
@@ -380,8 +403,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 dependencies = null
                 dependency   = null
 
-                handleResource(( CopyResource ) delegate, verbose,
-                               ( failIfNoDependencies && resourceDependencies.any{ ! it.optional } ))
+                processFilesResource(( CopyResource ) delegate, verbose,
+                                     ( failIfNoDependencies && resourceDependencies.any{ ! it.optional } ))
             }
         }
         finally
@@ -452,12 +475,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param failIfNotFound  whether execution should fail if no files were matched
      */
     @Requires({ resource })
-    private CopyResource handleResource ( CopyResource resource,
-                                          File         sourceDirectory,
-                                          List<String> includes        = null,
-                                          List<String> excludes        = null,
-                                          boolean      verbose         = true,
-                                          boolean      failIfNotFound  = true )
+    private CopyResource processFilesResource ( CopyResource resource,
+                                                File         sourceDirectory,
+                                                List<String> includes        = null,
+                                                List<String> excludes        = null,
+                                                boolean      verbose         = true,
+                                                boolean      failIfNotFound  = true )
     {
         List<String> zipEntries        = resource.zipEntries()        as List
         List<String> zipEntriesExclude = resource.zipEntriesExclude() as List
@@ -618,8 +641,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( packUsingTemp )
         {
-            handleResource( resource.makeCopy( this, filesDirectory, sourceDirectory, includes, excludes ),
-                            false, failIfNotFound )
+            processFilesResource( resource.makeCopy( this, filesDirectory, sourceDirectory, includes, excludes ),
+                                  false, failIfNotFound )
         }
 
         file().with {
@@ -702,7 +725,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
         if ( unpackUsingTemp )
         {
-            handleResource( resource.makeCopy( this, destinationDirectory, unpackDirectory, null, null ), false, true )
+            processFilesResource( resource.makeCopy( this, destinationDirectory, unpackDirectory, null, null ), false, true )
             file().delete( unpackDirectory )
         }
 
