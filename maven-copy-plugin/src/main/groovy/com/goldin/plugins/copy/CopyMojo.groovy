@@ -1,10 +1,12 @@
 package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
+import com.goldin.gcommons.GCommons
 import com.goldin.gcommons.util.GroovyConfig
 import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.Replace
 import com.goldin.plugins.common.ThreadLocals
+import groovy.io.FileType
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
 import org.apache.maven.artifact.repository.ArtifactRepository
@@ -279,13 +281,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @param failIfNotFound  whether execution should fail if no files were matched
      */
+    @Requires({ resource })
     private void processFilesResource ( CopyResource resource, boolean verbose, boolean failIfNotFound )
     {
         assert ( resource.mkdir || resource.directory )
 
         def  isDownload      = net().isNet( resource.directory )
         def  isUpload        = net().isNet( resource.targetPaths())
-        File sourceDirectory = ( isDownload         ? file().tempDirectory()     : // Temp dir to download the files to
+        File sourceDirectory = ( isDownload         ? file().tempDirectory()         : // Temp dir to download the files to
                                  resource.directory ? new File( resource.directory ) : // Directory to cleanup, upload or copy
                                                       null )                           // mkdir, no source directory
         try
@@ -338,22 +341,24 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Handles resource {@code <dependencies>}.
      *
-     * @param resource             resource to handle
-     * @param failIfNoDependencies whether execution should fail if zero dependencies were resolved
-     * @param verbose              verbose logging
+     * @param resource       resource to handle
+     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
+     * @param verbose        verbose logging
      */
-    private void processDependenciesResource ( CopyResource resource, boolean verbose, boolean failIfNoDependencies )
+    @Requires({ resource })
+    private void processDependenciesResource ( CopyResource resource, boolean verbose, boolean failIfNotFound )
     {
         List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
+        boolean              dependenciesAtM2     = resource.dependenciesAtM2()
 
-        if ( resource.dependenciesAtM2())
+        if ( dependenciesAtM2 )
         {
-            boolean dependenciesResolved = false // Whether any dependency was resolved
+            boolean resolved = false // Whether any dependency was resolved
 
-            resolve( resourceDependencies, failIfNoDependencies ).each {
+            resolve( resourceDependencies, failIfNotFound ).each {
                 CopyDependency d ->
 
-                dependenciesResolved = true
+                resolved = true
 
                 /**
                  * http://evgeny-goldin.org/youtrack/issue/pl-469
@@ -378,16 +383,18 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 }
             }
 
-            if ( dependenciesResolved ) { return }
+            if ( resolved ) { return }
         }
-
 
         File tempDirectory = file().tempDirectory()
 
         try
         {
-            resolve( resourceDependencies, failIfNoDependencies, tempDirectory, resource.stripVersion ).each {
-                CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
+            if ( ! dependenciesAtM2 )
+            {
+                resolve( resourceDependencies, failIfNotFound, tempDirectory, resource.stripVersion ).each {
+                    CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
+                }
             }
 
             /**
@@ -403,13 +410,12 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 dependencies = null
                 dependency   = null
 
-                processFilesResource(( CopyResource ) delegate, verbose,
-                                     ( failIfNoDependencies && resourceDependencies.any{ ! it.optional } ))
+                processFilesResource(( CopyResource ) delegate, verbose, ( tempDirectory.listFiles().size() > 0 ))
             }
         }
         finally
         {
-            file().delete(( File ) /* May fail with "Wrong number of arguments" otherwise */ tempDirectory )
+            file().delete(( File ) /* Occasionally fails with "Wrong number of arguments" otherwise */ tempDirectory )
         }
     }
 
@@ -417,21 +423,23 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     /**
      * Resolves and filters resource dependencies.
      *
-     * @param dependencies         dependencies to resolve and filter
-     * @param failIfNoDependencies whether execution should fail if zero artifacts were resolved
-     * @param directory            dependencies output directory to set
-     * @param stripVersion         whether dependencies version should be stripped
-     * @return                     dependencies resolved and filtered
+     * @param dependencies   dependencies to resolve and filter
+     * @param failIfNotFound whether execution should fail if zero artifacts were resolved
+     * @param directory      dependencies output directory to set
+     * @param stripVersion   whether dependencies version should be stripped
+     * @return               dependencies resolved and filtered
      */
+//    @Requires({ dependencies && directory })
+//    @Ensures({ result != null })
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
-                                                 boolean              failIfNoDependencies,
+                                                 boolean              failIfNotFound,
                                                  File                 directory    = constants().USER_DIR_FILE,
                                                  boolean              stripVersion = false )
     {
         assert dependencies && directory.directory
 
         Collection<CopyDependency> result = dependencies.
-        collect { CopyDependency d -> helper.getDependencies( d, failIfNoDependencies ) }.
+        collect { CopyDependency d -> helper.getDependencies( d, failIfNotFound ) }.
         flatten().
         collect { CopyDependency d ->
 
@@ -443,10 +451,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 setArtifactItems([ d ])
                 ( CopyDependency ) ( getProcessedArtifactItems( stripVersion )[ 0 ] )
             }
-            catch ( MojoExecutionException e )
+            catch ( e )
             {
                 String errorMessage = "Failed to resolve ${ d.optional ? 'optional ' : '' }<dependency> [$d]"
-                if ( d.optional )
+                if ( d.optional || ( ! failIfNotFound ))
                 {
                     log.warn( "$errorMessage: $e" )
                 }
@@ -458,7 +466,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         }.
         grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
 
-        assert ( result || ( ! failIfNoDependencies ) || dependencies.every { it.optional }), \
+        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional }), \
                "No dependencies resolved using [$dependencies]"
         result
     }
@@ -489,55 +497,53 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         if ( zipEntriesExclude ) { assert resource.unpack, '<zipEntryExclude> or <zipEntriesExclude> can only be used with <unpack>true</unpack>' }
         if ( resource.prefix   ) { assert resource.pack,   '<prefix> can only be used with <pack>true</pack>' }
 
-        if ( resource.clean  )
+        List<File> filesToProcess = []
+
+        if ( resource.clean )
         {
-            clean( sourceDirectory, includes, excludes, resource.cleanEmptyDirectories, resource.filter, verbose, failIfNotFound )
-            return resource
+            filesToProcess.addAll( clean( sourceDirectory, includes, excludes, resource.cleanEmptyDirectories, resource.filter, verbose, failIfNotFound ))
         }
-
-        if (( ! resource.mkdir ) && failIfNotFound )
+        else
         {
-            verify().directory( sourceDirectory )
-        }
-
-        def filesToProcess = []
-
-        for ( path in resource.targetPaths())
-        {
-            File targetPath = new File( verify().notNullOrEmpty( path ))
-
-            if ( resource.mkdir )
+            if (( ! resource.mkdir ) && failIfNotFound )
             {
-                filesToProcess << mkdir( targetPath, verbose )
+                verify().directory( sourceDirectory )
             }
 
-            if ( resource.pack )
+            for ( path in resource.targetPaths())
             {
-                filesToProcess << pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )
-            }
-            else if ( sourceDirectory /* null when mkdir is performed */ )
-            {
-                def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
-                for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
+                File targetPath = new File( verify().notNullOrEmpty( path ))
+
+                if ( resource.mkdir )
                 {
-                    if ( resource.unpack )
+                    filesToProcess << mkdir( targetPath, verbose )
+                }
+
+                if ( resource.pack )
+                {
+                    pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )?.with{ filesToProcess << delegate }
+                }
+                else if ( sourceDirectory /* null when mkdir is performed */ )
+                {
+                    def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+                    for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
                     {
-                        filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose, failIfNotFound ))
-                    }
-                    else
-                    {
-                        File fileCopied = copyResourceFile( resource, sourceDirectory, file, targetPath, verbose )
-                        if ( fileCopied ) { filesToProcess << fileCopied }
+                        GCommons.file().mkdirs( targetPath )
+
+                        if ( resource.unpack )
+                        {
+                            filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose, failIfNotFound ))
+                        }
+                        else
+                        {
+                            copyResourceFile( resource, sourceDirectory, file, targetPath, verbose )?.with { filesToProcess << delegate }
+                        }
                     }
                 }
             }
         }
 
-        if ( ! resource.clean )
-        {
-            process( filesToProcess, resource.process )
-        }
-
+        process( filesToProcess, resource.process, resource.clean )
         resource
     }
 
@@ -585,7 +591,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose         verbose logging
      * @return file copied if copying was performed, null otherwise
      */
-    @Requires({ resource && sourceDirectory && sourceFile && targetPath })
+    @Requires({ resource && sourceDirectory.directory && sourceFile.file && targetPath.directory })
+    @Ensures({ ( result == null ) || ( result.file ) })
     private File copyResourceFile ( CopyResource resource,
                                     File         sourceDirectory,
                                     File         sourceFile,
@@ -626,9 +633,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param excludes        files to exclude, may be <code>null</code>
      * @param failIfNotFound  fail if directory not found or no files were included
      *
-     * @return target archive packed
+     * @return target archive packed or null if no file was packed
      */
     @SuppressWarnings( 'AbcComplexity' )
+    @Requires({ resource && sourceDirectory && targetArchive })
+    @Ensures({ ( result == null ) || ( result.file ) })
     private File pack( CopyResource resource,
                        File         sourceDirectory,
                        File         targetArchive,
@@ -636,6 +645,16 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        List<String> excludes,
                        boolean      failIfNotFound )
     {
+        if ( ! sourceDirectory.directory )
+        {
+            "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be packed to [${targetArchive.canonicalPath}]".with {
+                assert ( ! failIfNotFound ), delegate
+                log.warn(( String ) delegate )
+            }
+
+            return null
+        }
+
         boolean packUsingTemp  = ( resource.replaces() || resource.filtering )
         File    filesDirectory = packUsingTemp ? file().tempDirectory() : sourceDirectory
 
@@ -691,9 +710,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose              whether logging should be verbose
      * @param failIfNotFound       whether execution should fail if no files were matched
      *
-     * @return
+     * @return list of files unpacked or empty list if no files were unpacked
      */
-    @Requires({ resource && sourceArchive && destinationDirectory && ( zipEntries != null ) && ( zipEntriesExclude != null ) })
+    @Requires({ resource && sourceArchive.file && destinationDirectory.directory && ( zipEntries != null ) && ( zipEntriesExclude != null ) })
     @Ensures({ result != null })
     private List<File> unpack ( CopyResource resource,
                                 File         sourceArchive,
@@ -768,39 +787,41 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose               verbose logging
      * @param failIfNotFound        fail if directory not found or no files were included
      */
-    private void clean( File         sourceDirectory,
-                        List<String> includes,
-                        List<String> excludes,
-                        boolean      cleanEmptyDirectories,
-                        String       filterExpression,
-                        boolean      verbose,
-                        boolean      failIfNotFound )
+    @Requires({ sourceDirectory })
+    private List<File> clean( File         sourceDirectory,
+                              List<String> includes,
+                              List<String> excludes,
+                              boolean      cleanEmptyDirectories,
+                              String       filterExpression,
+                              boolean      verbose,
+                              boolean      failIfNotFound )
     {
-        if ( failIfNotFound ) { verify().directory( sourceDirectory ) }
-
-        if ( sourceDirectory.directory )
+        if ( ! sourceDirectory.directory )
         {
-            def filesDeleted = filter( file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound ),
-                                       filterExpression, verbose, failIfNotFound )
-
-            file().delete( filesDeleted as File[] )
-
-            if ( cleanEmptyDirectories )
-            {
-                List<File> directoriesDeleted = ( sourceDirectory.splitWith( 'eachDirRecurse', File ) + sourceDirectory ).
-                                                findAll{ File f -> f.directory && ( f.directorySize() == 0 )}
-
-                file().delete( directoriesDeleted as File[] )
-                filesDeleted += directoriesDeleted
+            "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be deleted".with {
+                assert ( ! failIfNotFound ), delegate
+                log.warn(( String ) delegate )
             }
 
-            if ( verbose ) { log.info( "[$sourceDirectory.canonicalPath] files deleted: $filesDeleted" )}
+            return []
         }
-        else if ( verbose )
+
+        List<File> files        = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+        List<File> filesDeleted = filter( files, filterExpression, verbose, failIfNotFound )
+
+        file().delete( filesDeleted as File[] )
+
+        if ( cleanEmptyDirectories )
         {
-            assert ( ! sourceDirectory.directory ) && ( ! failIfNotFound )
-            log.info( "[$sourceDirectory.canonicalPath] doesn't exist, <failIfNotFound> is [$failIfNotFound], no files deleted" )
+            List<File> directoriesDeleted = ( file().recurse( sourceDirectory, { type : FileType.DIRECTORIES }) + sourceDirectory ).
+                                            findAll{ File f -> file().directorySize( f ) == 0 } /* Not all files could be deleted */
+
+            file().delete( directoriesDeleted as File[] )
+            filesDeleted += directoriesDeleted
         }
+
+        if ( verbose ) { log.info( "[$sourceDirectory.canonicalPath] files deleted: $filesDeleted" )}
+        filesDeleted
     }
 
 
@@ -853,9 +874,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param                   files to process
      * @param processExpression Groovy expression, if <code>null</code> - no processing is executed
      * @param verbose           whether logging should be verbose
+     * @param isClean           whether files processed are of <clean> operation
      */
-    @Requires({ files != null })
-    private void process( List<File> files, String processExpression )
+    @Requires({ ! (( files == null ) || ( files.any{ it == null } )) })
+    private void process( List<File> files, String processExpression, boolean isClean )
     {
         if ( processExpression )
         {   /**
@@ -866,7 +888,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             // noinspection GroovyAssignmentToMethodParameter
             files = ( filesSet.size() < files.size() ? filesSet as List /* Duplicates found */ : files )
-            verify().file( files as File[] )
+            if ( ! isClean ){ verify().file( files as File[] )}
 
             eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null )
         }

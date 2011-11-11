@@ -67,13 +67,13 @@ final class CopyMojoHelper
      * Scans all dependencies that this project has (including transitive ones) and filters them with scoping
      * and transitivity filters provided in dependency specified.
      *
-     * @param dependency           filtering dependency
-     * @param failIfNoDependencies whether execution should fail if zero dependencies are resolved
-     * @return                     project's dependencies that passed all filters
+     * @param dependency     filtering dependency
+     * @param failIfNotFound whether execution should fail if zero dependencies are resolved
+     * @return               project's dependencies that passed all filters
      */
     @Requires({ dependency })
     @Ensures({ result != null })
-    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNoDependencies )
+    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNotFound )
     {
         assert dependency
         def singleDependency = dependency.groupId && dependency.artifactId
@@ -104,7 +104,7 @@ final class CopyMojoHelper
             log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNoDependencies )), "No dependencies resolved using [$dependency]"
+            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved using [$dependency]"
             return dependencies
         }
         catch( e )
@@ -113,7 +113,7 @@ final class CopyMojoHelper
                 'Failed to resolve and filter dependencies' +
                 ( singleDependency ? " using ${ dependency.optional ? 'optional ' : '' }<dependency> [$dependency]" : '' )
 
-            if ( dependency.optional )
+            if ( dependency.optional || ( ! failIfNotFound ))
             {
                 String exceptionMessage =  ( e instanceof MultipleArtifactsNotFoundException ) ?
                     "${ e.missingArtifacts.size() } missing dependenc${ e.missingArtifacts.size() == 1 ? 'y' : 'ies' } - " +
