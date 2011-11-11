@@ -524,11 +524,11 @@ class AboutMojo extends BaseGroovyMojo
                 writeAboutFile( aboutFile )
             }
         }
-        catch ( e )
+        catch ( Throwable e )
         {
             def message = 'Failed to create "about" file'
             if ( failOnError ) { throw new MojoExecutionException( message, e ) }
-            log.error( message + ':', e )
+            log.error( "$message:", e )
         }
     }
 }
