@@ -15,6 +15,7 @@ ruleset {
         JavaIoPackageAccess      ( enabled : false )
         ConfusingMethodName      ( enabled : false )
         UnnecessarySubstring     ( enabled : false )
+        FactoryMethodName        ( enabled : false )
 
         VariableName             ( finalRegex : /[a-zA-Z0-9_]+/ )
         LineLength               ( length     : 160   )

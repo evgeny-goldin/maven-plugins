@@ -166,6 +166,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
      *
      * @param violations violations found
      */
+    @SuppressWarnings( 'UseCollectMany' )
     private void reportViolations( Map<String, List<String>> violations )
     {
         def message =

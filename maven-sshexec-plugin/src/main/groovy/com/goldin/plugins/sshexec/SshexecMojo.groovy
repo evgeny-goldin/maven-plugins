@@ -55,6 +55,7 @@ class SshexecMojo extends BaseGroovyMojo
      * Retrieves all execution commands
      * @return all execution commands
      */
+    @SuppressWarnings( 'UseCollectMany' )
     private String[] commands ()
     {
         String[] commands = general().array( this.commands, this.command, String )
