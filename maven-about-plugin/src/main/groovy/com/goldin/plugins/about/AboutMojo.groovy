@@ -101,11 +101,7 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath]" ) }
 
-        String result =  general().executeWithResult( command,
-                                                      ( isWindows ? ExecOption.CommonsExec : ExecOption.Runtime ),
-                                                      failOnError,
-                                                      -1,
-                                                      directory )
+        String result =  general().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
 
         if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath] - result is [$result]" ) }
 
@@ -118,7 +114,7 @@ class AboutMojo extends BaseGroovyMojo
         }
 
         assert ( result || ( ! failIfEmpty )), \
-               "Failed to run [$command] in [$basedir.canonicalPath] - result is [$result]"
+               "Failed to run [$command] in [$basedir.canonicalPath] - result is empty [$result]"
         result
     }
 
@@ -327,7 +323,7 @@ class AboutMojo extends BaseGroovyMojo
             svnVersion = exec( 'svn --version', basedir, false )
             if ( svnVersion.contains( 'svn, version' ))
             {
-                svnStatus = exec( "svn status $basedir.canonicalPath", basedir, false )
+                svnStatus = exec( "svn status $basedir.canonicalPath", basedir, false, false )
                 if (( ! svnStatus.contains( 'is not a working copy' )) &&
                     ( ! svnStatus.contains( 'containing working copy admin area is missing' )))
                 {
