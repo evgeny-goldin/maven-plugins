@@ -9,14 +9,14 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>maven-properties-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>0.2.3.5-SNAPSHOT</version>
+    <version>0.2.3.5-beta-7</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
         <artifactId>mojo-parent</artifactId>
-        <version>0.2.3.5-SNAPSHOT</version>
+        <version>0.2.3.5-beta-7</version>
         <relativePath>../mojo-parent</relativePath>
     </parent>
 
