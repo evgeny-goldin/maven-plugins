@@ -137,8 +137,13 @@ class AboutMojo extends BaseGroovyMojo
     @Ensures({ result })
     private String dependencyTree()
     {
-        String plugin      = 'maven-dependency-plugin:2.3:tree'
+        if ( project.collectedProjects )
+        {
+            return 'Aggregate project, no dependencies shown'
+        }
+
         String coordinates = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
+        String plugin      = 'maven-dependency-plugin:2.3:tree'
         String mvnHome     = env[ 'M2_HOME' ]
 
         assert mvnHome, "'M2_HOME' environment variable is not defined"
@@ -173,7 +178,7 @@ class AboutMojo extends BaseGroovyMojo
 
         project.artifacts.each {
             Artifact a ->
-            "$a.groupId:$a.artifactId:$a.type".with {
+            "$a.groupId:$a.artifactId".with {
                 assert mdtStripped.contains(( String ) delegate ), \
                 "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
             }
