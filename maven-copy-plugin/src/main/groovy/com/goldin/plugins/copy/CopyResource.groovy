@@ -236,6 +236,6 @@ final class CopyResource extends Resource implements Cloneable
     {   /**
          * Do not use any GCommons calls here ! It fails when Maven 2 build runs with "-X" flag.
          */
-        "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], dependencies [${ dependencies ?: dependency }]"
+        "Target path(s) [${ targetPaths ?: targetPath }], directory [$directory], dependencies [${ dependencies ?: dependency ?: '' }]"
     }
 }
