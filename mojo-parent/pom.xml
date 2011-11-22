@@ -9,14 +9,14 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>mojo-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.3.6</version>
+    <version>0.3-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
         <artifactId>main.plugins</artifactId>
-        <version>0.2.3.6</version>
+        <version>0.3-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -66,7 +66,7 @@
             <groupId>com.goldin.plugins</groupId>
             <artifactId>maven-common</artifactId>
             <scope>compile</scope>
-            <version>0.2.3.6</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
