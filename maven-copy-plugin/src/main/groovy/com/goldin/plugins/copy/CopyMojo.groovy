@@ -374,9 +374,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     dependencies = null
                     dependency   = null
 
-                    if ( d.destFileName && ( d.destFileName != file.name ))
+                    if ( d.destFileName )
                     {
                         destFileName = d.destFileName
+                    }
+
+                    if ( resource.stripVersion )
+                    {
+                        destFileName = destFileName.replaceAll( /-?\Q${ d.version }\E-?/, '' )
                     }
 
                     processFilesResource(( CopyResource ) delegate, verbose, true )

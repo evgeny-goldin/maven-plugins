@@ -200,19 +200,18 @@ final class CopyResource extends Resource implements Cloneable
 
     /**
      * Retrieves {@code <dependenciesAtM2>} value.
+     *
      * If it is defined - the corresponding value is returned.
-     * If this resource makes no use of {@code <stripVersion>}, {@code <filter>}, and {@code <process>} - true is returned
-     * as it is safe not to copy dependencies to the temporal folder.
+     * If this resource specifies a single dependency - true is returned.
+     * If this resource makes no use of {@code <filter>} or {@code <process>} - true is returned.
+     *
      * Otherwise, false is returned.
      *
      * @return whether dependencies for the current resource should be served from the local Maven repo
      */
-    @SuppressWarnings( 'GroovyConditionalCanBeElvis' )
     boolean dependenciesAtM2 ()
     {
-        /**
-         * See http://evgeny-goldin.org/youtrack/issue/pl-506
-         */
+        if ( this.dependenciesAtM2 != null ) { return this.dependenciesAtM2 }
 
         boolean singleDependency = ( dependencies().size() == 1 ) &&
                                    ( dependencies()[ 0 ].with {
@@ -224,10 +223,7 @@ final class CopyResource extends Resource implements Cloneable
                                              includeTypes,       excludeTypes ].any())
                                    })
 
-        ( this.dependenciesAtM2 != null ) ? this.dependenciesAtM2 :
-        ( this.stripVersion             ) ? false :
-        ( singleDependency              ) ? true  :
-                                            ( ! ( this.filter || this.process ))
+        ( singleDependency ) || ( ! ( this.filter || this.process ))
     }
 
 
