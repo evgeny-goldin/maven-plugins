@@ -423,7 +423,7 @@ class GMojoUtils
                                                                 destinationFile.lastModified() == fromFile.lastModified() ].every()
             if ( identical )
             {
-                log.info( "[$fromFile] skipped - content is identical to destination [$destinationFile]" )
+                if ( verbose ) { log.info( "[$fromFile] skipped - content is identical to destination [$destinationFile]" ) }
                 operationPerformed = true
                 operationSkipped   = true
             }
