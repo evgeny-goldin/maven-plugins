@@ -387,7 +387,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     dependencies  = null
                     dependency    = null
 
-                    if ( d.destFileName )
+
+                    if ( d.destFileName && ( d.destFileName != file.name ))
                     {
                         destFileName = d.destFileName
                     }

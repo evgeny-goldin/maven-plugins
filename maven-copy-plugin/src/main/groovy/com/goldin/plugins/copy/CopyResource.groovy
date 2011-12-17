@@ -34,6 +34,7 @@ final class CopyResource extends Resource implements Cloneable
         CopyResource newResource = new CopyResource()
 
         newResource.with { general().with {
+            startTime             = this.startTime
             targetPath            = targetPathFile.canonicalPath
             directory             = directoryFile.canonicalPath
             includes              = includePatterns
