@@ -102,6 +102,7 @@ final class CopyResource extends Resource implements Cloneable
     /**
      * Boolean flags that we need 3 states for: true, false, undefined
      */
+    Boolean stripVersion
     Boolean verbose
     Boolean failIfNotFound
     Boolean failOnError
@@ -120,7 +121,6 @@ final class CopyResource extends Resource implements Cloneable
                               //          dependencies are processes in the same order they are declared
 
     boolean preservePath          = false
-    boolean stripVersion          = false
     boolean clean                 = false
     boolean cleanEmptyDirectories = false
     boolean mkdir                 = false
@@ -133,8 +133,10 @@ final class CopyResource extends Resource implements Cloneable
     boolean stop                  = false // For troubleshooting only: halt build execution after resource is processed
     String  shouldFailWith        = ''    // For troubleshooting only: resource processing should fail with exception specified
 
-    int     retries = 5     // Number of retries for FTP download
-    long    timeout = 3600  // FTP download timeout (in seconds)
+    int     retries   = 5     // Number of retries for FTP download
+    long    timeout   = 3600  // FTP download timeout (in seconds)
+    long    startTime = -1    // Time when this resource started to be processed
+    long    endTime   = -1    // Time when this resource finished to be processed
 
     String  description
     String  runIf

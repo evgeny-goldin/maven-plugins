@@ -93,6 +93,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     }
 
     @MojoParameter ( required = false )
+    public  boolean stripVersion = false
+
+    @MojoParameter ( required = false )
     public  boolean verbose = true
 
     @MojoParameter ( required = false )
@@ -191,6 +194,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 try
                 {
+                    startTime = System.currentTimeMillis()
                     processResource( resource )
                 }
                 catch( Throwable e )
@@ -231,6 +235,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @Requires({ resource })
     private void processResource( CopyResource resource )
     {
+        final isVerbose        = general().choose( resource.verbose,        this.verbose        )
+        final isFailIfNotFound = general().choose( resource.failIfNotFound, this.failIfNotFound )
+
         resource.with {
             if ( runIf( runIf ))
             {
@@ -243,31 +250,31 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     log.info( "==> Processing <resource> [${ d() }]" )
                 }
 
-                long    t              = System.currentTimeMillis()
-                boolean processed      = false
-                boolean verbose        = general().choose( verbose,        this.verbose        )
-                boolean failIfNotFound = general().choose( failIfNotFound, this.failIfNotFound )
-                directory              = helper.canonicalPath ( directory )
-                includes               = helper.updatePatterns( directory, includes, encoding )
-                excludes               = helper.updatePatterns( directory, excludes, encoding )
+                boolean processed = false
+                directory         = helper.canonicalPath ( directory )
+                includes          = helper.updatePatterns( directory, includes, encoding )
+                excludes          = helper.updatePatterns( directory, excludes, encoding )
 
                 if ( mkdir || directory )
                 {
-                    processFilesResource( resource, verbose, failIfNotFound )
+                    processFilesResource( resource, isVerbose, isFailIfNotFound )
                     processed = true
                 }
 
                 if ( dependencies())
                 {
-                    processDependenciesResource( resource, verbose, failIfNotFound )
+                    processDependenciesResource( resource, isVerbose, isFailIfNotFound )
                     processed = true
                 }
 
                 assert processed, "Don't know how to process <resource> [$resource] - is it configured properly?"
 
+                endTime = (( endTime   > 0 ) ? endTime : System.currentTimeMillis())
+                assert     ( startTime > 0 ) && ( endTime >= startTime )
+
                 if ( description )
                 {
-                    log.info( "==> Processing <resource> [${ d() }] - done, [${ System.currentTimeMillis() - t }] ms" )
+                    log.info( "==> Processing <resource> [${ d() }] - done, [${ endTime - startTime }] ms" )
                 }
             }
         }
@@ -342,14 +349,16 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * Handles resource {@code <dependencies>}.
      *
      * @param resource       resource to handle
-     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
      * @param verbose        verbose logging
+     * @param failIfNotFound whether execution should fail if zero dependencies were resolved
      */
     @Requires({ resource })
-    private void processDependenciesResource ( CopyResource resource, boolean verbose, boolean failIfNotFound )
+    private void processDependenciesResource ( final CopyResource resource, final boolean verbose, final boolean failIfNotFound )
     {
         List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
-        boolean              dependenciesAtM2     = resource.dependenciesAtM2()
+        final                dependenciesAtM2     = resource.dependenciesAtM2()
+        final                isStripVersion       = general().choose( resource.stripVersion,  this.stripVersion  )
+        final                isSkipIdentical      = general().choose( resource.skipIdentical, this.skipIdentical )
 
         if ( dependenciesAtM2 )
         {
@@ -369,17 +378,18 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 (( CopyResource ) resource.clone()).with {
 
-                    directory    = file.parent
-                    includes     = [ file.name ]
-                    dependencies = null
-                    dependency   = null
+                    directory     = file.parent
+                    includes      = [ file.name ]
+                    skipIdentical = isSkipIdentical
+                    dependencies  = null
+                    dependency    = null
 
                     if ( d.destFileName )
                     {
                         destFileName = d.destFileName
                     }
 
-                    if ( resource.stripVersion )
+                    if ( isStripVersion )
                     {
                         destFileName = destFileName.replaceAll( /-?\Q${ d.version }\E-?/, '' )
                     }
@@ -397,7 +407,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, failIfNotFound, tempDirectory, resource.stripVersion ).each {
+                resolve( resourceDependencies, failIfNotFound, tempDirectory, isStripVersion ).each {
                     CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
                 }
             }
@@ -410,10 +420,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             (( CopyResource ) resource.clone()).with {
 
-                directory    = tempDirectory
-                includes     = [ '**' ]
-                dependencies = null
-                dependency   = null
+                directory     = tempDirectory
+                includes      = [ '**' ]
+                skipIdentical = isSkipIdentical
+                dependencies  = null
+                dependency    = null
 
                 processFilesResource(( CopyResource ) delegate, verbose, ( tempDirectory.listFiles().size() > 0 ))
             }
@@ -548,7 +559,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             }
         }
 
-        process( filesToProcess, resource.process, resource.clean )
+        assert ( resource.startTime > 0 )
+        resource.endTime = System.currentTimeMillis()
+        process( filesToProcess, resource.process, resource.clean, ( resource.endTime - resource.startTime ))
         resource
     }
 
@@ -881,9 +894,11 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param verbose           whether logging should be verbose
      * @param isClean           whether files processed are of <clean> operation
      */
-    @Requires({ ! (( files == null ) || ( files.any{ it == null } )) })
-    private void process( List<File> files, String processExpression, boolean isClean )
+    @Requires({ ! (( files == null ) || files.any{ it == null } ) })
+    private void process( List<File> files, String processExpression, boolean isClean, long time )
     {
+        assert ( time >= 0 )
+
         if ( processExpression )
         {   /**
              * There may be no files to process if all of them were skipped due to "skipIdentical"
@@ -895,7 +910,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             files = ( filesSet.size() < files.size() ? filesSet as List /* Duplicates found */ : files )
             if ( ! isClean ){ verify().file( files as File[] )}
 
-            eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null )
+            eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null, 'time', time )
         }
     }
 }
