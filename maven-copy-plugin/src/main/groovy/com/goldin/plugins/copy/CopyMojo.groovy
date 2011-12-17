@@ -77,6 +77,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     public boolean skipIdentical = false
 
     @MojoParameter ( required = false )
+    public boolean skipPacked = false
+
+    @MojoParameter ( required = false )
     public boolean skipUnpacked = false
 
     /**
@@ -673,8 +676,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             return null
         }
 
-        boolean packUsingTemp  = ( resource.replaces() || resource.filtering )
-        File    filesDirectory = packUsingTemp ? file().tempDirectory() : sourceDirectory
+        final packUsingTemp  = ( resource.replaces() || resource.filtering )
+        final filesDirectory = packUsingTemp ? file().tempDirectory() : sourceDirectory
+        final skipPacked     = general().choose( resource.skipPacked, this.skipPacked )
 
         if ( packUsingTemp )
         {
@@ -688,8 +692,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                   general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                   failIfNotFound, resource.update,
                   split( resource.defaultExcludes ?: defaultExcludes()),
-                  resource.destFileName, resource.prefix )
+                  resource.destFileName, resource.prefix, ( ! skipPacked ))
 
+            assert targetArchive.file
             if ( resource.move ) { delete( files( sourceDirectory, includes, excludes, true, false, failIfNotFound, true ) as File[] ) }
             if ( packUsingTemp ) { delete( filesDirectory ) }
 

@@ -107,6 +107,7 @@ final class CopyResource extends Resource implements Cloneable
     Boolean failIfNotFound
     Boolean failOnError
     Boolean skipIdentical
+    Boolean skipPacked
     Boolean skipUnpacked
     Boolean useTrueZipForPack
     Boolean useTrueZipForUnpack
