@@ -395,7 +395,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                     if ( isStripVersion )
                     {
-                        destFileName = destFileName.replaceAll( /-?\Q${ d.version }\E-?/, '' )
+                        destFileName = ( destFileName ?: d.destFileName ?: "${ d.artifactId }-${ d.version }.${ d.type }" ).
+                                       replaceAll( /-?\Q${ d.version }\E-?/, '' )
                     }
 
                     processFilesResource(( CopyResource ) delegate, verbose, true )
