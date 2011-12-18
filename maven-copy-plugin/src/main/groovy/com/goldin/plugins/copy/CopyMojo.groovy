@@ -73,6 +73,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter
     public  String  runIf
 
+    @MojoParameter
+    public  CopyManifest manifest = new CopyManifest()
+
     @MojoParameter ( required = false )
     public boolean skipIdentical = false
 
@@ -233,7 +236,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 {
                     log.info( '''
                               ------------------------------------------------
-                              *** Build stopped using <stop>true</stop> ***
+                                *** Build stopped with <stop>true</stop> ***
                               ------------------------------------------------'''.stripIndent())
                     System.exit( 0 )
                 }
@@ -251,7 +254,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         resource.with {
             if ( runIf( runIf ))
             {
-                Closure d      = {
+                Closure d = { // Evaluates <description>
                     description.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
                 }
 
@@ -303,9 +306,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         assert ( resource.mkdir || resource.directory )
 
-        def  isDownload      = net().isNet( resource.directory )
-        def  isUpload        = net().isNet( resource.targetPaths())
-        File sourceDirectory = ( isDownload         ? file().tempDirectory()         : // Temp dir to download the files to
+        final isDownload      = net().isNet( resource.directory )
+        final isUpload        = net().isNet( resource.targetPaths())
+        final sourceDirectory = ( isDownload         ? file().tempDirectory()         : // Temp dir to download the files to
                                  resource.directory ? new File( resource.directory ) : // Directory to cleanup, upload or copy
                                                       null )                           // mkdir, no source directory
         try
@@ -515,8 +518,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                                 boolean      verbose         = true,
                                                 boolean      failIfNotFound  = true )
     {
-        List<String> zipEntries        = resource.zipEntries()        as List
-        List<String> zipEntriesExclude = resource.zipEntriesExclude() as List
+        final zipEntries        = resource.zipEntries()        as List
+        final zipEntriesExclude = resource.zipEntriesExclude() as List
+        final manifest          = resource.manifest ? resource.manifest.add( this.manifest ) : this.manifest
+
+        if ( manifest.entries )
+        {
+            assert ( resource.pack || ( ! resource.manifest )), '<manifest> can only be used with <pack> operation'
+        }
 
         if ( zipEntries        ) { assert resource.unpack, '<zipEntry> or <zipEntries> can only be used with <unpack>true</unpack>' }
         if ( zipEntriesExclude ) { assert resource.unpack, '<zipEntryExclude> or <zipEntriesExclude> can only be used with <unpack>true</unpack>' }
@@ -546,7 +555,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 if ( resource.pack )
                 {
-                    pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound )?.with{ filesToProcess << delegate }
+                    final manifestDir = ( manifest.entries ? helper.prepareManifest( manifest ) : null )
+                    pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound, manifestDir )?.with{ filesToProcess << delegate }
+                    if ( manifestDir ) { file().delete( manifestDir ) }
                 }
                 else if ( sourceDirectory /* null when mkdir is performed */ )
                 {
@@ -659,6 +670,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      * @param includes        files to include, may be <code>null</code>
      * @param excludes        files to exclude, may be <code>null</code>
      * @param failIfNotFound  fail if directory not found or no files were included
+     * @param manifestDir     directory where Manifest file to be packed is stored
      *
      * @return target archive packed or null if no file was packed
      */
@@ -670,7 +682,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                        File         targetArchive,
                        List<String> includes,
                        List<String> excludes,
-                       boolean      failIfNotFound )
+                       boolean      failIfNotFound,
+                       File         manifestDir )
     {
         if ( ! sourceDirectory.directory )
         {
@@ -698,7 +711,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                   general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                   failIfNotFound, resource.update,
                   split( resource.defaultExcludes ?: defaultExcludes()),
-                  resource.destFileName, resource.prefix, ( ! skipPacked ))
+                  resource.destFileName, resource.prefix, ( ! skipPacked ), manifestDir )
 
             assert targetArchive.file
             if ( resource.move ) { delete( files( sourceDirectory, includes, excludes, true, false, failIfNotFound, true ) as File[] ) }

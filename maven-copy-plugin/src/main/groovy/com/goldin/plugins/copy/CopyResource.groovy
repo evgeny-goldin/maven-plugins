@@ -86,6 +86,7 @@ final class CopyResource extends Resource implements Cloneable
     Replace   replace
     Replace[] replaces () { general().array( this.replaces, this.replace, Replace ) }
 
+    CopyManifest manifest
 
     CopyDependency[] dependencies
     CopyDependency   dependency

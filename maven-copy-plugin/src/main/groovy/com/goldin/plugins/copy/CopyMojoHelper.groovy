@@ -2,6 +2,8 @@ package com.goldin.plugins.copy
 
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.ThreadLocals
+import java.util.jar.Attributes
+import java.util.jar.Manifest
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
 import org.apache.maven.plugin.MojoExecutionException
@@ -10,7 +12,6 @@ import org.apache.maven.project.MavenProject
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.apache.maven.shared.artifact.filter.collection.*
-
 
 /**
  * {@link CopyMojo} helper class.
@@ -174,5 +175,29 @@ final class CopyMojoHelper
                'No filters found in <dependency>. Specify filters like <includeScope> or <includeGroupIds>.'
 
         filters
+    }
+
+
+    /**
+     * Creates Manifest file in temp directory using the data specified.
+     *
+     * @param manifest data to store in the manifest file
+     * @return temporary directory where manifest file is created according to location specified by {@code manifest} argument.
+     */
+    @Requires({ manifest && manifest.location && manifest.entries })
+    @Ensures({ result.directory && result.listFiles() })
+    File prepareManifest( CopyManifest manifest )
+    {
+        final m       = new Manifest()
+        final tempDir = file().tempDirectory()
+        final f       = new File( tempDir, manifest.location )
+
+        m.mainAttributes[ Attributes.Name.MANIFEST_VERSION ] = '1.0'
+        manifest.entries.each{ String key, String value -> m.mainAttributes.putValue( key, value ) }
+
+        file().mkdirs( f.parentFile )
+        f.withOutputStream { m.write( it )}
+
+        tempDir
     }
 }
