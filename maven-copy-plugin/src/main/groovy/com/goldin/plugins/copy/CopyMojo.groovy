@@ -82,6 +82,16 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( required = false )
     public boolean skipUnpacked = false
 
+    @MojoParameter ( required = false )
+    public boolean stripVersion = false
+
+    void setStripVersion( boolean stripVersion )
+    {   /**
+         * Super-class has an identically named field and setter not being set by Maven so we "shadow" them.
+         */
+        this.stripVersion = stripVersion
+    }
+
     /**
      * "false" or comma-separated list of default excludes
      * Not active for Net operations
@@ -94,9 +104,6 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
            file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
     }
-
-    @MojoParameter ( required = false )
-    public  boolean stripVersion = false
 
     @MojoParameter ( required = false )
     public  boolean verbose = true
@@ -360,8 +367,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     {
         List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
         final                dependenciesAtM2     = resource.dependenciesAtM2()
-        final                isStripVersion       = general().choose( resource.stripVersion,  this.stripVersion  )
         final                isSkipIdentical      = general().choose( resource.skipIdentical, this.skipIdentical )
+        final                isStripVersion       = general().choose( resource.stripVersion,  this.stripVersion  )
 
         if ( dependenciesAtM2 )
         {
@@ -386,17 +393,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     skipIdentical = isSkipIdentical
                     dependencies  = null
                     dependency    = null
+                    destFileName  = ( d.destFileName && ( d.destFileName != file.name )) ?
+                                        d.destFileName :
+                                        destFileName  ?: // the one that was cloned
+                                        "${ d.artifactId }-${ d.version }${ d.classifier ? '-' + d.classifier : '' }.${ d.type }"
 
-
-                    if ( d.destFileName && ( d.destFileName != file.name ))
+                    if ( d.stripVersion || isStripVersion )
                     {
-                        destFileName = d.destFileName
-                    }
-
-                    if ( isStripVersion )
-                    {
-                        destFileName = ( destFileName ?: d.destFileName ?: "${ d.artifactId }-${ d.version }.${ d.type }" ).
-                                       replaceAll( /-?\Q${ d.version }\E-?/, '' )
+                        destFileName = destFileName.replace( "-${ d.version }", '' )
                     }
 
                     processFilesResource(( CopyResource ) delegate, verbose, true )
@@ -470,7 +474,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             {
                 d.outputDirectory = file().mkdirs( directory )
                 setArtifactItems([ d ])
-                ( CopyDependency ) ( getProcessedArtifactItems( stripVersion )[ 0 ] )
+                ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
             }
             catch ( e )
             {

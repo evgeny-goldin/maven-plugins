@@ -13,7 +13,8 @@ class CopyDependency extends ArtifactItem
     CopyDependency( Artifact artifact ) { super( artifact )  }
 
 
-    boolean optional          = false
+    boolean optional = false
+    Boolean stripVersion
     Boolean excludeTransitive
     boolean getExcludeTransitive ( boolean singleDependency )
     {
