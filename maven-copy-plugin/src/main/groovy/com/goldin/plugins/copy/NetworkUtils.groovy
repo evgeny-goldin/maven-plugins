@@ -289,7 +289,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                     listFileMap.eachWithIndex {
                         String ftpUrl, long size, int index ->
-                        download( ftpUrl, size, ftpData, localDirectory, resource.curl, command, verbose, resource.timeout, resource.retries, index, nFiles )
+                        downloadFile( ftpUrl, size, ftpData, localDirectory, resource.curl, command, verbose, resource.timeout, resource.retries, index, nFiles )
                     }
 
                     if ( deleteListFile ) { file().delete( listFile ) }
@@ -329,17 +329,17 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
     /**
      * Downloads the file specified
      */
-    private static void download( String  ftpUrl,
-                                  long    fileSize,
-                                  Map     ftpData,
-                                  File    localDirectory,
-                                  String  curl,
-                                  String  command,
-                                  boolean verbose,
-                                  long    timeoutSec,
-                                  int     maxAttempts,
-                                  int     fileIndex,
-                                  int     totalFiles )
+    private static void downloadFile ( String  ftpUrl,
+                                       long    fileSize,
+                                       Map     ftpData,
+                                       File    localDirectory,
+                                       String  curl,
+                                       String  command,
+                                       boolean verbose,
+                                       long    timeoutSec,
+                                       int     maxAttempts,
+                                       int     fileIndex,
+                                       int     totalFiles )
     {
         def fileName     = ftpUrl.substring( ftpUrl.lastIndexOf('/') + 1 )
         def destFile     = new File( localDirectory, fileName )
