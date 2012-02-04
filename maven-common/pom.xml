@@ -89,35 +89,35 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-project</artifactId>
             <!-- Only needed when Maven "${maven-version}" is 2.x -->
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>

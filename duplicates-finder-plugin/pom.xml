@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven2-version}</version>
+            <version>${maven-version}</version>
             <scope>compile</scope>
         </dependency>
 
