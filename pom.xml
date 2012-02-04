@@ -44,7 +44,7 @@
         <!-- ~~~~~ -->
 
         <module>maven-common</module>
-        <module>mojo2-parent</module>
+        <module>mojo-parent</module>
 
         <!-- ~~~~~~~ -->
         <!-- Plugins -->

@@ -15,9 +15,9 @@
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
-        <artifactId>mojo2-parent</artifactId>
+        <artifactId>mojo-parent</artifactId>
         <version>0.2.3.8-SNAPSHOT</version>
-        <relativePath>../mojo2-parent</relativePath>
+        <relativePath>../mojo-parent</relativePath>
     </parent>
 
 </project>
