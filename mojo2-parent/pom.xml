@@ -7,7 +7,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.goldin.plugins</groupId>
-    <artifactId>mojo-parent</artifactId>
+    <artifactId>mojo2-parent</artifactId>
     <packaging>pom</packaging>
     <version>0.2.3.8-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>

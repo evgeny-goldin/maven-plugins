@@ -15,9 +15,9 @@
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
-        <artifactId>mojo-parent</artifactId>
+        <artifactId>mojo2-parent</artifactId>
         <version>0.2.3.8-SNAPSHOT</version>
-        <relativePath>../mojo-parent</relativePath>
+        <relativePath>../mojo2-parent</relativePath>
     </parent>
 
 
@@ -25,7 +25,7 @@
         <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- Runs on Maven 3 only ! -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
-        <maven-version>3.0.3</maven-version>
+        <maven-version>${maven3-version}</maven-version>
     </properties>
 
 
