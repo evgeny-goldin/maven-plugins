@@ -21,35 +21,6 @@
     </parent>
 
 
-    <build>
-        <plugins>
-
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Compiling Java patches prior to compiling Groovy classes, using them -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <executions>
-                    <execution>
-                        <id>compile-patches</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                        <configuration>
-                            <includes>
-                                <!-- FTP Ant task patch (Ant v1.7.1) -->
-                                <include>com/goldin/org/apache/tools/**/*.java</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
 
         <!-- ~~~~~~~~~~~~~~~~~~~ -->
