@@ -11,7 +11,7 @@ def    groovydocDir = System.getProperty( 'groovydocDir' )
 assert groovydocDir, 'System property [groovydocDir] is not available'
 
 def basedir         = project.basedir.canonicalPath
-def mavenVersion    = project.properties[ 'maven-version'    ]
+def mavenVersion    = project.properties[ 'maven2-version'   ]
 def gcommonsVersion = project.properties[ 'gcommons-version' ]
 def version         = project.version
 def destinationDir  = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalPath
