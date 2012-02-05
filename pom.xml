@@ -44,7 +44,7 @@
         <!-- Infra -->
         <!-- ~~~~~ -->
 
-        <module>mojo-parent</module>
+        <module>mojo2-parent</module>
         <module>mojo3-parent</module>
         <module>maven-common</module>
 
