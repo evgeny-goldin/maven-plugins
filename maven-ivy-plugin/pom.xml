@@ -15,87 +15,18 @@
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
-        <artifactId>mojo-parent</artifactId>
+        <artifactId>mojo3-parent</artifactId>
         <version>0.2.3.8-SNAPSHOT</version>
-        <relativePath>../mojo-parent</relativePath>
+        <relativePath>../mojo3-parent</relativePath>
     </parent>
 
 
-    <properties>
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Runs on Maven 3 only ! -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
-        <maven-version>${maven3-version}</maven-version>
-    </properties>
-
-
     <dependencies>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-            <version>${maven-version}</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-jdk14</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-nop</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>${maven-version}</version>
-            <scope>compile</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
             <version>2.2.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.goldin.plugins</groupId>
-            <artifactId>maven-common</artifactId>
-            <scope>compile</scope>
-            <version>0.2.3.8-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-plugin-descriptor</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact-manager</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-monitor</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-project</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.codehaus.plexus</groupId>
-                    <artifactId>plexus-container-default</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>aopalliance</groupId>
-                    <artifactId>aopalliance</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
+
 </project>

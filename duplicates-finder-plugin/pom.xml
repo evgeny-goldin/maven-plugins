@@ -15,18 +15,10 @@
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
-        <artifactId>mojo-parent</artifactId>
+        <artifactId>mojo3-parent</artifactId>
         <version>0.2.3.8-SNAPSHOT</version>
-        <relativePath>../mojo-parent</relativePath>
+        <relativePath>../mojo3-parent</relativePath>
     </parent>
-
-
-    <properties>
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Runs on Maven 3 only ! -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~ -->
-        <maven-version>${maven3-version}</maven-version>
-    </properties>
 
 
     <build>
@@ -43,54 +35,5 @@
             </plugins>
         </pluginManagement>
     </build>
-
-
-    <dependencies>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-            <version>${maven-version}</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-jdk14</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-nop</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>${maven-version}</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- http://aether.sonatype.org/using-aether-in-maven-plugins.html -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-        <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-api</artifactId>
-            <version>1.13.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-util</artifactId>
-            <version>1.13.1</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
 </project>
