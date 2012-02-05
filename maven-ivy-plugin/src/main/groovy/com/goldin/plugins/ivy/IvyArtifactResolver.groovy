@@ -12,6 +12,7 @@ import org.apache.ivy.core.resolve.ResolveOptions
 import org.apache.ivy.core.settings.IvySettings
 import org.apache.ivy.plugins.matcher.ExactPatternMatcher
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.impl.ArtifactResolver
@@ -20,7 +21,7 @@ import org.sonatype.aether.resolution.ArtifactResult
 import org.sonatype.aether.util.artifact.DefaultArtifact
 
 /**
- *
+ * Resolved Ivy artifacts using the settings file specified.
  */
 class IvyArtifactResolver implements ArtifactResolver {
 
@@ -44,8 +45,15 @@ class IvyArtifactResolver implements ArtifactResolver {
     }
 
 
+    /**
+     * Attempts to resolve the request using Ivy.
+     *
+     * @param request artifact request
+     * @return artifact resolved if artifact's {@code <groupId>} starts with {@code "ivy:"}, null otherwise.
+     */
     @Requires({ request && request.artifact })
-    ArtifactResult resolveIvy( ArtifactRequest request )
+    @Ensures({ result && result.artifact.file.file })
+    private ArtifactResult resolveIvy( ArtifactRequest request )
     {
         if ( ! request.artifact.groupId.startsWith( 'ivy:' )) { return null }
 
@@ -99,24 +107,17 @@ class IvyArtifactResolver implements ArtifactResolver {
     }
 
 
-    @Requires({ requests != null })
-    List<ArtifactResult> resolveIvy( Collection<? extends ArtifactRequest> requests )
-    {
-        requests.collect { resolveIvy( it ) }
-    }
-
-
     @Override
     ArtifactResult resolveArtifact ( RepositorySystemSession session, ArtifactRequest request )
     {
-        resolveIvy( request ) ?: delegate.resolveArtifact(  session, request )
+        resolveIvy( request ) ?: delegate.resolveArtifact( session, request )
     }
 
 
     @Override
     List<ArtifactResult> resolveArtifacts ( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
     {
-        final result = resolveIvy( requests )
+        final result = requests.collect { resolveIvy( it ) }
         result.any() ? result : delegate.resolveArtifacts( session, requests )
     }
 }
