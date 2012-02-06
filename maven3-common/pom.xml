@@ -37,20 +37,44 @@
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
+                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                     <groupId>org.apache.maven</groupId>
                     <artifactId>maven-core</artifactId>
                 </exclusion>
                 <exclusion>
+                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                     <groupId>org.apache.maven</groupId>
                     <artifactId>maven-project</artifactId>
                 </exclusion>
                 <exclusion>
+                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                     <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact</artifactId>
+                    <artifactId>maven-monitor</artifactId>
                 </exclusion>
                 <exclusion>
+                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                     <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-model</artifactId>
+                    <artifactId>maven-artifact-manager</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- Duplicate of "org.apache.maven:maven-plugin-api:jar:3.0.4" -->
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-plugin-descriptor</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- Duplicate of "org.sonatype.sisu:sisu-inject-plexus:jar:2.3.0" -->
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-container-default</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- Duplicate of "org.sonatype.sisu:sisu-guava:jar:0.9.9" -->
+                    <groupId>com.google.collections</groupId>
+                    <artifactId>google-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0" -->
+                    <groupId>aopalliance</groupId>
+                    <artifactId>aopalliance</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -74,6 +98,13 @@
                     <artifactId>slf4j-nop</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>${maven-version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
