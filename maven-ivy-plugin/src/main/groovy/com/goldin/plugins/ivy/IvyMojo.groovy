@@ -1,7 +1,7 @@
 package com.goldin.plugins.ivy
 
 import com.goldin.gcommons.GCommons
-import com.goldin.plugins.common.BaseGroovyMojo
+import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
@@ -9,8 +9,10 @@ import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.RepositorySystem
-import org.jfrog.maven.annomojo.annotations.*
+import org.jfrog.maven.annomojo.annotations.MojoGoal
+import org.jfrog.maven.annomojo.annotations.MojoParameter
+import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
 
 /**
@@ -20,7 +22,7 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoGoal ( 'ivy' )
 @MojoPhase ( 'initialize' )
 @MojoRequiresDependencyResolution( 'test' )
-class IvyMojo extends BaseGroovyMojo
+class IvyMojo extends BaseGroovyMojo3
 {
    /**
     * Ivy settings file: http://ant.apache.org/ivy/history/latest-milestone/settings.html.
@@ -52,15 +54,6 @@ class IvyMojo extends BaseGroovyMojo
      */
     @MojoParameter ( required = false )
     public File dir
-
-    /**
-     * Aether components:
-     * http://aether.sonatype.org/using-aether-in-maven-plugins.html
-     * https://docs.sonatype.org/display/AETHER/Home
-     */
-
-    @MojoComponent
-    public RepositorySystem repoSystem
 
 
     private final DefaultArtifactHandler handler = new DefaultArtifactHandler()

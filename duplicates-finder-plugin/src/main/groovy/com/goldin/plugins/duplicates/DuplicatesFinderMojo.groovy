@@ -1,17 +1,15 @@
 package com.goldin.plugins.duplicates
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.plugins.common.BaseGroovyMojo
+import com.goldin.plugins.common.BaseGroovyMojo3
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoFailureException
-import org.sonatype.aether.RepositorySystem
-import org.sonatype.aether.RepositorySystemSession
-import org.sonatype.aether.repository.RemoteRepository
-import org.sonatype.aether.resolution.ArtifactRequest
-import org.sonatype.aether.util.artifact.DefaultArtifact
-import org.jfrog.maven.annomojo.annotations.*
+import org.jfrog.maven.annomojo.annotations.MojoGoal
+import org.jfrog.maven.annomojo.annotations.MojoParameter
+import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
 
 /**
@@ -21,7 +19,7 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
-class DuplicatesFinderMojo extends BaseGroovyMojo
+class DuplicatesFinderMojo extends BaseGroovyMojo3
 {
     /**
      * Cache of Maven artifact to file on the disk
@@ -42,21 +40,6 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
 
     @MojoParameter
     public boolean fail = true
-
-    /**
-     * Aether components:
-     * http://aether.sonatype.org/using-aether-in-maven-plugins.html
-     * https://docs.sonatype.org/display/AETHER/Home
-     */
-
-    @MojoComponent
-    public RepositorySystem repoSystem
-
-    @MojoParameter ( defaultValue = '${repositorySystemSession}', readonly = true )
-    public RepositorySystemSession repoSession
-
-    @MojoParameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
-    public List<RemoteRepository> remoteRepos
 
 
     @Override
@@ -85,7 +68,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
             project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) && ( a.type != 'pom' ) }.
                               // Artifact => File
                               collect { Artifact a ->
-                                        File f   = resolveArtifact( a )
+                                        File f   = resolveArtifactCached( a )
                                         f2A[ f ] = a
                                         if ( verbose ) { log.info( "Checking [$a]" ) }
                                         f }.
@@ -118,21 +101,14 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
      * @param artifact Maven artifact to resolve
      * @return local file where it is downloaded and stored
      */
-    private File resolveArtifact( Artifact artifact )
+    private File resolveArtifactCached( Artifact artifact )
     {
         if ( FILES_CACHE.containsKey( artifact ))
         {
             return FILES_CACHE[ artifact ]
         }
 
-        def request = new ArtifactRequest( new DefaultArtifact( artifact.groupId,
-                                                                artifact.artifactId,
-                                                                artifact.classifier,
-                                                                artifact.type,
-                                                                artifact.version ),
-                                           remoteRepos, null )
-
-        FILES_CACHE[ artifact ] = verify().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        FILES_CACHE[ artifact ] = resolveArtifact( artifact )
     }
 
 

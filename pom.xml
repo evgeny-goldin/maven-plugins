@@ -44,19 +44,25 @@
         <!-- Infra -->
         <!-- ~~~~~ -->
 
+        <module>maven2-common</module>
+        <module>maven3-common</module>
         <module>mojo2-parent</module>
         <module>mojo3-parent</module>
-        <module>maven-common</module>
 
-        <!-- ~~~~~~~ -->
-        <!-- Plugins -->
-        <!-- ~~~~~~~ -->
+        <!-- ~~~~~~~~~~~~~~~ -->
+        <!-- Maven 3 Plugins -->
+        <!-- ~~~~~~~~~~~~~~~ -->
 
         <module>duplicates-finder-plugin</module>
+        <module>maven-ivy-plugin</module>
+
+        <!-- ~~~~~~~~~~~~~~~ -->
+        <!-- Maven 2 Plugins -->
+        <!-- ~~~~~~~~~~~~~~~ -->
+
         <module>maven-about-plugin</module>
         <module>maven-copy-plugin</module>
         <module>maven-jenkins-plugin</module>
-        <module>maven-ivy-plugin</module>
         <module>maven-assert-plugin</module>
         <module>maven-mail-plugin</module>
         <module>maven-find-plugin</module>

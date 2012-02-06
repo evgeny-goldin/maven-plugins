@@ -23,11 +23,11 @@
 
     <dependencies>
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Duplicates entry from <parent> but if removed - stops seeing "maven-common" dependencies :( -->
+        <!-- Duplicates entry from <parent> but if removed - stops seeing "maven2-common" dependencies :( -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <dependency>
             <groupId>com.goldin.plugins</groupId>
-            <artifactId>maven-common</artifactId>
+            <artifactId>maven2-common</artifactId>
             <version>0.2.3.8-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
