@@ -1,14 +1,16 @@
 package com.goldin.plugins.ivy
 
+import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo
+import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.DefaultArtifact
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
+import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoComponent
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.sonatype.aether.RepositorySystem
+import org.jfrog.maven.annomojo.annotations.*
 
 
 /**
@@ -17,6 +19,7 @@ import org.sonatype.aether.RepositorySystem
  */
 @MojoGoal ( 'ivy' )
 @MojoPhase ( 'initialize' )
+@MojoRequiresDependencyResolution( 'test' )
 class IvyMojo extends BaseGroovyMojo
 {
    /**
@@ -60,18 +63,23 @@ class IvyMojo extends BaseGroovyMojo
     public RepositorySystem repoSystem
 
 
+    private final DefaultArtifactHandler handler = new DefaultArtifactHandler()
+
+
     @Override
     @Requires({ ivyconf.file })
     void doExecute ()
     {
+        handler.addedToClasspath = true
+
         // Ain't that cool to assign to private?!
         repoSystem.artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyconf )
 
         if ( scope || dir )
         {
             final dependencies = resolveDependencies( ivy, dependencies )
-            if ( scope ){ addDependenciesToScope( scope, dependencies ) }
-            if ( dir  ) { copyDependenciesToDir ( dir,   dependencies ) }
+            if ( scope ){ addArtifacts  ( scope, dependencies ) }
+            if ( dir  ) { copyArtifacts ( dir,   dependencies ) }
         }
     }
 
@@ -84,33 +92,48 @@ class IvyMojo extends BaseGroovyMojo
      * @return             local paths of dependencies resolved
      */
     @Requires({ ivyFile?.file || dependencies })
-    @Ensures({ result })
-    List<File> resolveDependencies( File ivyFile, ArtifactItem[] dependencies )
+    @Ensures({ result && result.every{ it.file.file } })
+    List<Artifact> resolveDependencies( File ivyFile, ArtifactItem[] dependencies )
     {
-        []
+        final log4j = new DefaultArtifact( 'log4j', 'log4j', VersionRange.createFromVersion( '1.2.16' ), 'compile', 'jar', null, handler )
+        log4j.file  = new File( '/Users/evgenyg/.m2/repository/log4j/log4j/1.2.16/log4j-1.2.16.jar' )
+
+        [ log4j ]
     }
 
 
     /**
-     * Adds dependencies resolved to the scope specified.
+     * Adds artifacts to the scope specified.
      *
-     * @param scope        Maven scope to add the dependecies to: "compile", "runtime", "test", etc.
-     * @param dependencies dependencies to add to the scope
+     * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
+     * @param artifacts dependencies to add to the scope
      */
-    @Requires({ scope && dependencies && dependencies.every{ it.file } })
-    void addDependenciesToScope ( String scope, List<File> dependencies )
+    @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
+    void addArtifacts ( String scope, List<Artifact> artifacts )
     {
+        artifacts.each { it.scope   = scope }
+        project.artifacts           = new HashSet<Artifact>( project.artifacts           + artifacts )
+        project.dependencyArtifacts = new HashSet<Artifact>( project.dependencyArtifacts + artifacts )
+        log.info( "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: " +
+                  artifacts )
     }
 
 
     /**
-     * Copies dependencies resolved to the directory specified.
+     * Copies artifacts to directory specified.
      *
-     * @param directory    directory to copy the dependencies to
-     * @param dependencies dependencies to copy
+     * @param directory directory to copy the artifacts to
+     * @param artifacts artifacts to copy
      */
-    @Requires({ directory && dependencies && dependencies.every{ it.file } })
-    void copyDependenciesToDir ( File directory, List<File> dependencies )
+    @Requires({ directory && artifacts && artifacts.every{ it.file.file } })
+    @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
+    void copyArtifacts ( File directory, List<Artifact> artifacts )
     {
+        artifacts*.file.each {
+            GCommons.file().copy( it, directory )
+        }
+
+        log.info( "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} copied \"${ directory.canonicalPath }\": " +
+                  artifacts )
     }
 }
