@@ -1,7 +1,8 @@
 package com.goldin.plugins.common
 
-import static com.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.sonatype.aether.RepositorySystem
@@ -9,7 +10,6 @@ import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
 import org.sonatype.aether.util.artifact.DefaultArtifact
-
 
 /**
  * Base class for all Mojo3-based plugins.
@@ -39,12 +39,17 @@ abstract class BaseGroovyMojo3 extends BaseGroovyMojo
      * @param artifact Maven artifact to resolve
      * @return same artifact with its local file set
      */
+    @Requires({ a })
+    @Ensures({ a.file.file })
     protected final Artifact resolveArtifact( Artifact a )
     {
-        assert a.file == null
-        final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
-                                             remoteRepos, null )
-        a.file = verify().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        if ( ! a.file )
+        {
+            final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
+                                                 remoteRepos, null )
+            a.file = repoSystem.resolveArtifact( repoSession, request ).artifact.file
+        }
+
         a
     }
 }

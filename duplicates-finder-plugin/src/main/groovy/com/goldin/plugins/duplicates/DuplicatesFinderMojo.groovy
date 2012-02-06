@@ -22,11 +22,6 @@ import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 class DuplicatesFinderMojo extends BaseGroovyMojo3
 {
     /**
-     * Cache of Maven artifact to file on the disk
-     */
-    private static final Map<Artifact, File> FILES_CACHE = [:]
-
-    /**
      * Cache of file on the disk to classes it contains
      */
     private static final Map<File, List<String>> CLASSES_CACHE = [:]
@@ -68,7 +63,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo3
             project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) && ( a.type != 'pom' ) }.
                               // Artifact => File
                               collect { Artifact a ->
-                                        File f   = resolveArtifactCached( a )
+                                        File f   = resolveArtifact( a ).file
                                         f2A[ f ] = a
                                         if ( verbose ) { log.info( "Checking [$a]" ) }
                                         f }.
@@ -92,23 +87,6 @@ class DuplicatesFinderMojo extends BaseGroovyMojo3
         log.info( "[${ f2A.size() }] artifact${ general().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
         if ( violations ) { reportViolations( violations ) }
         else              { log.info( 'No duplicate libraries found' ) }
-    }
-
-
-    /**
-     * Resolves Maven {@link Artifact} to local {@link File}.
-     *
-     * @param artifact Maven artifact to resolve
-     * @return local file where it is downloaded and stored
-     */
-    private File resolveArtifactCached( Artifact artifact )
-    {
-        if ( FILES_CACHE.containsKey( artifact ))
-        {
-            return FILES_CACHE[ artifact ]
-        }
-
-        FILES_CACHE[ artifact ] = resolveArtifact( artifact ).file
     }
 
 
