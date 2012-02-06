@@ -34,15 +34,17 @@ abstract class BaseGroovyMojo3 extends BaseGroovyMojo
 
 
     /**
-     * Resolves Maven {@link Artifact} to local {@link File}.
+     * Resolves local {@link File} of Maven {@link Artifact} and updates it.
      *
      * @param artifact Maven artifact to resolve
-     * @return local file where it is downloaded and stored
+     * @return same artifact with its local file set
      */
-    protected final File resolveArtifact( Artifact a )
+    protected final Artifact resolveArtifact( Artifact a )
     {
+        assert a.file == null
         final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
                                              remoteRepos, null )
-        verify().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        a.file = verify().file( repoSystem.resolveArtifact( repoSession, request ).artifact.file )
+        a
     }
 }

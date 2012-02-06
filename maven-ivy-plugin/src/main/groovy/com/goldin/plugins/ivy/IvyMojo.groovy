@@ -3,9 +3,8 @@ package com.goldin.plugins.ivy
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.artifact.DefaultArtifact
+import org.apache.maven.artifact.handler.ArtifactHandler
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
-import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -13,6 +12,8 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
+import org.sonatype.aether.impl.internal.DefaultRepositorySystem
+import org.apache.maven.artifact.DefaultArtifact
 
 
 /**
@@ -56,17 +57,13 @@ class IvyMojo extends BaseGroovyMojo3
     public File dir
 
 
-    private final DefaultArtifactHandler handler = new DefaultArtifactHandler()
-
 
     @Override
     @Requires({ ivyconf.file })
     void doExecute ()
     {
-        handler.addedToClasspath = true
-
-        // Ain't that cool to assign to private?!
-        repoSystem.artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyconf )
+        assert repoSystem instanceof DefaultRepositorySystem
+        (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyconf )
 
         if ( scope || dir )
         {
@@ -74,6 +71,18 @@ class IvyMojo extends BaseGroovyMojo3
             if ( scope ){ addArtifacts  ( scope, dependencies ) }
             if ( dir  ) { copyArtifacts ( dir,   dependencies ) }
         }
+    }
+
+
+    /**
+     * Creates a new {@link ArtifactHandler} instance.
+     * @return new {@link ArtifactHandler} instance
+     */
+    private ArtifactHandler artifactHandler()
+    {
+        DefaultArtifactHandler handler = new DefaultArtifactHandler()
+        handler.addedToClasspath       = true // so that new artifacts will be added to classpath
+        handler
     }
 
 
@@ -88,10 +97,10 @@ class IvyMojo extends BaseGroovyMojo3
     @Ensures({ result && result.every{ it.file.file } })
     List<Artifact> resolveDependencies( File ivyFile, ArtifactItem[] dependencies )
     {
-        final log4j = new DefaultArtifact( 'log4j', 'log4j', VersionRange.createFromVersion( '1.2.16' ), 'compile', 'jar', null, handler )
-        log4j.file  = new File( '/Users/evgenyg/.m2/repository/log4j/log4j/1.2.16/log4j-1.2.16.jar' )
-
-        [ log4j ]
+        dependencies.collect {
+            ArtifactItem d ->
+            resolveArtifact( new DefaultArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, artifactHandler()))
+        }
     }
 
 

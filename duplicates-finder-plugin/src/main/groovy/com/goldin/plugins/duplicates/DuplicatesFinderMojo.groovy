@@ -108,7 +108,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo3
             return FILES_CACHE[ artifact ]
         }
 
-        FILES_CACHE[ artifact ] = resolveArtifact( artifact )
+        FILES_CACHE[ artifact ] = resolveArtifact( artifact ).file
     }
 
 
