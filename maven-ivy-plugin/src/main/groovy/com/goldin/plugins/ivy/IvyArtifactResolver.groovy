@@ -9,7 +9,6 @@ import org.apache.ivy.core.module.id.ArtifactId
 import org.apache.ivy.core.module.id.ModuleRevisionId
 import org.apache.ivy.core.report.ResolveReport
 import org.apache.ivy.core.resolve.ResolveOptions
-import org.apache.ivy.core.settings.IvySettings
 import org.apache.ivy.plugins.matcher.ExactPatternMatcher
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
 import org.gcontracts.annotations.Ensures
@@ -25,23 +24,15 @@ import org.sonatype.aether.util.artifact.DefaultArtifact
  */
 class IvyArtifactResolver implements ArtifactResolver {
 
-    private final ArtifactResolver delegate
+    private final ArtifactResolver delegateResolver
     private final Ivy              ivy
 
 
-    @Requires({ delegate && ivyconf?.file })
-    IvyArtifactResolver ( ArtifactResolver delegate, File ivyconf )
+    @Requires({ delegateResolver && ivy })
+    IvyArtifactResolver ( ArtifactResolver delegateResolver, Ivy ivy )
     {
-        this.delegate = delegate
-        this.ivy      = buildIvy( ivyconf )
-    }
-
-
-    private Ivy buildIvy ( File ivyconf )
-    {
-        IvySettings settings = new IvySettings()
-        settings.load( ivyconf )
-        Ivy.newInstance( settings )
+        this.delegateResolver = delegateResolver
+        this.ivy              = ivy
     }
 
 
@@ -110,7 +101,7 @@ class IvyArtifactResolver implements ArtifactResolver {
     @Override
     ArtifactResult resolveArtifact ( RepositorySystemSession session, ArtifactRequest request )
     {
-        resolveIvy( request ) ?: delegate.resolveArtifact( session, request )
+        resolveIvy( request ) ?: delegateResolver.resolveArtifact( session, request )
     }
 
 
@@ -118,6 +109,6 @@ class IvyArtifactResolver implements ArtifactResolver {
     List<ArtifactResult> resolveArtifacts ( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
     {
         final result = requests.collect { resolveIvy( it ) }
-        result.any() ? result : delegate.resolveArtifacts( session, requests )
+        result.any() ? result : delegateResolver.resolveArtifacts( session, requests )
     }
 }
