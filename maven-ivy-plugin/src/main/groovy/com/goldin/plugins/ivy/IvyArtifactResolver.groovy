@@ -46,10 +46,10 @@ class IvyArtifactResolver implements ArtifactResolver {
     @Ensures({ result && result.artifact.file.file })
     private ArtifactResult resolveIvy( ArtifactRequest request )
     {
-        if ( ! request.artifact.groupId.startsWith( 'ivy:' )) { return null }
+        if ( ! request.artifact.groupId.startsWith( IvyMojo.IVY_PREFIX )) { return null }
 
         final a            = request.artifact
-        final organisation = a.groupId.substring( 'ivy:'.size())
+        final organisation = a.groupId.substring( IvyMojo.IVY_PREFIX.size())
         final name         = a.artifactId
         final pattern      = a.classifier
         final revision     = a.version
@@ -99,6 +99,8 @@ class IvyArtifactResolver implements ArtifactResolver {
 
 
     @Override
+    @Requires({ session && request })
+    @Ensures({ result })
     ArtifactResult resolveArtifact ( RepositorySystemSession session, ArtifactRequest request )
     {
         resolveIvy( request ) ?: delegateResolver.resolveArtifact( session, request )
@@ -108,7 +110,6 @@ class IvyArtifactResolver implements ArtifactResolver {
     @Override
     List<ArtifactResult> resolveArtifacts ( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
     {
-        final result = requests.collect { resolveIvy( it ) }
-        result.any() ? result : delegateResolver.resolveArtifacts( session, requests )
+        requests.collect { resolveArtifact( session, it )}
     }
 }

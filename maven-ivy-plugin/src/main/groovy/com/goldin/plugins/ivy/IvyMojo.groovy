@@ -30,6 +30,9 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 @MojoRequiresDependencyResolution( 'test' )
 class IvyMojo extends BaseGroovyMojo3
 {
+    public static final String IVY_PREFIX = 'ivy.'
+
+
    /**
     * Ivy settings file: http://ant.apache.org/ivy/history/latest-milestone/settings.html.
     */
@@ -74,7 +77,7 @@ class IvyMojo extends BaseGroovyMojo3
 
         if ( scope || dir )
         {
-            final dependencies = resolveDependencies( ivyInstance, ivy, dependencies )
+            final dependencies = resolveAllDependencies( ivyInstance, ivy, dependencies )
             if ( scope ){ addArtifacts  ( scope, dependencies ) }
             if ( dir  ) { copyArtifacts ( dir,   dependencies ) }
         }
@@ -99,10 +102,11 @@ class IvyMojo extends BaseGroovyMojo3
      */
     @Requires({ ivyInstance && ( ivyFile || dependencies ) })
     @Ensures({ result && result.every{ it.file.file } })
-    private List<Artifact> resolveDependencies( Ivy ivyInstance, File ivyFile, ArtifactItem[] dependencies )
+    private List<Artifact> resolveAllDependencies ( Ivy ivyInstance, File ivyFile, ArtifactItem[] dependencies )
     {
-        ( ivyFile      ? resolveIvyDependencies  ( ivyInstance, ivyFile ) : [] ) +
-        ( dependencies ? resolveMavenDependencies( dependencies         ) : [] )
+        final ivyArtifacts   = ( ivyFile      ? resolveIvyDependencies  ( ivyInstance, ivyFile ) : [] )
+        final mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies         ) : [] )
+        ivyArtifacts + mavenArtifacts
     }
 
 
@@ -131,11 +135,10 @@ class IvyMojo extends BaseGroovyMojo3
             String groupId    = attributes[ 'organisation' ]
             String artifactId = attributes[ 'module'       ]
             String version    = attributes[ 'revision'     ]
-            String branch     = attributes[ 'branch'       ]
-            String classifier = ( branch ? "$branch-" : '' ) + artifactReport.artifactOrigin.artifact.name.replace( '/', '-' )
+            String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
             File   localFile  = artifactReport.localFile
 
-            artifact( groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
+            artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
         }
     }
 
