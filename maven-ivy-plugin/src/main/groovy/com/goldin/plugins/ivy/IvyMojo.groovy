@@ -65,6 +65,13 @@ class IvyMojo extends BaseGroovyMojo3
     public File dir
 
 
+    /**
+     * Whether plugin should log verbosely.
+     */
+    @MojoParameter ( required = false )
+    public boolean verbose = false
+
+
 
     @Override
     @Requires({ ivyconf.file })
@@ -138,6 +145,11 @@ class IvyMojo extends BaseGroovyMojo3
             String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
             File   localFile  = artifactReport.localFile
 
+            if ( verbose )
+            {
+                log.info( "[${ ivyFile.canonicalPath }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
+            }
+
             artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
         }
     }
@@ -196,8 +208,16 @@ class IvyMojo extends BaseGroovyMojo3
         artifacts.each { it.scope   = scope }
         project.artifacts           = new HashSet<Artifact>( project.artifacts           + artifacts )
         project.dependencyArtifacts = new HashSet<Artifact>( project.dependencyArtifacts + artifacts )
-        log.info( "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: " +
-                  artifacts )
+        final message               = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
+
+        if ( verbose )
+        {
+            log.info( message + artifacts.collect { "\"$it\" (${ it.file })"  })
+        }
+        else
+        {
+            log.info( message + artifacts )
+        }
     }
 
 
@@ -211,11 +231,20 @@ class IvyMojo extends BaseGroovyMojo3
     @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
     private void copyArtifacts ( File directory, List<Artifact> artifacts )
     {
-        artifacts*.file.each {
-            GCommons.file().copy( it, directory )
+        Map<Artifact, File> filesCopied = artifacts.inject([ : ]){
+            Map m, Artifact a -> m[ a ] = file().copy( a.file, directory )
+                                 m
         }
 
-        log.info( "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} copied \"${ directory.canonicalPath }\": " +
-                  artifacts )
+        final message = "${ artifacts.size() } artifact${ GCommons.general().s(artifacts.size())} copied to \"${ directory.canonicalPath }\": "
+
+        if ( verbose )
+        {
+            log.info( message + artifacts.collect { "\"$it\" => \"${ filesCopied[ it ] }\""  })
+        }
+        else
+        {
+            log.info( message + artifacts )
+        }
     }
 }
