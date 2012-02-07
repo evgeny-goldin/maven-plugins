@@ -19,6 +19,7 @@ import org.sonatype.aether.resolution.ArtifactRequest
 import org.sonatype.aether.resolution.ArtifactResult
 import org.sonatype.aether.util.artifact.DefaultArtifact
 
+
 /**
  * Resolved Ivy artifacts using the settings file specified.
  */

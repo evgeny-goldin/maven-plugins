@@ -205,10 +205,10 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
     private void addArtifacts ( String scope, List<Artifact> artifacts )
     {
-        artifacts.each { it.scope   = scope }
-        project.artifacts           = new HashSet<Artifact>( project.artifacts           + artifacts )
-        project.dependencyArtifacts = new HashSet<Artifact>( project.dependencyArtifacts + artifacts )
-        final message               = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
+        artifacts.each { it.scope = scope }
+        project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts )) // Sorry, Jason. Is there a better way?
+
+        final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
 
         if ( verbose )
         {
