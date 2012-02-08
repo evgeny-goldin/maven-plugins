@@ -228,8 +228,26 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
     private void addArtifacts ( String scope, List<Artifact> artifacts )
     {
-        artifacts.each { it.scope = scope }
-        project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts )) // Sorry, Jason. Is there a better way?
+        /**
+         * Two beautiful Maven hacks are coming! (thanks to Groovy being able to read/write private fields)
+         */
+        if ( scope == 'plugin-runtime' )
+        {   /**
+             * Hack #1: adding jars to plugin's classloader.
+             */
+            assert this.class.classLoader instanceof URLClassLoader
+            artifacts*.file.each {
+                (( URLClassLoader ) this.class.classLoader ).addURL( it.toURL())
+            }
+        }
+        else
+        {
+            /**
+             * Hack #2: adding jars to Maven's scope and compilation classpath.
+             */
+            artifacts.each { it.scope = scope }
+            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
+        }
 
         final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
 
