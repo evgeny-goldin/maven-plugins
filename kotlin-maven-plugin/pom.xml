@@ -26,11 +26,11 @@
             <plugin>
                 <groupId>com.goldin.plugins</groupId>
                 <artifactId>ivy-maven-plugin</artifactId>
-                <version>0.2.3.8-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>add-kotlin-compile</id>
-                        <phase>validate</phase>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>ivy</goal>
                         </goals>
@@ -44,5 +44,14 @@
             </plugin>
         </plugins>
     </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.goldin.plugins</groupId>
+            <artifactId>ivy-maven-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
 </project>

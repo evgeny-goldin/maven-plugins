@@ -241,8 +241,7 @@ class IvyMojo extends BaseGroovyMojo3
             }
         }
         else
-        {
-            /**
+        {   /**
              * Hack #2: adding jars to Maven's scope and compilation classpath.
              */
             artifacts.each { it.scope = scope }
