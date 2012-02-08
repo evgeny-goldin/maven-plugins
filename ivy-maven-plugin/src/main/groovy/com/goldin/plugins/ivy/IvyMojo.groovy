@@ -37,13 +37,13 @@ class IvyMojo extends BaseGroovyMojo3
     * Ivy settings file: http://ant.apache.org/ivy/history/latest-milestone/settings.html.
     */
     @MojoParameter ( required = true )
-    public File ivyconf
+    public String ivyconf
 
     /**
      * Ivy file: http://ant.apache.org/ivy/history/latest-milestone/ivyfile.html.
      */
     @MojoParameter ( required = false )
-    public File ivy
+    public String ivy
 
     /**
      * Maven-style {@code <dependencies>}.
@@ -74,24 +74,47 @@ class IvyMojo extends BaseGroovyMojo3
 
 
     @Override
-    @Requires({ ivyconf.file })
+    @Requires({ ivyconf })
     void doExecute ()
     {
-        final ivyInstance = buildIvy( ivyconf )
+        URL ivyconfUrl  = url( ivyconf )
+        URL ivyUrl      = url( ivy )
+        Ivy ivyInstance = buildIvy( ivyconfUrl )
 
         assert repoSystem instanceof DefaultRepositorySystem
         (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance )
+        log.info( "Added Ivy artifacts resolver based on \"$ivyconfUrl\"" )
 
         if ( scope || dir )
         {
-            final dependencies = resolveAllDependencies( ivyInstance, ivy, dependencies )
+            final dependencies = resolveAllDependencies( ivyInstance, ivyUrl, dependencies )
             if ( scope ){ addArtifacts  ( scope, dependencies ) }
             if ( dir  ) { copyArtifacts ( dir,   dependencies ) }
         }
     }
 
 
-    private Ivy buildIvy ( File ivyconf )
+    /**
+     * Converts path specified to URL.
+     *
+     * @param s path of disk file or jar-located resource.
+     * @return path's URL
+     */
+    @Requires({ s })
+    @Ensures({ result })
+    private URL url( String s )
+    {
+        s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
+    }
+
+
+    /**
+     * Creates a new {@link Ivy} instance from Ivy settings specified.
+     *
+     * @param ivyconf ivy setting to create an {@link Ivy} instance from
+     * @return new {@link Ivy} instance
+     */
+    private Ivy buildIvy ( URL ivyconf )
     {
         IvySettings settings = new IvySettings()
         settings.load( ivyconf )
@@ -109,7 +132,7 @@ class IvyMojo extends BaseGroovyMojo3
      */
     @Requires({ ivyInstance && ( ivyFile || dependencies ) })
     @Ensures({ result && result.every{ it.file.file } })
-    private List<Artifact> resolveAllDependencies ( Ivy ivyInstance, File ivyFile, ArtifactItem[] dependencies )
+    private List<Artifact> resolveAllDependencies ( Ivy ivyInstance, URL ivyFile, ArtifactItem[] dependencies )
     {
         final ivyArtifacts   = ( ivyFile      ? resolveIvyDependencies  ( ivyInstance, ivyFile ) : [] )
         final mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies         ) : [] )
@@ -124,12 +147,12 @@ class IvyMojo extends BaseGroovyMojo3
      * @param ivyFile ivy dependencies file
      * @return artifacts resolved
      */
-    @Requires({ ivyInstance && ivyFile?.file })
+    @Requires({ ivyInstance && ivyFile })
     @Ensures({ result })
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
-    private List<Artifact> resolveIvyDependencies ( Ivy ivyInstance, File ivyFile )
+    private List<Artifact> resolveIvyDependencies ( Ivy ivyInstance, URL ivyFile )
     {
-        final report = ivyInstance.resolve( ivyFile.toURL(), new ResolveOptions().setConfs( [ 'default' ] as String[] ))
+        final report = ivyInstance.resolve( ivyFile, new ResolveOptions().setConfs( [ 'default' ] as String[] ))
 
         report.allArtifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
@@ -147,7 +170,7 @@ class IvyMojo extends BaseGroovyMojo3
 
             if ( verbose )
             {
-                log.info( "[${ ivyFile.canonicalPath }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
+                log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
             }
 
             artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
