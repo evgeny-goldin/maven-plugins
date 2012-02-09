@@ -38,6 +38,7 @@
                             <ivyconf>${project.basedir}/src/main/resources/ivyconf.xml</ivyconf>
                             <ivy>${project.basedir}/src/main/resources/ivy.xml</ivy>
                             <scope>compile</scope>
+                            <verbose>true</verbose>
                         </configuration>
                     </execution>
                 </executions>

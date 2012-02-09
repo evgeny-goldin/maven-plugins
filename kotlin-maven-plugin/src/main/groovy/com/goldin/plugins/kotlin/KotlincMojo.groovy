@@ -66,11 +66,17 @@ class KotlincMojo extends BaseGroovyMojo3
     @MojoParameter ( required = false )
     public boolean includeRuntime = false
 
+    /**
+     * Whether Ivy activity is logged verbosely.
+     */
+    @MojoParameter ( required = false )
+    public boolean verboseIvy = false
+
 
     @Override
     void doExecute ()
     {
-        addKotlinToRuntime()
+        addKotlinDependency()
 
         final compiler = new BytecodeCompiler()
         if ( stdlib         ) { verify().file( new File( stdlib )) }
@@ -118,7 +124,7 @@ class KotlincMojo extends BaseGroovyMojo3
     /**
      * Adds Kotlin dependencies to plugin's classloader.
      */
-    private addKotlinToRuntime ()
+    private addKotlinDependency ()
     {
         IvyMojo ivyMojo    = new IvyMojo()
         ivyMojo.project    = project
@@ -128,7 +134,7 @@ class KotlincMojo extends BaseGroovyMojo3
         ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
         ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
         ivyMojo.scope      = 'plugin-runtime' // This injects all Ivy dependencies into plugin's runtime classloader
-        ivyMojo.verbose    = false            // Do not log anything
+        ivyMojo.verbose    = verboseIvy
         ivyMojo.execute()
     }
 }
