@@ -7,7 +7,6 @@ import org.apache.ivy.Ivy
 import org.apache.ivy.core.module.descriptor.MDArtifact
 import org.apache.ivy.core.report.ArtifactDownloadReport
 import org.apache.ivy.core.resolve.ResolveOptions
-import org.apache.ivy.core.settings.IvySettings
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
@@ -19,6 +18,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
+import org.apache.ivy.core.settings.IvySettings
 
 
 /**
@@ -78,25 +78,41 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ ivyconf })
     void doExecute ()
     {
-        URL ivyconfUrl  = url( ivyconf )
-        URL ivyUrl      = url( ivy )
-        Ivy ivyInstance = buildIvy( ivyconfUrl )
+        Ivy ivyInstance = addIvyResolver( url( ivyconf ))
+
+        if ( scope || dir )
+        {
+            assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) need to be specified when <scope> or <dir> are used."
+            final dependencies = resolveAllDependencies( ivyInstance, ( ivy ? url( ivy ) : null ), dependencies )
+
+            if ( scope ){ addArtifacts  ( scope, dependencies ) }
+            if ( dir   ){ copyArtifacts ( dir,   dependencies ) }
+        }
+    }
+
+
+    /**
+     * Adds Ivy resolver to Aether RepositorySystem.
+     * @return configured {@link Ivy} instance.
+     */
+    @Requires({ ivyconfUrl })
+    @Ensures({ result })
+    private Ivy addIvyResolver ( URL ivyconfUrl )
+    {
+        IvySettings settings = new IvySettings()
+        settings.load( ivyconfUrl )
+        final ivyInstance = Ivy.newInstance( settings )
 
         assert repoSystem instanceof DefaultRepositorySystem
         (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance )
-        if ( logNormally())
+
+        if ( logNormally() )
         {
             log.info( "Added Ivy artifacts resolver based on \"$ivyconfUrl\"" )
         }
 
-        if ( scope || dir )
-        {
-            final dependencies = resolveAllDependencies( ivyInstance, ivyUrl, dependencies )
-            if ( scope ){ addArtifacts  ( scope, dependencies ) }
-            if ( dir  ) { copyArtifacts ( dir,   dependencies ) }
-        }
+        ivyInstance
     }
-
 
     /**
      * Converts path specified to URL.
@@ -109,20 +125,6 @@ class IvyMojo extends BaseGroovyMojo3
     private URL url( String s )
     {
         s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
-    }
-
-
-    /**
-     * Creates a new {@link Ivy} instance from Ivy settings specified.
-     *
-     * @param ivyconf ivy setting to create an {@link Ivy} instance from
-     * @return new {@link Ivy} instance
-     */
-    private Ivy buildIvy ( URL ivyconf )
-    {
-        IvySettings settings = new IvySettings()
-        settings.load( ivyconf )
-        Ivy.newInstance( settings )
     }
 
 
