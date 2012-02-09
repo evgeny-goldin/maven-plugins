@@ -156,7 +156,10 @@ class IvyMojo extends BaseGroovyMojo3
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
     private List<Artifact> resolveIvyDependencies ( Ivy ivyInstance, URL ivyFile )
     {
-        final report = ivyInstance.resolve( ivyFile, new ResolveOptions().setConfs( [ 'default' ] as String[] ))
+        final options = new ResolveOptions()
+        options.setConfs([ 'default' ] as String[] )
+        options.setLog( logVerbosely() ? 'default' : 'download-only' )
+        final report  = ivyInstance.resolve( ivyFile, options )
 
         report.allArtifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
