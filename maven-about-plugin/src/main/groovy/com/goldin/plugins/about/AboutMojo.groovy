@@ -12,6 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
+import com.goldin.plugins.ivy.IvyMojo
 
 
 /**
@@ -178,9 +179,12 @@ class AboutMojo extends BaseGroovyMojo
 
         project.artifacts.each {
             Artifact a ->
-            "$a.groupId:$a.artifactId".with {
-                assert mdtStripped.contains(( String ) delegate ), \
-                "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
+            if ( ! a.groupId.startsWith( IvyMojo.IVY_PREFIX ))
+            {
+                "$a.groupId:$a.artifactId".with {
+                    assert mdtStripped.contains(( String ) delegate ), \
+                    "Failed to run [$plugin] - cleaned up data should contain [$delegate]: [$mdtStripped]"
+                }
             }
         }
 
