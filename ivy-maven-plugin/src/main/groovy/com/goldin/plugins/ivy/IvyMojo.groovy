@@ -74,6 +74,14 @@ class IvyMojo extends BaseGroovyMojo3
     private boolean logNormally (){ ( verbose ) || ( verbose == null ) }
 
 
+    /**
+     * Whether execution should fail if resolving artifacts doesn't succeed.
+     */
+    @MojoParameter ( required = false )
+    public boolean failOnError = true
+
+
+
     @Override
     @Requires({ ivyconf })
     void doExecute ()
@@ -162,6 +170,25 @@ class IvyMojo extends BaseGroovyMojo3
         options.setConfs([ 'default' ] as String[] )
         options.setLog( logVerbosely() ? 'default' : 'download-only' )
         final report  = ivyInstance.resolve( ivyFile, options )
+
+        if ( logVerbosely())
+        {
+            log.info( "[${ report.downloadSize }] byte${ general().s( report.downloadSize )} downloaded in [${ report.downloadTime / 1000 }] sec" +
+                      (( report.downloadSize > 0 ) ?
+                          " - [${ report.artifacts.size() }] artifact${ general().s( report.artifacts.size())} of " +
+                          "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }" :
+                          '' ))
+        }
+
+        if ( report.unresolvedDependencies && failOnError )
+        {
+            throw new RuntimeException( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
+        }
+
+        if ( report.allProblemMessages && failOnError )
+        {
+            throw new RuntimeException( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
+        }
 
         report.allArtifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
