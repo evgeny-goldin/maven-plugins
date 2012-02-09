@@ -7,8 +7,6 @@ import org.apache.ivy.core.module.descriptor.DefaultIncludeRule
 import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor
 import org.apache.ivy.core.module.id.ArtifactId
 import org.apache.ivy.core.module.id.ModuleRevisionId
-import org.apache.ivy.core.report.ResolveReport
-import org.apache.ivy.core.resolve.ResolveOptions
 import org.apache.ivy.plugins.matcher.ExactPatternMatcher
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
 import org.gcontracts.annotations.Ensures
@@ -27,13 +25,15 @@ class IvyArtifactResolver implements ArtifactResolver {
 
     private final ArtifactResolver delegateResolver
     private final Ivy              ivy
+    private final IvyHelper        ivyHelper
 
 
-    @Requires({ delegateResolver && ivy })
-    IvyArtifactResolver ( ArtifactResolver delegateResolver, Ivy ivy )
+    @Requires({ delegateResolver && ivy && ivyHelper })
+    IvyArtifactResolver ( ArtifactResolver delegateResolver, Ivy ivy, IvyHelper ivyHelper )
     {
         this.delegateResolver = delegateResolver
         this.ivy              = ivy
+        this.ivyHelper        = ivyHelper
     }
 
 
@@ -72,24 +72,21 @@ class IvyArtifactResolver implements ArtifactResolver {
             }
 
             md.addDependency( dd );
-
             XmlModuleDescriptorWriter.write( md, ivyfile );
 
-            ResolveOptions options = new ResolveOptions()
-            options.confs          = [ 'default' ]
-            ResolveReport report   = ivy.resolve( ivyfile.toURL(), options )
+            final artifacts = ivyHelper.resolve( ivy, ivyfile.toURL())
 
-            assert report.artifacts, \
+            assert artifacts, \
                 "No artifacts resolved for \"$organisation:$name:$revision\"."
 
-            assert report.artifacts.size() == 1, \
-                "Multiple artifacts resolved for \"$organisation:$name:$revision\" - [${ report.artifacts }], specify <classifier> pattern."
+            assert artifacts.size() == 1, \
+                "Multiple artifacts resolved for \"$organisation:$name:$revision\" - [${ artifacts }], specify <classifier> pattern."
 
-            final  f = report.allArtifactsReports.first().localFile
+            final  f = artifacts.first().file
             assert f.file, "File [$f] resolved by Ivy isn't found"
 
-            final result    = new ArtifactResult( request )
-            result.artifact = new DefaultArtifact( organisation, name, extension, revision ).setFile( f )
+            final result    = new ArtifactResult( request )                                               // org.sonatype.aether.resolution.ArtifactResult
+            result.artifact = new DefaultArtifact( organisation, name, extension, revision ).setFile( f ) // org.sonatype.aether.util.artifact.DefaultArtifact
             result
         }
         finally

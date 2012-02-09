@@ -4,12 +4,8 @@ import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.ivy.Ivy
-import org.apache.ivy.core.module.descriptor.MDArtifact
-import org.apache.ivy.core.report.ArtifactDownloadReport
-import org.apache.ivy.core.resolve.ResolveOptions
+import org.apache.ivy.core.settings.IvySettings
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.artifact.DefaultArtifact
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -18,7 +14,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
-import org.apache.ivy.core.settings.IvySettings
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 
 
 /**
@@ -31,6 +27,9 @@ import org.apache.ivy.core.settings.IvySettings
 class IvyMojo extends BaseGroovyMojo3
 {
     public static final String IVY_PREFIX = 'ivy.'
+
+
+    private IvyHelper ivyHelper
 
 
    /**
@@ -86,6 +85,7 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ ivyconf })
     void doExecute ()
     {
+        ivyHelper       = new IvyHelper( logVerbosely(), failOnError )
         Ivy ivyInstance = addIvyResolver( url( ivyconf ))
 
         if ( scope || dir )
@@ -112,7 +112,8 @@ class IvyMojo extends BaseGroovyMojo3
         final ivyInstance = Ivy.newInstance( settings )
 
         assert repoSystem instanceof DefaultRepositorySystem
-        (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance )
+        (( DefaultRepositorySystem ) repoSystem ).artifactResolver =
+            new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance, ivyHelper )
 
         if ( logNormally() )
         {
@@ -148,74 +149,9 @@ class IvyMojo extends BaseGroovyMojo3
     @Ensures({ result && result.every{ it.file.file } })
     private List<Artifact> resolveAllDependencies ( Ivy ivyInstance, URL ivyFile, ArtifactItem[] dependencies )
     {
-        final ivyArtifacts   = ( ivyFile      ? resolveIvyDependencies  ( ivyInstance, ivyFile ) : [] )
-        final mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies         ) : [] )
+        final ivyArtifacts   = ( ivyFile      ? ivyHelper.resolve( ivyInstance, ivyFile ) : [] )
+        final mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
         ivyArtifacts + mavenArtifacts
-    }
-
-
-    /**
-     * Resolve dependencies specified in Ivy file.
-     *
-     * @param ivyInstance  configured {@link Ivy} instance
-     * @param ivyFile ivy dependencies file
-     * @return artifacts resolved
-     */
-    @Requires({ ivyInstance && ivyFile })
-    @Ensures({ result })
-    @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
-    private List<Artifact> resolveIvyDependencies ( Ivy ivyInstance, URL ivyFile )
-    {
-        final options = new ResolveOptions()
-        options.setConfs([ 'default' ] as String[] )
-        options.setLog( logVerbosely() ? 'default' : 'download-only' )
-        final report  = ivyInstance.resolve( ivyFile, options )
-
-        if ( logVerbosely())
-        {
-            if ( report.downloadSize < 1 )
-            {
-                log.info( "[${ report.downloadSize }] bytes downloaded" )
-            }
-            else
-            {
-                log.info( "[${( long )( report.downloadSize / 1024 ) }] Kb downloaded in [${ ( long ) ( report.downloadTime / 1000 ) }] sec - " +
-                          "[${ report.artifacts.size() }] artifact${ general().s( report.artifacts.size())} of " +
-                          "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }"  )
-            }
-        }
-
-        if ( report.unresolvedDependencies && failOnError )
-        {
-            throw new RuntimeException( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
-        }
-
-        if ( report.allProblemMessages && failOnError )
-        {
-            throw new RuntimeException( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
-        }
-
-        report.allArtifactsReports.collect {
-            ArtifactDownloadReport artifactReport ->
-            assert artifactReport.artifact instanceof MDArtifact
-
-            /**
-             * Help me God, Ivy. See http://db.tt/9Cf1X4bH.
-             */
-            Map    attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
-            String groupId    = attributes[ 'organisation' ]
-            String artifactId = attributes[ 'module'       ]
-            String version    = attributes[ 'revision'     ]
-            String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
-            File   localFile  = artifactReport.localFile
-
-            if ( logVerbosely())
-            {
-                log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
-            }
-
-            artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
-        }
     }
 
 
@@ -230,33 +166,9 @@ class IvyMojo extends BaseGroovyMojo3
     private List<Artifact> resolveMavenDependencies ( ArtifactItem[] dependencies )
     {
         dependencies.collect {
-            ArtifactItem d -> resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
+            ArtifactItem d ->
+            resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
         }
-    }
-
-
-    /**
-     * Creates new Maven {@link Artifact}.
-     *
-     * @param groupId    artifact {@code <groupId>}
-     * @param artifactId artifact {@code <artifactId>}
-     * @param version    artifact {@code <version>}
-     * @param type       artifact {@code <type>}
-     * @param classifier artifact {@code <classifier>}
-     * @param file       artifact local file, may be {@code null}
-     *
-     * @return new Maven {@link Artifact}
-     */
-    @Requires({ groupId && artifactId && version })
-    @Ensures({ result })
-    private Artifact artifact( String groupId, String artifactId, String version, String type, String classifier, File file = null )
-    {
-        DefaultArtifactHandler handler = new DefaultArtifactHandler()
-        handler.addedToClasspath       = true // For new artifacts to be added to compilation classpath later
-
-        final a = new DefaultArtifact( groupId, artifactId, version, '', type, classifier, handler )
-        if ( file ) { a.file = verify().file( file ) }
-        a
     }
 
 
@@ -270,11 +182,11 @@ class IvyMojo extends BaseGroovyMojo3
     private void addArtifacts ( String scope, List<Artifact> artifacts )
     {
         /**
-         * Two beautiful Maven hacks are coming! (thanks to Groovy being able to read/write private fields)
+         * Maven hacks are coming thanks to Groovy being able to read/write private fields.
          */
         if ( scope == 'plugin-runtime' )
         {   /**
-             * Hack #1: adding jars to plugin's classloader.
+             * Adding jars to plugin's classloader.
              */
             assert this.class.classLoader instanceof URLClassLoader
             artifacts*.file.each {
@@ -283,9 +195,14 @@ class IvyMojo extends BaseGroovyMojo3
         }
         else
         {   /**
-             * Hack #2: adding jars to Maven's scope and compilation classpath.
+             * Adding jars to Maven's scope and compilation classpath.
              */
-            artifacts.each { it.scope = scope }
+            artifacts.each {
+                Artifact a ->
+                a.scope = scope
+                assert a.artifactHandler instanceof DefaultArtifactHandler
+                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
+            }
             project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
         }
 

@@ -7,10 +7,13 @@ import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import org.apache.maven.Maven
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.factory.ArtifactFactory
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
 import org.apache.maven.artifact.resolver.ArtifactResolver
 import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter
+import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.MojoExecutionException
@@ -544,6 +547,30 @@ class GMojoUtils
         }
 
         value
+    }
+
+
+    /**
+     * Creates new Maven {@link Artifact}.
+     *
+     * @param groupId    artifact {@code <groupId>}
+     * @param artifactId artifact {@code <artifactId>}
+     * @param version    artifact {@code <version>}
+     * @param type       artifact {@code <type>}
+     * @param classifier artifact {@code <classifier>}
+     * @param file       artifact local file, may be {@code null}
+     *
+     * @return new Maven {@link Artifact}
+     */
+    static Artifact artifact( String groupId, String artifactId, String version, String type, String classifier, File file = null )
+    {
+        assert groupId && artifactId && version
+
+        final a = mavenVersion().startsWith( '2' ) ?
+                  new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ), '', type, classifier, new DefaultArtifactHandler()): // 2.2.1
+                  new DefaultArtifact( groupId, artifactId, version,                                   '', type, classifier, new DefaultArtifactHandler())  // 3.0.4
+        if ( file ) { a.file = verify().file( file ) }
+        a
     }
 
 
