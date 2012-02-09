@@ -32,7 +32,7 @@ class KotlincMojo extends BaseGroovyMojo3
      * Project classpath.
      */
     @MojoParameter( defaultValue = '${project.compileClasspathElements}' )
-    public List<String> classpathElements
+    public String[] classpath
 
     /**
      * Directory for compiled classes.
@@ -40,52 +40,91 @@ class KotlincMojo extends BaseGroovyMojo3
     @MojoParameter( defaultValue = '${project.build.outputDirectory}' )
     public String output
 
+    /**
+     * Destination jar.
+     */
     @MojoParameter ( required = false )
     public String jar
 
+    /**
+     * "stdlib" kotlinc argument (path to runtime.jar)
+     */
     @MojoParameter ( required = false )
     public String stdlib
 
-
+    /**
+     * Kotlin compilation module, as alternative to source files or folders.
+     */
     @MojoParameter ( required = false )
     public String module
 
+    /**
+     * "-includeRuntime" kotlinc argument, whether Kotlin runtime library is included in jar created.
+     */
     @MojoParameter ( required = false )
-    public boolean includeRuntime = true
+    public boolean includeRuntime = false
 
 
     @Override
     void doExecute ()
     {
-        addKotlinRuntime()
+        addKotlinToRuntime()
 
-        final compiler   = new BytecodeCompiler()
-        final sourceDirs = ( src ? [ new File( src ).with { file ? parent : delegate } ] : sources )
+        final compiler = new BytecodeCompiler()
+        if ( stdlib         ) { verify().file( new File( stdlib )) }
+        if ( includeRuntime ) { assert ( module || jar ), "<includeRuntime> parameter can only be used with <module> source or <jar> destination" }
 
-        sourceDirs.each {
-            String sourceDir ->
+        if ( module )
+        {   /**
+             * Compiling module.
+             */
 
-            verify().directory( new File( sourceDir ))
-            verify().directory( file().mkdirs( new File( output )))
-            if ( stdlib ) { verify().file( new File( stdlib )) }
+            verify().file( new File( module ))
+            log.info( jar ? "Compiling [$module] => [$jar]" : "Compiling [$module]" )
+            compiler.moduleToJar( module, jar, includeRuntime, stdlib, classpath )
+        }
+        else
+        {   /**
+             * Compiling sources.
+             */
 
-            log.info( "Compiling [$sourceDir] => [$output]" )
-            compiler.sourcesToDir( sourceDir, output, stdlib, classpathElements as String[] )
+            final sourceDirs  = ( src ? [ new File( src ).with { file ? parent : delegate } ] : sources )
+            final destination = jar ?: output
+
+            sourceDirs.each {
+                String sourceDir ->
+
+                verify().directory( new File( sourceDir ))
+                if ( ! jar ) { verify().directory( file().mkdirs( new File( output ))) }
+
+                log.info( "Compiling [$sourceDir] => [$destination]" )
+
+                if ( jar )
+                {
+                    compiler.sourcesToJar( sourceDir, jar, includeRuntime, stdlib, classpath )
+                }
+                else
+                {
+                    compiler.sourcesToDir( sourceDir, output, stdlib, classpath )
+                }
+            }
         }
     }
 
 
     /**
-     * Add Kotlin dependencies to plugin's classloader.
+     * Adds Kotlin dependencies to plugin's classloader.
      */
-    private addKotlinRuntime()
+    private addKotlinToRuntime ()
     {
         IvyMojo ivyMojo    = new IvyMojo()
-        ivyMojo.project    = this.project
+        ivyMojo.project    = project
+        ivyMojo.log        = log
+        ivyMojo.session    = session
         ivyMojo.repoSystem = repoSystem
-        ivyMojo.ivy        = new File( this.class.classLoader.getResource( 'ivy.xml' ).toString())
-        ivyMojo.ivyconf    = new File( this.class.classLoader.getResource( 'ivyconf.xml' ).toString())
-        ivyMojo.scope      = 'plugin-runtime'
-        ivyMojo.doExecute()
+        ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
+        ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
+        ivyMojo.scope      = 'plugin-runtime' // This injects all Ivy dependencies into plugin's runtime classloader
+        ivyMojo.execute()
     }
 }
