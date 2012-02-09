@@ -125,6 +125,7 @@ class KotlincMojo extends BaseGroovyMojo3
         ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
         ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
         ivyMojo.scope      = 'plugin-runtime' // This injects all Ivy dependencies into plugin's runtime classloader
+        ivyMojo.verbose    = false            // Do not log anything
         ivyMojo.execute()
     }
 }

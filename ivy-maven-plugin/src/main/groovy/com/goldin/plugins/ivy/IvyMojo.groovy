@@ -66,11 +66,12 @@ class IvyMojo extends BaseGroovyMojo3
 
 
     /**
-     * Whether plugin should log verbosely.
+     * Whether plugin should log verbosely (verbose = true), regularly (verbose is null) or not at all (verbose = false).
      */
     @MojoParameter ( required = false )
-    public boolean verbose = false
-
+    public Boolean verbose
+    private boolean logVerbosely(){ ( verbose ) }
+    private boolean logNormally (){ ( verbose ) || ( verbose == null ) }
 
 
     @Override
@@ -83,7 +84,10 @@ class IvyMojo extends BaseGroovyMojo3
 
         assert repoSystem instanceof DefaultRepositorySystem
         (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance )
-        log.info( "Added Ivy artifacts resolver based on \"$ivyconfUrl\"" )
+        if ( logNormally())
+        {
+            log.info( "Added Ivy artifacts resolver based on \"$ivyconfUrl\"" )
+        }
 
         if ( scope || dir )
         {
@@ -168,7 +172,7 @@ class IvyMojo extends BaseGroovyMojo3
             String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
             File   localFile  = artifactReport.localFile
 
-            if ( verbose )
+            if ( logVerbosely())
             {
                 log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
             }
@@ -250,11 +254,11 @@ class IvyMojo extends BaseGroovyMojo3
 
         final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
 
-        if ( verbose )
+        if ( logVerbosely())
         {
             log.info( message + artifacts.collect { "\"$it\" (${ it.file })"  })
         }
-        else
+        else if ( logNormally())
         {
             log.info( message + artifacts )
         }
@@ -278,11 +282,11 @@ class IvyMojo extends BaseGroovyMojo3
 
         final message = "${ artifacts.size() } artifact${ GCommons.general().s(artifacts.size())} copied to \"${ directory.canonicalPath }\": "
 
-        if ( verbose )
+        if ( logVerbosely())
         {
             log.info( message + artifacts.collect { "\"$it\" => \"${ filesCopied[ it ] }\""  })
         }
-        else
+        else if ( logNormally())
         {
             log.info( message + artifacts )
         }
