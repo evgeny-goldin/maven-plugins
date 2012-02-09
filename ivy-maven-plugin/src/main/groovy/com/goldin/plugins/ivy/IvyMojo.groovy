@@ -173,11 +173,16 @@ class IvyMojo extends BaseGroovyMojo3
 
         if ( logVerbosely())
         {
-            log.info( "[${ report.downloadSize / 1024 }] Kb downloaded in [${ report.downloadTime / 1000 }] sec" +
-                      (( report.downloadSize > 0 ) ?
-                          " - [${ report.artifacts.size() }] artifact${ general().s( report.artifacts.size())} of " +
-                          "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }" :
-                          '' ))
+            if ( report.downloadSize < 1 )
+            {
+                log.info( "[${ report.downloadSize }] bytes downloaded" )
+            }
+            else
+            {
+                log.info( "[${( long )( report.downloadSize / 1024 ) }] Kb downloaded in [${ ( long ) ( report.downloadTime / 1000 ) }] sec - " +
+                          "[${ report.artifacts.size() }] artifact${ general().s( report.artifacts.size())} of " +
+                          "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }"  )
+            }
         }
 
         if ( report.unresolvedDependencies && failOnError )
