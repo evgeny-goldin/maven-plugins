@@ -88,24 +88,25 @@ class KotlincMojo extends BaseGroovyMojo3
              * Compiling sources.
              */
 
-            final sourceDirs  = ( src ? [ new File( src ).with { file ? parent : delegate } ] : sources )
-            final destination = jar ?: output
+            final  sourceLocations  = ( src ? [ src ] : this.sources )
+            final  destination      = ( jar ?: output )
+            assert destination // 'output' is always defined by Maven
 
-            sourceDirs.each {
-                String sourceDir ->
+            sourceLocations.each {
+                String sourceLocation -> // May be a Kotlin file or sources directory
 
-                verify().directory( new File( sourceDir ))
+                verify().exists( new File( sourceLocation ))
                 if ( ! jar ) { verify().directory( file().mkdirs( new File( output ))) }
 
-                log.info( "Compiling [$sourceDir] => [$destination]" )
+                log.info( "Compiling [$sourceLocation] => [$destination]" )
 
                 if ( jar )
                 {
-                    compiler.sourcesToJar( sourceDir, jar, includeRuntime, stdlib, classpath )
+                    compiler.sourcesToJar( sourceLocation, jar, includeRuntime, stdlib, classpath )
                 }
                 else
                 {
-                    compiler.sourcesToDir( sourceDir, output, stdlib, classpath )
+                    compiler.sourcesToDir( sourceLocation, output, stdlib, classpath )
                 }
             }
         }
