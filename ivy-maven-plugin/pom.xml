@@ -28,9 +28,10 @@
             <version>2.2.0</version>
         </dependency>
 
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- To debug AbstractCompilerMojo -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- To occasionally debug CompilerMojo -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
 <!--
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>

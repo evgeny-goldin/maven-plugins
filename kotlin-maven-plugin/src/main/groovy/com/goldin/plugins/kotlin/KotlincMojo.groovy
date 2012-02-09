@@ -7,6 +7,7 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import com.goldin.plugins.ivy.IvyMojo
+import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
 
 /**
@@ -14,6 +15,7 @@ import com.goldin.plugins.ivy.IvyMojo
  */
 @MojoGoal ( 'kotlinc' )
 @MojoPhase ( 'compile' )
+@MojoRequiresDependencyResolution( 'compile' )
 class KotlincMojo extends BaseGroovyMojo3
 {
     /**
