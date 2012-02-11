@@ -330,7 +330,7 @@ class AboutMojo extends BaseGroovyMojo
         if ( svnDir.directory )
         {
             svnVersion = exec( 'svn --version', basedir, false )
-            if ( svnVersion.contains( 'svn, version' ))
+            if ( svnVersion.toLowerCase().contains( 'svn, version' ))
             {
                 svnStatus = exec( "svn status $basedir.canonicalPath", basedir, false, false )
                 if (( ! svnStatus.contains( 'is not a working copy' )) &&
