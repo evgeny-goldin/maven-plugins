@@ -22,10 +22,11 @@ def project         = new Project()
 def path            = { String path -> path ? new Path( project, path ) : new Path( project ) }
 def sourcePaths     = path( '' )
 
-[ 'maven-about-plugin',
-  'duplicates-finder-plugin',
+[ 'duplicates-finder-plugin',
+  'ivy-maven-plugin',
+  'kotlin-maven-plugin',
+  'maven-about-plugin',
   'maven-assert-plugin',
-  'maven-common',
   'maven-copy-plugin',
   'maven-find-plugin',
   'maven-jenkins-plugin',
@@ -34,6 +35,10 @@ def sourcePaths     = path( '' )
   'maven-spring-batch-plugin',
   'maven-sshexec-plugin',
   'maven-timestamp-plugin',
+  'maven2-common',
+  'maven3-common',
+  'mojo2-parent',
+  'mojo3-parent',
 ].each { sourcePaths.add( path( new File( "$basedir/../$it/src/main/groovy/" ).canonicalPath )) }
 
 
