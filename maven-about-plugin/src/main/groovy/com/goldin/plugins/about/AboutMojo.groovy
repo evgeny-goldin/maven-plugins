@@ -100,22 +100,22 @@ class AboutMojo extends BaseGroovyMojo
     {
         assert command && directory
 
-        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath]" ) }
+        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$directory.canonicalPath]" ) }
 
         String result =  general().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
 
-        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$basedir.canonicalPath] - result is [$result]" ) }
+        if ( log.isDebugEnabled()) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" ) }
 
         if ( minimalListSize > 0 )
         {
             List lines = result.readLines()
             assert lines.size() >= minimalListSize, \
-                   "Received not enough data when running [$command] in [$basedir.canonicalPath] - " +
+                   "Received not enough data when running [$command] in [$directory.canonicalPath] - " +
                    "expected list of size [$minimalListSize] at least, received [$result]$lines of size [${ lines.size() }]"
         }
 
         assert ( result || ( ! failIfEmpty )), \
-               "Failed to run [$command] in [$basedir.canonicalPath] - result is empty [$result]"
+               "Failed to run [$command] in [$directory.canonicalPath] - result is empty [$result]"
         result
     }
 
