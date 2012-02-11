@@ -8,7 +8,7 @@ import org.apache.tools.ant.Project
  */
 
 def    groovydocDir = System.getProperty( 'groovydocDir' )
-assert groovydocDir, 'System property [groovydocDir] is not available'
+assert groovydocDir, 'System property [groovydocDir] is not defined, add -DgroovydocDir=<directory>.'
 
 def basedir         = project.basedir.canonicalPath
 def mavenVersion    = project.properties[ 'maven-version'    ]
@@ -43,7 +43,7 @@ def sourcePaths     = path( '' )
 
 
 def ant = new AntBuilder()
-ant.taskdef(name: 'groovydoc', classname: 'org.codehaus.groovy.ant.Groovydoc' )
+ant.taskdef( name: 'groovydoc', classname: 'org.codehaus.groovy.ant.Groovydoc' )
 ant.groovydoc(
         destdir      : destinationDir,
         sourcepath   : sourcePaths,
@@ -69,16 +69,17 @@ ant.groovydoc(
 
                        </script>""".stripIndent())
     {
-       link( packages :'java.,org.xml.,javax.,org.xml.',     href : 'http://download.oracle.com/javase/6/docs/api'    )
-       link( packages :'groovy.,org.codehaus.groovy.',       href : 'http://groovy.codehaus.org/api'                  )
-       link( packages :'org.apache.tools.ant.',              href : 'http://evgeny-goldin.org/javadoc/ant/api'        )
-       link( packages :'org.junit.,junit.framework.',        href : 'http://kentbeck.github.com/junit/javadoc/latest' )
-       link( packages :'org.apache.commons.net.',            href : 'http://commons.apache.org/net/apidocs'           )
-       link( packages :'de.schlichtherle.',                  href : 'http://truezip.java.net/apidocs'                 )
-       link( packages :'org.codehaus.gmaven.',               href : 'http://evgeny-goldin.org/javadoc/gmaven' )
-       link( packages :'org.apache.maven.shared.filtering.', href : 'http://maven.apache.org/shared/maven-filtering/apidocs' )
-       link( packages :'org.apache.maven.artifact.',         href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
-       link( packages :'org.apache.maven.project.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-project/apidocs" )
-       link( packages :'org.apache.maven.',                  href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs" )
-       link( packages :'com.goldin.gcommons.',               href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
+       link( packages :'java.,org.xml.,javax.,org.xml.',      href : 'http://download.oracle.com/javase/6/docs/api'    )
+       link( packages :'groovy.,org.codehaus.groovy.',        href : 'http://groovy.codehaus.org/api'                  )
+       link( packages :'org.apache.tools.ant.',               href : 'http://evgeny-goldin.org/javadoc/ant/api'        )
+       link( packages :'org.junit.,junit.framework.',         href : 'http://kentbeck.github.com/junit/javadoc/latest' )
+       link( packages :'org.apache.commons.net.',             href : 'http://commons.apache.org/net/apidocs'           )
+       link( packages :'de.schlichtherle.',                   href : 'http://truezip.java.net/apidocs'                 )
+       link( packages :'org.codehaus.gmaven.',                href : 'http://evgeny-goldin.org/javadoc/gmaven' )
+       link( packages :'org.apache.maven.shared.filtering.',  href : 'http://maven.apache.org/shared/maven-filtering/apidocs' )
+       link( packages :'org.apache.maven.plugin.dependency.', href : 'http://maven.apache.org/plugins/maven-dependency-plugin/apidocs' )
+       link( packages :'org.apache.maven.artifact.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
+       link( packages :'org.apache.maven.project.',           href : "http://maven.apache.org/ref/$mavenVersion/maven-project/apidocs" )
+       link( packages :'org.apache.maven.',                   href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs" )
+       link( packages :'com.goldin.gcommons.',                href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
     }
