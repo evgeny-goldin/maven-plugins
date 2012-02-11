@@ -1,12 +1,13 @@
 package com.goldin.plugins.kotlin
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.plugins.common.BaseGroovyMojo3
 import org.jetbrains.jet.buildtools.core.BytecodeCompiler
+import com.goldin.plugins.common.BaseGroovyMojo3
+import com.goldin.plugins.ivy.IvyMojo
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import com.goldin.plugins.ivy.IvyMojo
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
 
@@ -124,7 +125,8 @@ class KotlincMojo extends BaseGroovyMojo3
     /**
      * Adds Kotlin dependencies to plugin's classloader.
      */
-    private addKotlinDependency ()
+    @Requires({ project && log && session && repoSystem })
+    void addKotlinDependency ()
     {
         IvyMojo ivyMojo    = new IvyMojo()
         ivyMojo.project    = project

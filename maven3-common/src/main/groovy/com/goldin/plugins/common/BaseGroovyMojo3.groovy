@@ -47,7 +47,8 @@ abstract class BaseGroovyMojo3 extends BaseGroovyMojo
         {
             final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
                                                  remoteRepos, null )
-            a.file = repoSystem.resolveArtifact( repoSession, request ).artifact.file
+            a.file = repoSystem.resolveArtifact( repoSession, request )?.artifact?.file
+            // File may not be resolved when "failOnError" is "false" and resolution doesn't succeed.
         }
 
         a

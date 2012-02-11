@@ -4,8 +4,8 @@ import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.ivy.Ivy
-import org.apache.ivy.core.settings.IvySettings
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -14,7 +14,6 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
 
 
 /**
@@ -82,46 +81,45 @@ class IvyMojo extends BaseGroovyMojo3
 
 
     @Override
-    @Requires({ ivyconf })
+    @Requires({ this.ivyconf })
     void doExecute ()
     {
-        ivyHelper       = new IvyHelper( logVerbosely(), failOnError )
-        Ivy ivyInstance = addIvyResolver( url( ivyconf ))
+        ivyHelper = new IvyHelper( url( this.ivyconf ), logVerbosely(), failOnError )
+        addIvyResolver()
+
+        if ( ivy || dependencies )
+        {
+            assert ( scope || dir ), "Either <scope> or <dir> (or both) needs to be specified when <ivy> or <dependencies> are used."
+        }
 
         if ( scope || dir )
         {
-            assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) need to be specified when <scope> or <dir> are used."
-            final dependencies = resolveAllDependencies( ivyInstance, ( ivy ? url( ivy ) : null ), dependencies )
+            assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) needs to be specified when <scope> or <dir> are used."
+            final dependencies = resolveDependencies(( ivy ? url( ivy ) : null ), dependencies )
 
-            if ( scope ){ addArtifacts  ( scope, dependencies ) }
-            if ( dir   ){ copyArtifacts ( dir,   dependencies ) }
+            if ( scope ){ addArtifactsToScope  ( scope, dependencies ) }
+            if ( dir   ){ copyArtifactsToDir   ( dir,   dependencies ) }
         }
     }
 
 
     /**
-     * Adds Ivy resolver to Aether RepositorySystem.
+     * Adds Ivy resolver to Aether RepositorySystem based on settings file specified.
      * @return configured {@link Ivy} instance.
      */
-    @Requires({ ivyconfUrl })
-    @Ensures({ result })
-    private Ivy addIvyResolver ( URL ivyconfUrl )
+    @Requires({ repoSystem && ivyHelper && ivyHelper.ivyconfUrl })
+    void addIvyResolver ()
     {
-        IvySettings settings = new IvySettings()
-        settings.load( ivyconfUrl )
-        final ivyInstance = Ivy.newInstance( settings )
-
         assert repoSystem instanceof DefaultRepositorySystem
-        (( DefaultRepositorySystem ) repoSystem ).artifactResolver =
-            new IvyArtifactResolver( repoSystem.artifactResolver, ivyInstance, ivyHelper )
+        (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyHelper )
+        assert repoSystem.artifactResolver instanceof IvyArtifactResolver
 
-        if ( logNormally() )
+        if ( logNormally())
         {
-            log.info( "Added Ivy artifacts resolver based on \"$ivyconfUrl\"" )
+            log.info( "Added Ivy artifacts resolver based on \"${ ivyHelper.ivyconfUrl }\"" )
         }
-
-        ivyInstance
     }
+
 
     /**
      * Converts path specified to URL.
@@ -131,7 +129,7 @@ class IvyMojo extends BaseGroovyMojo3
      */
     @Requires({ s })
     @Ensures({ result })
-    private URL url( String s )
+    URL url( String s )
     {
         s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
     }
@@ -140,18 +138,17 @@ class IvyMojo extends BaseGroovyMojo3
     /**
      * Resolves dependencies specified and retrieves their local paths.
      *
-     * @param ivyInstance  configured {@link Ivy} instance
      * @param ivyFile      "ivy.xml" file
      * @param dependencies Maven-style dependencies
-     * @return             local paths of dependencies resolved
+     * @return             artifacts resolved or empty list if {@link #failOnError} is "false".
      */
-    @Requires({ ivyInstance && ( ivyFile || dependencies ) })
-    @Ensures({ result && result.every{ it.file.file } })
-    private List<Artifact> resolveAllDependencies ( Ivy ivyInstance, URL ivyFile, ArtifactItem[] dependencies )
+    @Requires({ ivyFile || dependencies })
+    @Ensures({ result.every{ it.file.file } })
+    List<Artifact> resolveDependencies ( URL ivyFile, ArtifactItem[] dependencies )
     {
-        final ivyArtifacts   = ( ivyFile      ? ivyHelper.resolve( ivyInstance, ivyFile ) : [] )
-        final mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
-        ivyArtifacts + mavenArtifacts
+        List<Artifact> ivyArtifacts   = ( ivyFile      ? ivyHelper.resolve( ivyFile ) : [] )
+        List<Artifact> mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
+        ( ivyArtifacts + mavenArtifacts ).findAll{ it.file } // Some artifacts may have file undefined if {@link #failOnError} is "false".
     }
 
 
@@ -163,7 +160,7 @@ class IvyMojo extends BaseGroovyMojo3
      */
     @Requires({ dependencies })
     @Ensures({ result && ( result.size() == dependencies.size()) })
-    private List<Artifact> resolveMavenDependencies ( ArtifactItem[] dependencies )
+    List<Artifact> resolveMavenDependencies ( ArtifactItem[] dependencies )
     {
         dependencies.collect {
             ArtifactItem d ->
@@ -178,8 +175,8 @@ class IvyMojo extends BaseGroovyMojo3
      * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
      * @param artifacts dependencies to add to the scope
      */
-    @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
-    private void addArtifacts ( String scope, List<Artifact> artifacts )
+    @Requires({ scope && artifacts.every{ it.file.file } })
+    void addArtifactsToScope ( String scope, List<Artifact> artifacts )
     {
         /**
          * Maven hacks are coming thanks to Groovy being able to read/write private fields.
@@ -225,12 +222,12 @@ class IvyMojo extends BaseGroovyMojo3
      * @param directory directory to copy the artifacts to
      * @param artifacts artifacts to copy
      */
-    @Requires({ directory && artifacts && artifacts.every{ it.file.file } })
+    @Requires({ directory && artifacts.every{ it.file.file } })
     @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
-    private void copyArtifacts ( File directory, List<Artifact> artifacts )
+    void copyArtifactsToDir ( File directory, List<Artifact> artifacts )
     {
-        Map<Artifact, File> filesCopied = artifacts.inject([ : ]){
-            Map m, Artifact a -> m[ a ] = file().copy( a.file, directory )
+        Map<Artifact, File> filesCopied = artifacts.inject([:]){
+            Map m, Artifact a -> m[ a ] = file().copy( a.file, directory ).canonicalPath
                                  m
         }
 

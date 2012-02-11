@@ -1,13 +1,22 @@
 package com.goldin.plugins.ivy
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import org.gcontracts.annotations.Requires
-import org.gcontracts.annotations.Ensures
-import org.apache.maven.artifact.Artifact
+import com.goldin.gcommons.GCommons
 import org.apache.ivy.Ivy
-import org.apache.ivy.core.resolve.ResolveOptions
-import org.apache.ivy.core.report.ArtifactDownloadReport
+import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor
+import org.apache.ivy.core.module.descriptor.DefaultIncludeRule
+import org.apache.ivy.core.module.descriptor.DefaultModuleDescriptor
 import org.apache.ivy.core.module.descriptor.MDArtifact
+import org.apache.ivy.core.module.id.ArtifactId
+import org.apache.ivy.core.module.id.ModuleRevisionId
+import org.apache.ivy.core.report.ArtifactDownloadReport
+import org.apache.ivy.core.resolve.ResolveOptions
+import org.apache.ivy.plugins.matcher.ExactPatternMatcher
+import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
+import org.apache.maven.artifact.Artifact
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
+import org.apache.ivy.core.settings.IvySettings
 
 
 /**
@@ -15,29 +24,100 @@ import org.apache.ivy.core.module.descriptor.MDArtifact
  */
 class IvyHelper
 {
-    private final boolean verbose
-    private final boolean failOnError
+    final Ivy     ivy
+    final URL     ivyconfUrl
+    final boolean verbose
+    final boolean failOnError
 
-    IvyHelper ( boolean verbose, boolean failOnError )
+
+    /**
+     * Creates new instance of this helper class.
+     *
+     * @param ivyconfUrl  Ivy settings file {@link URL}.
+     * @param verbose     whether logging should be verbose.
+     * @param failOnError whether execution should fail when resolving Ivy artifacts fails.
+     */
+    @Requires({ ivyconfUrl })
+    IvyHelper ( URL ivyconfUrl, boolean verbose, boolean failOnError )
     {
+        IvySettings settings = new IvySettings()
+        settings.load( ivyconfUrl )
+
+        this.ivy         = Ivy.newInstance( settings )
+        this.ivyconfUrl  = ivyconfUrl
         this.verbose     = verbose
         this.failOnError = failOnError
     }
 
 
     /**
-     * Resolve dependencies specified in Ivy file.
+     * Resolves dependency specified.
      *
-     * @param ivy         configured {@link org.apache.ivy.Ivy} instance
-     * @param ivyFile     ivy dependencies file
-     * @param verbose     whether logging should be verbose
-     * @param failOnError whether execution should fail if resolving artifacts doesn't succeed
-     * @return Maven artifacts resolved
+     * @param groupId    dependency {@code <groupId>}
+     * @param artifactId dependency {@code <artifactId>}
+     * @param version    dependency {@code <version>}
+     * @param classifier dependency {@code <classifier>}
+     * @param type       dependency {@code <type>}
+     *
+     * @return Maven artifact resolved or null if resolution fails.
+     * @throws RuntimeException if artifact resolution fails and {@link #failOnError} is {@code true}.
      */
-    @Requires({ ivy && ivyFile })
-    @Ensures({ result && result.every{ it.file.file } })
+    @Requires({ groupId && artifactId && version && type })
+    Artifact resolve ( String groupId, String artifactId, String version, String classifier, String type )
+    {
+        final ivyfile = File.createTempFile( 'ivy', '.xml' )
+        ivyfile.deleteOnExit();
+
+        try
+        {
+            final md      = DefaultModuleDescriptor.newDefaultInstance( ModuleRevisionId.newInstance( groupId, artifactId + '-caller', 'working' ))
+            final module  = ModuleRevisionId.newInstance( groupId, artifactId, version )
+            final dd      = new DefaultDependencyDescriptor( md, module, false, false, true )
+
+            if ( classifier )
+            {
+                dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier, type, type ),
+                                                               new ExactPatternMatcher(), [:] ))
+            }
+
+            md.addDependency( dd );
+            XmlModuleDescriptorWriter.write( md, ivyfile );
+
+            final artifacts = resolve( ivyfile.toURL())
+            final gavc      = "$groupId:$artifactId:$version:${ classifier ? classifier + ':' : '' }$type"
+
+            if ( ! artifacts )
+            {
+                warnOrFail( "Failed to resolve [$gavc]" )
+                return null
+            }
+
+            if ( artifacts.size() > 1 )
+            {
+                warnOrFail( "Multiple artifacts resolved for [$gavc] - [${ artifacts }], specify <classifier> pattern." )
+            }
+
+            artifact( groupId, artifactId, version, type, classifier, artifacts.first().file )
+        }
+        finally
+        {
+            GCommons.file().delete( ivyfile )
+        }
+    }
+
+
+    /**
+     * Resolves dependencies specified in Ivy file.
+     *
+     * @param ivyFile ivy dependencies file
+     *
+     * @return Maven artifacts resolved or empty list if resolution fails.
+     * @throws RuntimeException if artifacts resolution fails and {@link #failOnError} is {@code true}.
+     */
+    @Requires({ ivyFile })
+    @Ensures({ result.every{ it.file.file } })
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
-    List<Artifact> resolve ( Ivy ivy, URL ivyFile )
+    List<Artifact> resolve ( URL ivyFile )
     {
         final options = new ResolveOptions()
         options.confs = [ 'default' ] as String[]
@@ -58,17 +138,25 @@ class IvyHelper
             }
         }
 
-        if ( report.unresolvedDependencies && failOnError )
+        if ( report.unresolvedDependencies )
         {
-            throw new RuntimeException( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
+            warnOrFail( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
         }
 
-        if ( report.allProblemMessages && failOnError )
+        if ( report.allProblemMessages )
         {
-            throw new RuntimeException( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
+            warnOrFail( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
         }
 
-        report.allArtifactsReports.collect {
+        final artifactsReports = report.allArtifactsReports
+
+        if ( ! artifactsReports )
+        {
+            warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved." )
+            return []
+        }
+
+        artifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
             assert artifactReport.artifact instanceof MDArtifact
 
@@ -80,14 +168,26 @@ class IvyHelper
             String artifactId = attributes[ 'module'       ]
             String version    = attributes[ 'revision'     ]
             String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
-            File   localFile  = verify().file( artifactReport.localFile )
+            File   f          = verify().file( artifactReport.localFile )
 
             if ( verbose )
             {
-                log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ localFile.canonicalPath })" )
+                log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ f.canonicalPath })" )
             }
 
-            artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( localFile ), classifier, localFile )
+            artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( f ), classifier, f )
         }
+    }
+
+
+    /**
+     * Logs an error message or throws a fatal exception, according to {@link #failOnError} field.
+     * @param errorMessage error message to log or throw
+     */
+    @Requires({ errorMessage })
+    void warnOrFail ( String errorMessage )
+    {
+        if ( failOnError ) { throw new RuntimeException( errorMessage )}
+        else               { log.warn( errorMessage ) }
     }
 }
