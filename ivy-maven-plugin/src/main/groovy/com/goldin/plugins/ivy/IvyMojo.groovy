@@ -95,10 +95,13 @@ class IvyMojo extends BaseGroovyMojo3
         if ( scope || dir )
         {
             assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) needs to be specified when <scope> or <dir> are used."
-            final dependencies = resolveDependencies(( ivy ? url( ivy ) : null ), dependencies )
+            final artifacts = resolveArtifacts(( ivy ? url( ivy ) : null ), dependencies )
 
-            if ( scope ){ addArtifactsToScope  ( scope, dependencies ) }
-            if ( dir   ){ copyArtifactsToDir   ( dir,   dependencies ) }
+            if ( artifacts )
+            {
+                if ( scope ){ addArtifactsToScope  ( scope, artifacts ) }
+                if ( dir   ){ copyArtifactsToDir   ( dir,   artifacts ) }
+            }
         }
     }
 
@@ -144,7 +147,7 @@ class IvyMojo extends BaseGroovyMojo3
      */
     @Requires({ ivyFile || dependencies })
     @Ensures({ result.every{ it.file.file } })
-    List<Artifact> resolveDependencies ( URL ivyFile, ArtifactItem[] dependencies )
+    List<Artifact> resolveArtifacts ( URL ivyFile, ArtifactItem[] dependencies )
     {
         List<Artifact> ivyArtifacts   = ( ivyFile      ? ivyHelper.resolve( ivyFile ) : [] )
         List<Artifact> mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
@@ -175,7 +178,7 @@ class IvyMojo extends BaseGroovyMojo3
      * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
      * @param artifacts dependencies to add to the scope
      */
-    @Requires({ scope && artifacts.every{ it.file.file } })
+    @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
     void addArtifactsToScope ( String scope, List<Artifact> artifacts )
     {
         /**
@@ -222,7 +225,7 @@ class IvyMojo extends BaseGroovyMojo3
      * @param directory directory to copy the artifacts to
      * @param artifacts artifacts to copy
      */
-    @Requires({ directory && artifacts.every{ it.file.file } })
+    @Requires({ directory && artifacts && artifacts.every{ it.file.file } })
     @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
     void copyArtifactsToDir ( File directory, List<Artifact> artifacts )
     {
