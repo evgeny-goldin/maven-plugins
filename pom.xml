@@ -54,7 +54,7 @@
 
         <module>duplicates-finder-plugin</module>
         <module>ivy-maven-plugin</module>
-        <!--<module>kotlin-maven-plugin</module>-->
+        <module>kotlin-maven-plugin</module>
 
         <!-- ~~~~~~~~~~~~~~~ -->
         <!-- Maven 2 Plugins -->

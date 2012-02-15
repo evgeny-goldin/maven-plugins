@@ -20,13 +20,13 @@ import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 class KotlincMojo extends BaseGroovyMojo3
 {
     /**
-     * Single compilation source directory.
+     * Compilation source directory.
      */
     @MojoParameter ( required = false )
     public String src
 
     /**
-     * Source directories containing the sources to be compiled.
+     * Compilation source directories.
      */
     @MojoParameter( defaultValue = '${project.compileSourceRoots}' )
     public List<String> sources

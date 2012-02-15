@@ -1,11 +1,13 @@
 <ivy-module version="1.3">
     <info organisation="com.jetbrains" module="kotlin"/>
     <dependencies>
-        <!-- Kotlin build: http://127.0.0.1:8111/guestAuth/repository/download/bt2/latest.lastSuccessful/teamcity-ivy.xml -->
-        <dependency org="org" name="bt2" rev="latest.lastSuccessful">
+        <!-- Kotlin build: http://teamcity.jetbrains.com/viewType.html?buildTypeId=bt344 -->
+        <!--               http://teamcity.jetbrains.com/guestAuth/repository/download/bt344/latest.lastSuccessful/teamcity-ivy.xml -->
+        <dependency org="org" name="bt344" rev="latest.lastSuccessful">
             <include ext="jar" matcher="exactOrRegexp"/>
         </dependency>
-        <!-- IDEA build: http://teamcity.jetbrains.com/guestAuth/repository/download/bt343/latest.lastSuccessful/teamcity-ivy.xml -->
+        <!-- IDEA build: http://teamcity.jetbrains.com/viewType.html?buildTypeId=bt343 -->
+        <!--             http://teamcity.jetbrains.com/guestAuth/repository/download/bt343/latest.lastSuccessful/teamcity-ivy.xml -->
         <dependency org="org" name="bt343" rev="latest.lastSuccessful">
             <include name="core/.*" ext="jar" matcher="exactOrRegexp"/>
         </dependency>
