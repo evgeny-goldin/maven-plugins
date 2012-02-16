@@ -9,14 +9,14 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>maven2-common</artifactId>
     <packaging>jar</packaging>
-    <version>0.2.3.8-beta-4</version>
+    <version>0.2.3.8-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
     <parent>
         <groupId>com.goldin.plugins</groupId>
         <artifactId>main.plugins</artifactId>
-        <version>0.2.3.8-beta-4</version>
+        <version>0.2.3.8-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
