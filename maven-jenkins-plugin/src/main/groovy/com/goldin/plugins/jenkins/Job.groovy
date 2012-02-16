@@ -133,15 +133,15 @@ class Job
 
     Trigger[]            triggers
     Trigger              trigger
-    Trigger[]            triggers() { general().array( this.triggers, this.trigger, Trigger ) }
+    List<Trigger>        triggers() { general().list( this.triggers, this.trigger ) }
 
     Parameter[]          parameters
     Parameter            parameter
-    Parameter[]          parameters() { general().array( this.parameters, this.parameter, Parameter ) }
+    List<Parameter>      parameters() { general().list( this.parameters, this.parameter ) }
 
     Repository[]         repositories
     Repository           repository
-    Repository[]         repositories() { general().array( this.repositories, this.repository, Repository ) }
+    List<Repository>     repositories() { general().list( this.repositories, this.repository ) }
 
 
     /**
@@ -245,11 +245,11 @@ class Job
         set( 'invoke',            parentJob, override, { it }, new Invoke())
 
         if ((( ! this.triggers())   || ( override )) && parentJob.triggers())
-            { setTriggers ( parentJob.triggers()) }
+            { setTriggers ( parentJob.triggers() as Trigger[] ) }
 
         if ((( ! this.parameters()) || ( override )) && parentJob.parameters())
         {
-            setParameters ( parentJob.parameters())
+            setParameters ( parentJob.parameters() as Parameter[] )
         }
         else if ( parentJob.parameters())
         {
@@ -257,12 +257,12 @@ class Job
              * Set gives a lower priority to parentJob parameters - parameters having the
              * same name and type *are not taken*, see {@link Parameter#equals(Object)}
              */
-            def newParams = new HashSet<Parameter>( this.parameters().toList() + parentJob.parameters().toList())
+            def newParams = new HashSet<Parameter>( this.parameters() + parentJob.parameters())
             setParameters( newParams.toArray( new Parameter[ newParams.size() ] ))
         }
 
         if ((( ! this.repositories()) || ( override )) && parentJob.repositories())
-            { setRepositories ( parentJob.repositories()) }
+            { setRepositories ( parentJob.repositories() as Repository[] ) }
 
         if ( this.jobType == JOB_TYPE.maven )
         {

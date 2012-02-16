@@ -21,7 +21,7 @@ class PropertiesMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public Property[] properties
 
-    private Property[] properties() { general().array( this.properties, this.property, Property ) }
+    private List<Property> properties() { general().list( this.properties, this.property ) }
 
     @MojoParameter ( required = false )
     public String rawProperties

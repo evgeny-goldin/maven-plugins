@@ -58,10 +58,10 @@ class SshexecMojo extends BaseGroovyMojo
     @SuppressWarnings( 'UseCollectMany' )
     private String[] commands ()
     {
-        String[] commands = general().array( this.commands, this.command, String )
-        commands          = commands*.split( /,|;/ ).flatten()*.trim().grep().
-                            collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
-                            flatten()
+        List<String> commands = general().list( this.commands, this.command )
+        commands              = commands*.split( /,|;/ ).flatten()*.trim().grep().
+                                collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
+                                flatten()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).flatten().grep()
     }

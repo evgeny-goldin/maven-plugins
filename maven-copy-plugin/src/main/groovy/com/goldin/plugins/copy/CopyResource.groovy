@@ -41,7 +41,7 @@ final class CopyResource extends Resource implements Cloneable
             excludes              = excludePatterns
             preservePath          = true
             skipIdentical         = false
-            replaces              = this.replaces()
+            replaces              = this.replaces() as Replace[]
             filtering             = this.filtering
             filter                = this.filter
             encoding              = this.encoding
@@ -64,13 +64,13 @@ final class CopyResource extends Resource implements Cloneable
     {
         if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        List<String> paths = split( general().array( targetPaths, targetPath, String ).join( ',' ))
+        List<String> paths = split( general().list( targetPaths, targetPath ).join( ',' ))
         assert     ( paths || clean ), \
                      '<targetPath>/<targetPaths> need to be defined for resources that do not perform <clean> operation'
 
         if ( paths && ( targetRoots || targetRoot ))
         {
-            List<String> targetRootsSplit = split( general().array( targetRoots, targetRoot, String ).join( ',' ))
+            List<String> targetRootsSplit = split( general().list( targetRoots, targetRoot ).join( ',' ))
             if ( targetRootsSplit )
             {
                 paths = [ targetRootsSplit, paths ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
@@ -84,21 +84,21 @@ final class CopyResource extends Resource implements Cloneable
 
     Replace[] replaces
     Replace   replace
-    Replace[] replaces () { general().array( this.replaces, this.replace, Replace ) }
+    List<Replace> replaces () { general().list( this.replaces, this.replace ) }
 
     CopyManifest manifest
 
     CopyDependency[] dependencies
     CopyDependency   dependency
-    CopyDependency[] dependencies () { general().array( this.dependencies, this.dependency, CopyDependency ) }
+    List<CopyDependency> dependencies () { general().list( this.dependencies, this.dependency ) }
 
     String[] zipEntries
     String   zipEntry
     String[] zipEntriesExclude
     String   zipEntryExclude
 
-    String[] zipEntries ()        { split( general().array( this.zipEntries,        this.zipEntry,        String ).join( ', ' )) as String[] }
-    String[] zipEntriesExclude () { split( general().array( this.zipEntriesExclude, this.zipEntryExclude, String ).join( ', ' )) as String[] }
+    List<String> zipEntries ()        { split( general().list( this.zipEntries,        this.zipEntry        ).join( ', ' )) }
+    List<String> zipEntriesExclude () { split( general().list( this.zipEntriesExclude, this.zipEntryExclude ).join( ', ' )) }
 
 
     /**

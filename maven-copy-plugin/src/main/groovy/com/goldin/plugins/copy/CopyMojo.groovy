@@ -135,7 +135,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @MojoParameter ( required = false )
     public  CopyResource resource
 
-    private CopyResource[] resources () { general().array( this.resources, this.resource, CopyResource ) }
+    private List<CopyResource> resources () { general().list( this.resources, this.resource ) }
 
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig
@@ -368,7 +368,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @Requires({ resource })
     private void processDependenciesResource ( final CopyResource resource, final boolean verbose, final boolean failIfNotFound )
     {
-        List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies() as List )
+        List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies())
         final                dependenciesAtM2     = resource.dependenciesAtM2()
         final                isSkipIdentical      = general().choose( resource.skipIdentical, this.skipIdentical )
         final                isStripVersion       = general().choose( resource.stripVersion,  this.stripVersion  )
@@ -518,8 +518,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                                                 boolean      verbose         = true,
                                                 boolean      failIfNotFound  = true )
     {
-        final zipEntries        = resource.zipEntries()        as List
-        final zipEntriesExclude = resource.zipEntriesExclude() as List
+        final zipEntries        = resource.zipEntries()
+        final zipEntriesExclude = resource.zipEntriesExclude()
         final manifest          = resource.manifest ? resource.manifest.add( this.manifest ) : this.manifest
 
         if ( manifest.entries )
@@ -651,7 +651,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
         copyFile( sourceFile.canonicalFile,
                   file.canonicalFile,
                   general().choose( resource.skipIdentical, skipIdentical ),
-                  ( noFilter ? [] as Replace[] : resource.replaces()),
+                  ( noFilter ? [] : resource.replaces()) as Replace[],
                   (( ! noFilter ) && resource.filtering ),
                   resource.encoding,
                   fileFilter,

@@ -54,7 +54,7 @@ class JenkinsMojo extends BaseGroovyMojo
     @MojoParameter
     public Job   job
 
-    private Job[] jobs() { general().array( this.jobs, this.job, Job )  }
+    private List<Job> jobs() { general().list( this.jobs, this.job ) }
 
 
     @Override
