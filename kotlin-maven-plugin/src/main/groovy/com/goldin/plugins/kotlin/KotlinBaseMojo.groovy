@@ -1,47 +1,24 @@
 package com.goldin.plugins.kotlin
 
-import static com.goldin.plugins.common.GMojoUtils.*
-import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import com.goldin.plugins.common.BaseGroovyMojo3
 import com.goldin.plugins.ivy.IvyMojo
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
+import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
+import static com.goldin.plugins.common.GMojoUtils.file
+import static com.goldin.plugins.common.GMojoUtils.verify
 
 /**
- * Plugin compiling Kotlin sources
+ * Kotlin mojo base class.
  */
-@MojoGoal ( 'kotlinc' )
-@MojoPhase ( 'compile' )
-@MojoRequiresDependencyResolution( 'compile' )
-class KotlincMojo extends BaseGroovyMojo3
+abstract class KotlinBaseMojo extends BaseGroovyMojo3
 {
     /**
      * Compilation source directory.
      */
     @MojoParameter ( required = false )
     public String src
-
-    /**
-     * Compilation source directories.
-     */
-    @MojoParameter( defaultValue = '${project.compileSourceRoots}' )
-    public List<String> sources
-
-    /**
-     * Project classpath.
-     */
-    @MojoParameter( defaultValue = '${project.compileClasspathElements}' )
-    public String[] classpath
-
-    /**
-     * Directory for compiled classes.
-     */
-    @MojoParameter( defaultValue = '${project.build.outputDirectory}' )
-    public String output
 
     /**
      * Destination jar.
@@ -74,14 +51,26 @@ class KotlincMojo extends BaseGroovyMojo3
     public boolean verboseIvy = false
 
 
+    abstract List<String> sources()
+    abstract List<String> classpath()
+    abstract String       output()
+
+
     @Override
-    void doExecute ()
+    final void doExecute()
     {
         addKotlinDependency()
 
-        final compiler = new BytecodeCompiler()
+        List<String> sources   = sources()
+        String[]     classpath = classpath().toArray()
+        String       output    = output()
+
+        assert sources && classpath && output
+
         if ( stdlib         ) { verify().file( new File( stdlib )) }
         if ( includeRuntime ) { assert ( module || jar ), "<includeRuntime> parameter can only be used with <module> source or <jar> destination" }
+
+        final compiler = new BytecodeCompiler()
 
         if ( module )
         {   /**
@@ -97,9 +86,9 @@ class KotlincMojo extends BaseGroovyMojo3
              * Compiling sources.
              */
 
-            final  sourceLocations  = ( src ? [ src ] : this.sources )
+            final  sourceLocations  = ( src ? [ src ] : sources )
             final  destination      = ( jar ?: output )
-            assert destination // 'output' is always defined by Maven
+            assert destination
 
             sourceLocations.each {
                 String sourceLocation -> // May be a Kotlin file or sources directory
@@ -135,8 +124,8 @@ class KotlincMojo extends BaseGroovyMojo3
         ivyMojo.repoSystem = repoSystem
         ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
         ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
-        ivyMojo.scope      = 'plugin-runtime' // This injects all Ivy dependencies into plugin's runtime classloader
+        ivyMojo.scope      = 'plugin-runtime'
         ivyMojo.verbose    = verboseIvy
-        ivyMojo.execute()
+        ivyMojo.execute()  // This injects all Ivy dependencies into plugin's runtime classloader.
     }
 }
