@@ -24,6 +24,8 @@ import org.apache.ivy.core.settings.IvySettings
  */
 class IvyHelper
 {
+    static final String SEPARATOR  = '\n * '
+
     final Ivy     ivy
     final URL     ivyconfUrl
     final boolean verbose
@@ -133,7 +135,7 @@ class IvyHelper
             else
             {
                 log.info( "[${( long )( report.downloadSize / 1024 ) }] Kb downloaded in [${ ( long ) ( report.downloadTime / 1000 ) }] sec - " +
-                          "[${ report.artifacts.size() }] artifact${ general().s( report.artifacts.size())} of " +
+                          "[${ artifactsNumber( report.artifacts )} of " +
                           "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }"  )
             }
         }
@@ -156,7 +158,7 @@ class IvyHelper
             return []
         }
 
-        artifactsReports.collect {
+        final artifacts = artifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
             assert artifactReport.artifact instanceof MDArtifact
 
@@ -170,13 +172,43 @@ class IvyHelper
             String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
             File   f          = verify().file( artifactReport.localFile )
 
-            if ( verbose )
-            {
-                log.info( "[${ ivyFile }] => \"$groupId:$artifactId:$classifier:$version\" (${ f.canonicalPath })" )
-            }
-
             artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( f ), classifier, f )
         }
+
+        if ( verbose )
+        {
+            log.info( "[$ivyFile] - ${ artifactsNumber( artifacts )} resolved: ${ artifactsToString( artifacts )}" )
+        }
+
+        artifacts
+    }
+
+
+    /**
+     * Retrieves a String-ified representation of artifacts number: "[1] artifact", "[5] artifacts", etc.
+     *
+     * @param  l artifacts to String-ify
+     * @return String-ified representation of artifacts number
+     */
+    @Requires({ l })
+    @Ensures({ result })
+    String artifactsNumber( List<Artifact> l )
+    {
+        "[${ l.size()}] artifact${ general().s( l.size())}"
+    }
+
+
+    /**
+     * Retrieves a String-ified representation of artifacts specified.
+     *
+     * @param  l artifacts to String-ify
+     * @return String-ified representation of artifacts specified
+     */
+    @Requires({ l })
+    @Ensures({ result })
+    String artifactsToString( List<Artifact> l )
+    {
+        SEPARATOR + l.collect{ "$it - [$it.file.canonicalPath]" }.join( SEPARATOR )
     }
 
 

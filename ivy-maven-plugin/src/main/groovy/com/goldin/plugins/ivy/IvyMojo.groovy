@@ -1,7 +1,6 @@
 package com.goldin.plugins.ivy
 
 import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.gcommons.GCommons
 import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.ivy.Ivy
 import org.apache.maven.artifact.Artifact
@@ -25,7 +24,7 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 @MojoRequiresDependencyResolution( 'test' )
 class IvyMojo extends BaseGroovyMojo3
 {
-    public static final String IVY_PREFIX = 'ivy.'
+    static final String IVY_PREFIX = 'ivy.'
 
 
     private IvyHelper ivyHelper
@@ -215,16 +214,10 @@ class IvyMojo extends BaseGroovyMojo3
                 project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
             }
 
-            final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
-
-            if ( logVerbosely())
-            {
-                log.info( message + artifacts.collect { "\"$it\" (${ it.file })"  })
-            }
-            else if ( logNormally())
-            {
-                log.info( message + artifacts )
-            }
+            log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
+                      ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) :
+                        logNormally () ? artifacts :
+                                       '' ))
         }
     }
 
@@ -244,7 +237,7 @@ class IvyMojo extends BaseGroovyMojo3
                                  m
         }
 
-        final message = "${ artifacts.size() } artifact${ GCommons.general().s(artifacts.size())} copied to \"${ directory.canonicalPath }\": "
+        final message = "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ directory.canonicalPath }\": "
 
         if ( logVerbosely())
         {
