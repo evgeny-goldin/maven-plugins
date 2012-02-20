@@ -251,6 +251,7 @@
                         </goals>
                         <configuration>
                             <runIf>{{ Boolean.valueOf( System.getProperty( 'addAbout' )) }}</runIf>
+                            <!--<verbose>true</verbose>-->
                         </configuration>
                     </execution>
                 </executions>
