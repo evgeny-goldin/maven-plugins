@@ -36,4 +36,7 @@ class KotlinTestCompileMojo extends KotlinBaseMojo
     @MojoParameter( defaultValue = '${project.build.testOutputDirectory}' )
     public String output
     public String output () { output }
+
+
+    boolean isTest () { true }
 }

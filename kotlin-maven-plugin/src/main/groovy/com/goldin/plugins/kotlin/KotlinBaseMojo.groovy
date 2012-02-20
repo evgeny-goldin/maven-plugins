@@ -54,6 +54,7 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     abstract List<String> sources()
     abstract List<String> classpath()
     abstract String       output()
+    abstract boolean      isTest()
 
 
     @Override
@@ -124,8 +125,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
         ivyMojo.repoSystem = repoSystem
         ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
         ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
-        ivyMojo.scope      = 'plugin-runtime'
         ivyMojo.verbose    = verboseIvy
+        ivyMojo.scope      = 'plugin-runtime' + ( test ? ', test' : '' )
         ivyMojo.execute()  // This injects all Ivy dependencies into plugin's runtime classloader.
     }
 }
