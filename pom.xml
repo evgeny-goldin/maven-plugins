@@ -9,7 +9,7 @@
     <groupId>com.goldin.plugins</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.3.8-SNAPSHOT</version>
+    <version>0.2.3.8-beta-6</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
 
@@ -24,7 +24,7 @@
         <maven-version>${maven2-version}</maven-version>
         <java-version>1.6</java-version>
         <duplicates-about-version>0.2.3.8-beta-5</duplicates-about-version>
-        <gcommons-version>0.5.3.8-SNAPSHOT</gcommons-version>
+        <gcommons-version>0.5.3.8-beta-6</gcommons-version>
         <groovy-version>1.8.6</groovy-version>
         <gmaven-version>1.4</gmaven-version>
         <annomojo-version>1.4.0</annomojo-version>
