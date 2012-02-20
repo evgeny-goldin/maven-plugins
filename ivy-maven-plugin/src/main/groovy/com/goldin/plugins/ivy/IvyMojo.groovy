@@ -50,7 +50,7 @@ class IvyMojo extends BaseGroovyMojo3
     public ArtifactItem[] dependencies
 
     /**
-     * Maven scope to add the dependencies resolved to: "compile", "runtime", "test", etc.
+     * Comma-separated Maven scope to add the dependencies resolved to: "compile", "compile, runtime", "test", etc.
      * Similar to Ivy's <cachepath>: http://ant.apache.org/ivy/history/latest-milestone/use/cachepath.html.
      */
     @MojoParameter ( required = false )
@@ -99,7 +99,7 @@ class IvyMojo extends BaseGroovyMojo3
 
             if ( artifacts )
             {
-                if ( scope ){ addArtifactsToScope  ( scope, artifacts ) }
+                if ( scope ){ addArtifactsToScopes ( scope, artifacts ) }
                 if ( dir   ){ copyArtifactsToDir   ( dir,   artifacts ) }
             }
         }
@@ -178,43 +178,53 @@ class IvyMojo extends BaseGroovyMojo3
      * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
      * @param artifacts dependencies to add to the scope
      */
-    @Requires({ scope && artifacts && artifacts.every{ it.file.file } })
-    void addArtifactsToScope ( String scope, List<Artifact> artifacts )
+    @Requires({ scopes && artifacts && artifacts.every{ it.file.file } })
+    void addArtifactsToScopes ( String scopes, List<Artifact> artifacts )
     {
-        /**
-         * Maven hacks are coming thanks to Groovy being able to read/write private fields.
-         */
-        if ( scope == 'plugin-runtime' )
-        {   /**
-             * Adding jars to plugin's classloader.
-             */
-            assert this.class.classLoader instanceof URLClassLoader
-            artifacts*.file.each {
-                (( URLClassLoader ) this.class.classLoader ).addURL( it.toURL())
-            }
-        }
-        else
-        {   /**
-             * Adding jars to Maven's scope and compilation classpath.
-             */
-            artifacts.each {
-                Artifact a ->
-                a.scope = scope
-                assert a.artifactHandler instanceof DefaultArtifactHandler
-                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
-            }
-            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
-        }
+        split( scopes ).each {
+            String scope ->
 
-        final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
+            /**
+             * Maven hacks are coming thanks to Groovy being able to read/write private fields.
+             */
+            if ( scope == 'plugin-runtime' )
+            {   /**
+                 * Adding jars to plugin's classloader.
+                 */
+                assert this.class.classLoader instanceof URLClassLoader
+                final cl = ( URLClassLoader ) this.class.classLoader
+                artifacts*.file.each {
+                    File f ->
+                    f.toURL().with {
+                        if ( ! cl.URLs.contains( delegate )) {
+                            cl.addURL( delegate )
+                        }
+                    }
+                }
+            }
+            else
+            {   /**
+                 * Adding jars to Maven's scope and compilation classpath.
+                 */
+                artifacts.each {
+                    Artifact a ->
+                    a.scope = scope
+                    assert a.artifactHandler instanceof DefaultArtifactHandler
+                    (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
+                }
+                project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
+            }
 
-        if ( logVerbosely())
-        {
-            log.info( message + artifacts.collect { "\"$it\" (${ it.file })"  })
-        }
-        else if ( logNormally())
-        {
-            log.info( message + artifacts )
+            final message = "${ artifacts.size() } artifact${ GCommons.general().s( artifacts.size())} added to \"$scope\" scope: "
+
+            if ( logVerbosely())
+            {
+                log.info( message + artifacts.collect { "\"$it\" (${ it.file })"  })
+            }
+            else if ( logNormally())
+            {
+                log.info( message + artifacts )
+            }
         }
     }
 
