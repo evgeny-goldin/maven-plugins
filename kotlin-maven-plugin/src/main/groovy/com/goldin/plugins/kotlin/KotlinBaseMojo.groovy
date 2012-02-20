@@ -66,7 +66,7 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
         String[]     classpath = classpath().toArray()
         String       output    = output()
 
-        assert sources && classpath && output
+        assert sources && classpath && output && classpath.every { new File( it ).with { file || directory || mkdirs() }}
 
         if ( stdlib         ) { verify().file( new File( stdlib )) }
         if ( includeRuntime ) { assert ( module || jar ), "<includeRuntime> parameter can only be used with <module> source or <jar> destination" }
@@ -80,6 +80,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 
             verify().file( new File( module ))
             log.info( jar ? "Compiling [$module] => [$jar]" : "Compiling [$module]" )
+
+            file().mkdirs( new File( jar ).parentFile )
             compiler.moduleToJar( module, jar, includeRuntime, stdlib, classpath )
         }
         else
@@ -101,10 +103,12 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 
                 if ( jar )
                 {
+                    file().mkdirs( new File( jar ).parentFile )
                     compiler.sourcesToJar( sourceLocation, jar, includeRuntime, stdlib, classpath )
                 }
                 else
                 {
+                    file().mkdirs( new File( output ))
                     compiler.sourcesToDir( sourceLocation, output, stdlib, classpath )
                 }
             }
