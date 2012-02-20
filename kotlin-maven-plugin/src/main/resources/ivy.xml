@@ -9,9 +9,8 @@
         <!-- IDEA build: http://teamcity.jetbrains.com/viewType.html?buildTypeId=bt343 -->
         <!--             http://teamcity.jetbrains.com/guestAuth/repository/download/bt343/latest.lastSuccessful/teamcity-ivy.xml -->
         <dependency org="org" name="bt343" rev="latest.lastSuccessful">
-            <include name="core/.*"           ext="jar" matcher="exactOrRegexp"/>
-            <exclude name="core/asm*"         ext="jar" matcher="exactOrRegexp"/>
-            <exclude name="core/asm-commons"  ext="jar" matcher="exact"/>
+            <include name="core/.*"    ext="jar" matcher="exactOrRegexp"/>
+            <exclude name="core/asm.*" ext="jar" matcher="exactOrRegexp"/>
         </dependency>
     </dependencies>
 </ivy-module>
