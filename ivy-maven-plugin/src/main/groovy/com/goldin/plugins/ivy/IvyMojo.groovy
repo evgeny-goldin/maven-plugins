@@ -214,10 +214,13 @@ class IvyMojo extends BaseGroovyMojo3
                 project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
             }
 
-            log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
-                      ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) :
-                        logNormally () ? artifacts :
-                                       '' ))
+            if ( logVerbosely() || logNormally())
+            {
+                log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
+                          ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) :
+                                             artifacts  ))
+
+            }
         }
     }
 
@@ -232,20 +235,20 @@ class IvyMojo extends BaseGroovyMojo3
     @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
     void copyArtifactsToDir ( File directory, List<Artifact> artifacts )
     {
-        Map<Artifact, File> filesCopied = artifacts.inject([:]){
-            Map m, Artifact a -> m[ a ] = file().copy( a.file, directory ).canonicalPath
-                                 m
+        artifacts.each {
+            Artifact a ->
+            File destination = file().copy( a.file, directory )
+
+            if ( logVerbosely())
+            {
+                log.info( "$a - [$a.file.canonicalPath] copied to [$destination.canonicalPath]" )
+            }
         }
 
-        final message = "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ directory.canonicalPath }\": "
-
-        if ( logVerbosely())
+        if ( logVerbosely() || logNormally())
         {
-            log.info( message + artifacts.collect { "\"$it\" => \"${ filesCopied[ it ] }\""  })
-        }
-        else if ( logNormally())
-        {
-            log.info( message + artifacts )
+            log.info( "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ directory.canonicalPath }\"" +
+                      ( logVerbosely() ? '' : ': ' + artifacts ))
         }
     }
 }
