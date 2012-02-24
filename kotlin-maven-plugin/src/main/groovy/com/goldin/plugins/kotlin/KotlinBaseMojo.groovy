@@ -2,6 +2,7 @@ package com.goldin.plugins.kotlin
 
 import com.goldin.plugins.common.BaseGroovyMojo3
 import com.goldin.plugins.ivy.IvyMojo
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import org.jfrog.maven.annomojo.annotations.MojoParameter
@@ -51,9 +52,15 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     public boolean verboseIvy = false
 
 
+//    @Ensures({ result })
     abstract List<String> sources()
+
+//    @Ensures({ result })
     abstract List<String> classpath()
+
+//    @Ensures({ result })
     abstract String       output()
+
     abstract boolean      isTest()
 
 
