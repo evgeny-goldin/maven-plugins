@@ -37,6 +37,17 @@ class KotlinTestCompileMojo extends KotlinBaseMojo
     public String output
     public String output () { output }
 
-
+    /**
+     * Postfix to the docOutput directory for test case KDoc
+     */
+    @MojoParameter( defaultValue = '-test' )
+    public String docOutputPostfix
+    
     boolean isTest () { true }
+    
+    String docOutputPostFix() 
+    {
+      return docOutputPostfix
+    }
+
 }

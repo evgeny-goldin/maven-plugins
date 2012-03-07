@@ -380,6 +380,26 @@
                 <module>groovydoc</module>
             </modules>
         </profile>
+
+
+        <profile>
+            <id>download</id>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>evgeny-goldin.org</id>
+                    <name>evgeny-goldin.org</name>
+                    <url>http://evgeny-goldin.org/artifactory/repo</url>
+                </pluginRepository>
+            </pluginRepositories>
+            <repositories>
+                <repository>
+                    <id>evgeny-goldin.org</id>
+                    <name>evgeny-goldin.org</name>
+                    <url>http://evgeny-goldin.org/artifactory/repo</url>
+                </repository>
+            </repositories>
+        </profile>
     </profiles>
+
 
 </project>
