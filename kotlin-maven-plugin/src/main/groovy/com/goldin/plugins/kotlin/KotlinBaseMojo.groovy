@@ -1,5 +1,6 @@
 package com.goldin.plugins.kotlin
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo3
 import com.goldin.plugins.ivy.IvyMojo
 import org.gcontracts.annotations.Requires
@@ -8,8 +9,6 @@ import org.jetbrains.jet.cli.KDocLoader
 import org.jetbrains.jet.compiler.CompilerPlugin
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 
-import static com.goldin.plugins.common.GMojoUtils.file
-import static com.goldin.plugins.common.GMojoUtils.verify
 
 /**
  * Kotlin mojo base class.
@@ -57,6 +56,12 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
      */
     @MojoParameter ( required = false )
     public boolean verboseIvy = false
+
+    /**
+     * Explicit Kotlin jars (alternative to Ivy download).
+     */
+    @MojoParameter ( required = false )
+    public String[] kotlinJars
 
 
 //    @Ensures({ result })
@@ -157,15 +162,23 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     @Requires({ project && log && session && repoSystem })
     void addKotlinDependency ()
     {
-        IvyMojo ivyMojo    = new IvyMojo()
-        ivyMojo.project    = project
-        ivyMojo.log        = log
-        ivyMojo.session    = session
-        ivyMojo.repoSystem = repoSystem
-        ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
-        ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
-        ivyMojo.verbose    = verboseIvy
-        ivyMojo.scope      = 'plugin-runtime' + ( test ? ', test' : '' )
-        ivyMojo.execute()  // This injects all Ivy dependencies into plugin's runtime classloader.
+        if ( kotlinJars )
+        {
+            List<URL> kotlinFiles = kotlinJars.collect { verify().file( new File( it )) }*.toURL()
+            addToClassLoader(( URLClassLoader ) this.class.classLoader, kotlinFiles )
+        }
+        else
+        {
+            IvyMojo ivyMojo    = new IvyMojo()
+            ivyMojo.project    = project
+            ivyMojo.log        = log
+            ivyMojo.session    = session
+            ivyMojo.repoSystem = repoSystem
+            ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
+            ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
+            ivyMojo.verbose    = verboseIvy
+            ivyMojo.scope      = 'plugin-runtime' + ( test ? ', test' : '' )
+            ivyMojo.execute()  // This injects all Ivy dependencies into plugin's runtime classloader.
+        }
     }
 }

@@ -82,6 +82,31 @@ class GMojoUtils
      }
 
 
+
+    /**
+     * Adds URLs specified to class loader provided.
+     *
+     * @param cl Classloader to add URLs to.
+     * @param urls URLs to add.
+     */
+    static void addToClassLoader( URLClassLoader cl, List<URL> urls )
+    {
+        assert cl && urls
+
+        final urlsAdded = []
+        urls.each {
+            URL url ->
+            if ( ! cl.URLs.contains( url ))
+            {
+                cl.addURL( url )
+                urlsAdded << url
+            }
+        }
+
+        log.info( "Added to [$cl]: $urlsAdded" )
+    }
+
+
     /**
      * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
      * @return instance of {@code OutputStream} ignoring everything that is written to it
