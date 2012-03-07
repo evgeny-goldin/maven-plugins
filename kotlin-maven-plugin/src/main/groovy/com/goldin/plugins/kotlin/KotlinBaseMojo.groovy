@@ -2,7 +2,6 @@ package com.goldin.plugins.kotlin
 
 import com.goldin.plugins.common.BaseGroovyMojo3
 import com.goldin.plugins.ivy.IvyMojo
-import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import org.jetbrains.jet.cli.KDocLoader
@@ -88,18 +87,23 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 
         final compiler = new BytecodeCompiler()
 
-        if ( docOutput ) {
-          String docDir = docOutput + docOutputPostFix() 
-          log.info("Generating API docs to [$docDir]")
+        if ( docOutput )
+        {
+            String docDir = docOutput + docOutputPostFix()
+            log.info( "Generating API docs to [$docDir]" )
 
-          // add the KDocCompiler plugin...
-          KDocLoader kdocLoader = new KDocLoader( docDir )
-          CompilerPlugin plugin = kdocLoader.createCompilerPlugin()
-          if (plugin == null) {
-            log.warn("Could not load KDoc compiler plugin, did you add the kdoc jar to the plugin dependencies?")
-          } else {
-            compiler.getCompilerPlugins().add(plugin)
-          }
+            /**
+             * Add the KDocCompiler plugin.
+             */
+            CompilerPlugin plugin = new KDocLoader( docDir ).createCompilerPlugin()
+            if ( plugin == null )
+            {
+                log.warn( "Could not load KDoc compiler plugin, did you add the kdoc jar to the plugin dependencies?" )
+            }
+            else
+            {
+                compiler.compilerPlugins.add( plugin )
+            }
         }
 
         if ( module )
@@ -144,10 +148,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
         }
     }
 
-    String docOutputPostFix() 
-    {
-      return ""
-    }
+
+    String docOutputPostFix() { '' }
 
     /**
      * Adds Kotlin dependencies to plugin's classloader.
