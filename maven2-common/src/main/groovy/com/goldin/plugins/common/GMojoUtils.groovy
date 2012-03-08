@@ -618,6 +618,62 @@ class GMojoUtils
     }
 
 
+
+    /**
+     * Adds artifacts to the scope specified.
+     *
+     * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
+     * @param artifacts dependencies to add to the scope
+     * @param project   current Maven project
+     */
+    static void addToScopes ( List<Artifact> artifacts, String scopes, MavenProject project )
+    {
+        assert artifacts && scopes && artifacts.every{ it.file.file }
+
+        split( scopes ).each {
+            String scope ->
+
+           /**
+             * Adding jars to Maven's scope and compilation classpath.
+             */
+            artifacts.each {
+                Artifact a ->
+                a.scope = scope
+                assert a.artifactHandler instanceof DefaultArtifactHandler
+                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
+            }
+
+            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
+        }
+    }
+
+
+    /**
+     * Copies artifacts to directory specified.
+     *
+     * @param directory directory to copy the artifacts to
+     * @param artifacts artifacts to copy
+     * @param verbose   whether copy operation should be logged
+     */
+    static void copyToDir ( List<Artifact> artifacts, File directory, boolean verbose )
+    {
+        assert artifacts && directory && artifacts.every{ it.file.file }
+
+        artifacts.each {
+            Artifact a ->
+            File destination = file().copy( a.file, directory )
+
+            if ( verbose )
+            {
+                log.info( "$a - [$a.file.canonicalPath] copied to [$destination.canonicalPath]" )
+            }
+        }
+
+        assert artifacts.every{ new File( directory, it.file.name ).file }
+    }
+
+
+
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static ConstantsBean constants (){ GCommons.constants ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )

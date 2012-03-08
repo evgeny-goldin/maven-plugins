@@ -4,7 +4,6 @@ import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo3
 import org.apache.ivy.Ivy
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -98,8 +97,28 @@ class IvyMojo extends BaseGroovyMojo3
 
             if ( artifacts )
             {
-                if ( scope ){ addArtifactsToScopes ( scope, artifacts ) }
-                if ( dir   ){ copyArtifactsToDir   ( dir,   artifacts ) }
+                if ( scope ){
+
+                    addToScopes( artifacts, scope, project )
+
+                    if ( logVerbosely() || logNormally())
+                    {
+                        log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
+                                  ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) : artifacts  ))
+
+                    }
+                }
+
+                if ( dir ){
+
+                    copyToDir( artifacts, dir, logVerbosely())
+
+                    if ( logVerbosely() || logNormally() )
+                    {
+                        log.info( "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ dir.canonicalPath }\"" +
+                                  ( logVerbosely() ? '' /* Artifact paths are logged already */ : ': ' + artifacts ))
+                    }
+                }
             }
         }
     }
@@ -154,68 +173,6 @@ class IvyMojo extends BaseGroovyMojo3
         dependencies.collect {
             ArtifactItem d ->
             resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
-        }
-    }
-
-
-    /**
-     * Adds artifacts to the scope specified.
-     *
-     * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
-     * @param artifacts dependencies to add to the scope
-     */
-    @Requires({ scopes && artifacts && artifacts.every{ it.file.file } })
-    void addArtifactsToScopes ( String scopes, List<Artifact> artifacts )
-    {
-        split( scopes ).each {
-            String scope ->
-
-           /**
-             * Adding jars to Maven's scope and compilation classpath.
-             */
-            artifacts.each {
-                Artifact a ->
-                a.scope = scope
-                assert a.artifactHandler instanceof DefaultArtifactHandler
-                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
-            }
-            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
-
-            if ( logVerbosely() || logNormally())
-            {
-                log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
-                          ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) :
-                                             artifacts  ))
-
-            }
-        }
-    }
-
-
-    /**
-     * Copies artifacts to directory specified.
-     *
-     * @param directory directory to copy the artifacts to
-     * @param artifacts artifacts to copy
-     */
-    @Requires({ directory && artifacts && artifacts.every{ it.file.file } })
-    @Ensures({ artifacts.every{ new File( directory, it.file.name ).file } })
-    void copyArtifactsToDir ( File directory, List<Artifact> artifacts )
-    {
-        artifacts.each {
-            Artifact a ->
-            File destination = file().copy( a.file, directory )
-
-            if ( logVerbosely())
-            {
-                log.info( "$a - [$a.file.canonicalPath] copied to [$destination.canonicalPath]" )
-            }
-        }
-
-        if ( logVerbosely() || logNormally())
-        {
-            log.info( "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ directory.canonicalPath }\"" +
-                      ( logVerbosely() ? '' : ': ' + artifacts ))
         }
     }
 }

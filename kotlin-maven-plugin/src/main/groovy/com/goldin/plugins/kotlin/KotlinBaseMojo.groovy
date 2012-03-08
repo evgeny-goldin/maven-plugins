@@ -2,13 +2,14 @@ package com.goldin.plugins.kotlin
 
 import static com.goldin.plugins.common.GMojoUtils.*
 import com.goldin.plugins.common.BaseGroovyMojo3
+import com.goldin.plugins.ivy.IvyHelper
 import com.goldin.plugins.ivy.IvyMojo
+import org.apache.maven.artifact.Artifact
 import org.gcontracts.annotations.Requires
 import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import org.jetbrains.jet.cli.KDocLoader
 import org.jetbrains.jet.compiler.CompilerPlugin
 import org.jfrog.maven.annomojo.annotations.MojoParameter
-import com.goldin.plugins.ivy.IvyHelper
 
 
 /**
@@ -66,13 +67,22 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 
 
 //    @Ensures({ result })
+//    http://goo.gl/cruAP
     abstract List<String> sources()
 
 //    @Ensures({ result })
+//    http://goo.gl/cruAP
     abstract List<String> classpath()
 
 //    @Ensures({ result })
+//    http://goo.gl/cruAP
     abstract String       output()
+
+
+    /**
+     * Whether current instance compiles tests.
+     */
+    boolean isTest(){ false }
 
 
     @Override
@@ -164,20 +174,32 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     @Requires({ project && log && session && repoSystem })
     List<File> addKotlinDependency ()
     {
-        List<File> files
+        List<Artifact> artifacts
 
         if ( kotlinJars )
         {
-            files = kotlinJars.collect { new File( it ) }
+            artifacts  = kotlinJars.collect {
+                final f         = new File( it )
+                final extension = file().extension( f )
+                final basename  = extension ? f.name - ".$extension" : f.name
+                artifact( 'org', basename, '1.0', extension, null, f )
+            }
         }
         else
         {
             URL     ivy     = this.class.classLoader.getResource( 'ivy.xml'     )
             URL     ivyconf = this.class.classLoader.getResource( 'ivyconf.xml' )
-            files           = new IvyMojo().resolveArtifacts( ivy, null, new IvyHelper( ivyconf, verbose, true ))*.file
+            artifacts       = new IvyMojo().resolveArtifacts( ivy, null, new IvyHelper( ivyconf, verbose, true ))
         }
 
+        List<File> files = artifacts*.file
         addToClassLoader(( URLClassLoader ) this.class.classLoader, files, verbose )
+
+        if ( isTest())
+        {
+            addToScopes( artifacts, 'test', project )
+        }
+
         files
     }
 }

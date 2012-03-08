@@ -44,4 +44,8 @@ class KotlinTestCompileMojo extends KotlinBaseMojo
     @MojoParameter( defaultValue = '-test' )
     public String docOutputPostfix
     String docOutputPostFix() { docOutputPostfix }
+
+
+    @Override
+    boolean isTest () { true }
 }
