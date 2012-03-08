@@ -164,8 +164,7 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     {
         if ( kotlinJars )
         {
-            List<URL> kotlinFiles = kotlinJars.collect { verify().file( new File( it )) }*.toURL()
-            addToClassLoader(( URLClassLoader ) this.class.classLoader, kotlinFiles )
+            addToClassLoader(( URLClassLoader ) this.class.classLoader, kotlinJars.collect { new File( it ) } as List )
         }
         else
         {

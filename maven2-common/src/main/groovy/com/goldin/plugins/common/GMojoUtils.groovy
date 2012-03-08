@@ -84,26 +84,35 @@ class GMojoUtils
 
 
     /**
-     * Adds URLs specified to class loader provided.
+     * Adds files specified to the class loader provided.
      *
-     * @param cl Classloader to add URLs to.
-     * @param urls URLs to add.
+     * @param cl    ClassLoader to add files to.
+     * @param files files to add.
      */
-    static void addToClassLoader( URLClassLoader cl, List<URL> urls )
+    static void addToClassLoader( URLClassLoader cl, List<File> files )
     {
-        assert cl && urls
+        assert cl && files
 
-        final urlsAdded = []
-        urls.each {
-            URL url ->
+        final urls = []
+
+        files.each {
+            File f ->
+            final url = verify().file( f ).canonicalFile.toURL()
             if ( ! cl.URLs.contains( url ))
             {
                 cl.addURL( url )
-                urlsAdded << url
+                urls << url
             }
         }
 
-        log.info( "Added to [$cl]: $urlsAdded" )
+        if ( urls )
+        {
+            log.info( "Added to [${ cl.class }]: $urls" )
+        }
+        else
+        {
+            log.info( "No URLs added to [${ cl.class }] - were added before." )
+        }
     }
 
 

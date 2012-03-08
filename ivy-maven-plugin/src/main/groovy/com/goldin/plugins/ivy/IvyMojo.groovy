@@ -190,7 +190,7 @@ class IvyMojo extends BaseGroovyMojo3
             {   /**
                  * Adding jars to plugin's classloader.
                  */
-                addToClassLoader(( URLClassLoader ) this.class.classLoader, artifacts*.file*.toURL())
+                addToClassLoader(( URLClassLoader ) this.class.classLoader, artifacts*.file )
             }
             else
             {   /**
