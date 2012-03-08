@@ -114,8 +114,10 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
              * Compiling module.
              */
 
-            verify().file( new File( module ))
-            log.info(( jar     ? "Compiling [$module] => [$jar]" : "Compiling [$module]" ) +
+            final modulePath = verify().file( new File( module )).canonicalPath
+            final jarPath    = jar ? new File( jar ).canonicalPath : null
+
+            log.info(( jar     ? "Compiling [$modulePath] => [$jarPath]" : "Compiling [$modulePath]" ) +
                      ( verbose ? ", classpath = $classpath" : '' ))
 
             file().mkdirs( new File( jar ).parentFile )
@@ -126,9 +128,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
              * Compiling sources.
              */
 
-            final  sourceLocations  = ( src ? [ src ] : sources )
-            final  destination      = ( jar ?: output )
-            assert destination
+            final sourceLocations = ( src ? [ src ] : sources ).collect { new File( it ).canonicalPath }
+            final destination     = new File( jar ?: output ).canonicalPath
 
             sourceLocations.each {
                 String sourceLocation -> // May be a Kotlin file or sources directory
