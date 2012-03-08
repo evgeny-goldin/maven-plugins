@@ -8,6 +8,7 @@ import org.jetbrains.jet.buildtools.core.BytecodeCompiler
 import org.jetbrains.jet.cli.KDocLoader
 import org.jetbrains.jet.compiler.CompilerPlugin
 import org.jfrog.maven.annomojo.annotations.MojoParameter
+import com.goldin.plugins.ivy.IvyHelper
 
 
 /**
@@ -52,10 +53,10 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
     public boolean includeRuntime = false
 
     /**
-     * Whether Ivy activity is logged verbosely.
+     * Whether logging is verbose.
      */
     @MojoParameter ( required = false )
-    public boolean verboseIvy = false
+    public boolean verbose = false
 
     /**
      * Explicit Kotlin jars (alternative to Ivy download).
@@ -73,17 +74,14 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 //    @Ensures({ result })
     abstract String       output()
 
-    abstract boolean      isTest()
-
 
     @Override
     final void doExecute()
     {
-        addKotlinDependency()
-
-        List<String> sources   = sources()
-        String[]     classpath = classpath().toArray()
-        String       output    = output()
+        List<String> kotlinFiles = addKotlinDependency()*.path
+        String[]     classpath   = ( kotlinFiles + classpath()).collect { new File( it ).canonicalPath }.toSet().toArray()
+        List<String> sources     = sources()
+        String       output      = output()
 
         assert sources && classpath && output && classpath.every { new File( it ).with { file || directory || mkdirs() }}
 
@@ -117,7 +115,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
              */
 
             verify().file( new File( module ))
-            log.info( jar ? "Compiling [$module] => [$jar]" : "Compiling [$module]" )
+            log.info(( jar     ? "Compiling [$module] => [$jar]" : "Compiling [$module]" ) +
+                     ( verbose ? ", classpath = $classpath" : '' ))
 
             file().mkdirs( new File( jar ).parentFile )
             compiler.moduleToJar( module, jar, includeRuntime, stdlib, classpath )
@@ -137,7 +136,8 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
                 verify().exists( new File( sourceLocation ))
                 if ( ! jar ) { verify().directory( file().mkdirs( new File( output ))) }
 
-                log.info( "Compiling [$sourceLocation] => [$destination]" )
+                log.info(( "Compiling [$sourceLocation] => [$destination]" ) +
+                         ( verbose ? ", classpath = $classpath" : '' ))
 
                 if ( jar )
                 {
@@ -156,28 +156,27 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
 
     String docOutputPostFix() { '' }
 
+
     /**
      * Adds Kotlin dependencies to plugin's classloader.
      */
     @Requires({ project && log && session && repoSystem })
-    void addKotlinDependency ()
+    List<File> addKotlinDependency ()
     {
+        List<File> files
+
         if ( kotlinJars )
         {
-            addToClassLoader(( URLClassLoader ) this.class.classLoader, kotlinJars.collect { new File( it ) } as List )
+            files = kotlinJars.collect { new File( it ) }
         }
         else
         {
-            IvyMojo ivyMojo    = new IvyMojo()
-            ivyMojo.project    = project
-            ivyMojo.log        = log
-            ivyMojo.session    = session
-            ivyMojo.repoSystem = repoSystem
-            ivyMojo.ivy        = this.class.classLoader.getResource( 'ivy.xml'     ).toString()
-            ivyMojo.ivyconf    = this.class.classLoader.getResource( 'ivyconf.xml' ).toString()
-            ivyMojo.verbose    = verboseIvy
-            ivyMojo.scope      = 'plugin-runtime' + ( test ? ', test' : '' )
-            ivyMojo.execute()  // This injects all Ivy dependencies into plugin's runtime classloader.
+            URL     ivy     = this.class.classLoader.getResource( 'ivy.xml'     )
+            URL     ivyconf = this.class.classLoader.getResource( 'ivyconf.xml' )
+            files           = new IvyMojo().resolveArtifacts( ivy, null, new IvyHelper( ivyconf, verbose, true ))*.file
         }
+
+        addToClassLoader(( URLClassLoader ) this.class.classLoader, files, verbose )
+        files
     }
 }

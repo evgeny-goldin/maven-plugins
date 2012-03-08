@@ -94,7 +94,7 @@ class IvyMojo extends BaseGroovyMojo3
         if ( scope || dir )
         {
             assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) needs to be specified when <scope> or <dir> are used."
-            final artifacts = resolveArtifacts(( ivy ? url( ivy ) : null ), dependencies )
+            final artifacts = resolveArtifacts(( ivy ? url( ivy ) : null ), dependencies, ivyHelper ).asImmutable()
 
             if ( artifacts )
             {
@@ -124,31 +124,18 @@ class IvyMojo extends BaseGroovyMojo3
 
 
     /**
-     * Converts path specified to URL.
-     *
-     * @param s path of disk file or jar-located resource.
-     * @return path's URL
-     */
-    @Requires({ s })
-    @Ensures({ result })
-    URL url( String s )
-    {
-        s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
-    }
-
-
-    /**
      * Resolves dependencies specified and retrieves their local paths.
      *
      * @param ivyFile      "ivy.xml" file
      * @param dependencies Maven-style dependencies
+     * @param helper       {@link IvyHelper} instance to use
      * @return             artifacts resolved or empty list if {@link #failOnError} is "false".
      */
-    @Requires({ ivyFile || dependencies })
+    @Requires({ ( ivyFile || dependencies ) && helper })
     @Ensures({ result.every{ it.file.file } })
-    List<Artifact> resolveArtifacts ( URL ivyFile, ArtifactItem[] dependencies )
+    List<Artifact> resolveArtifacts ( URL ivyFile, ArtifactItem[] dependencies, IvyHelper helper )
     {
-        List<Artifact> ivyArtifacts   = ( ivyFile      ? ivyHelper.resolve( ivyFile ) : [] )
+        List<Artifact> ivyArtifacts   = ( ivyFile      ? helper.resolve( ivyFile )                 : [] )
         List<Artifact> mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
         ( ivyArtifacts + mavenArtifacts ).findAll{ it.file } // Some artifacts may have file undefined if {@link #failOnError} is "false".
     }
@@ -183,27 +170,16 @@ class IvyMojo extends BaseGroovyMojo3
         split( scopes ).each {
             String scope ->
 
-            /**
-             * Maven hacks are coming thanks to Groovy being able to read/write private fields.
+           /**
+             * Adding jars to Maven's scope and compilation classpath.
              */
-            if ( scope == 'plugin-runtime' )
-            {   /**
-                 * Adding jars to plugin's classloader.
-                 */
-                addToClassLoader(( URLClassLoader ) this.class.classLoader, artifacts*.file )
+            artifacts.each {
+                Artifact a ->
+                a.scope = scope
+                assert a.artifactHandler instanceof DefaultArtifactHandler
+                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
             }
-            else
-            {   /**
-                 * Adding jars to Maven's scope and compilation classpath.
-                 */
-                artifacts.each {
-                    Artifact a ->
-                    a.scope = scope
-                    assert a.artifactHandler instanceof DefaultArtifactHandler
-                    (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
-                }
-                project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
-            }
+            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
 
             if ( logVerbosely() || logNormally())
             {

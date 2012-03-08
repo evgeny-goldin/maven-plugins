@@ -86,10 +86,11 @@ class GMojoUtils
     /**
      * Adds files specified to the class loader provided.
      *
-     * @param cl    ClassLoader to add files to.
-     * @param files files to add.
+     * @param cl      ClassLoader to add files to.
+     * @param files   files to add.
+     * @param verbose whether files added should be logged.
      */
-    static void addToClassLoader( URLClassLoader cl, List<File> files )
+    static void addToClassLoader( URLClassLoader cl, List<File> files, boolean verbose )
     {
         assert cl && files
 
@@ -105,13 +106,10 @@ class GMojoUtils
             }
         }
 
-        if ( urls )
+        if ( verbose )
         {
-            log.info( "Added to [${ cl.class }]: $urls" )
-        }
-        else
-        {
-            log.info( "No URLs added to [${ cl.class }] - were added before." )
+            log.info( urls ? "New URLs added to [${ cl.class }]: $urls" :
+                             "No new URLs added to [${ cl.class }]" )
         }
     }
 
@@ -605,6 +603,18 @@ class GMojoUtils
                   new DefaultArtifact( groupId, artifactId, version,                                   '', type, classifier, new DefaultArtifactHandler())  // 3.0.4
         if ( file ) { a.file = verify().file( file ) }
         a
+    }
+
+
+    /**
+     * Converts path specified to URL.
+     *
+     * @param s path of disk file or jar-located resource.
+     * @return path's URL
+     */
+    static URL url( String s )
+    {
+        s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
     }
 
 
