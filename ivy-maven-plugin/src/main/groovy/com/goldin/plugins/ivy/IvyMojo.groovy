@@ -42,7 +42,13 @@ class IvyMojo extends BaseGroovyMojo3
     public String ivy
 
     /**
-     * Maven-style {@code <dependencies>}.
+     * Single Maven-style {@code <dependency>}.
+     */
+    @MojoParameter ( required = false )
+    public ArtifactItem dependency
+
+    /**
+     * Multiple Maven-style {@code <dependencies>}.
      */
     @MojoParameter ( required = false )
     public ArtifactItem[] dependencies
@@ -82,8 +88,10 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ this.ivyconf })
     void doExecute ()
     {
-        ivyHelper = new IvyHelper( url( this.ivyconf ), logVerbosely(), failOnError )
-        addIvyResolver()
+        ArtifactItem[] dependencies = general().list( this.dependencies, this.dependency ) as ArtifactItem[]
+        ivyHelper                   = new IvyHelper( url( this.ivyconf ), logVerbosely(), failOnError )
+
+        addIvyResolver() // http://evgeny-goldin.org/youtrack/issue/pl-605
 
         if ( ivy || dependencies )
         {
