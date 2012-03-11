@@ -61,10 +61,13 @@ class IvyHelper
      * @param classifier dependency {@code <classifier>}
      * @param type       dependency {@code <type>}
      *
-     * @return Maven artifact resolved or null if resolution fails.
+     * @return Maven artifact resolved,
+     *         its "file" field ({@link Artifact#getFile}) may be not set
+     *         if artifact resolution fails and {@link #failOnError} is {@code false}.
      * @throws RuntimeException if artifact resolution fails and {@link #failOnError} is {@code true}.
      */
     @Requires({ groupId && artifactId && version && type })
+    @Ensures({ result })
     Artifact resolve ( String groupId, String artifactId, String version, String classifier, String type )
     {
         final ivyfile = File.createTempFile( 'ivy', '.xml' )
@@ -88,18 +91,14 @@ class IvyHelper
             final artifacts = resolve( ivyfile.toURL())
             final gavc      = "$groupId:$artifactId:$version:${ classifier ? classifier + ':' : '' }$type"
 
-            if ( ! artifacts )
+            if ( artifacts.size() != 1 )
             {
-                warnOrFail( "Failed to resolve [$gavc]" )
-                return null
+                warnOrFail( artifacts ?
+                    "Multiple artifacts resolved for [$gavc] - [${ artifacts }], specify <classifier> so that only one artifact is resolved." :
+                    "Failed to resolve [$gavc] artifact" )
             }
 
-            if ( artifacts.size() > 1 )
-            {
-                warnOrFail( "Multiple artifacts resolved for [$gavc] - [${ artifacts }], specify <classifier> pattern." )
-            }
-
-            artifact( groupId, artifactId, version, type, classifier, artifacts.first().file )
+            artifact( groupId, artifactId, version, type, classifier, ( artifacts ? artifacts.first().file : null ))
         }
         finally
         {

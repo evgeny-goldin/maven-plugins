@@ -32,39 +32,43 @@ class IvyArtifactResolver implements ArtifactResolver {
      * @return artifact result resolved or {@code null} if resolution fails.
      */
     @Requires({ request && request.artifact.groupId.startsWith( IvyMojo.IVY_PREFIX ) })
+    @Ensures({ result })
     ArtifactResult resolveIvy( ArtifactRequest request )
     {
-        final a                = request.artifact
-        final organisation     = a.groupId.substring( IvyMojo.IVY_PREFIX.size())
-        final name             = a.artifactId
-        final pattern          = a.classifier
-        final revision         = a.version
-        final extension        = a.extension
-        final resolvedArtifact = ivyHelper.resolve( organisation, name, revision, pattern, extension )
-
-        if ( ! resolvedArtifact ) { return null }
-
-        final result    = new ArtifactResult( request )                                                                   // org.sonatype.aether.resolution.ArtifactResult
-        result.artifact = new DefaultArtifact( organisation, name, extension, revision ).setFile( resolvedArtifact.file ) // org.sonatype.aether.util.artifact.DefaultArtifact
+        final a            = request.artifact
+        final organisation = a.groupId.substring( IvyMojo.IVY_PREFIX.size())
+        final name         = a.artifactId
+        final pattern      = a.classifier
+        final revision     = a.version
+        final extension    = a.extension
+        // Artifact may have no "file" set if resolution fails and helper's "failOnError" is "false"
+        final artifact     = ivyHelper.resolve( organisation, name, revision, pattern, extension )
+        final result       = new ArtifactResult( request )                                  // org.sonatype.aether.resolution.ArtifactResult
+        result.artifact    = new DefaultArtifact( organisation, name, extension, revision ) // org.sonatype.aether.util.artifact.DefaultArtifact
+        if ( artifact.file )
+        {
+            result.artifact = result.artifact.setFile( artifact.file )
+        }
         result
     }
 
 
     @Override
     @Requires({ session && request })
+    @Ensures({ result })
     ArtifactResult resolveArtifact ( RepositorySystemSession session, ArtifactRequest request )
     {
         request.artifact.groupId.startsWith( IvyMojo.IVY_PREFIX ) ?
-            resolveIvy( request ) : // May return null.
+            resolveIvy( request ) :
             delegateResolver.resolveArtifact( session, request )
     }
 
 
     @Override
     @Requires({ session && requests })
-    @Ensures({ result != null })
+    @Ensures({ result })
     List<ArtifactResult> resolveArtifacts ( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
     {
-        requests.collect { ArtifactRequest request -> resolveArtifact( session, request )}.grep()
+        requests.collect { ArtifactRequest request -> resolveArtifact( session, request )}
     }
 }
