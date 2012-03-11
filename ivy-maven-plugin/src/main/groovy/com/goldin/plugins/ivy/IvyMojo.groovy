@@ -25,9 +25,11 @@ class IvyMojo extends BaseGroovyMojo3
 {
     static final String IVY_PREFIX = 'ivy.'
 
-
-    private IvyHelper ivyHelper
-
+    /**
+     * Whether Ivy resolver should be added to Maven for subsequent resolutions of Ivy artifacts by other plugins.
+     */
+    @MojoParameter ( required = false )
+    public boolean addIvyResolver = false
 
    /**
     * Ivy settings file: http://ant.apache.org/ivy/history/latest-milestone/settings.html.
@@ -88,10 +90,14 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ this.ivyconf })
     void doExecute ()
     {
-        ArtifactItem[] dependencies = general().list( this.dependencies, this.dependency ) as ArtifactItem[]
-        ivyHelper                   = new IvyHelper( url( this.ivyconf ), logVerbosely(), failOnError )
+        final helper = new IvyHelper( url( this.ivyconf ), logVerbosely(), this.failOnError )
 
-        addIvyResolver() // http://evgeny-goldin.org/youtrack/issue/pl-605
+        if ( addIvyResolver )
+        {
+            addIvyResolver( helper )
+        }
+
+        ArtifactItem[] dependencies = general().list( this.dependencies, this.dependency ) as ArtifactItem[]
 
         if ( ivy || dependencies )
         {
@@ -101,7 +107,7 @@ class IvyMojo extends BaseGroovyMojo3
         if ( scope || dir )
         {
             assert ( ivy || dependencies ), "Either <ivy> or <dependencies> (or both) needs to be specified when <scope> or <dir> are used."
-            final artifacts = resolveArtifacts(( ivy ? url( ivy ) : null ), dependencies, ivyHelper ).asImmutable()
+            final artifacts = resolveArtifacts(( ivy ? url( ivy ) : null ), dependencies, helper ).asImmutable()
 
             if ( artifacts )
             {
@@ -111,8 +117,8 @@ class IvyMojo extends BaseGroovyMojo3
 
                     if ( logVerbosely() || logNormally())
                     {
-                        log.info( "${ ivyHelper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
-                                  ( logVerbosely() ? ivyHelper.artifactsToString( artifacts ) : artifacts  ))
+                        log.info( "${ helper.artifactsNumber( artifacts )} added to \"$scope\" scope: " +
+                                  ( logVerbosely() ? helper.artifactsToString( artifacts ) : artifacts  ))
 
                     }
                 }
@@ -123,7 +129,7 @@ class IvyMojo extends BaseGroovyMojo3
 
                     if ( logVerbosely() || logNormally() )
                     {
-                        log.info( "${ ivyHelper.artifactsNumber( artifacts )} copied to \"${ dir.canonicalPath }\"" +
+                        log.info( "${ helper.artifactsNumber( artifacts )} copied to \"${ dir.canonicalPath }\"" +
                                   ( logVerbosely() ? '' /* Artifact paths are logged already */ : ': ' + artifacts ))
                     }
                 }
@@ -136,16 +142,16 @@ class IvyMojo extends BaseGroovyMojo3
      * Adds Ivy resolver to Aether RepositorySystem based on settings file specified.
      * @return configured {@link Ivy} instance.
      */
-    @Requires({ repoSystem && ivyHelper && ivyHelper.ivyconfUrl })
-    void addIvyResolver ()
+    @Requires({ repoSystem && helper && helper.ivyconfUrl })
+    void addIvyResolver ( IvyHelper helper )
     {
         assert repoSystem instanceof DefaultRepositorySystem
-        (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, ivyHelper )
+        (( DefaultRepositorySystem ) repoSystem ).artifactResolver = new IvyArtifactResolver( repoSystem.artifactResolver, helper )
         assert repoSystem.artifactResolver instanceof IvyArtifactResolver
 
         if ( logNormally())
         {
-            log.info( "Added Ivy artifacts resolver based on \"${ ivyHelper.ivyconfUrl }\"" )
+            log.info( "Added Ivy artifacts resolver based on \"${ helper.ivyconfUrl }\"" )
         }
     }
 
@@ -162,8 +168,8 @@ class IvyMojo extends BaseGroovyMojo3
     @Ensures({ result.every{ it.file.file } })
     List<Artifact> resolveArtifacts ( URL ivyFile, ArtifactItem[] dependencies, IvyHelper helper )
     {
-        List<Artifact> ivyArtifacts   = ( ivyFile      ? helper.resolve( ivyFile )                 : [] )
-        List<Artifact> mavenArtifacts = ( dependencies ? resolveMavenDependencies( dependencies  ) : [] )
+        List<Artifact> ivyArtifacts   = ( ivyFile      ? helper.resolve( ivyFile )                         : [] )
+        List<Artifact> mavenArtifacts = ( dependencies ? resolveMavenDependencies( helper, dependencies  ) : [] )
         ( ivyArtifacts + mavenArtifacts ).findAll{ it.file } // Some artifacts may have file undefined if {@link #failOnError} is "false".
     }
 
@@ -171,16 +177,20 @@ class IvyMojo extends BaseGroovyMojo3
     /**
      * Resolve dependencies specified inline as Maven {@code <dependencies>}.
      *
+     * @param helper       {@link IvyHelper} to use for resolution of dependencies located in Ivy repo
      * @param dependencies dependencies to resolve
      * @return artifacts resolved
      */
-    @Requires({ dependencies })
+    @Requires({ helper && dependencies })
     @Ensures({ result && ( result.size() == dependencies.size()) })
-    List<Artifact> resolveMavenDependencies ( ArtifactItem[] dependencies )
+    List<Artifact> resolveMavenDependencies ( IvyHelper helper, ArtifactItem[] dependencies )
     {
         dependencies.collect {
             ArtifactItem d ->
-            resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
+
+            d.groupId.startsWith( IVY_PREFIX ) ?
+                helper.resolve(            d.groupId, d.artifactId, d.version, d.type, d.classifier ) :
+                resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
         }
     }
 }

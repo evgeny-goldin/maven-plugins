@@ -58,8 +58,8 @@ class IvyHelper
      * @param groupId    dependency {@code <groupId>}
      * @param artifactId dependency {@code <artifactId>}
      * @param version    dependency {@code <version>}
-     * @param classifier dependency {@code <classifier>}
      * @param type       dependency {@code <type>}
+     * @param classifier dependency {@code <classifier>}, may be null
      *
      * @return Maven artifact resolved,
      *         its "file" field ({@link Artifact#getFile}) may be not set
@@ -68,8 +68,13 @@ class IvyHelper
      */
     @Requires({ groupId && artifactId && version && type })
     @Ensures({ result })
-    Artifact resolve ( String groupId, String artifactId, String version, String classifier, String type )
+    Artifact resolve ( String groupId, String artifactId, String version, String type, String classifier )
     {
+        if ( groupId.startsWith( IvyMojo.IVY_PREFIX ))
+        {
+            groupId = groupId.substring( IvyMojo.IVY_PREFIX.size())
+        }
+
         final ivyfile = File.createTempFile( 'ivy', '.xml' )
         ivyfile.deleteOnExit();
 
@@ -88,7 +93,7 @@ class IvyHelper
             md.addDependency( dd );
             XmlModuleDescriptorWriter.write( md, ivyfile );
 
-            final artifacts = resolve( ivyfile.toURL())
+            final artifacts = resolve( ivyfile.toURL(), false )
             final gavc      = "$groupId:$artifactId:$version:${ classifier ? classifier + ':' : '' }$type"
 
             if ( artifacts.size() != 1 )
@@ -110,7 +115,8 @@ class IvyHelper
     /**
      * Resolves dependencies specified in Ivy file.
      *
-     * @param ivyFile ivy dependencies file
+     * @param ivyFile      ivy dependencies file.
+     * @param reportErrors whether resolution errors should be reported.
      *
      * @return Maven artifacts resolved or empty list if resolution fails.
      * @throws RuntimeException if artifacts resolution fails and {@link #failOnError} is {@code true}.
@@ -118,7 +124,7 @@ class IvyHelper
     @Requires({ ivyFile })
     @Ensures({ result.every{ it.file.file } })
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
-    List<Artifact> resolve ( URL ivyFile )
+    List<Artifact> resolve ( URL ivyFile, boolean reportErrors = true )
     {
         final options = new ResolveOptions()
         options.confs = [ 'default' ] as String[]
@@ -139,12 +145,12 @@ class IvyHelper
             }
         }
 
-        if ( report.unresolvedDependencies )
+        if ( report.unresolvedDependencies && reportErrors )
         {
             warnOrFail( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
         }
 
-        if ( report.allProblemMessages )
+        if ( report.allProblemMessages && reportErrors )
         {
             warnOrFail( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
         }
@@ -153,7 +159,7 @@ class IvyHelper
 
         if ( ! artifactsReports )
         {
-            warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved." )
+            if ( reportErrors ) { warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved." ) }
             return []
         }
 
@@ -162,7 +168,7 @@ class IvyHelper
             assert artifactReport.artifact instanceof MDArtifact
 
             /**
-             * Help me God, Ivy (http://db.tt/9Cf1X4bH).
+             * See http://db.tt/9Cf1X4bH.
              */
             Map    attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
             String groupId    = attributes[ 'organisation' ]
