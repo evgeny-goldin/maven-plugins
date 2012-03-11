@@ -387,23 +387,34 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                  * File may be resolved from other module "target" (that is built in the same reactor),
                  * not necessarily from ".m2"
                  */
-                File file = verify().file( d.artifact.file ).canonicalFile
+                File f = verify().file( d.artifact.file ).canonicalFile
 
                 (( CopyResource ) resource.clone()).with {
 
-                    directory     = file.parent
-                    includes      = [ file.name ]
+                    directory     = f.parent
+                    includes      = [ f.name ]
                     skipIdentical = isSkipIdentical
                     dependencies  = null
                     dependency    = null
-                    destFileName  = ( d.destFileName && ( d.destFileName != file.name )) ?
+                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ?
                                         d.destFileName :
                                         destFileName  ?: // the one that was cloned
                                         "${ d.artifactId }-${ d.version }${ d.classifier ? '-' + d.classifier : '' }.${ d.type }"
 
                     if ( d.stripVersion || isStripVersion )
                     {
-                        destFileName = destFileName.replace( "-${ d.version }", '' )
+                        if ( d.version.endsWith( '-SNAPSHOT' ))
+                        {
+                            final version    = d.version.substring( 0, d.version.lastIndexOf( '-SNAPSHOT' ))
+                            final classifier = d.classifier.with          { delegate ? "-$delegate" : '' }
+                            final extension  = file().extension( f ).with { delegate ? ".$delegate" : '' }
+                            destFileName     = destFileName.replaceAll( /-\Q$version\E.+?\Q$classifier$extension\E$/,
+                                                                        "$classifier$extension" )
+                        }
+                        else
+                        {
+                            destFileName = destFileName.replace( "-${ d.version }", '' )
+                        }
                     }
 
                     processFilesResource(( CopyResource ) delegate, verbose, true )
