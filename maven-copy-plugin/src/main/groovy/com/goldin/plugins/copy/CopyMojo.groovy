@@ -7,7 +7,6 @@ import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.Replace
 import com.goldin.plugins.common.ThreadLocals
 import groovy.io.FileType
-import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
 import org.apache.maven.artifact.repository.ArtifactRepository
@@ -430,8 +429,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             if ( ! dependenciesAtM2 )
             {
                 resolve( resourceDependencies, failIfNotFound, tempDirectory, isStripVersion ).each {
-                    CopyDependency d ->
-                    file().copy( d.artifact.file, tempDirectory )
+                    // Copies artifact to temp directory using correct "destFileName".
+                    CopyDependency d -> copyArtifact( d )
                 }
             }
 
@@ -491,13 +490,10 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
                 final destFileName = d.destFileName
                 d = ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
-                d.destFileName = destFileName // Eliminate resolution side-effects
 
                 if ( d.groupId.startsWith( IVY_PREFIX ))
-                {   // Ivy dependencies carry a fake <classifier>, serving as a pattern to name the artifact - it needs to be removed.
-                    Artifact a   = d.artifact
-                    d.classifier = null
-                    d.artifact   = artifact( a.groupId, a.artifactId, a.version, a.type, null, a.file )
+                {   // Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact) in "destFileName" which now needs to be removed.
+                    d.destFileName = destFileName ?: d.artifact.file.name
                 }
 
                 return d
