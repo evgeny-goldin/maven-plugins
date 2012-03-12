@@ -7,6 +7,7 @@ import com.goldin.plugins.common.GMojoUtils
 import com.goldin.plugins.common.Replace
 import com.goldin.plugins.common.ThreadLocals
 import groovy.io.FileType
+import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource
 import org.apache.maven.artifact.repository.ArtifactRepository
@@ -485,14 +486,20 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             try
             {
                 d.outputDirectory = file().mkdirs( directory )
+                setArtifactItems([ d ])
+
+                final destFileName = d.destFileName
+                d = ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
+                d.destFileName = destFileName // Eliminate resolution side-effects
 
                 if ( d.groupId.startsWith( IVY_PREFIX ))
-                {   // Ivy dependencies carry <classifier>, if any, only to name an artifact, this is not a real Maven <classifier>.
+                {   // Ivy dependencies carry a fake <classifier>, serving as a pattern to name the artifact - it needs to be removed.
+                    Artifact a   = d.artifact
                     d.classifier = null
+                    d.artifact   = artifact( a.groupId, a.artifactId, a.version, a.type, null, a.file )
                 }
 
-                setArtifactItems([ d ])
-                return ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
+                return d
             }
             catch ( e )
             {

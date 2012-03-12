@@ -96,7 +96,7 @@ class IvyHelper
             if ( artifacts.size() != 1 )
             {
                 warnOrFail( artifacts ?
-                    "Multiple artifacts resolved for [$gavc] - [${ artifacts }], specify <classifier> so that only one artifact is resolved." :
+                    "Multiple artifacts resolved for [$gavc] - ${ artifacts }, specify <classifier> so that only one artifact is resolved." :
                     "Failed to resolve [$gavc] artifact" )
             }
 
