@@ -430,7 +430,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             if ( ! dependenciesAtM2 )
             {
                 resolve( resourceDependencies, failIfNotFound, tempDirectory, isStripVersion ).each {
-                    CopyDependency d -> copyArtifact( d ) // Copies <dependency> to temp directory
+                    CopyDependency d ->
+                    file().copy( d.artifact.file, tempDirectory )
                 }
             }
 
