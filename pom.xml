@@ -24,7 +24,7 @@
         <maven-version>${maven2-version}</maven-version>
         <java-version>1.6</java-version>
         <duplicates-about-version>0.2.3.8-beta-10</duplicates-about-version>
-        <gcommons-version>0.5.3.8-beta-6</gcommons-version>
+        <gcommons-version>0.5.3.8-SNAPSHOT</gcommons-version>
         <groovy-version>1.8.6</groovy-version>
         <gmaven-version>1.4</gmaven-version>
         <annomojo-version>1.4.0</annomojo-version>
