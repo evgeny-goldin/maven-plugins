@@ -23,8 +23,6 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 @MojoRequiresDependencyResolution( 'test' )
 class IvyMojo extends BaseGroovyMojo3
 {
-    static final String IVY_PREFIX = 'ivy.'
-
     /**
      * Whether Ivy resolver should be added to Maven for subsequent resolutions of Ivy artifacts by other plugins.
      */
@@ -68,7 +66,6 @@ class IvyMojo extends BaseGroovyMojo3
     @MojoParameter ( required = false )
     public File dir
 
-
     /**
      * Whether plugin should log verbosely (verbose = true), regularly (verbose is null) or not at all (verbose = false).
      */
@@ -77,13 +74,11 @@ class IvyMojo extends BaseGroovyMojo3
     private boolean logVerbosely(){ ( verbose ) }
     private boolean logNormally (){ ( verbose ) || ( verbose == null ) }
 
-
     /**
      * Whether execution should fail if resolving artifacts doesn't succeed.
      */
     @MojoParameter ( required = false )
     public boolean failOnError = true
-
 
 
     @Override

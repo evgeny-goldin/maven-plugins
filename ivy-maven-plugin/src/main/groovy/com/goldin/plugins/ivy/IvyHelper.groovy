@@ -11,12 +11,13 @@ import org.apache.ivy.core.module.id.ArtifactId
 import org.apache.ivy.core.module.id.ModuleRevisionId
 import org.apache.ivy.core.report.ArtifactDownloadReport
 import org.apache.ivy.core.resolve.ResolveOptions
-import org.apache.ivy.plugins.matcher.ExactPatternMatcher
+
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
 import org.apache.maven.artifact.Artifact
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.apache.ivy.core.settings.IvySettings
+import org.apache.ivy.plugins.matcher.ExactOrRegexpPatternMatcher
 
 
 /**
@@ -70,9 +71,9 @@ class IvyHelper
     @Ensures({ result })
     Artifact resolve ( String groupId, String artifactId, String version, String type, String classifier )
     {
-        if ( groupId.startsWith( IvyMojo.IVY_PREFIX ))
+        if ( groupId.startsWith( IVY_PREFIX ))
         {
-            groupId = groupId.substring( IvyMojo.IVY_PREFIX.size())
+            groupId = groupId.substring( IVY_PREFIX.size())
         }
 
         final ivyfile = File.createTempFile( 'ivy', '.xml' )
@@ -83,18 +84,14 @@ class IvyHelper
             final md      = DefaultModuleDescriptor.newDefaultInstance( ModuleRevisionId.newInstance( groupId, artifactId + '-caller', 'working' ))
             final module  = ModuleRevisionId.newInstance( groupId, artifactId, version )
             final dd      = new DefaultDependencyDescriptor( md, module, false, false, true )
-
-            if ( classifier )
-            {
-                dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier, type, type ),
-                                                               new ExactPatternMatcher(), [:] ))
-            }
-
+            dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier ?: '.*' , type, type ),
+                                                           new ExactOrRegexpPatternMatcher(),
+                                                           [:] ))
             md.addDependency( dd );
             XmlModuleDescriptorWriter.write( md, ivyfile );
 
+            final gavc      = "$groupId:$artifactId:$version:$type${ classifier ? ':' + classifier  : '' }"
             final artifacts = resolve( ivyfile.toURL(), false )
-            final gavc      = "$groupId:$artifactId:$version:${ classifier ? classifier + ':' : '' }$type"
 
             if ( artifacts.size() != 1 )
             {
@@ -103,7 +100,9 @@ class IvyHelper
                     "Failed to resolve [$gavc] artifact" )
             }
 
-            artifact( groupId, artifactId, version, type, classifier, ( artifacts ? artifacts.first().file : null ))
+            artifact( groupId, artifactId, version, type,
+                      '' /* <classifier> is only used to name an Ivy artifact, this is not a real Maven <classifier> */,
+                      ( artifacts ? artifacts.first().file : null ))
         }
         finally
         {
@@ -140,7 +139,7 @@ class IvyHelper
             else
             {
                 log.info( "[${( long )( report.downloadSize / 1024 ) }] Kb downloaded in [${ ( long ) ( report.downloadTime / 1000 ) }] sec - " +
-                          "[${ artifactsNumber( report.artifacts )} of " +
+                          "${ artifactsNumber( report.artifacts )} of " +
                           "[${ report.dependencies.size() }] dependenc${ report.dependencies.size() == 1 ? 'y' : 'ies' }"  )
             }
         }
@@ -177,7 +176,7 @@ class IvyHelper
             String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
             File   f          = verify().file( artifactReport.localFile )
 
-            artifact( IvyMojo.IVY_PREFIX + groupId, artifactId, version, file().extension( f ), classifier, f )
+            artifact( IVY_PREFIX + groupId, artifactId, version, file().extension( f ), classifier, f )
         }
 
         if ( verbose )

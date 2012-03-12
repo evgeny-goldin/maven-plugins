@@ -34,6 +34,12 @@ import com.goldin.gcommons.beans.*
  */
 class GMojoUtils
 {
+    /**
+     * <groupId> prefix for Ivy <dependencies>.
+     */
+    static final String IVY_PREFIX = 'ivy.'
+
+
     private GMojoUtils ()
     {
     }

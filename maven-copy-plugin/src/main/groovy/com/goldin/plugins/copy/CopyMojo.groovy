@@ -396,11 +396,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                     skipIdentical = isSkipIdentical
                     dependencies  = null
                     dependency    = null
-                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ?
-                                        d.destFileName :
-                                        destFileName  ?: // the one that was cloned
-                                        "${ d.artifactId }-${ d.version }${ d.classifier ? '-' + d.classifier : '' }.${ d.type }"
-
+                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependench> but not default one, set by Maven */
+                                    ( destFileName )                                  ? destFileName   : /* the one from <resource> */
+                                                                                        f.name
                     if ( d.stripVersion || isStripVersion )
                     {
                         if ( d.version.endsWith( '-SNAPSHOT' ))
@@ -487,8 +485,14 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
             try
             {
                 d.outputDirectory = file().mkdirs( directory )
+
+                if ( d.groupId.startsWith( IVY_PREFIX ))
+                {   // Ivy dependencies carry <classifier>, if any, only to name an artifact, this is not a real Maven <classifier>.
+                    d.classifier = null
+                }
+
                 setArtifactItems([ d ])
-                ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
+                return ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
             }
             catch ( e )
             {

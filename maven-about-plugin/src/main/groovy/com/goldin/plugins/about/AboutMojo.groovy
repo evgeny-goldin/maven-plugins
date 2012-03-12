@@ -12,7 +12,6 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
-import com.goldin.plugins.ivy.IvyMojo
 
 
 /**
@@ -179,7 +178,7 @@ class AboutMojo extends BaseGroovyMojo
 
         project.artifacts.each {
             Artifact a ->
-            if ( ! a.groupId.startsWith( IvyMojo.IVY_PREFIX ))
+            if ( ! a.groupId.startsWith( IVY_PREFIX ))
             {
                 "$a.groupId:$a.artifactId".with {
                     assert mdtStripped.contains(( String ) delegate ), \

@@ -1,5 +1,6 @@
 package com.goldin.plugins.ivy
 
+import static com.goldin.plugins.common.GMojoUtils.*
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.RepositorySystemSession
@@ -7,6 +8,7 @@ import org.sonatype.aether.impl.ArtifactResolver
 import org.sonatype.aether.resolution.ArtifactRequest
 import org.sonatype.aether.resolution.ArtifactResult
 import org.sonatype.aether.util.artifact.DefaultArtifact
+
 
 /**
  * Resolved Ivy artifacts using the settings file specified.
@@ -31,12 +33,12 @@ class IvyArtifactResolver implements ArtifactResolver {
      * @param request artifact request
      * @return artifact result resolved or {@code null} if resolution fails.
      */
-    @Requires({ request && request.artifact.groupId.startsWith( IvyMojo.IVY_PREFIX ) })
+    @Requires({ request && request.artifact.groupId.startsWith( IVY_PREFIX ) })
     @Ensures({ result })
     ArtifactResult resolveIvy( ArtifactRequest request )
     {
         final a            = request.artifact
-        final organisation = a.groupId.substring( IvyMojo.IVY_PREFIX.size())
+        final organisation = a.groupId.substring( IVY_PREFIX.size())
         final name         = a.artifactId
         final pattern      = a.classifier
         final revision     = a.version
@@ -58,7 +60,7 @@ class IvyArtifactResolver implements ArtifactResolver {
     @Ensures({ result })
     ArtifactResult resolveArtifact ( RepositorySystemSession session, ArtifactRequest request )
     {
-        request.artifact.groupId.startsWith( IvyMojo.IVY_PREFIX ) ?
+        request.artifact.groupId.startsWith( IVY_PREFIX ) ?
             resolveIvy( request ) :
             delegateResolver.resolveArtifact( session, request )
     }

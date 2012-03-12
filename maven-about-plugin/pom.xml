@@ -20,13 +20,4 @@
         <relativePath>../mojo2-parent</relativePath>
     </parent>
 
-
-    <dependencies>
-        <dependency>
-            <groupId>com.goldin.plugins</groupId>
-            <artifactId>ivy-maven-plugin</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
 </project>
