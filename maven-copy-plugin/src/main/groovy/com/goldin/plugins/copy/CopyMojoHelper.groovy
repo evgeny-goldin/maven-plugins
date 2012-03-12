@@ -55,11 +55,12 @@ final class CopyMojoHelper
 
         patterns*.trim().grep().collect {
             String pattern ->
-            pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()      :
-            pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines() :
+            pattern.startsWith( 'file:'      ) ? new File( pattern.substring( 'file:'.length())).getText( encoding ).readLines()                :
+            pattern.startsWith( 'classpath:' ) ? CopyMojo.getResourceAsStream( pattern.substring( 'classpath:'.length())).readLines( encoding ) :
                                                  split( pattern )
         }.
-        flatten().
+        flatten(). // Some patterns were transferred to lines of patterns
+        grep().    // Eliminating empty patterns and lines
         collect { String pattern -> ( directory && new File( directory, pattern ).directory ? "$pattern/**" : pattern )}
     }
 
