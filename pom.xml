@@ -60,7 +60,7 @@
         <!-- Maven 2 Plugins -->
         <!-- ~~~~~~~~~~~~~~~ -->
 
-        <module>maven-about-plugin</module>
+        <module>about-maven-plugin</module>
         <module>maven-copy-plugin</module>
         <module>maven-jenkins-plugin</module>
         <module>maven-assert-plugin</module>

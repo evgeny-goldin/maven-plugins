@@ -25,7 +25,7 @@ def sourcePaths     = path( '' )
 [ 'duplicates-finder-plugin',
   'ivy-maven-plugin',
   'kotlin-maven-plugin',
-  'maven-about-plugin',
+  'about-maven-plugin',
   'maven-assert-plugin',
   'maven-copy-plugin',
   'maven-find-plugin',

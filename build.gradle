@@ -8,7 +8,7 @@ apply plugin: 'groovy'
 def groovyModules = '''
 duplicates-finder-plugin
 groovydoc
-maven-about-plugin
+about-maven-plugin
 maven-assert-plugin
 maven-common
 maven-copy-plugin
