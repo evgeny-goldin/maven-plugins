@@ -65,7 +65,7 @@
         <module>jenkins-maven-plugin</module>
         <module>assert-maven-plugin</module>
         <module>mail-maven-plugin</module>
-        <module>maven-find-plugin</module>
+        <module>find-maven-plugin</module>
         <module>maven-timestamp-plugin</module>
         <module>maven-properties-plugin</module>
         <module>maven-sshexec-plugin</module>
