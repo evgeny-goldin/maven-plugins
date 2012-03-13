@@ -18,7 +18,7 @@ mail-maven-plugin
 maven-properties-plugin
 maven-spring-batch-plugin
 maven-sshexec-plugin
-maven-timestamp-plugin
+timestamp-maven-plugin
 '''
 
 codenarcRuleSetFiles = [ 'codenarc.groovy' ]
