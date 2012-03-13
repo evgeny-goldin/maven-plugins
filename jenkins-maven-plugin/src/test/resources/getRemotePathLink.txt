@@ -1,0 +1,54 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# Input file for com.goldin.plugins.jenkins.RepositoryTest.getRemotePathLink() #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# SVN repos
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+http://v8.googlecode.com/svn/trunk/                                .gitignore                                                                                               http://v8.googlecode.com/svn/trunk/.gitignore
+http://v8.googlecode.com/svn/branches/bleeding_edge/               ChangeLog                                                                                                http://v8.googlecode.com/svn/branches/bleeding_edge/ChangeLog
+https://v8.googlecode.com/svn/branches/bleeding_edge/              src/checks.h                                                                                             https://v8.googlecode.com/svn/branches/bleeding_edge/src/checks.h
+
+http://google-web-toolkit.googlecode.com/svn/trunk/                build.xml                                                                                                http://google-web-toolkit.googlecode.com/svn/trunk/build.xml
+
+http://dropthings.googlecode.com/svn/trunk/                        src/Dropthings.Data/Dropthings.Data.csproj.user                                                          http://dropthings.googlecode.com/svn/trunk/src/Dropthings.Data/Dropthings.Data.csproj.user
+
+http://google-guice.googlecode.com/svn/trunk/                      latest-javadoc/allclasses-frame.html                                                                     http://google-guice.googlecode.com/svn/trunk/latest-javadoc/allclasses-frame.html
+http://google-guice.googlecode.com/svn/branches/2.0-maven/         examples/src/example/xml/Contact.java                                                                    http://google-guice.googlecode.com/svn/branches/2.0-maven/examples/src/example/xml/Contact.java
+
+http://facebook-java-api.googlecode.com/svn/trunk/                 annotation-processor/src/main/resources/META-INF/services/com.sun.mirror.apt.AnnotationProcessorFactory  http://facebook-java-api.googlecode.com/svn/trunk/annotation-processor/src/main/resources/META-INF/services/com.sun.mirror.apt.AnnotationProcessorFactory
+http://facebook-java-api.googlecode.com/svn/branches/fbapi-2.0.0/  misc/svn_ignore.txt                                                                                      http://facebook-java-api.googlecode.com/svn/branches/fbapi-2.0.0/misc/svn_ignore.txt
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# GitHub repos
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+git@github.com:evgeny-goldin/maven-plugins.git                    master    pom.xml                                                                                          http://github.com/evgeny-goldin/maven-plugins/blob/master/pom.xml
+https://evgeny-goldin@github.com/evgeny-goldin/maven-plugins.git  master    README.txt                                                                                       http://github.com/evgeny-goldin/maven-plugins/blob/master/README.txt
+git@github.com:evgeny-goldin/maven-plugins.git                    dev       maven-jenkins-plugin-test/pom.xml                                                                 http://github.com/evgeny-goldin/maven-plugins/blob/dev/maven-jenkins-plugin-test/pom.xml
+https://evgeny-goldin@github.com/evgeny-goldin/maven-plugins.git  dev       maven-jenkins-plugin-test/src/test/resources/configs/maven-plugins-dev/config.xml                 http://github.com/evgeny-goldin/maven-plugins/blob/dev/maven-jenkins-plugin-test/src/test/resources/configs/maven-plugins-dev/config.xml
+
+git@github.com:evgeny-goldin/WideFinder.git                       master    pom.xml                                                                                          http://github.com/evgeny-goldin/WideFinder/blob/master/pom.xml
+git://github.com/evgeny-goldin/WideFinder.git                     master    .gitignore                                                                                       http://github.com/evgeny-goldin/WideFinder/blob/master/.gitignore
+https://evgeny-goldin@github.com/evgeny-goldin/WideFinder.git     master    data/data-100.log                                                                                http://github.com/evgeny-goldin/WideFinder/blob/master/data/data-100.log
+git@github.com:evgeny-goldin/WideFinder.git                       dev       perf/out9-spaces.txt                                                                             http://github.com/evgeny-goldin/WideFinder/blob/dev/perf/out9-spaces.txt
+git://github.com/evgeny-goldin/WideFinder.git                     dev       src/main/groovy/misc/BigFile.groovy                                                              http://github.com/evgeny-goldin/WideFinder/blob/dev/src/main/groovy/misc/BigFile.groovy
+https://evgeny-goldin@github.com/evgeny-goldin/WideFinder.git     dev       src/main/groovy/widefinder/Start.groovy                                                          http://github.com/evgeny-goldin/WideFinder/blob/dev/src/main/groovy/widefinder/Start.groovy
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Gitorious repos
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+git://gitorious.org/qt/qt.git                   master      projects.pro                                                                                                      http://gitorious.org/qt/qt/blobs/master/projects.pro
+http://git.gitorious.org/qt/qt.git              master      imports/.gitignore                                                                                                http://git.gitorious.org/qt/qt/blobs/master/imports/.gitignore
+git://gitorious.org/qt/qt.git                   4.7         LICENSE.PREVIEW.COMMERCIAL                                                                                        http://gitorious.org/qt/qt/blobs/4.7/LICENSE.PREVIEW.COMMERCIAL
+http://git.gitorious.org/qt/qt.git              4.7         examples/dbus/dbus-chat/chat.h                                                                                    http://git.gitorious.org/qt/qt/blobs/4.7/examples/dbus/dbus-chat/chat.h
+git://gitorious.org/qt/qt.git                   4.6-stable  dist/changes-1.1                                                                                                  http://gitorious.org/qt/qt/blobs/4.6-stable/dist/changes-1.1
+http://git.gitorious.org/qt/qt.git              4.6-stable  bin/syncqt                                                                                                        http://git.gitorious.org/qt/qt/blobs/4.6-stable/bin/syncqt
+
+git://gitorious.org/esp-home/wsarena3.git        master     readme.txt                                                                                                        http://gitorious.org/esp-home/wsarena3/blobs/master/readme.txt
+http://git.gitorious.org/esp-home/wsarena3.git   master     service/src/main/java/esp/home/wsarena/service/FooService.java                                                    http://git.gitorious.org/esp-home/wsarena3/blobs/master/service/src/main/java/esp/home/wsarena/service/FooService.java
+git://gitorious.org/esp-home/wsarena3.git        version1   webservice-metro/readme.txt                                                                                       http://gitorious.org/esp-home/wsarena3/blobs/version1/webservice-metro/readme.txt
+http://git.gitorious.org/esp-home/wsarena3.git   version1   webservice-metro/target/gen-java/esp/home/wsarena/service/jaxws/Ping.java                                         http://git.gitorious.org/esp-home/wsarena3/blobs/version1/webservice-metro/target/gen-java/esp/home/wsarena/service/jaxws/Ping.java
+
