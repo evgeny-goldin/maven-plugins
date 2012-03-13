@@ -6,7 +6,7 @@
                                http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.goldin.plugins</groupId>
+    <groupId>com.github.goldin</groupId>
     <artifactId>maven2-common</artifactId>
     <packaging>jar</packaging>
     <version>0.2.3.8-SNAPSHOT</version>
@@ -14,7 +14,7 @@
 
 
     <parent>
-        <groupId>com.goldin.plugins</groupId>
+        <groupId>com.github.goldin</groupId>
         <artifactId>main.plugins</artifactId>
         <version>0.2.3.8-SNAPSHOT</version>
         <relativePath>..</relativePath>
