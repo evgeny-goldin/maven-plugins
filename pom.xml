@@ -61,7 +61,7 @@
         <!-- ~~~~~~~~~~~~~~~ -->
 
         <module>about-maven-plugin</module>
-        <module>maven-copy-plugin</module>
+        <module>copy-maven-plugin</module>
         <module>maven-jenkins-plugin</module>
         <module>maven-assert-plugin</module>
         <module>maven-mail-plugin</module>

@@ -11,7 +11,7 @@ groovydoc
 about-maven-plugin
 maven-assert-plugin
 maven-common
-maven-copy-plugin
+copy-maven-plugin
 maven-find-plugin
 maven-jenkins-plugin
 maven-mail-plugin

@@ -27,7 +27,7 @@ def sourcePaths     = path( '' )
   'kotlin-maven-plugin',
   'about-maven-plugin',
   'maven-assert-plugin',
-  'maven-copy-plugin',
+  'copy-maven-plugin',
   'maven-find-plugin',
   'maven-jenkins-plugin',
   'maven-mail-plugin',
