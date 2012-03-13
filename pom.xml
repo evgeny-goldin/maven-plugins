@@ -68,7 +68,7 @@
         <module>find-maven-plugin</module>
         <module>timestamp-maven-plugin</module>
         <module>properties-maven-plugin</module>
-        <module>maven-sshexec-plugin</module>
+        <module>sshexec-maven-plugin</module>
         <module>maven-spring-batch-plugin</module>
     </modules>
 
