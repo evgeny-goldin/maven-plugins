@@ -228,7 +228,7 @@
         <!-- ~~~~ -->
 
         <dependency>
-            <groupId>com.goldin</groupId>
+            <groupId>com.github.goldin</groupId>
             <artifactId>gcommons</artifactId>
             <version>${gcommons-version}</version>
             <scope>compile</scope>
