@@ -67,7 +67,7 @@
         <module>mail-maven-plugin</module>
         <module>find-maven-plugin</module>
         <module>timestamp-maven-plugin</module>
-        <module>maven-properties-plugin</module>
+        <module>properties-maven-plugin</module>
         <module>maven-sshexec-plugin</module>
         <module>maven-spring-batch-plugin</module>
     </modules>
