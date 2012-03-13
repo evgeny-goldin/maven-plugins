@@ -9,7 +9,7 @@ def groovyModules = '''
 duplicates-finder-plugin
 groovydoc
 about-maven-plugin
-maven-assert-plugin
+assert-maven-plugin
 maven-common
 copy-maven-plugin
 maven-find-plugin
