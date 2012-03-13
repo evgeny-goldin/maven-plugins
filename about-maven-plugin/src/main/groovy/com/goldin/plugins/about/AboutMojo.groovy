@@ -143,7 +143,7 @@ class AboutMojo extends BaseGroovyMojo
         }
 
         String coordinates = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
-        String plugin      = 'maven-dependency-plugin:2.3:tree'
+        String plugin      = 'maven-dependency-plugin:2.4:tree'
         String mvnHome     = env[ 'M2_HOME' ]
 
         assert mvnHome, "'M2_HOME' environment variable is not defined"
