@@ -30,7 +30,7 @@ def sourcePaths     = path( '' )
   'copy-maven-plugin',
   'maven-find-plugin',
   'jenkins-maven-plugin',
-  'maven-mail-plugin',
+  'mail-maven-plugin',
   'maven-properties-plugin',
   'maven-spring-batch-plugin',
   'maven-sshexec-plugin',

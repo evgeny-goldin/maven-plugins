@@ -64,7 +64,7 @@
         <module>copy-maven-plugin</module>
         <module>jenkins-maven-plugin</module>
         <module>assert-maven-plugin</module>
-        <module>maven-mail-plugin</module>
+        <module>mail-maven-plugin</module>
         <module>maven-find-plugin</module>
         <module>maven-timestamp-plugin</module>
         <module>maven-properties-plugin</module>
