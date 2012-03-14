@@ -386,16 +386,16 @@
             <id>download</id>
             <pluginRepositories>
                 <pluginRepository>
-                    <id>evgeny-goldin.org</id>
-                    <name>evgeny-goldin.org</name>
-                    <url>http://evgeny-goldin.org/artifactory/repo</url>
+                    <id>evgenyg.artifactoryonline.com</id>
+                    <name>evgenyg.artifactoryonline.com</name>
+                    <url>http://evgenyg.artifactoryonline.com/evgenyg/repo</url>
                 </pluginRepository>
             </pluginRepositories>
             <repositories>
                 <repository>
-                    <id>evgeny-goldin.org</id>
-                    <name>evgeny-goldin.org</name>
-                    <url>http://evgeny-goldin.org/artifactory/repo</url>
+                    <id>evgenyg.artifactoryonline.com</id>
+                    <name>evgenyg.artifactoryonline.com</name>
+                    <url>http://evgenyg.artifactoryonline.com/evgenyg/repo</url>
                 </repository>
             </repositories>
         </profile>
