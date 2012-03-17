@@ -257,8 +257,7 @@ class Job
              * Set gives a lower priority to parentJob parameters - parameters having the
              * same name and type *are not taken*, see {@link Parameter#equals(Object)}
              */
-            def newParams = new HashSet<Parameter>( this.parameters() + parentJob.parameters())
-            setParameters( newParams.toArray( new Parameter[ newParams.size() ] ))
+            setParameters( joinParameters( parentJob.parameters(), this.parameters()) as Parameter[] )
         }
 
         if ((( ! this.repositories()) || ( override )) && parentJob.repositories())
@@ -283,6 +282,30 @@ class Job
         {
             if ((( ! this.tasks ) || ( override )) && parentJob.tasks )
                 { setTasks ( parentJob.tasks ) }
+        }
+    }
+
+
+
+    /**
+     * Joins two set of parameters, those inhered from the parent job and those of the current job.
+     *
+     * @param parentParameters  parameters inherited from the parent job.
+     * @param currentParameters parameters of the current job.
+     * @return new set of parameters
+     */
+    private static List<Parameter> joinParameters( List<Parameter> parentParameters, List<Parameter> currentParameters )
+    {
+        List<String> parentNames  = parentParameters*.name
+        List<String> currentNames = currentParameters*.name
+
+        if ( parentNames.intersect( currentNames ))
+        {
+            parentParameters.findAll { ! currentNames.contains( it.name ) } + currentParameters
+        }
+        else
+        {
+            parentParameters + currentParameters
         }
     }
 
