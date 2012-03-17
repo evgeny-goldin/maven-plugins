@@ -286,7 +286,6 @@ class Job
     }
 
 
-
     /**
      * Joins two set of parameters, those inhered from the parent job and those of the current job.
      *
