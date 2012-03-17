@@ -192,8 +192,8 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <assignedNode>${ job.node ?: '' }</assignedNode>
   <canRoam>${ job.node ? false : true }</canRoam>
   <disabled>${ job.disabled }</disabled>
-  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <blockBuildWhenDownstreamBuilding>${ job.blockBuildWhenDownstreamBuilding }</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>${ job.blockBuildWhenUpstreamBuilding }</blockBuildWhenUpstreamBuilding>
   <jdk>${ job.jdkName }</jdk>
   <%
      if ( job.authToken )

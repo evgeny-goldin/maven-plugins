@@ -85,6 +85,8 @@ class Job
     Boolean              doRevert
     Boolean              privateRepository
     Boolean              archivingDisabled
+    Boolean              blockBuildWhenDownstreamBuilding
+    Boolean              blockBuildWhenUpstreamBuilding
     String               jenkinsUrl
     String               generationPom
     String               parent
@@ -238,6 +240,8 @@ class Job
         set( 'process',           parentJob, override, { it }, '' )
         set( 'useUpdate',         parentJob, override, { it }, false )
         set( 'doRevert',          parentJob, override, { it }, false )
+        set( 'blockBuildWhenDownstreamBuilding', parentJob, override, { it }, false )
+        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override, { it }, false )
         set( 'daysToKeep',        parentJob, override, { it }, -1 )
         set( 'numToKeep',         parentJob, override, { it }, -1 )
         set( 'descriptionTable',  parentJob, override, { it }, new DescriptionRow[ 0 ])
@@ -377,6 +381,8 @@ class Job
          assert ( this.process           != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
          assert ( this.useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
          assert ( this.doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( this.blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
+         assert ( this.blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
          assert ( this.daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
          assert ( this.numToKeep         != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
          assert ( this.descriptionTable  != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
