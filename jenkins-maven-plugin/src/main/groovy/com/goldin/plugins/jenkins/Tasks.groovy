@@ -12,7 +12,7 @@ abstract class Task
     {
         List<String> lines = []
 
-        for ( property in properties )
+        for ( property in properties.grep())
         {
             String value = this[ property ] as String
             if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
@@ -22,12 +22,14 @@ abstract class Task
     }
 }
 
+
 @SuppressWarnings( 'StatelessClass' )
 class Shell extends Task
 {
     String command
     String getMarkup () { buildMarkup([ 'command' ]) }
 }
+
 
 @SuppressWarnings( 'StatelessClass' )
 class Maven extends Task
@@ -41,11 +43,12 @@ class Maven extends Task
 
     String getMarkup ()
     {
-        buildMarkup( ( List<String> ) [ 'targets', 'mavenName', 'jvmOptions' ] +
-                                      ( pom == 'false' ? [] : [ 'pom' ] ) +
-                                      [ 'properties', 'usePrivateRepository' ] )
+        buildMarkup( ( List<String> ) [ 'targets', 'mavenName', 'jvmOptions',
+                                        ( pom == 'false' ? '' : 'pom' ),
+                                        'properties', 'usePrivateRepository' ] )
     }
 }
+
 
 @SuppressWarnings( 'StatelessClass' )
 class BatchFile extends Task
@@ -54,12 +57,15 @@ class BatchFile extends Task
     String getMarkup () { buildMarkup([ 'command' ]) }
 }
 
+
 @SuppressWarnings( 'StatelessClass' )
 class Ant extends Task
 {
+    String antName
     String targets
     String antOpts    = ''
     String buildFile  = 'build.xml'
     String properties = ''
-    String getMarkup () { buildMarkup([ 'targets', 'antOpts', 'buildFile', 'properties' ]) }
+    String getMarkup () { buildMarkup([ ( antName ? 'antName' : '' ),
+                                        'targets', 'antOpts', 'buildFile', 'properties' ]) }
 }
