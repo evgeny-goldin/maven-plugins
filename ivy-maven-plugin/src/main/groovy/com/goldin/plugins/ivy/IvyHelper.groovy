@@ -31,6 +31,7 @@ class IvyHelper
     final URL     ivyconfUrl
     final boolean verbose
     final boolean failOnError
+    final boolean offline
 
 
     /**
@@ -39,9 +40,10 @@ class IvyHelper
      * @param ivyconfUrl  Ivy settings file {@link URL}.
      * @param verbose     whether logging should be verbose.
      * @param failOnError whether execution should fail when resolving Ivy artifacts fails.
+     * @param offline     whether Maven build operates in offline mode.
      */
     @Requires({ ivyconfUrl })
-    IvyHelper ( URL ivyconfUrl, boolean verbose, boolean failOnError )
+    IvyHelper ( URL ivyconfUrl, boolean verbose, boolean failOnError, boolean offline )
     {
         IvySettings settings = new IvySettings()
         settings.load( ivyconfUrl )
@@ -50,6 +52,7 @@ class IvyHelper
         this.ivyconfUrl  = ivyconfUrl
         this.verbose     = verbose
         this.failOnError = failOnError
+        this.offline     = offline
     }
 
 
@@ -96,7 +99,7 @@ class IvyHelper
             if ( artifacts.size() != 1 )
             {
                 warnOrFail( artifacts ?
-                    "Multiple artifacts resolved for [$gavc] - ${ artifacts }, specify <classifier> so that only one artifact is resolved." :
+                    "Multiple artifacts resolved for [$gavc] - ${ artifacts }, specify <classifier> so that only one artifact is resolved" :
                     "Failed to resolve [$gavc] artifact" )
             }
 
@@ -125,10 +128,11 @@ class IvyHelper
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
     List<Artifact> resolve ( URL ivyFile, boolean reportErrors = true )
     {
-        final options = new ResolveOptions()
-        options.confs = [ 'default' ] as String[]
-        options.log   = verbose ? 'default' : 'download-only'
-        final report  = ivy.resolve( ivyFile, options )
+        final options        = new ResolveOptions()
+        options.confs        = [ 'default' ] as String[]
+        options.log          = verbose ? 'default' : 'download-only'
+        options.useCacheOnly = offline
+        final report         = ivy.resolve( ivyFile, options )
 
         if ( verbose )
         {
@@ -158,30 +162,45 @@ class IvyHelper
 
         if ( ! artifactsReports )
         {
-            if ( reportErrors ) { warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved." ) }
+            if ( reportErrors ) { warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved" ) }
             return []
         }
 
-        final artifacts = artifactsReports.collect {
+        List<Artifact> artifacts = artifactsReports.collect {
             ArtifactDownloadReport artifactReport ->
             assert artifactReport.artifact instanceof MDArtifact
 
             /**
-             * See http://db.tt/9Cf1X4bH.
+             * See http://db.tt/9Cf1X4bH for debug view of the object received.
              */
-            Map    attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
-            String groupId    = attributes[ 'organisation' ]
-            String artifactId = attributes[ 'module'       ]
-            String version    = attributes[ 'revision'     ]
-            String classifier = artifactReport.artifactOrigin.artifact.name // artifact name ("core/annotations" - http://goo.gl/se95h) plays as classifier
-            File   f          = verify().file( artifactReport.localFile )
+            Map<String, String> attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
+            String groupId    = verify().notNullOrEmpty( attributes[ 'organisation' ])
+            String artifactId = verify().notNullOrEmpty( attributes[ 'module'       ])
+            String version    = verify().notNullOrEmpty( attributes[ 'revision'     ])
 
-            artifact( IVY_PREFIX + groupId, artifactId, version, file().extension( f ), classifier, f )
-        }
+            if ( artifactReport.artifactOrigin?.artifact?.name && artifactReport.localFile )
+            {
+                // artifact name ("core/annotations" - http://goo.gl/se95h) plays as a classifier
+                String classifier = artifactReport.artifactOrigin.artifact.name
+                File   f          = verify().file( artifactReport.localFile )
+                String type       = file().extension( f )
+                artifact( IVY_PREFIX + groupId, artifactId, version, type, classifier, f )
+            }
+            else
+            {
+                if ( reportErrors )
+                {
+                    warnOrFail( "Failed to resolve [$ivyFile] dependencies: partially resolved artifactReport" )
+                }
+                null // Partially resolved artifactReport can't be converted to Maven Artifact
+            }
+        }.
+        grep() // Filter out partially resolved artifactReports
 
         if ( verbose )
         {
-            log.info( "[$ivyFile] - ${ artifactsNumber( artifacts )} resolved: ${ artifactsToString( artifacts )}" )
+            log.info( "[$ivyFile] - ${ artifactsNumber( artifacts )} resolved" +
+                      ( artifacts ? ':' + artifactsToString( artifacts ) : '' ))
         }
 
         artifacts
@@ -223,6 +242,7 @@ class IvyHelper
     @Requires({ errorMessage })
     void warnOrFail ( String errorMessage )
     {
+        errorMessage += ( offline ? ' (system is in offline mode).' : '.' )
         if ( failOnError ) { throw new RuntimeException( errorMessage )}
         else               { log.warn( errorMessage ) }
     }

@@ -85,7 +85,7 @@ class IvyMojo extends BaseGroovyMojo3
     @Requires({ this.ivyconf })
     void doExecute ()
     {
-        final helper = new IvyHelper( url( this.ivyconf ), logVerbosely(), this.failOnError )
+        final helper = new IvyHelper( url( this.ivyconf ), logVerbosely(), this.failOnError, this.session.offline )
 
         if ( addIvyResolver )
         {
