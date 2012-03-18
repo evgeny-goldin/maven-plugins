@@ -189,7 +189,7 @@ abstract class KotlinBaseMojo extends BaseGroovyMojo3
         {
             URL     ivy     = this.class.classLoader.getResource( 'ivy.xml'     )
             URL     ivyconf = this.class.classLoader.getResource( 'ivyconf.xml' )
-            artifacts       = new IvyMojo().resolveArtifacts( ivy, null, new IvyHelper( ivyconf, verbose, true ), this.session.offline )
+            artifacts       = new IvyMojo().resolveArtifacts( ivy, null, new IvyHelper( ivyconf, verbose, true, this.session.offline ))
         }
 
         List<File> files = artifacts*.file
