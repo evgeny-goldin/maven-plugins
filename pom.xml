@@ -27,7 +27,7 @@
         <gcommons-version>0.5.3.9-SNAPSHOT</gcommons-version>
         <groovy-version>1.8.6</groovy-version>
         <gmaven-version>1.4</gmaven-version>
-        <annomojo-version>1.4.0</annomojo-version>
+        <annomojo-version>1.4.1</annomojo-version>
         <spring-version>3.1.0.RELEASE</spring-version>
         <spring-batch-version>2.1.8.RELEASE</spring-batch-version>
         <junit-version>4.10</junit-version>
