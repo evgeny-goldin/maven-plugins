@@ -112,9 +112,10 @@ class JenkinsMojo extends BaseGroovyMojo
                 }
                 else
                 {
-                    configFile.write( config )
-                    assert verify().file( configFile ).size() == config.size()
+                    configFile.write( config, 'UTF-8' )
                 }
+
+                verify().file( configFile )
             }
 
             assert configPath
