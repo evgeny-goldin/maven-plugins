@@ -167,7 +167,8 @@ class GoldinCommandLineJobRunner
     private JobLocator jobLocator
 
     // Package private for unit test
-    private static SystemExiter systemExiter = new JvmSystemExiter()
+    @SuppressWarnings([ 'FieldName' ])
+    private static final SystemExiter systemExiter = new JvmSystemExiter()
 
     private static String message = ''
 
@@ -229,6 +230,7 @@ class GoldinCommandLineJobRunner
      *
      * @return the error message
      */
+    @SuppressWarnings([ 'GetterMethodCouldBeProperty' ])
     static String getErrorMessage() { message }
 
     /**

@@ -444,7 +444,8 @@ class Job
          }
          else
          {
-             assert false, "Unknown job type [${ this.jobType }]"
+             throw new IllegalArgumentException ( "Unknown job type [${ this.jobType }]. " +
+                                                  "Known types are \"${JOB_TYPE.free.name()}\" and \"${JOB_TYPE.maven.name()}\"" )
          }
      }
 

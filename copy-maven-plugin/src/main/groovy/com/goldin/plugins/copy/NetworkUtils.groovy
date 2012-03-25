@@ -289,7 +289,8 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
 
                     listFileMap.eachWithIndex {
                         String ftpUrl, long size, int index ->
-                        downloadFile( ftpUrl, size, ftpData, localDirectory, resource.curl, command, verbose, resource.timeout, resource.retries, index, nFiles )
+                        downloadFile( ftpUrl, size, ftpData, localDirectory, resource.curl,
+                                      command, verbose, resource.timeout, resource.retries, index, nFiles )
                     }
 
                     if ( deleteListFile ) { file().delete( listFile ) }
