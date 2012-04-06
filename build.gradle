@@ -21,6 +21,6 @@ sshexec-maven-plugin
 timestamp-maven-plugin
 '''
 
-codenarcRuleSetFiles = [ 'codenarc.groovy' ]
-codenarcSources      = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
+ext.codenarcRuleSetFiles = [ 'codenarc.groovy' ]
+ext.codenarcSources      = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
 apply from: 'https://raw.github.com/evgeny-goldin/gradle-plugins/dev/src/main/groovy/CodeNarc.gradle'
