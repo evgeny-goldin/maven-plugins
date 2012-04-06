@@ -1,7 +1,7 @@
 
 ruleset {
 
-    description 'GCommons CodeNarc RuleSet'
+    description 'CodeNarc RuleSet'
 
     ruleset( "http://codenarc.sourceforge.net/StarterRuleSet-AllRulesByCategory.groovy.txt" ) {
 
