@@ -80,5 +80,5 @@ ant.groovydoc(
        link( packages :'org.apache.maven.artifact.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
        link( packages :'org.apache.maven.project.',           href : "http://maven.apache.org/ref/$mavenVersion/maven-project/apidocs" )
        link( packages :'org.apache.maven.',                   href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs" )
-       link( packages :'com.goldin.gcommons.',                href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
+       link( packages :'com.github.goldin.gcommons.',         href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
     }

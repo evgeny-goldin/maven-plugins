@@ -1,8 +1,8 @@
 <%
-import com.goldin.plugins.jenkins.*
-import com.goldin.plugins.jenkins.beans.*
-import com.goldin.plugins.jenkins.Job.*
-import com.goldin.plugins.jenkins.Job.JOB_TYPE
+import com.github.goldin.plugins.jenkins.*
+import com.github.goldin.plugins.jenkins.beans.*
+import com.github.goldin.plugins.jenkins.Job.*
+import com.github.goldin.plugins.jenkins.Job.JOB_TYPE
 
 def jobLink ( String jenkinsUrl, String jobId ) {
     """<a href=\"${ jenkinsUrl }/job/${ jobId }\">

@@ -16,7 +16,7 @@
         <appender-ref ref="console"/>
     </logger>
 
-    <logger name="com.goldin" additivity="false">
+    <logger name="com.github.goldin" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="console"/>
     </logger>

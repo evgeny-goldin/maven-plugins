@@ -1,7 +1,7 @@
 <%
-import com.goldin.plugins.jenkins.*
-import com.goldin.plugins.jenkins.beans.*
-import com.goldin.plugins.common.*
+import com.github.goldin.plugins.jenkins.*
+import com.github.goldin.plugins.jenkins.beans.*
+import com.github.goldin.plugins.common.*
 %>
 
 

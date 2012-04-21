@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <%
-import static com.goldin.plugins.common.GMojoUtils.*
-import com.goldin.plugins.jenkins.*
-import com.goldin.plugins.jenkins.beans.*
-import com.goldin.plugins.jenkins.Job.*
-import com.goldin.plugins.jenkins.Job.JOB_TYPE
-import com.goldin.plugins.common.*
+import static com.github.goldin.plugins.common.GMojoUtils.*
+import com.github.goldin.plugins.jenkins.*
+import com.github.goldin.plugins.jenkins.beans.*
+import com.github.goldin.plugins.jenkins.Job.*
+import com.github.goldin.plugins.jenkins.Job.JOB_TYPE
+import com.github.goldin.plugins.common.*
 %>
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->

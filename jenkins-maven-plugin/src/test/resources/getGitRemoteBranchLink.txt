@@ -1,6 +1,6 @@
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# Input file for com.goldin.plugins.jenkins.RepositoryTest.getGitRemoteBranchLink() #
+# Input file for com.github.goldin.plugins.jenkins.RepositoryTest.getGitRemoteBranchLink() #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
