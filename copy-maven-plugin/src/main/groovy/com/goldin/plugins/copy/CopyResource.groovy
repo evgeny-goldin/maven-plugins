@@ -136,10 +136,11 @@ final class CopyResource extends Resource implements Cloneable
     boolean stop                  = false // For troubleshooting only: halt build execution after resource is processed
     String  shouldFailWith        = ''    // For troubleshooting only: resource processing should fail with exception specified
 
-    int     retries   = 5     // Number of retries for FTP download
-    long    timeout   = 3600  // FTP download timeout (in seconds)
-    long    startTime = -1    // Time when this resource started to be processed
-    long    endTime   = -1    // Time when this resource finished to be processed
+    int     compressionLevel = 9     // Zip compression level
+    int     retries          = 5     // Number of retries for FTP download
+    long    timeout          = 3600  // FTP download timeout (in seconds)
+    long    startTime        = -1    // Time when this resource started to be processed
+    long    endTime          = -1    // Time when this resource finished to be processed
 
     String  description
     String  runIf

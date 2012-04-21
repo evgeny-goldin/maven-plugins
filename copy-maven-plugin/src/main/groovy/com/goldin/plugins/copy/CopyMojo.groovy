@@ -730,7 +730,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                   general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                   failIfNotFound, resource.update,
                   split( resource.defaultExcludes ?: defaultExcludes()),
-                  resource.destFileName, resource.prefix, ( ! skipPacked ), manifestDir )
+                  resource.destFileName, resource.prefix, ( ! skipPacked ), manifestDir, resource.compressionLevel )
 
             assert targetArchive.file
             if ( resource.move ) { delete( files( sourceDirectory, includes, excludes, true, false, failIfNotFound, true ) as File[] ) }
