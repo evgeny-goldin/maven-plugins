@@ -490,7 +490,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
                 final destFileName = d.destFileName
                 d = ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
 
-                if ( d.groupId.startsWith( GMojoUtils.IVY_PREFIX ))
+                if ( d.groupId.startsWith( IVY_PREFIX ))
                 {   // Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact) in "destFileName" which now needs to be removed.
                     d.destFileName = destFileName ?: d.artifact.file.name
                 }
@@ -613,20 +613,20 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      */
     @Requires({ file && resource })
     @Ensures({ result })
-    private String newName ( File file, CopyResource resource )
+    private String newName ( File f, CopyResource resource )
     {
         resource.with {
 
             if ( destFileName ) { return destFileName }
 
-            String newName = file.name
+            String newName = f.name
 
             if ( destFilePrefix || destFileSuffix || destFileExtension )
             {
                 assert ( targetPaths() && directory && ( ! ( pack || unpack ))), \
                        '<destFilePrefix>, <destFileSuffix>, <destFileExtension> can only be used when files are copied from <targetPath> to <directory>'
 
-                String extension = GMojoUtils.file().extension( file )
+                String extension = file().extension( f )
                 String body      = ( extension ? newName.substring( 0, newName.size() - extension.size() - 1 ) : newName )
                 extension        = destFileExtension  ?: extension
                 newName          = "${ destFilePrefix ?: '' }${ body }${ destFileSuffix ?: '' }${ extension ? '.' + extension : '' }"

@@ -3,7 +3,6 @@ package com.github.goldin.plugins.about
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import java.text.SimpleDateFormat
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Ensures
@@ -12,6 +11,8 @@ import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
+
+import java.text.SimpleDateFormat
 
 
 /**
@@ -178,7 +179,7 @@ class AboutMojo extends BaseGroovyMojo
 
         project.artifacts.each {
             Artifact a ->
-            if ( ! a.groupId.startsWith( GMojoUtils.IVY_PREFIX ))
+            if ( ! a.groupId.startsWith( IVY_PREFIX ))
             {
                 "$a.groupId:$a.artifactId".with {
                     assert mdtStripped.contains(( String ) delegate ), \

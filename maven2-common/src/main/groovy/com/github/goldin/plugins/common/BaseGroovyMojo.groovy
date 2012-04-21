@@ -29,11 +29,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     @MojoParameter ( required = true, expression = '${project.build.directory}' )
     public    File buildDirectory
-    protected File buildDirectory() { com.github.goldin.plugins.common.GMojoUtils.file().mkdirs( this.buildDirectory ) }
+    protected File buildDirectory() { file().mkdirs( this.buildDirectory ) }
 
     @MojoParameter ( required = true, expression = '${project.build.outputDirectory}' )
     public    File outputDirectory
-    protected File outputDirectory() { com.github.goldin.plugins.common.GMojoUtils.file().mkdirs( this.outputDirectory ) }
+    protected File outputDirectory() { file().mkdirs( this.outputDirectory ) }
 
     @MojoParameter
     public String  runIf
@@ -43,9 +43,9 @@ abstract class BaseGroovyMojo extends GroovyMojo
     final void execute()
     {
         ThreadLocals.set( log, project, session )
-        com.github.goldin.plugins.common.GMojoUtils.mopInit()
+        mopInit()
 
-        if ( ! com.github.goldin.plugins.common.GMojoUtils.runIf( runIf )) { return }
+        if ( ! runIf( runIf )) { return }
 
         doExecute()
     }

@@ -183,7 +183,7 @@ class IvyMojo extends BaseGroovyMojo3
         dependencies.collect {
             ArtifactItem d ->
 
-            d.groupId.startsWith( GMojoUtils.IVY_PREFIX ) ?
+            d.groupId.startsWith( IVY_PREFIX ) ?
                 helper.resolve(            d.groupId, d.artifactId, d.version, d.type, d.classifier ) :
                 resolveArtifact( artifact( d.groupId, d.artifactId, d.version, d.type, d.classifier, null ))
         }

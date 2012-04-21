@@ -11,13 +11,12 @@ import org.apache.ivy.core.module.id.ArtifactId
 import org.apache.ivy.core.module.id.ModuleRevisionId
 import org.apache.ivy.core.report.ArtifactDownloadReport
 import org.apache.ivy.core.resolve.ResolveOptions
-
+import org.apache.ivy.core.settings.IvySettings
+import org.apache.ivy.plugins.matcher.ExactOrRegexpPatternMatcher
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
 import org.apache.maven.artifact.Artifact
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.apache.ivy.core.settings.IvySettings
-import org.apache.ivy.plugins.matcher.ExactOrRegexpPatternMatcher
 
 
 /**
@@ -74,9 +73,9 @@ class IvyHelper
     @Ensures({ result })
     Artifact resolve ( String groupId, String artifactId, String version, String type, String classifier )
     {
-        if ( groupId.startsWith( GMojoUtils.IVY_PREFIX ))
+        if ( groupId.startsWith( IVY_PREFIX ))
         {
-            groupId = groupId.substring( GMojoUtils.IVY_PREFIX.size())
+            groupId = groupId.substring( IVY_PREFIX.size())
         }
 
         final ivyfile = File.createTempFile( 'ivy', '.xml' )
@@ -184,7 +183,7 @@ class IvyHelper
                 String classifier = artifactReport.artifactOrigin.artifact.name
                 File   f          = verify().file( artifactReport.localFile )
                 String type       = file().extension( f )
-                artifact( GMojoUtils.IVY_PREFIX + groupId, artifactId, version, type, classifier, f )
+                artifact( IVY_PREFIX + groupId, artifactId, version, type, classifier, f )
             }
             else
             {
