@@ -125,10 +125,7 @@ def jobLink ( String jenkinsUrl, String jobId ) {
             %>
 
             - <strong><code>${ trigger.type }:</code></strong>
-                 <a href="http://www.manpagez.com/man/5/crontab/">
-                 <strong><code>&quot;${ trigger.expression }&quot;</code></strong>
-                 </a>
-                ${ trigger.description ? '<i>(' + trigger.description + ')</i>' : '' }<br/>
+              <a href="http://www.manpagez.com/man/5/crontab/"><strong><code>&quot;${ trigger.expression }&quot;</code></strong></a> ${ trigger.description ? '<i>(' + trigger.description + ')</i>' : '' }<br/>
             <%
                 }
             %>
