@@ -42,9 +42,6 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ log && project && session })
     final void execute()
     {
-        final  mavenVersion = mavenVersion()
-        assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
-
         ThreadLocals.set( log, project, session )
         mopInit()
 
