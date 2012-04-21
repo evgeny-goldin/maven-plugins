@@ -57,9 +57,6 @@ class GMojoUtils
      */
      static mopInit ()
      {
-         final  mavenVersion = mavenVersion()
-         assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
-
          file() // Triggers GCommons MOP replacements
 
          /**
