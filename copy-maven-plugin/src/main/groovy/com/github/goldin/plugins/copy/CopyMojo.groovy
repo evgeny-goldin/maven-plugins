@@ -3,17 +3,11 @@ package com.github.goldin.plugins.copy
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
+import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.Replace
-import com.github.goldin.plugins.common.ThreadLocals
 import groovy.io.FileType
-import org.apache.maven.artifact.factory.ArtifactFactory
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource
-import org.apache.maven.artifact.repository.ArtifactRepository
-import org.apache.maven.artifact.resolver.ArtifactResolver
-import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.PluginManager
-import org.apache.maven.project.MavenProject
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
@@ -29,41 +23,19 @@ import org.jfrog.maven.annomojo.annotations.*
 @MojoPhase( 'package' )
 @MojoRequiresDependencyResolution( 'test' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
-class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.CopyMojo
+class CopyMojo extends BaseGroovyMojo
 {
     /**
      * Container-injected fields
      */
-
-    @MojoComponent
-    public ArtifactFactory artifactFactory
-
     @MojoComponent
     public PluginManager pluginManager
-
-    @MojoComponent
-    public ArtifactResolver artifactResolver
-
-    @MojoComponent
-    public ArtifactMetadataSource metadataSource
 
     @MojoComponent
     public MavenProjectHelper mavenProjectHelper
 
     @MojoComponent ( role = 'org.apache.maven.shared.filtering.MavenFileFilter', roleHint = 'default' )
     public MavenFileFilter fileFilter
-
-    @MojoParameter( expression = '${project}' )
-    public MavenProject mavenProject
-
-    @MojoParameter ( expression = '${session}', readonly = true, required = true )
-    public MavenSession mavenSession
-
-    @MojoParameter ( expression = '${localRepository}', readonly = true, required = true )
-    public  ArtifactRepository artifactRepository
-
-    @MojoParameter ( expression = '${project.remoteArtifactRepositories}', readonly = true, required = true )
-    public  List<ArtifactRepository> remoteArtifactRepositories
 
     /**
      * User-provided fields
@@ -172,35 +144,8 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
      */
     @Override
     @SuppressWarnings([ 'AbcComplexity', 'CatchThrowable' ])
-    void execute() throws MojoExecutionException
+    void doExecute() throws MojoExecutionException
     {
-        final  mavenVersion = mavenVersion()
-        assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
-
-        /**
-         * See {@link com.github.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
-         * it here as long as we can't extend it
-         */
-        ThreadLocals.set( log, mavenProject, mavenSession, artifactFactory, artifactResolver, metadataSource )
-        mopInit()
-
-        if ( ! runIf( runIf )) { return }
-
-        /**
-         * Initializing super-class fields
-         * (they were not initialized since Maven doesn't set annotated parameters in super-class).
-         *
-         * Next verifications below will break when this bug is fixed in Maven
-         */
-
-        verify().isNull( this.project, this.factory, this.resolver, this.local, this.remoteRepos )
-
-        this.project     = mavenProject
-        this.factory     = artifactFactory
-        this.resolver    = artifactResolver
-        this.local       = artifactRepository
-        this.remoteRepos = remoteArtifactRepositories
-
         for ( CopyResource resource in resources())
         {
             resource.with {
@@ -740,7 +685,7 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
 
             if ( resource.attachArtifact )
             {
-                mavenProjectHelper.attachArtifact( mavenProject, extension( targetArchive ), resource.artifactClassifier, targetArchive )
+                mavenProjectHelper.attachArtifact( project, extension( targetArchive ), resource.artifactClassifier, targetArchive )
             }
         }
 

@@ -5,6 +5,7 @@ import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.logging.Log
 import org.junit.Test
 
+
 class RepositoryTest
 {
     private static Log getLog () { ThreadLocals.get( Log ) }

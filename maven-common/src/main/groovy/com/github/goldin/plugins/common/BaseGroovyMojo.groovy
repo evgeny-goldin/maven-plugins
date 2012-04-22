@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.common
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.execution.MavenSession
@@ -9,8 +10,11 @@ import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
+import org.sonatype.aether.RepositorySystem
+import org.sonatype.aether.RepositorySystemSession
+import org.sonatype.aether.repository.RemoteRepository
+import org.sonatype.aether.resolution.ArtifactRequest
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * Base GroovyMojo class

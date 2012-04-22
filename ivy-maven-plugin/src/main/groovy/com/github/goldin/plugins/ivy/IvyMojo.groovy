@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.ivy
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.ivy.Ivy
 import org.apache.maven.artifact.Artifact
@@ -12,7 +13,6 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * Plugin that delegates artifacts resolving to Ivy, adds dependencies resolved to the Maven scope or

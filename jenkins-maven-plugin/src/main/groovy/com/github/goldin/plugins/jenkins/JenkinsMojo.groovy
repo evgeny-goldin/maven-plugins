@@ -2,12 +2,12 @@ package com.github.goldin.plugins.jenkins
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import com.github.goldin.plugins.jenkins.Job.JOB_TYPE
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+
 
 /**
  * Plugin that creates Jenkins config files to define new build projects

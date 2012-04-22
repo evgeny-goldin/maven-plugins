@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.duplicates
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoFailureException
@@ -11,7 +12,6 @@ import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * A plugin that finds duplicate classes in the scope(s) specified
