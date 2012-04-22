@@ -15,9 +15,6 @@ import org.sonatype.aether.collection.CollectRequest
 import org.sonatype.aether.graph.Dependency
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
-import org.sonatype.aether.resolution.DependencyRequest
-import org.sonatype.aether.util.filter.ScopeDependencyFilter
-
 
 
 /**
@@ -80,7 +77,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ a })
     @Ensures({ result.is( a ) })
-    protected final Artifact resolveArtifact( Artifact a, boolean failOnError = true )
+    protected final Artifact resolveArtifact( Artifact a, boolean failOnError )
     {
         if ( ! a.file )
         {
@@ -101,40 +98,49 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     /**
-     * Resolves <b>transitively</b> all artifacts from the scopes specified starting from those specified initially.
+     * Collects transitive dependencies of artifacts specified.
      *
-     * @param  rootArtifacts initial artifacts to resolve transitively from
-     * @param  failOnError   whether execution should fail if failed to resolve
-     * @param  scopes        artifact scopes
-     * @return               artifacts resolved transitively
+     * @param  artifacts    artifacts to resolve transitive dependencies of
+     * @param  failOnError  whether execution should fail if failed to collect dependencies
+     * @return              dependencies collected (not resolved!)
      *
-     * @throws RuntimeException if 'failOnError' is true and resolution fails
+     * @throws RuntimeException if 'failOnError' is true and collecting dependencies fails
      */
-    Set<Artifact> resolveArtifactsTransitively ( Collection<Artifact> rootArtifacts, List<String> scopes, boolean failOnError = true )
+    Set<Artifact> collectTransitiveDependencies ( Collection<Artifact> artifacts, boolean failOnError )
     {
-        assert rootArtifacts && scopes
+        assert artifacts
 
-        final request = new DependencyRequest (
-            new CollectRequest( rootArtifacts.collect { Artifact a -> new Dependency( toAetherArtifact( a ), null ) },
-                                null,
-                                remoteRepos ),
-            new ScopeDependencyFilter( scopes, [] )
-        )
+        ( Set<Artifact> ) artifacts.collect {
+            Artifact mavenArtifact ->
 
-        try
-        {
-            repoSystem.resolveDependencies( repoSession, request ).artifactResults*.artifact.collect {
-                org.sonatype.aether.artifact.Artifact a ->
+            final request  = new CollectRequest( new Dependency( toAetherArtifact( mavenArtifact ), null ), remoteRepos )
+            def   rootNode
 
-                if ( failOnError ) { assert a.file?.file, "Failed to resolve [$a]" }
-                toMavenArtifact( a )
-            }.toSet()
-        }
-        catch ( e )
-        {
-            if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$rootArtifacts]", e ) }
-            [].toSet()
-        }
+            try
+            {
+                rootNode = repoSystem.collectDependencies( repoSession, request ).root
+            }
+            catch ( e )
+            {
+                if ( failOnError ) { throw new RuntimeException( "Failed to collect [$mavenArtifact] transitive dependencies", e ) }
+            }
+
+            if ( rootNode )
+            {
+                rootNode.relocations.collect {
+                    org.sonatype.aether.artifact.Artifact aetherArtifact ->
+                    toMavenArtifact( aetherArtifact )
+                }
+            }
+            else
+            {
+                assert ( ! failOnError ), "Failed to collect [$mavenArtifact] transitive dependncies"
+                Collections.emptyList()
+            }
+        }.
+        flatten().
+        grep(). // To filter out possible empty lists returned
+        toSet()
     }
 
 

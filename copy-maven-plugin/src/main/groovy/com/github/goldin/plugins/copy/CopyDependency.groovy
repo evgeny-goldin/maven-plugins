@@ -57,6 +57,6 @@ class CopyDependency extends ArtifactItem
                   excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
                 ].grep().join( ', ' )
 
-        super.toString() + ( s ? ", $s" : '' )
+        (( groupId && artifactId ) ? super.toString() + ' ' : '' ) + ( s ?: '' )
     }
 }

@@ -421,8 +421,8 @@ class CopyMojo extends BaseGroovyMojo
             helper.resolveDependencies( d, failIfNotFound )
         }.
         flatten().
-        collect { CopyDependency d ->
-
+        collect {
+            CopyDependency d ->
             assert d.groupId && d.artifactId && d.artifact.file.file
 
             final prevDestFileName = d.destFileName

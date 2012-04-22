@@ -1,19 +1,19 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.maven.shared.artifact.filter.collection.*
+
+import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
-import java.util.jar.Attributes
-import java.util.jar.Manifest
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
-import org.apache.maven.project.MavenProject
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.apache.maven.shared.artifact.filter.collection.*
-import com.github.goldin.plugins.common.BaseGroovyMojo
 
+import java.util.jar.Attributes
+import java.util.jar.Manifest
 
 /**
  * {@link CopyMojo} helper class.
@@ -77,7 +77,7 @@ final class CopyMojoHelper
     protected List<CopyDependency> resolveDependencies ( CopyDependency d, boolean failIfNotFound )
     {
         assert d
-        def singleDependency = d.groupId && d.artifactId
+        final singleDependency = d.groupId && d.artifactId
 
         if ( singleDependency && d.getExcludeTransitive( singleDependency ))
         {
@@ -89,18 +89,17 @@ final class CopyMojoHelper
 
         /**
          * Iterating over all dependencies and selecting those passing the filters.
-         * "test" = "compile" + "provided" + "runtime" + "test" (http://maven.apache.org/pom.html#Dependencies)
          */
         List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            [ buildArtifact( d.groupId, d.artifactId, d.version, d.type ) ] :
-            ThreadLocals.get( MavenProject ).artifacts
+            [ toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier ) ] :
+            mojoInstance.project.artifacts
 
         try
         {
-            List<CopyDependency>  dependencies = mojoInstance.resolveArtifactsTransitively( artifacts, [ 'test', 'system' ], failIfNotFound ).
+            List<CopyDependency>  dependencies = mojoInstance.collectTransitiveDependencies( artifacts, failIfNotFound ).
                                                  findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                                                 collect { Artifact artifact -> new CopyDependency( artifact ) }
+                                                 collect { Artifact artifact -> new CopyDependency( mojoInstance.resolveArtifact( artifact, failIfNotFound )) }
             Log log = ThreadLocals.get( Log )
 
             log.info( "Resolving dependencies [$d]: [${ dependencies.size() }] artifacts found" )
@@ -147,8 +146,8 @@ final class CopyMojoHelper
         def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
         def directDependencies        = singleDependency ?
-            [ dependency ] as Set :                               // For single dependency it is it's own direct dependency
-            ThreadLocals.get( MavenProject ).dependencyArtifacts  // Direct project dependencies for filtered dependencies
+            [ dependency ] as Set :                   // For single dependency it is it's own direct dependency
+            mojoInstance.project.dependencyArtifacts  // Direct project dependencies for filtered dependencies
 
         filters << new ProjectTransitivityFilter( directDependencies, dependency.getExcludeTransitive( singleDependency ))
 
