@@ -78,12 +78,13 @@ final class CopyMojoHelper
     {
         assert d
         final singleDependency = d.groupId && d.artifactId
+        final mavenArtifact    = singleDependency ? toMavenArtifact( d.groupId , d.artifactId , d.version , d.type , d.classifier ) :
+                                                    null
 
         if ( singleDependency && d.getExcludeTransitive( singleDependency ))
         {
             // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - dependency is returned
-            d.artifact = mojoInstance.resolveArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier ),
-                                                       failIfNotFound )
+            d.artifact = mojoInstance.resolveArtifact( mavenArtifact, failIfNotFound )
             return [ d ]
         }
 
@@ -92,7 +93,7 @@ final class CopyMojoHelper
          */
         List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            mojoInstance.collectTransitiveDependencies( toMavenArtifact( d ), failIfNotFound ) :
+            mojoInstance.collectTransitiveDependencies( mavenArtifact, failIfNotFound ) :
             mojoInstance.project.artifacts
 
         try
@@ -132,18 +133,6 @@ final class CopyMojoHelper
 
             throw new MojoExecutionException( errorMessage, e )
         }
-    }
-
-    /**
-     * Converts {@link CopyDependency} instance to Maven {@link Artifact}.
-     * @param d dependency to convert
-     * @return  Maven {@link Artifact} instance
-     */
-    @Requires({ d })
-    @Ensures({ result })
-    private Artifact toMavenArtifact( CopyDependency d )
-    {
-        toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier )
     }
 
 

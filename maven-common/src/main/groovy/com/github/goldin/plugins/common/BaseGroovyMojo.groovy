@@ -77,7 +77,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ artifact })
     @Ensures({ result.is( artifact ) })
-    protected final Artifact resolveArtifact( Artifact artifact, boolean failOnError )
+    final Artifact resolveArtifact( Artifact artifact, boolean failOnError )
     {
         if ( ! artifact.file )
         {
@@ -108,7 +108,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ artifact })
     @Ensures({ result })
-    List<Artifact> collectTransitiveDependencies ( Artifact artifact, boolean failOnError )
+    final List<Artifact> collectTransitiveDependencies ( Artifact artifact, boolean failOnError )
     {
         final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), remoteRepos )
         def   rootNode
