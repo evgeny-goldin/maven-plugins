@@ -146,7 +146,10 @@ class CopyMojo extends BaseGroovyMojo
     @SuppressWarnings([ 'AbcComplexity', 'CatchThrowable' ])
     void doExecute()
     {
-        for ( CopyResource resource in resources())
+        final  resources = resources()
+        assert resources, "No <resource> or <resources> provided"
+
+        for ( CopyResource resource in resources )
         {
             resource.with {
 

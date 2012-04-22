@@ -21,7 +21,7 @@
 
         <maven-version>3.0.4</maven-version>
         <java-version>1.6</java-version>
-        <duplicates-about-version>0.2.3.8</duplicates-about-version>
+        <previous-plugins-version>0.2.3.8</previous-plugins-version>
         <gcommons-version>0.5.4-SNAPSHOT</gcommons-version>
         <groovy-version>1.8.6</groovy-version>
         <gmaven-version>1.4</gmaven-version>
@@ -70,12 +70,6 @@
         <resources>
             <resource>
                 <directory>${project.basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <includes>
-                    <include>license.txt</include>
-                </includes>
             </resource>
         </resources>
 
@@ -227,6 +221,39 @@
                 </configuration>
             </plugin>
 
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Copying "license.txt" and "README.txt" files to ${project.build.directory} -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>com.github.goldin</groupId>
+                <artifactId>copy-maven-plugin</artifactId>
+                <version>${previous-plugins-version}</version>
+                <executions>
+                    <execution>
+                        <id>copy-license-readme</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <runIf>{{ new File( project.build.outputDirectory ).directory }}</runIf>
+                            <resources>
+                                <resource>
+                                    <targetPath>${project.build.outputDirectory}</targetPath>
+                                    <file>${project.basedir}/../license.txt</file>
+                                </resource>
+                                <resource>
+                                    <targetPath>${project.build.outputDirectory}</targetPath>
+                                    <file>${project.basedir}/README.txt</file>
+                                    <failIfNotFound>false</failIfNotFound>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Compiling Groovy sources and tests                               -->
             <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
@@ -304,7 +331,7 @@
                     <plugin>
                         <groupId>com.github.goldin</groupId>
                         <artifactId>about-maven-plugin</artifactId>
-                        <version>${duplicates-about-version}</version>
+                        <version>${previous-plugins-version}</version>
                         <executions>
                             <execution>
                                 <id>generate-about</id>
@@ -337,7 +364,7 @@
                     <plugin>
                         <groupId>com.github.goldin</groupId>
                         <artifactId>duplicates-finder-plugin</artifactId>
-                        <version>${duplicates-about-version}</version>
+                        <version>${previous-plugins-version}</version>
                         <executions>
                             <execution>
                                 <id>find-duplicates</id>
