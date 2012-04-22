@@ -75,72 +75,62 @@ abstract class BaseGroovyMojo extends GroovyMojo
      *
      * @throws RuntimeException if 'failOnError' is true and resolution fails
      */
-    @Requires({ a })
-    @Ensures({ result.is( a ) })
-    protected final Artifact resolveArtifact( Artifact a, boolean failOnError )
+    @Requires({ artifact })
+    @Ensures({ result.is( artifact ) })
+    protected final Artifact resolveArtifact( Artifact artifact, boolean failOnError )
     {
-        if ( ! a.file )
+        if ( ! artifact.file )
         {
-            final request = new ArtifactRequest( toAetherArtifact( a ), remoteRepos, null )
+            final request = new ArtifactRequest( toAetherArtifact( artifact ), remoteRepos, null )
             try
             {
-                a.file = repoSystem.resolveArtifact( repoSession, request ).artifact?.file
+                artifact.file = repoSystem.resolveArtifact( repoSession, request ).artifact?.file
             }
             catch ( e )
             {
-                if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$a]", e ) }
+                if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$artifact]", e ) }
             }
         }
 
-        if ( failOnError ) { assert a.file?.file, "Failed to resolve [$a]" }
-        a
+        if ( failOnError ) { assert artifact.file?.file, "Failed to resolve [$artifact]" }
+        artifact
     }
 
 
     /**
-     * Collects transitive dependencies of artifacts specified.
+     * Collects transitive dependencies of the artifact specified.
      *
-     * @param  artifacts    artifacts to resolve transitive dependencies of
+     * @param  artifact     Maven artifact to collect transitive dependencies of
      * @param  failOnError  whether execution should fail if failed to collect dependencies
      * @return              dependencies collected (not resolved!)
      *
      * @throws RuntimeException if 'failOnError' is true and collecting dependencies fails
      */
-    Set<Artifact> collectTransitiveDependencies ( Collection<Artifact> artifacts, boolean failOnError )
+    @Requires({ artifact })
+    @Ensures({ result })
+    List<Artifact> collectTransitiveDependencies ( Artifact artifact, boolean failOnError )
     {
-        assert artifacts
+        final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), remoteRepos )
+        def   rootNode
 
-        ( Set<Artifact> ) artifacts.collect {
-            Artifact mavenArtifact ->
+        try
+        {
+            rootNode = repoSystem.collectDependencies( repoSession, request ).root
+        }
+        catch ( e )
+        {
+            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] transitive dependencies", e ) }
+        }
 
-            final request  = new CollectRequest( new Dependency( toAetherArtifact( mavenArtifact ), null ), remoteRepos )
-            def   rootNode
-
-            try
-            {
-                rootNode = repoSystem.collectDependencies( repoSession, request ).root
-            }
-            catch ( e )
-            {
-                if ( failOnError ) { throw new RuntimeException( "Failed to collect [$mavenArtifact] transitive dependencies", e ) }
-            }
-
-            if ( rootNode )
-            {
-                rootNode.relocations.collect {
-                    org.sonatype.aether.artifact.Artifact aetherArtifact ->
-                    toMavenArtifact( aetherArtifact )
-                }
-            }
-            else
-            {
-                assert ( ! failOnError ), "Failed to collect [$mavenArtifact] transitive dependncies"
-                Collections.emptyList()
-            }
-        }.
-        flatten().
-        grep(). // To filter out possible empty lists returned
-        toSet()
+        if ( rootNode )
+        {
+            nodeArtifacts( rootNode )
+        }
+        else
+        {
+            assert ( ! failOnError ), "Failed to collect [$artifact] transitive dependencies"
+            [ artifact ]
+        }
     }
 
 

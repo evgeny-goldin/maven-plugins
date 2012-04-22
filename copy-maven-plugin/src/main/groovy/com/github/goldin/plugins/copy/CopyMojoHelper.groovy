@@ -92,14 +92,16 @@ final class CopyMojoHelper
          */
         List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            [ toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier ) ] :
+            mojoInstance.collectTransitiveDependencies( toMavenArtifact( d ), failIfNotFound ) :
             mojoInstance.project.artifacts
 
         try
         {
-            List<CopyDependency>  dependencies = mojoInstance.collectTransitiveDependencies( artifacts, failIfNotFound ).
-                                                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                                                 collect { Artifact artifact -> new CopyDependency( mojoInstance.resolveArtifact( artifact, failIfNotFound )) }
+            List<CopyDependency>  dependencies =
+                artifacts.
+                findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
+                collect { Artifact artifact -> new CopyDependency( mojoInstance.resolveArtifact( artifact, failIfNotFound )) }
+
             Log log = ThreadLocals.get( Log )
 
             log.info( "Resolving dependencies [$d]: [${ dependencies.size() }] artifacts found" )
@@ -130,6 +132,18 @@ final class CopyMojoHelper
 
             throw new MojoExecutionException( errorMessage, e )
         }
+    }
+
+    /**
+     * Converts {@link CopyDependency} instance to Maven {@link Artifact}.
+     * @param d dependency to convert
+     * @return  Maven {@link Artifact} instance
+     */
+    @Requires({ d })
+    @Ensures({ result })
+    private Artifact toMavenArtifact( CopyDependency d )
+    {
+        toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier )
     }
 
 

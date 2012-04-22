@@ -1,7 +1,6 @@
 package com.github.goldin.plugins.common
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
-
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
 import groovy.text.SimpleTemplateEngine
@@ -21,6 +20,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
+import org.sonatype.aether.graph.DependencyNode
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import com.github.goldin.gcommons.beans.*
 
@@ -618,11 +618,27 @@ class GMojoUtils
      * @param s path to convert
      * @return path in canonical form
      */
-     static String canonicalPath ( String s )
-     {
-         ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
-     }
+    static String canonicalPath ( String s )
+    {
+        ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+    }
 
+
+    /**
+     * Iterates over {@link DependencyNode} children recursively and returns resulting list of Maven artifacts.
+     *
+     * @param node root node to iterate
+     * @return Maven artifacts
+     */
+    static List<Artifact> nodeArtifacts( DependencyNode node )
+    {
+        assert node
+
+        (( node.children ?: [] ).collect{ DependencyNode childNode -> nodeArtifacts( childNode ) } + // Node child artifacts
+        toMavenArtifact( node.dependency.artifact )).                                                // Node itself as an artifact
+        flatten().
+        toList()
+    }
 
 
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
