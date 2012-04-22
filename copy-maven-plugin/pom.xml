@@ -21,7 +21,21 @@
     </parent>
 
     <dependencies>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Duplicate from "mojo-parent", otherwise it's not seen here -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <dependency>
+            <groupId>com.github.goldin</groupId>
+            <artifactId>maven-common</artifactId>
+            <scope>compile</scope>
+            <version>0.2.4-SNAPSHOT</version>
+        </dependency>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- For <dependency> definition -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
@@ -43,6 +57,21 @@
                 <exclusion>
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging-api</artifactId>
+                </exclusion>
+                <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-artifact-manager</artifactId>
+                </exclusion>
+                <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-project</artifactId>
+                </exclusion>
+                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-plexus:jar:2.3.0" -->
+                <exclusion>
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-container-default</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

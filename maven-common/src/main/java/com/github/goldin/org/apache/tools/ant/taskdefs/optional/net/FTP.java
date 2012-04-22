@@ -2431,9 +2431,9 @@ public class FTP extends Task {
 
         FTPClient ftp = null;
 
-        try {
+        try
+        {
             log("Opening FTP connection to " + server, Project.MSG_VERBOSE);
-
 
             /**
              * "verbose" version of <code>FTPClient</code> prints progress indicator

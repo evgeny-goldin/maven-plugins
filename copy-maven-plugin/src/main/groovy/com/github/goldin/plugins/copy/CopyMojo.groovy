@@ -6,8 +6,8 @@ import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.Replace
 import groovy.io.FileType
+import org.apache.maven.plugin.BuildPluginManager
 import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugin.PluginManager
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
@@ -29,7 +29,7 @@ class CopyMojo extends BaseGroovyMojo
      * Container-injected fields
      */
     @MojoComponent
-    public PluginManager pluginManager
+    public BuildPluginManager pluginManager
 
     @MojoComponent
     public MavenProjectHelper mavenProjectHelper

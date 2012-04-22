@@ -12,8 +12,8 @@ import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
+import org.apache.maven.plugin.BuildPluginManager
 import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugin.PluginManager
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.shared.filtering.MavenFileFilter
@@ -488,7 +488,7 @@ class GMojoUtils
      * @param manager    Maven plugin manager
      */
     static void deploy ( File f, String url, String groupId, String artifactId, String version, String classifier,
-                         PluginManager manager )
+                         BuildPluginManager manager )
     {
         verify().file( f )
         verify().notNullOrEmpty( url, groupId, artifactId, version )
