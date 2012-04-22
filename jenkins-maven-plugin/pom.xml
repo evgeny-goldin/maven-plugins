@@ -19,4 +19,14 @@
         <version>0.2.4-SNAPSHOT</version>
     </parent>
 
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>
