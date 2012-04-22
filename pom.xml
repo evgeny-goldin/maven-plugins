@@ -71,6 +71,12 @@
             <resource>
                 <directory>${project.basedir}/src/main/resources</directory>
             </resource>
+            <resource>
+                <directory>${project.basedir}</directory>
+                <includes>
+                    <include>license.txt</include>
+                </includes>
+            </resource>
         </resources>
 
         <testResources>
