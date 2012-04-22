@@ -144,7 +144,7 @@ class CopyMojo extends BaseGroovyMojo
      */
     @Override
     @SuppressWarnings([ 'AbcComplexity', 'CatchThrowable' ])
-    void doExecute() throws MojoExecutionException
+    void doExecute()
     {
         for ( CopyResource resource in resources())
         {
