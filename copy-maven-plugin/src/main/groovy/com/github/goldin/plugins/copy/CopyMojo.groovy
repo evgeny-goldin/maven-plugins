@@ -14,7 +14,6 @@ import org.codehaus.plexus.util.FileUtils
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.*
-import org.apache.maven.plugin.dependency.utils.DependencyUtil
 
 
 /**
@@ -432,7 +431,7 @@ class CopyMojo extends BaseGroovyMojo
                                       * in "destFileName" which now needs to be removed.
                                       */
                                      ( prevDestFileName ?: d.artifact.file.name ) :
-                                     DependencyUtil.getFormattedFileName( d.artifact, ( d.stripVersion || stripVersion ))
+                                     helper.artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
             d
         }
 
