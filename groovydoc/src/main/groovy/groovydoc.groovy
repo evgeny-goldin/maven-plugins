@@ -2,12 +2,13 @@
 import java.text.SimpleDateFormat
 import org.apache.tools.ant.types.Path
 import org.apache.tools.ant.Project
+import com.github.goldin.gcommons.GCommons
 
 /**
  * http://docs.codehaus.org/display/GROOVY/The+groovydoc+Ant+task
  */
 
-def    groovydocDir = System.getProperty( 'groovydocDir' )
+String groovydocDir = System.getProperty( 'groovydocDir' )
 assert groovydocDir, 'System property [groovydocDir] is not defined, add -DgroovydocDir=<directory>.'
 
 def basedir         = project.basedir.canonicalPath
@@ -15,8 +16,8 @@ def mavenVersion    = project.properties[ 'maven-version'    ]
 def gcommonsVersion = project.properties[ 'gcommons-version' ]
 def version         = project.version
 
-File   destinationDir = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalPath
-assert destinationDir.with{ directory || mkdirs() }
+File   destinationDir = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalFile
+assert GCommons.file().delete( destinationDir ).mkdirs()
 
 def d               = new Date()
 def time            = new SimpleDateFormat( "HH:mm '(GMT'Z')'", new Locale( 'en' )).format( d )
@@ -25,21 +26,20 @@ def project         = new Project()
 def path            = { String path -> path ? new Path( project, path ) : new Path( project ) }
 def sourcePaths     = path( '' )
 
-[ 'duplicates-finder-plugin',
-  'ivy-maven-plugin',
-  'about-maven-plugin',
+[ 'about-maven-plugin',
   'assert-maven-plugin',
   'copy-maven-plugin',
+  'duplicates-finder-plugin',
   'find-maven-plugin',
+  'ivy-maven-plugin',
   'jenkins-maven-plugin',
   'mail-maven-plugin',
+  'maven-common',
   'properties-maven-plugin',
   'spring-batch-maven-plugin',
   'sshexec-maven-plugin',
   'timestamp-maven-plugin',
-  'maven-common',
-  'mojo-parent',
-].each { sourcePaths.add( path( new File( "$basedir/../$it/src/main/groovy/" ).canonicalPath )) }
+].each { sourcePaths.add( path( GCommons.verify().directory( new File( "$basedir/../$it/src/main/groovy/" )).canonicalPath )) }
 
 
 def ant = new AntBuilder()
@@ -69,8 +69,12 @@ ant.groovydoc(
 
                        </script>""".stripIndent())
     {
+       link( packages :'org.apache.maven.artifact.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
+       link( packages :'org.apache.maven.',                   href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs/" )
        link( packages :'java.,org.xml.,javax.,org.xml.',      href : 'http://download.oracle.com/javase/6/docs/api'    )
        link( packages :'groovy.,org.codehaus.groovy.',        href : 'http://groovy.codehaus.org/api'                  )
+       link( packages :'org.springframework.batch.',          href : 'http://static.springsource.org/spring-batch/apidocs/'          )
+       link( packages :'org.springframework.',                href : 'http://static.springsource.org/spring/docs/3.1.x/javadoc-api/' )
        link( packages :'org.apache.tools.ant.',               href : 'http://evgeny-goldin.org/javadoc/ant/api'        )
        link( packages :'org.junit.,junit.framework.',         href : 'http://kentbeck.github.com/junit/javadoc/latest' )
        link( packages :'org.apache.commons.net.',             href : 'http://commons.apache.org/net/apidocs'           )
@@ -78,8 +82,5 @@ ant.groovydoc(
        link( packages :'org.codehaus.gmaven.',                href : 'http://evgeny-goldin.org/javadoc/gmaven' )
        link( packages :'org.apache.maven.shared.filtering.',  href : 'http://maven.apache.org/shared/maven-filtering/apidocs' )
        link( packages :'org.apache.maven.plugin.dependency.', href : 'http://maven.apache.org/plugins/maven-dependency-plugin/apidocs' )
-       link( packages :'org.apache.maven.artifact.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
-       link( packages :'org.apache.maven.project.',           href : "http://maven.apache.org/ref/$mavenVersion/maven-project/apidocs" )
-       link( packages :'org.apache.maven.',                   href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs" )
        link( packages :'com.github.goldin.gcommons.',         href : "http://evgeny-goldin.org/groovydoc/gcommons/$gcommonsVersion" )
     }

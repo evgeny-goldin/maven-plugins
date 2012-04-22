@@ -65,5 +65,10 @@
             <artifactId>ant</artifactId>
             <version>${ant-version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.goldin</groupId>
+            <artifactId>gcommons</artifactId>
+            <version>${gcommons-version}</version>
+        </dependency>
     </dependencies>
 </project>
