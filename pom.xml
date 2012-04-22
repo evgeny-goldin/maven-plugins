@@ -331,7 +331,7 @@
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
         <profile>
-            <id>groovyDoc</id>
+            <id>groovydoc</id>
             <modules>
                 <module>groovydoc</module>
             </modules>
@@ -360,7 +360,7 @@
                                     <runIf>{{ new File( project.build.outputDirectory ).with{ directory &amp;&amp; listFiles() } }}</runIf>
                                     <dumpDependencies>true</dumpDependencies>
                                     <dumpMaven>true</dumpMaven>
-                                    <fileName>${project.build.outputDirectory}/META-INF/about~${project.groupId}~${project.artifactId}~${project.version}.txt</fileName>
+                                    <fileName>${project.build.outputDirectory}/about.txt</fileName>
                                     <updateArchives>false</updateArchives>
                                 </configuration>
                             </execution>
@@ -390,7 +390,7 @@
                                     <goal>find-duplicates</goal>
                                 </goals>
                                 <configuration>
-                                    <!--<verbose>true</verbose>-->
+                                    <verbose>false</verbose>
                                 </configuration>
                             </execution>
                         </executions>
