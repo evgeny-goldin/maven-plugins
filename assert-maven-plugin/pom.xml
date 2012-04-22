@@ -17,6 +17,7 @@
         <groupId>com.github.goldin</groupId>
         <artifactId>mojo-parent</artifactId>
         <version>0.2.4-SNAPSHOT</version>
+        <relativePath>../mojo-parent</relativePath>
     </parent>
 
 </project>

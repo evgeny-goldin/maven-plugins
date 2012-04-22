@@ -17,6 +17,7 @@
         <groupId>com.github.goldin</groupId>
         <artifactId>main.plugins</artifactId>
         <version>0.2.4-SNAPSHOT</version>
+        <relativePath>..</relativePath>
     </parent>
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
