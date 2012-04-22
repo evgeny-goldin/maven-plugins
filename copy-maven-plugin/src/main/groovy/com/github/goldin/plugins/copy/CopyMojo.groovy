@@ -174,6 +174,9 @@ class CopyMojo extends org.apache.maven.plugin.dependency.fromConfiguration.Copy
     @SuppressWarnings([ 'AbcComplexity', 'CatchThrowable' ])
     void execute() throws MojoExecutionException
     {
+        final  mavenVersion = mavenVersion()
+        assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
+
         /**
          * See {@link com.github.goldin.plugins.common.BaseGroovyMojo#execute()} - we duplicate
          * it here as long as we can't extend it
