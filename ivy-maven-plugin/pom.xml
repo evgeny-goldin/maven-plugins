@@ -15,9 +15,8 @@
 
     <parent>
         <groupId>com.github.goldin</groupId>
-        <artifactId>mojo3-parent</artifactId>
+        <artifactId>mojo-parent</artifactId>
         <version>0.2.4-SNAPSHOT</version>
-        <relativePath>../mojo3-parent</relativePath>
     </parent>
 
 

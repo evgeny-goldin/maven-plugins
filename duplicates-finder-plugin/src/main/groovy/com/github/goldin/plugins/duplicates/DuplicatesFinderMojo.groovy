@@ -1,9 +1,6 @@
 package com.github.goldin.plugins.duplicates
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.plugins.common.BaseGroovyMojo3
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
+import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoFailureException
 import org.jfrog.maven.annomojo.annotations.MojoGoal
@@ -11,6 +8,10 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+
+import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * A plugin that finds duplicate classes in the scope(s) specified
@@ -19,7 +20,7 @@ import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
-class DuplicatesFinderMojo extends BaseGroovyMojo3
+class DuplicatesFinderMojo extends BaseGroovyMojo
 {
     /**
      * Cache of file on the disk to classes it contains

@@ -1,7 +1,6 @@
 package com.github.goldin.plugins.ivy
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.plugins.common.BaseGroovyMojo3
+import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.ivy.Ivy
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
@@ -13,6 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * Plugin that delegates artifacts resolving to Ivy, adds dependencies resolved to the Maven scope or
@@ -21,7 +21,7 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 @MojoGoal ( 'ivy' )
 @MojoPhase ( 'initialize' )
 @MojoRequiresDependencyResolution( 'test' )
-class IvyMojo extends BaseGroovyMojo3
+class IvyMojo extends BaseGroovyMojo
 {
     /**
      * Whether Ivy resolver should be added to Maven for subsequent resolutions of Ivy artifacts by other plugins.

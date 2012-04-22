@@ -1,12 +1,16 @@
 package com.github.goldin.plugins.common
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 
 /**
  * Base GroovyMojo class
@@ -37,6 +41,43 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     @MojoParameter
     public String  runIf
+
+    /**
+     * Aether components:
+     * http://aether.sonatype.org/using-aether-in-maven-plugins.html
+     * https://docs.sonatype.org/display/AETHER/Home
+     */
+
+    @MojoComponent
+    public RepositorySystem repoSystem
+
+    @MojoParameter ( defaultValue = '${repositorySystemSession}', readonly = true )
+    public RepositorySystemSession repoSession
+
+    @MojoParameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
+    public List<RemoteRepository> remoteRepos
+
+
+    /**
+     * Resolves local {@link File} of Maven {@link org.apache.maven.artifact.Artifact} and updates it.
+     *
+     * @param artifact Maven artifact to resolve
+     * @return same artifact with its local file set
+     */
+    @Requires({ a })
+    @Ensures({ a.file.file })
+    protected final Artifact resolveArtifact( Artifact a )
+    {
+        if ( ! a.file )
+        {
+            final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
+                                                 remoteRepos, null )
+            a.file = repoSystem.resolveArtifact( repoSession, request )?.artifact?.file
+            // File may not be resolved when "failOnError" is "false" and resolution doesn't succeed.
+        }
+
+        a
+    }
 
     @Override
     @Requires({ log && project && session })

@@ -14,7 +14,10 @@ def basedir         = project.basedir.canonicalPath
 def mavenVersion    = project.properties[ 'maven-version'    ]
 def gcommonsVersion = project.properties[ 'gcommons-version' ]
 def version         = project.version
-def destinationDir  = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalPath
+
+File   destinationDir = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalPath
+assert destinationDir.with{ directory || mkdirs() }
+
 def d               = new Date()
 def time            = new SimpleDateFormat( "HH:mm '(GMT'Z')'", new Locale( 'en' )).format( d )
 def date            = new SimpleDateFormat( 'MMMM dd, yyyy',    new Locale( 'en' )).format( d )
@@ -34,10 +37,8 @@ def sourcePaths     = path( '' )
   'spring-batch-maven-plugin',
   'sshexec-maven-plugin',
   'timestamp-maven-plugin',
-  'maven2-common',
-  'maven3-common',
-  'mojo2-parent',
-  'mojo3-parent',
+  'maven-common',
+  'mojo-parent',
 ].each { sourcePaths.add( path( new File( "$basedir/../$it/src/main/groovy/" ).canonicalPath )) }
 
 

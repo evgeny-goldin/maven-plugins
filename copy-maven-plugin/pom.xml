@@ -15,19 +15,18 @@
 
     <parent>
         <groupId>com.github.goldin</groupId>
-        <artifactId>mojo2-parent</artifactId>
+        <artifactId>mojo-parent</artifactId>
         <version>0.2.4-SNAPSHOT</version>
-        <relativePath>../mojo2-parent</relativePath>
     </parent>
 
 
     <dependencies>
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Duplicates entry from <parent> but if removed - stops seeing "maven2-common" dependencies :( -->
+        <!-- Duplicates entry from <parent> but if removed - stops seeing "maven-common" dependencies :( -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <dependency>
             <groupId>com.github.goldin</groupId>
-            <artifactId>maven2-common</artifactId>
+            <artifactId>maven-common</artifactId>
             <version>0.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
