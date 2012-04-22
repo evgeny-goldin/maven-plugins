@@ -101,7 +101,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     /**
-     * Resolves all artifacts from the scopes specified starting from those specified initially.
+     * Resolves <b>transitively</b> all artifacts from the scopes specified starting from those specified initially.
      *
      * @param  rootArtifacts initial artifacts to resolve transitively from
      * @param  failOnError   whether execution should fail if failed to resolve
@@ -110,7 +110,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      *
      * @throws RuntimeException if 'failOnError' is true and resolution fails
      */
-    Set<Artifact> resolveArtifacts ( Collection<Artifact> rootArtifacts, boolean failOnError = true, String ... scopes )
+    Set<Artifact> resolveArtifactsTransitively ( Collection<Artifact> rootArtifacts, List<String> scopes, boolean failOnError = true )
     {
         assert rootArtifacts && scopes
 
@@ -118,13 +118,16 @@ abstract class BaseGroovyMojo extends GroovyMojo
             new CollectRequest( rootArtifacts.collect { Artifact a -> new Dependency( toAetherArtifact( a ), null ) },
                                 null,
                                 remoteRepos ),
-            new ScopeDependencyFilter( scopes.toList(), [] )
+            new ScopeDependencyFilter( scopes, [] )
         )
 
         try
         {
             repoSystem.resolveDependencies( repoSession, request ).artifactResults*.artifact.collect {
-                org.sonatype.aether.artifact.Artifact a -> toMavenArtifact( a )
+                org.sonatype.aether.artifact.Artifact a ->
+
+                if ( failOnError ) { assert a.file?.file, "Failed to resolve [$a]" }
+                toMavenArtifact( a )
             }.toSet()
         }
         catch ( e )

@@ -63,7 +63,7 @@ final class CopyMojoHelper
 
 
     /**
-     * Scans all dependencies that this project has (including transitive ones) and filters them with scoping
+     * Scans all dependencies this project has (including transitive ones) and filters them with scoping
      * and transitivity filters provided in dependency specified.
      *
      * @param dependency     filtering dependency
@@ -72,7 +72,7 @@ final class CopyMojoHelper
      */
     @Requires({ dependency })
     @Ensures({ result != null })
-    protected List<CopyDependency> getDependencies ( CopyDependency dependency, boolean failIfNotFound )
+    protected List<CopyDependency> resolveDependenciesTransitively ( CopyDependency dependency, boolean failIfNotFound )
     {
         assert dependency
         def singleDependency = dependency.groupId && dependency.artifactId
@@ -94,10 +94,9 @@ final class CopyMojoHelper
 
         try
         {
-            List<CopyDependency>  dependencies = mojoInstance.resolveArtifacts( artifacts, failIfNotFound, 'test', 'system' ).
+            List<CopyDependency>  dependencies = mojoInstance.resolveArtifactsTransitively( artifacts, [ 'test', 'system' ], failIfNotFound ).
                                                  findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                                                  collect { Artifact artifact -> new CopyDependency( artifact ) }
-
             Log log = ThreadLocals.get( Log )
 
             log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
@@ -114,9 +113,14 @@ final class CopyMojoHelper
 
             if ( dependency.optional || ( ! failIfNotFound ))
             {
-                String exceptionMessage =  ( e instanceof MultipleArtifactsNotFoundException ) ?
-                    "${ e.missingArtifacts.size() } missing dependenc${ e.missingArtifacts.size() == 1 ? 'y' : 'ies' } - " +
-                    "${ e.missingArtifacts }" : e.toString()
+                String exceptionMessage = e.toString()
+
+                if ( e instanceof MultipleArtifactsNotFoundException )
+                {
+                    final missingArtifacts = (( MultipleArtifactsNotFoundException ) e ).missingArtifacts
+                    exceptionMessage = "${ missingArtifacts.size() } missing dependenc${ missingArtifacts.size() == 1 ? 'y' : 'ies' } - $missingArtifacts"
+                }
+
                 log.warn( "$errorMessage: $exceptionMessage" )
                 return []
             }

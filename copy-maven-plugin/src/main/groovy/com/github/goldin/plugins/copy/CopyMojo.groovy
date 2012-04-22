@@ -14,6 +14,7 @@ import org.codehaus.plexus.util.FileUtils
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.*
+import org.apache.maven.plugin.dependency.utils.DependencyUtil
 
 
 /**
@@ -42,9 +43,6 @@ class CopyMojo extends BaseGroovyMojo
      */
 
     @MojoParameter
-    public  String  runIf
-
-    @MojoParameter
     public  CopyManifest manifest = new CopyManifest()
 
     @MojoParameter ( required = false )
@@ -58,13 +56,6 @@ class CopyMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = false )
     public boolean stripVersion = false
-
-    void setStripVersion( boolean stripVersion )
-    {   /**
-         * Super-class has an identically named field and setter not being set by Maven so we "shadow" them.
-         */
-        this.stripVersion = stripVersion
-    }
 
     /**
      * "false" or comma-separated list of default excludes
@@ -184,6 +175,9 @@ class CopyMojo extends BaseGroovyMojo
 
                 if ( stop )
                 {
+                    /**
+                     * Used for troubleshooting purposes only
+                     */
                     log.info( '''
                               ------------------------------------------------
                                 *** Build stopped with <stop>true</stop> ***
@@ -372,15 +366,14 @@ class CopyMojo extends BaseGroovyMojo
             if ( resolved ) { return }
         }
 
-        File tempDirectory = file().tempDirectory()
+        final tempDirectory = file().tempDirectory()
 
         try
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, failIfNotFound, tempDirectory, isStripVersion ).each {
-                    // Copies artifact to temp directory using correct "destFileName".
-                    CopyDependency d -> copyArtifact( d )
+                resolve( resourceDependencies, failIfNotFound, isStripVersion ).each {
+                    CopyDependency d -> file().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
 
@@ -413,57 +406,34 @@ class CopyMojo extends BaseGroovyMojo
      *
      * @param dependencies   dependencies to resolve and filter
      * @param failIfNotFound whether execution should fail if zero artifacts were resolved
-     * @param directory      dependencies output directory to set
      * @param stripVersion   whether dependencies version should be stripped
      * @return               dependencies resolved and filtered
      */
-//    @Requires({ dependencies && directory })
-//    @Ensures({ result != null })
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
                                                  boolean              failIfNotFound,
-                                                 File                 directory    = constants().USER_DIR_FILE,
                                                  boolean              stripVersion = false )
     {
-        assert dependencies && directory.directory
+        assert dependencies
 
         Collection<CopyDependency> result = dependencies.
-        collect { CopyDependency d -> helper.getDependencies( d, failIfNotFound ) }.
+        collect { CopyDependency d -> helper.resolveDependenciesTransitively( d, failIfNotFound ) }.
         flatten().
         collect { CopyDependency d ->
 
-            verify().notNullOrEmpty( d.groupId, d.artifactId )
+            assert d.groupId && d.artifactId && d.artifact.file.file
 
-            try
-            {
-                d.outputDirectory = file().mkdirs( directory )
-                setArtifactItems([ d ])
+            final prevDestFileName = d.destFileName
+            d.destFileName         = ( d.groupId.startsWith( IVY_PREFIX )) ?
+                                     /**
+                                      * Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact)
+                                      * in "destFileName" which now needs to be removed.
+                                      */
+                                     ( prevDestFileName ?: d.artifact.file.name ) :
+                                     DependencyUtil.getFormattedFileName( d.artifact, ( d.stripVersion || stripVersion ))
+            d
+        }
 
-                final destFileName = d.destFileName
-                d = ( CopyDependency ) ( getProcessedArtifactItems( d.stripVersion || stripVersion )[ 0 ] )
-
-                if ( d.groupId.startsWith( IVY_PREFIX ))
-                {   // Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact) in "destFileName" which now needs to be removed.
-                    d.destFileName = destFileName ?: d.artifact.file.name
-                }
-
-                return d
-            }
-            catch ( e )
-            {
-                String errorMessage = "Failed to resolve ${ d.optional ? 'optional ' : '' }<dependency> [$d]"
-                if ( d.optional || ( ! failIfNotFound ))
-                {
-                    log.warn( "$errorMessage: $e" )
-                }
-                else
-                {
-                    throw new MojoExecutionException( errorMessage, e )
-                }
-            }
-        }.
-        grep() // Filtering out nulls that can be resulted by optional dependencies that failed to be resolved
-
-        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional }), \
+        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), \
                "No dependencies resolved using [$dependencies]"
         result
     }
@@ -558,11 +528,11 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Calculates new name of the file to copy taking its resource into consideration.
      *
-     * @param file     file to copy
+     * @param f        file to copy
      * @param resource file's <resource>
      * @return         file's new name
      */
-    @Requires({ file && resource })
+    @Requires({ f && resource })
     @Ensures({ result })
     private String newName ( File f, CopyResource resource )
     {
