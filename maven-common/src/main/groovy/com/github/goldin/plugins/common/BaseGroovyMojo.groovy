@@ -2,7 +2,6 @@ package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
@@ -12,8 +11,13 @@ import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
+import org.sonatype.aether.collection.CollectRequest
+import org.sonatype.aether.graph.Dependency
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
+import org.sonatype.aether.resolution.DependencyRequest
+import org.sonatype.aether.util.filter.ScopeDependencyFilter
+
 
 
 /**
@@ -22,9 +26,11 @@ import org.sonatype.aether.resolution.ArtifactRequest
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    protected final boolean isWindows = System.getProperty( 'os.name' ).toLowerCase().contains( 'windows' )
-    protected final boolean isLinux   = System.getProperty( 'os.name' ).toLowerCase().contains( 'linux' )
-    protected final boolean isMac     = System.getProperty( 'os.name' ).toLowerCase().contains( 'mac os' )
+    protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
+    protected final boolean isWindows = os.contains( 'windows' )
+    protected final boolean isLinux   = os.contains( 'linux' )
+    protected final boolean isMac     = os.contains( 'mac os' )
+
 
     @MojoParameter ( required = true, expression = '${project}' )
     public MavenProject project
@@ -48,7 +54,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     /**
      * Aether components:
-     * http://aether.sonatype.org/using-aether-in-maven-plugins.html
+     * http://www.sonatype.org/aether/
+     * http://eclipse.org/aether/
      * https://docs.sonatype.org/display/AETHER/Home
      */
 
@@ -63,25 +70,70 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     /**
-     * Resolves local {@link File} of Maven {@link org.apache.maven.artifact.Artifact} and updates it.
+     * Resolves local {@link File} of Maven {@link Artifact} and updates it.
      *
-     * @param artifact Maven artifact to resolve
-     * @return same artifact with its local file set
+     * @param artifact    Maven artifact to resolve
+     * @param failOnError whether execution should fail if failed to resolve an artifact
+     * @return            same artifact with its local file set
+     *
+     * @throws RuntimeException if 'failOnError' is true and resolution fails
      */
     @Requires({ a })
-    @Ensures({ a.file.file })
-    protected final Artifact resolveArtifact( Artifact a )
+    @Ensures({ result.is( a ) })
+    protected final Artifact resolveArtifact( Artifact a, boolean failOnError = true )
     {
         if ( ! a.file )
         {
-            final request = new ArtifactRequest( new DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version ),
-                                                 remoteRepos, null )
-            a.file = repoSystem.resolveArtifact( repoSession, request )?.artifact?.file
-            // File may not be resolved when "failOnError" is "false" and resolution doesn't succeed.
+            final request = new ArtifactRequest( toAetherArtifact( a ), remoteRepos, null )
+            try
+            {
+                a.file = repoSystem.resolveArtifact( repoSession, request ).artifact?.file
+            }
+            catch ( e )
+            {
+                if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$a]", e ) }
+            }
         }
 
+        if ( failOnError ) { assert a.file?.file, "Failed to resolve [$a]" }
         a
     }
+
+
+    /**
+     * Resolves all artifacts from the scopes specified starting from those specified initially.
+     *
+     * @param  rootArtifacts initial artifacts to resolve transitively from
+     * @param  failOnError   whether execution should fail if failed to resolve
+     * @param  scopes        artifact scopes
+     * @return               artifacts resolved transitively
+     *
+     * @throws RuntimeException if 'failOnError' is true and resolution fails
+     */
+    Set<Artifact> resolveArtifacts ( Collection<Artifact> rootArtifacts, boolean failOnError = true, String ... scopes )
+    {
+        assert rootArtifacts && scopes
+
+        final request = new DependencyRequest (
+            new CollectRequest( rootArtifacts.collect { Artifact a -> new Dependency( toAetherArtifact( a ), null ) },
+                                null,
+                                remoteRepos ),
+            new ScopeDependencyFilter( scopes.toList(), [] )
+        )
+
+        try
+        {
+            repoSystem.resolveDependencies( repoSession, request ).artifactResults*.artifact.collect {
+                org.sonatype.aether.artifact.Artifact a -> toMavenArtifact( a )
+            }.toSet()
+        }
+        catch ( e )
+        {
+            if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$rootArtifacts]", e ) }
+            [].toSet()
+        }
+    }
+
 
     @Override
     @Requires({ log && project && session })

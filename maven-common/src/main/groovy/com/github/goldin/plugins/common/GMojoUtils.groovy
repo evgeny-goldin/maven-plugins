@@ -10,10 +10,6 @@ import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource
-import org.apache.maven.artifact.resolver.ArtifactResolver
-import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter
-import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.MojoExecutionException
@@ -266,32 +262,6 @@ class GMojoUtils
 
 
     /**
-     * Retrieves all artifacts from the scopes specified.
-     */
-    static Set<Artifact> getArtifacts ( Collection<Artifact> initialArtifacts, String ... scopes )
-    {
-        assert initialArtifacts && scopes
-
-        Set<Artifact> result  = [] as Set
-        MavenProject  project = ThreadLocals.get( MavenProject )
-
-        for ( scope in scopes )
-        {
-            result.addAll( ThreadLocals.get( ArtifactResolver ).resolveTransitively(
-                           initialArtifacts as Set,
-                           buildArtifact( project.groupId, project.artifactId, project.version, project.packaging ),
-                           project.managedVersionMap,
-                           ThreadLocals.get( MavenSession ).localRepository,
-                           project.remoteArtifactRepositories,
-                           ThreadLocals.get( ArtifactMetadataSource ),
-                           new ScopeArtifactFilter( verify().notNullOrEmpty( scope ))).artifacts )
-        }
-
-        result
-    }
-
-
-    /**
      * Validates content of the file specified to be XML-valid with {@link DefaultHandler2}.
      * @param configFile file to validate
      * @return same file object, for further chain calls
@@ -522,8 +492,6 @@ class GMojoUtils
     {
         verify().file( f )
         verify().notNullOrEmpty( url, groupId, artifactId, version )
-        assert mavenVersion().startsWith( '2' ): \
-               'Right now <deploy> is only supported by Maven 2, see http://evgeny-goldin.org/youtrack/issue/pl-258'
 
         List<Element> config = [ element( 'file',       f.canonicalPath ),
                                  element( 'url',        url         ),
@@ -589,7 +557,7 @@ class GMojoUtils
 
 
     /**
-     * Creates new Maven {@link Artifact}.
+     * Converts artifact coordinates to Maven {@link Artifact}.
      *
      * @param groupId    artifact {@code <groupId>}
      * @param artifactId artifact {@code <artifactId>}
@@ -600,15 +568,38 @@ class GMojoUtils
      *
      * @return new Maven {@link Artifact}
      */
-    static Artifact artifact( String groupId, String artifactId, String version, String type, String classifier, File file = null )
+    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String type, String classifier, File file = null )
     {
         assert groupId && artifactId && version
 
-        final a = mavenVersion().startsWith( '2' ) ?
-                  new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ), '', type, classifier, new DefaultArtifactHandler()): // 2.2.1
-                  new DefaultArtifact( groupId, artifactId, version,                                   '', type, classifier, new DefaultArtifactHandler())  // 3.0.4
+        final a = new DefaultArtifact( groupId, artifactId, version, '', type, classifier, new DefaultArtifactHandler())
         if ( file ) { a.file = verify().file( file ) }
         a
+    }
+
+
+    /**
+     * Converts Aether artifact to Maven {@link Artifact}.
+     * @param a Aether artifact
+     * @return new Maven {@link Artifact}
+     */
+    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact a )
+    {
+        assert a
+        toMavenArtifact( a.groupId, a.artifactId, a.version, a.extension, a.classifier, a.file )
+    }
+
+
+    /**
+     * Converts Maven artifact to Aether artifact.
+     *
+     * @param a Maven artifact
+     * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
+     */
+    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Artifact a )
+    {
+        assert a
+        new org.sonatype.aether.util.artifact.DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version, null, a.file )
     }
 
 
@@ -677,6 +668,18 @@ class GMojoUtils
 
         assert artifacts.every{ new File( directory, it.file.name ).file }
     }
+
+
+    /**
+     * Convert path to its canonical form.
+     *
+     * @param s path to convert
+     * @return path in canonical form
+     */
+     static String canonicalPath ( String s )
+     {
+         ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+     }
 
 
 

@@ -41,8 +41,6 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
-        assert mavenVersion().startsWith( '3' ), 'This plugin only runs with Maven 3'
-
         /**
          * Mapping of File to Maven Artifact
          */

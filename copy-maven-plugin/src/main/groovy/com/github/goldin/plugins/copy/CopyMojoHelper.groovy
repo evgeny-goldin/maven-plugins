@@ -12,6 +12,7 @@ import org.apache.maven.project.MavenProject
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.apache.maven.shared.artifact.filter.collection.*
+import com.github.goldin.plugins.common.BaseGroovyMojo
 
 /**
  * {@link CopyMojo} helper class.
@@ -22,16 +23,12 @@ import org.apache.maven.shared.artifact.filter.collection.*
 @SuppressWarnings( 'FinalClassWithProtectedMember' )
 final class CopyMojoHelper
 {
+    private final BaseGroovyMojo mojoInstance
 
-   /**
-    * Convert path to its canonical form.
-    *
-    * @param s path to convert
-    * @return path in canonical form
-    */
-    protected String canonicalPath ( String s )
+    @Requires({ mojoInstance })
+    CopyMojoHelper ( BaseGroovyMojo mojoInstance )
     {
-        ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+        this.mojoInstance = mojoInstance
     }
 
 
@@ -97,7 +94,7 @@ final class CopyMojoHelper
 
         try
         {
-            List<CopyDependency>  dependencies = getArtifacts( artifacts, 'test', 'system' ).
+            List<CopyDependency>  dependencies = mojoInstance.resolveArtifacts( artifacts, failIfNotFound, 'test', 'system' ).
                                                  findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                                                  collect { Artifact artifact -> new CopyDependency( artifact ) }
 

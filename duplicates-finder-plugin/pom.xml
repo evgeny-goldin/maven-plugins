@@ -20,19 +20,4 @@
         <relativePath>../mojo-parent</relativePath>
     </parent>
 
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>com.github.goldin</groupId>
-                    <artifactId>duplicates-finder-plugin</artifactId>
-                    <version>${project.version}</version>
-                    <configuration>
-                        <fail>false</fail>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 </project>

@@ -78,7 +78,7 @@ final class CopyResource extends Resource implements Cloneable
         }
 
         assert ( targetPathsResolved == null )
-        targetPathsResolved = paths.collect { String path -> new CopyMojoHelper().canonicalPath( path ) } as String[]
+        targetPathsResolved = paths.collect { String path -> canonicalPath( path ) } as String[]
     }
 
 

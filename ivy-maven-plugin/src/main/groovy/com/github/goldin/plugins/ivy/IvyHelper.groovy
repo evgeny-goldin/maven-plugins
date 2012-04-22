@@ -102,9 +102,9 @@ class IvyHelper
                     "Failed to resolve [$gavc] artifact" )
             }
 
-            artifact( groupId, artifactId, version, type,
-                      '' /* <classifier> is only used to name an Ivy artifact, this is not a real Maven <classifier> */,
-                      ( artifacts ? artifacts.first().file : null ))
+            toMavenArtifact( groupId, artifactId, version, type,
+                             '' /* <classifier> is only used to name an Ivy artifact, this is not a real Maven <classifier> */,
+                             ( artifacts ? artifacts.first().file : null ))
         }
         finally
         {
@@ -183,7 +183,7 @@ class IvyHelper
                 String classifier = artifactReport.artifactOrigin.artifact.name
                 File   f          = verify().file( artifactReport.localFile )
                 String type       = file().extension( f )
-                artifact( IVY_PREFIX + groupId, artifactId, version, type, classifier, f )
+                toMavenArtifact( IVY_PREFIX + groupId, artifactId, version, type, classifier, f )
             }
             else
             {

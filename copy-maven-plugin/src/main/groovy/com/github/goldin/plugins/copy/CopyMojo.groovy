@@ -112,7 +112,7 @@ class CopyMojo extends BaseGroovyMojo
     public GroovyConfig groovyConfig
 
 
-    private final CopyMojoHelper helper = new CopyMojoHelper()
+    private final CopyMojoHelper helper = new CopyMojoHelper( this )
 
 
     /**
@@ -211,7 +211,7 @@ class CopyMojo extends BaseGroovyMojo
                 }
 
                 boolean processed = false
-                directory         = helper.canonicalPath ( directory )
+                directory         = canonicalPath ( directory )
                 includes          = helper.updatePatterns( directory, includes, encoding )
                 excludes          = helper.updatePatterns( directory, excludes, encoding )
 
