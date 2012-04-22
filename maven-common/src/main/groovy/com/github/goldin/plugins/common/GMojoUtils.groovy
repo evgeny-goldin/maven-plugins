@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.common
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*
+
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
 import groovy.text.SimpleTemplateEngine
@@ -21,7 +22,6 @@ import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
-import org.xml.sax.ext.DefaultHandler2
 import com.github.goldin.gcommons.beans.*
 
 
@@ -82,38 +82,6 @@ class GMojoUtils
              delegate.replaceAll( /(?<!\$)(?=\{.+?\})/, '\\$' )
          }
      }
-
-
-
-    /**
-     * Adds files specified to the class loader provided.
-     *
-     * @param cl      ClassLoader to add files to.
-     * @param files   files to add.
-     * @param verbose whether files added should be logged.
-     */
-    static void addToClassLoader( URLClassLoader cl, List<File> files, boolean verbose )
-    {
-        assert cl && files
-
-        final urls = []
-
-        files.each {
-            File f ->
-            final url = verify().file( f ).canonicalFile.toURL()
-            if ( ! cl.URLs.contains( url ))
-            {
-                cl.addURL( url )
-                urls << url
-            }
-        }
-
-        if ( verbose )
-        {
-            log.info( urls ? "New URLs added to [${ cl.class }]: $urls" :
-                             "No new URLs added to [${ cl.class }]" )
-        }
-    }
 
 
     /**
@@ -212,7 +180,7 @@ class GMojoUtils
      * @param resultType   result's type,
      *                     if <code>null</code> - no verification is made for result's type and <code>null</code>
      *                     value is allowed to be returned from eval()-ing the expression
-     * @param groovyConfig {@link com.github.goldin.gcommons.util.GroovyConfig} object to use, allowed to be <code>null</code>
+     * @param groovyConfig {@link GroovyConfig} object to use, allowed to be <code>null</code>
      * @param verbose      Whether Groovy evaluation should be verbose
      *
      * @param <T>        result's type
@@ -262,32 +230,6 @@ class GMojoUtils
 
 
     /**
-     * Validates content of the file specified to be XML-valid with {@link DefaultHandler2}.
-     * @param configFile file to validate
-     * @return same file object, for further chain calls
-     * @throws RuntimeException if content validation fails
-     */
-    static File validate ( File configFile )
-    {
-        for ( parserClass in [ XmlParser, XmlSlurper ] )
-        {
-            def parser = parserClass.newInstance( true, true )
-            parser.setErrorHandler( new DefaultHandler2())
-            try
-            {
-                assert parser.parse( configFile )
-            }
-            catch ( e )
-            {
-                throw new MojoExecutionException( "Failed to validate [${ configFile.canonicalPath }]", e )
-            }
-        }
-
-        configFile
-    }
-
-
-    /**
      * Initializes {@link ThreadLocals} storage for testing environment
      */
     static void initTestThreadLocals()
@@ -302,7 +244,7 @@ class GMojoUtils
     /**
      * Retrieves maximal length of map's key.
      */
-    static int maxKeyLength ( Map<?, ?> map ) { map.keySet().max{ it.toString().size() }.toString().size() }
+    static int maxKeyLength ( Map<?, ?> map ) { map.keySet().max{ Object o -> o.toString().size() }.toString().size() }
 
 
     /**
@@ -640,7 +582,7 @@ class GMojoUtils
                 (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
             }
 
-            project.setResolvedArtifacts( new HashSet<Artifact>( project.resolvedArtifacts + artifacts ))
+            project.resolvedArtifacts = new HashSet<Artifact>( project.resolvedArtifacts + artifacts )
         }
     }
 

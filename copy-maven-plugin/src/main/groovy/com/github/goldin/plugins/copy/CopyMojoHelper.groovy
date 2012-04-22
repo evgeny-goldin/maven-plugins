@@ -14,6 +14,7 @@ import org.gcontracts.annotations.Requires
 import org.apache.maven.shared.artifact.filter.collection.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 
+
 /**
  * {@link CopyMojo} helper class.
  *
@@ -64,32 +65,35 @@ final class CopyMojoHelper
 
     /**
      * Scans all dependencies this project has (including transitive ones) and filters them with scoping
-     * and transitivity filters provided in dependency specified.
+     * and transitivity filters provided in dependency specified. If dependency specified is not "filtering"
+     * one then it is resolved normally.
      *
-     * @param dependency     filtering dependency
+     * @param d              filtering dependency
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
      * @return               project's dependencies that passed all filters
      */
-    @Requires({ dependency })
+    @Requires({ d })
     @Ensures({ result != null })
-    protected List<CopyDependency> resolveDependenciesTransitively ( CopyDependency dependency, boolean failIfNotFound )
+    protected List<CopyDependency> resolveDependencies ( CopyDependency d, boolean failIfNotFound )
     {
-        assert dependency
-        def singleDependency = dependency.groupId && dependency.artifactId
+        assert d
+        def singleDependency = d.groupId && d.artifactId
 
-        if ( singleDependency && dependency.getExcludeTransitive( singleDependency ))
+        if ( singleDependency && d.getExcludeTransitive( singleDependency ))
         {
             // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - dependency is returned
-            return [ dependency ]
+            d.artifact = mojoInstance.resolveArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, d.type, d.classifier ),
+                                                       failIfNotFound )
+            return [ d ]
         }
 
         /**
          * Iterating over all dependencies and selecting those passing the filters.
          * "test" = "compile" + "provided" + "runtime" + "test" (http://maven.apache.org/pom.html#Dependencies)
          */
-        List<ArtifactsFilter> filters   = getFilters( dependency, singleDependency )
+        List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            [ buildArtifact( dependency.groupId, dependency.artifactId, dependency.version, dependency.type ) ] :
+            [ buildArtifact( d.groupId, d.artifactId, d.version, d.type ) ] :
             ThreadLocals.get( MavenProject ).artifacts
 
         try
@@ -99,19 +103,19 @@ final class CopyMojoHelper
                                                  collect { Artifact artifact -> new CopyDependency( artifact ) }
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
+            log.info( "Resolving dependencies [$d]: [${ dependencies.size() }] artifacts found" )
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved using [$dependency]"
+            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved using [$d]"
             return dependencies
         }
         catch( e )
         {
             String errorMessage =
                 'Failed to resolve and filter dependencies' +
-                ( singleDependency ? " using ${ dependency.optional ? 'optional ' : '' }<dependency> [$dependency]" : '' )
+                ( singleDependency ? " using ${ d.optional ? 'optional ' : '' }<dependency> [$d]" : '' )
 
-            if ( dependency.optional || ( ! failIfNotFound ))
+            if ( d.optional || ( ! failIfNotFound ))
             {
                 String exceptionMessage = e.toString()
 

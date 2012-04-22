@@ -416,7 +416,10 @@ class CopyMojo extends BaseGroovyMojo
         assert dependencies
 
         Collection<CopyDependency> result = dependencies.
-        collect { CopyDependency d -> helper.resolveDependenciesTransitively( d, failIfNotFound ) }.
+        collect {
+            CopyDependency d ->
+            helper.resolveDependencies( d, failIfNotFound )
+        }.
         flatten().
         collect { CopyDependency d ->
 

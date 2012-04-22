@@ -360,7 +360,7 @@
                                     <runIf>{{ new File( project.build.outputDirectory ).with{ directory &amp;&amp; listFiles() } }}</runIf>
                                     <dumpDependencies>true</dumpDependencies>
                                     <dumpMaven>true</dumpMaven>
-                                    <fileName>${project.build.outputDirectory}/about.txt</fileName>
+                                    <fileName>${project.build.outputDirectory}/about~${project.groupId}~${project.artifactId}~${project.version}.txt</fileName>
                                     <updateArchives>false</updateArchives>
                                 </configuration>
                             </execution>
