@@ -113,6 +113,29 @@ abstract class BaseGroovyMojo extends GroovyMojo
                                                                boolean  failOnError,
                                                                boolean  excludeOptional = true )
     {
+        final result = [ artifact ].toSet()
+        collectTransitiveDependenciesRecursively( artifact, failOnError, excludeOptional, result )
+        result
+    }
+
+
+    /**
+     * GContracts - private methods - does it work correctly?
+     * ?????????????????????????????
+     * NOT Optimized
+     *
+     * @param artifact
+     * @param failOnError
+     * @param excludeOptional
+     * @param collectedArtifacts
+     */
+    @Requires({ artifact && ( artifact in collectedArtifacts ) })
+    @Ensures({ collectedArtifacts })
+    private void collectTransitiveDependenciesRecursively ( Artifact      artifact,
+                                                            boolean       failOnError,
+                                                            boolean       excludeOptional,
+                                                            Set<Artifact> collectedArtifacts )
+    {
         final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), artifact.scope ), remoteRepos )
         def   rootNode
 
@@ -127,27 +150,28 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
         if ( rootNode )
         {
-            final childArtifacts = ( rootNode.children ?: [] ).
-                                   findAll {
-                                       DependencyNode childNode ->
-                                       ( ! ( excludeOptional && childNode.dependency.optional ))
-                                   }.
-                                   collect {
-                                       DependencyNode childNode ->
-                                       collectTransitiveDependencies( toMavenArtifact( childNode.dependency.artifact ),
-                                                                      failOnError,
-                                                                      excludeOptional )
-                                   }.
-                                   flatten().
-                                   toList()
-
-            final result = [ toMavenArtifact( rootNode.dependency.artifact ), *childArtifacts ].toSet()
-            result
+            ( rootNode.children ?: [] ).
+            findAll {
+                DependencyNode childNode ->
+                ( ! ( excludeOptional && childNode.dependency.optional ))
+            }.
+            collect {
+                DependencyNode childNode ->
+                toMavenArtifact( childNode.dependency.artifact )
+            }.
+            findAll {
+                Artifact childArtifact ->
+                ! ( childArtifact in collectedArtifacts )
+            }.
+            each {
+                Artifact childArtifact ->
+                collectedArtifacts << childArtifact
+                collectTransitiveDependenciesRecursively( childArtifact, failOnError, excludeOptional, collectedArtifacts )
+            }
         }
         else
         {
             assert ( ! failOnError ), "Failed to collect [$artifact] transitive dependencies"
-            [ artifact ]
         }
     }
 
