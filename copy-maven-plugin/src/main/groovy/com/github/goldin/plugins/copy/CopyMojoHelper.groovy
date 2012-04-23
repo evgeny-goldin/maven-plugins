@@ -98,7 +98,7 @@ final class CopyMojoHelper
 
         try
         {
-            List<CopyDependency>  dependencies =
+            List<CopyDependency> dependencies =
                 artifacts.
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                 collect { Artifact artifact -> new CopyDependency( mojoInstance.resolveArtifact( artifact, failIfNotFound )) }

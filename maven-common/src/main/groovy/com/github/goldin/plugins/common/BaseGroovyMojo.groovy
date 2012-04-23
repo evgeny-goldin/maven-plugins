@@ -15,7 +15,7 @@ import org.sonatype.aether.collection.CollectRequest
 import org.sonatype.aether.graph.Dependency
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
-
+import org.sonatype.aether.graph.DependencyNode
 
 /**
  * Base GroovyMojo class
@@ -100,17 +100,20 @@ abstract class BaseGroovyMojo extends GroovyMojo
     /**
      * Collects transitive dependencies of the artifact specified.
      *
-     * @param  artifact     Maven artifact to collect transitive dependencies of
-     * @param  failOnError  whether execution should fail if failed to collect dependencies
-     * @return              dependencies collected (not resolved!)
+     * @param  artifact        Maven artifact to collect transitive dependencies of
+     * @param  failOnError     whether execution should fail if failed to collect dependencies
+     * @param  excludeOptional whether optional dependencies should be excluded
+     * @return                 dependencies collected (not resolved!)
      *
      * @throws RuntimeException if 'failOnError' is true and collecting dependencies fails
      */
-    @Requires({ artifact })
+    @Requires({ artifact && artifact.scope })
     @Ensures({ result })
-    final List<Artifact> collectTransitiveDependencies ( Artifact artifact, boolean failOnError )
+    final Collection<Artifact> collectTransitiveDependencies ( Artifact artifact,
+                                                               boolean  failOnError,
+                                                               boolean  excludeOptional = true )
     {
-        final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), remoteRepos )
+        final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), artifact.scope ), remoteRepos )
         def   rootNode
 
         try
@@ -124,7 +127,22 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
         if ( rootNode )
         {
-            nodeArtifacts( rootNode )
+            final childArtifacts = ( rootNode.children ?: [] ).
+                                   findAll {
+                                       DependencyNode childNode ->
+                                       ( ! ( excludeOptional && childNode.dependency.optional ))
+                                   }.
+                                   collect {
+                                       DependencyNode childNode ->
+                                       collectTransitiveDependencies( toMavenArtifact( childNode.dependency.artifact ),
+                                                                      failOnError,
+                                                                      excludeOptional )
+                                   }.
+                                   flatten().
+                                   toList()
+
+            final result = [ toMavenArtifact( rootNode.dependency.artifact ), *childArtifacts ].toSet()
+            result
         }
         else
         {
