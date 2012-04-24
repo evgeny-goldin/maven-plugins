@@ -13,9 +13,11 @@ class CopyDependency extends ArtifactItem
     CopyDependency( Artifact artifact ) { super( artifact )  }
 
 
-    boolean optional = false
-    Boolean stripVersion
-    Boolean excludeTransitive
+    boolean optional        = false  // Whether this dependency is optional
+    boolean includeOptional = false  // Whether this filtering dependency should include optional dependencies
+    Boolean stripVersion             // Whether version number should be removed from file names
+    Boolean excludeTransitive        // Whether transitive dependencies should be excluded
+
     boolean getExcludeTransitive ( boolean singleDependency )
     {
         /**
