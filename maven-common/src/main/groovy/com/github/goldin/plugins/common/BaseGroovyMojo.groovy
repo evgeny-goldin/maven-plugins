@@ -11,11 +11,12 @@ import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
-import org.sonatype.aether.collection.CollectRequest
-import org.sonatype.aether.graph.Dependency
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
+import org.sonatype.aether.graph.Dependency
+import org.sonatype.aether.collection.CollectRequest
 import org.sonatype.aether.graph.DependencyNode
+
 
 /**
  * Base GroovyMojo class
@@ -100,78 +101,84 @@ abstract class BaseGroovyMojo extends GroovyMojo
     /**
      * Collects transitive dependencies of the artifact specified.
      *
-     * @param  artifact        Maven artifact to collect transitive dependencies of
-     * @param  failOnError     whether execution should fail if failed to collect dependencies
-     * @param  excludeOptional whether optional dependencies should be excluded
-     * @return                 dependencies collected (not resolved!)
+     * @param artifact        Maven artifact to collect transitive dependencies of
+     * @param scope           Artifact scope
+     * @param failOnError     whether execution should fail if failed to collect dependencies
+     * @param collectOptional whether optional dependencies should be excluded
+     * @return                dependencies collected (not resolved!)
      *
      * @throws RuntimeException if 'failOnError' is true and collecting dependencies fails
      */
-    @Requires({ artifact && artifact.scope })
+    @Requires({ artifact && ( artifact.scope != null ) })
     @Ensures({ result })
     final Collection<Artifact> collectTransitiveDependencies ( Artifact artifact,
+                                                               String   scope,
                                                                boolean  failOnError,
-                                                               boolean  excludeOptional = true )
+                                                               boolean  collectOptional )
     {
         final result = [ artifact ].toSet()
-        collectTransitiveDependenciesRecursively( artifact, failOnError, excludeOptional, result )
+        collectTransitiveDependenciesRecursively( artifact, scope, failOnError, collectOptional, result )
         result
     }
 
 
     /**
-     * GContracts - private methods - does it work correctly?
-     * ?????????????????????????????
-     * NOT Optimized
+     * Collects transitive dependencies of the artifact specified.
      *
-     * @param artifact
-     * @param failOnError
-     * @param excludeOptional
-     * @param collectedArtifacts
+     * @param artifact           Maven artifact to collect transitive dependencies of
+     * @param scope              Artifact scope
+     * @param failOnError        whether execution should fail if failed to collect dependencies
+     * @param collectOptional    whether optional dependencies should be excluded
+     * @param artifactsInProcess Set of artifacts being processed recursively
      */
-    @Requires({ artifact && ( artifact in collectedArtifacts ) })
-    @Ensures({ collectedArtifacts })
+    @Requires({ artifact && ( scope != null ) && artifactsInProcess && ( artifact in artifactsInProcess ) && false })
+    @Ensures({ artifactsInProcess })
     private void collectTransitiveDependenciesRecursively ( Artifact      artifact,
+                                                            String        scope,
                                                             boolean       failOnError,
-                                                            boolean       excludeOptional,
-                                                            Set<Artifact> collectedArtifacts )
+                                                            boolean       collectOptional,
+                                                            Set<Artifact> artifactsInProcess )
     {
-        final request = new CollectRequest( new Dependency( toAetherArtifact( artifact ), artifact.scope ), remoteRepos )
+        final dependency = new Dependency( toAetherArtifact( artifact ) , scope )
+        final request    = new CollectRequest( dependency, remoteRepos )
         def   rootNode
 
         try
         {
             rootNode = repoSystem.collectDependencies( repoSession, request ).root
+            if ( ! rootNode )
+            {
+                assert ( ! failOnError ), "Failed to collect [$artifact] transitive dependencies"
+                return
+            }
         }
         catch ( e )
         {
             if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] transitive dependencies", e ) }
         }
 
-        if ( rootNode )
-        {
-            ( rootNode.children ?: [] ).
-            findAll {
-                DependencyNode childNode ->
-                ( ! ( excludeOptional && childNode.dependency.optional ))
-            }.
-            collect {
-                DependencyNode childNode ->
-                toMavenArtifact( childNode.dependency.artifact )
-            }.
-            findAll {
-                Artifact childArtifact ->
-                ! ( childArtifact in collectedArtifacts )
-            }.
-            each {
-                Artifact childArtifact ->
-                collectedArtifacts << childArtifact
-                collectTransitiveDependenciesRecursively( childArtifact, failOnError, excludeOptional, collectedArtifacts )
+        rootNode.children.
+        findAll {
+            DependencyNode childNode ->
+            (( ! childNode.dependency.optional ) || collectOptional )
+        }.
+        collect {
+            DependencyNode childNode ->
+            toMavenArtifact( childNode.dependency.artifact )
+        }.
+        each {
+            Artifact a ->
+
+            /**
+             * Every child artifact is checked before going recursive.
+             * findAll{ .. } doesn't work here as it checks all child artifacts only once
+             * and ignores any updates from recursive invocations.
+             */
+            if ( ! ( a in artifactsInProcess ))
+            {
+                collectTransitiveDependenciesRecursively( a, scope, failOnError, collectOptional,
+                                                          (( Set ) artifactsInProcess << a ))
             }
-        }
-        else
-        {
-            assert ( ! failOnError ), "Failed to collect [$artifact] transitive dependencies"
         }
     }
 

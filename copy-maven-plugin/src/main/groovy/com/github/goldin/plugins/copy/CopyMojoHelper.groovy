@@ -83,7 +83,7 @@ final class CopyMojoHelper
 
         if ( singleDependency && d.getExcludeTransitive( singleDependency ))
         {
-            // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - dependency is returned
+            // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - resolved dependency is returned
             d.artifact = mojoInstance.resolveArtifact( mavenArtifact, failIfNotFound )
             return [ d ]
         }
@@ -93,7 +93,7 @@ final class CopyMojoHelper
          */
         List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            mojoInstance.collectTransitiveDependencies( mavenArtifact, failIfNotFound ) :
+            mojoInstance.collectTransitiveDependencies( mavenArtifact, d.includeScope ?: '', failIfNotFound, false ) :
             mojoInstance.project.artifacts
 
         try
