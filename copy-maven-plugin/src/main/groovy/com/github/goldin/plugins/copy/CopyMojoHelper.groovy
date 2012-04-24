@@ -78,8 +78,9 @@ final class CopyMojoHelper
     {
         assert d
         final singleDependency = d.groupId && d.artifactId
-        final mavenArtifact    = singleDependency ? toMavenArtifact( d.groupId , d.artifactId , d.version , d.type , d.classifier ) :
-                                                    null
+        final mavenArtifact    = singleDependency ?
+            toMavenArtifact( d.groupId, d.artifactId, d.version, d.includeScope, d.type, d.classifier ) :
+            null
 
         if ( singleDependency && d.getExcludeTransitive( singleDependency ))
         {

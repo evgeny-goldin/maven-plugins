@@ -503,17 +503,18 @@ class GMojoUtils
      * @param groupId    artifact {@code <groupId>}
      * @param artifactId artifact {@code <artifactId>}
      * @param version    artifact {@code <version>}
+     * @param scope      artifact {@code <scope>}
      * @param type       artifact {@code <type>}
      * @param classifier artifact {@code <classifier>}
      * @param file       artifact local file, may be {@code null}
      *
      * @return new Maven {@link Artifact}
      */
-    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String type, String classifier, File file = null )
+    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier, File file = null )
     {
         assert groupId && artifactId && version
 
-        final a = new DefaultArtifact( groupId, artifactId, version, 'compile', type, classifier, new DefaultArtifactHandler())
+        final a = new DefaultArtifact( groupId, artifactId, version, scope ?: 'compile', type, classifier, new DefaultArtifactHandler())
         if ( file ) { a.file = verify().file( file ) }
         a
     }
@@ -521,13 +522,14 @@ class GMojoUtils
 
     /**
      * Converts Aether artifact to Maven {@link Artifact}.
-     * @param a Aether artifact
+     * @param a     Aether artifact
+     * @param scope artifact scope
      * @return new Maven {@link Artifact}
      */
-    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact a )
+    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact a, String scope )
     {
         assert a
-        toMavenArtifact( a.groupId, a.artifactId, a.version, a.extension, a.classifier, a.file )
+        toMavenArtifact( a.groupId, a.artifactId, a.version, scope, a.extension, a.classifier, a.file )
     }
 
 
