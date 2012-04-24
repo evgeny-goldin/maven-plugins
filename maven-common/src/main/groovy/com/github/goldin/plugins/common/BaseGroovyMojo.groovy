@@ -124,8 +124,10 @@ abstract class BaseGroovyMojo extends GroovyMojo
         try
         {
             final request                  = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), remoteRepos )
+            final previousSelector         = repoSession.dependencySelector
             repoSession.dependencySelector = new ScopeDependencySelector( split( includeScope ), split( excludeScope ))
             final rootNode                 = repoSystem.collectDependencies( repoSession, request ).root
+            repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
             {
