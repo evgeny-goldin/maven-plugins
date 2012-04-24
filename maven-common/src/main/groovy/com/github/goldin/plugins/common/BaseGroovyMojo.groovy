@@ -106,7 +106,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * Collects transitive dependencies of the artifact specified.
      *
      * @param artifact        Maven artifact to collect transitive dependencies of
-     * @param scope           Artifact scope
+     * @param includeScope    scope of artifacts to include
+     * @param excludeScope    scope of artifacts to exclude
      * @param failOnError     whether execution should fail if failed to collect dependencies
      * @param collectOptional whether optional dependencies should be excluded
      * @return                dependencies collected (not resolved!)
@@ -116,7 +117,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ artifact && ( artifact.scope != null ) })
     @Ensures({ result })
     final Collection<Artifact> collectTransitiveDependencies ( Artifact artifact,
-                                                               String   scope,
+                                                               String   includeScope,
+                                                               String   excludeScope,
                                                                boolean  failOnError,
                                                                boolean  collectOptional )
     {
@@ -126,14 +128,14 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
         try
         {
-            final scopeSelector            = new ScopeDependencySelector( scope ? [ scope ] : null, null )
+            final scopeSelector            = new ScopeDependencySelector( includeScope ? [ includeScope ] : null,
+                                                                          excludeScope ? [ excludeScope ] : null )
             final optionalSelector         = collectOptional ? new StaticDependencySelector( true ) : new OptionalDependencySelector()
-            final allSelectors             = new AndDependencySelector( scopeSelector, optionalSelector )
-            repoSession.dependencySelector = allSelectors
+            repoSession.dependencySelector = new AndDependencySelector( scopeSelector, optionalSelector )
             rootNode                       = repoSystem.collectDependencies( repoSession, request ).root
 
             assert ( rootNode || ( ! failOnError )), "Failed to collect [$artifact] transitive dependencies"
-            ( rootNode ? artifacts( rootNode, collectOptional ) : Collections.emptyList())
+            ( rootNode ? collectNodeArtifacts( rootNode, collectOptional ) : Collections.emptyList())
         }
         catch ( e )
         {
@@ -142,9 +144,16 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    @Requires({ node && false /* Testing GContracts */ })
-    @Ensures({ result })
-    private Set<Artifact> artifacts( DependencyNode node, boolean collectOptional )
+    /**
+     * Recursively collects dependency node artifacts.
+     *
+     * @param node            node to collect its artifacts.
+     * @param collectOptional whether optional dependencies should be collected
+     * @return                node artifacts
+     */
+    @Requires({ node  && false /* Testing GContracts */ })
+    @Ensures({ result && false })
+    private Set<Artifact> collectNodeArtifacts ( DependencyNode node, boolean collectOptional )
     {
         ( Set<Artifact> ) node.children.
         findAll {
@@ -153,7 +162,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
         }.
         collect {
             DependencyNode childNode ->
-            artifacts( childNode, collectOptional )
+            collectNodeArtifacts( childNode, collectOptional )
         }.
         flatten().
         toSet() << toMavenArtifact( node.dependency.artifact, node.dependency.scope )

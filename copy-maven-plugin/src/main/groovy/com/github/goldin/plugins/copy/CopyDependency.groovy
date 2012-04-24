@@ -25,8 +25,9 @@ class CopyDependency extends ArtifactItem
         ( excludeTransitive == null ) ? singleDependency : excludeTransitive
     }
 
-    String  includeScope
-    String  excludeScope
+
+    String includeScope
+    String excludeScope
 
     String  includeGroupIds
     String  excludeGroupIds

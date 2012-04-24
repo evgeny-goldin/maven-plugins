@@ -15,6 +15,7 @@ import org.gcontracts.annotations.Requires
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
+
 /**
  * {@link CopyMojo} helper class.
  *
@@ -94,7 +95,7 @@ final class CopyMojoHelper
          */
         List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
         Collection<Artifact>  artifacts = singleDependency ?
-            mojoInstance.collectTransitiveDependencies( mavenArtifact, d.includeScope ?: '', failIfNotFound, false ) :
+            mojoInstance.collectTransitiveDependencies( mavenArtifact, d.includeScope, d.excludeScope, failIfNotFound, false ) :
             mojoInstance.project.artifacts
 
         try
@@ -157,7 +158,7 @@ final class CopyMojoHelper
 
         if ( dependency.includeScope || dependency.excludeScope )
         {
-            filters << new ScopeFilter( c ( dependency.includeScope ), c ( dependency.excludeScope ))
+            filters << new ScopeFilter( split( dependency.includeScope ), split( dependency.excludeScope ))
         }
 
         if ( dependency.includeGroupIds || dependency.excludeGroupIds )
