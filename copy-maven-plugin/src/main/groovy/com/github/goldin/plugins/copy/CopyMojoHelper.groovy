@@ -161,18 +161,18 @@ final class CopyMojoHelper
     /**
      * Collects dependencies of the artifact specified.
      *
-     * @param dependency         dependency artifact originated from
-     * @param artifact           artifact to collect dependencies of
-     * @param failOnError        whether execution should fail if failed to collect dependencies
-     * @param artifactsInProcess internal variable used by recursive iteration, shouldn't be used by caller!
-     * @return                   dependencies collected (not resolved!)
+     * @param dependency          dependency artifact originated from
+     * @param artifact            artifact to collect dependencies of
+     * @param failOnError         whether execution should fail if failed to collect dependencies
+     * @param artifactsAggregator internal variable used by recursive iteration, shouldn't be used by caller!
+     * @return                    dependencies collected (not resolved!)
      */
     @Requires({ dependency && artifact })
     @Ensures({ result })
     final Collection<Artifact> collectDependencies ( CopyDependency dependency,
                                                      Artifact       artifact,
                                                      boolean        failOnError,
-                                                     Set<Artifact>  artifactsInProcess = [ artifact ].toSet())
+                                                     Set<Artifact>  artifactsAggregator = [ artifact ].toSet())
     {
         try
         {
@@ -210,21 +210,19 @@ final class CopyMojoHelper
                  */
                 childArtifacts.each {
                     Artifact childArtifact ->
-                    if ( ! ( childArtifact in artifactsInProcess ))
+                    if ( ! ( childArtifact in artifactsAggregator ))
                     {
                         collectDependencies( dependency, childArtifact, failOnError,
-                                             (( Set<Artifact> )( artifactsInProcess << childArtifact )))
+                                             (( Set<Artifact> )( artifactsAggregator << childArtifact )))
                     }
                 }
-
-                childArtifacts = artifactsInProcess
             }
 
             /**
              * Filtering out the final result before returning it since initial artifact was added to
              * recursion set without checking its scope.
              */
-            childArtifacts.findAll { Artifact a -> scopeMatches( a.scope, includeScope, excludeScope ) }
+            artifactsAggregator.findAll { Artifact a -> scopeMatches( a.scope, includeScope, excludeScope ) }
         }
         catch ( e )
         {
