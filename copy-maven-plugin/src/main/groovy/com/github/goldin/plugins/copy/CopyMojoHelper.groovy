@@ -82,7 +82,6 @@ final class CopyMojoHelper
          */
         final mavenArtifact = d.gav ? toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier ) :
                                       null
-
         if ( d.single )
         {
             d.artifact = mojoInstance.resolveArtifact( mavenArtifact, failIfNotFound )
@@ -93,7 +92,7 @@ final class CopyMojoHelper
          * Iterating over all dependencies and selecting those passing the filters.
          */
 
-        Collection<Artifact> artifacts = mavenArtifact ?
+        Collection<Artifact> artifacts = d.gav ?
             // For GAV dependency we collect its dependencies
             mojoInstance.collectDependencies( mavenArtifact, d.includeScope, d.excludeScope, d.transitive, d.includeOptional, failIfNotFound ) :
             // Otherwise, we take all project's transitive dependencies
@@ -104,7 +103,7 @@ final class CopyMojoHelper
             /**
              * When GAV coordinates appear, scope and transitivity were applied already by {@link BaseGroovyMojo#collectDependencies} call above.
              */
-            final                filters      = getFilters( d, ( mavenArtifact == null ))
+            final                filters      = getFilters( d, ( ! d.gav ))
             List<CopyDependency> dependencies =
                 artifacts.
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
@@ -190,7 +189,7 @@ final class CopyMojoHelper
             filters << new TypeFilter( c ( dependency.includeTypes ), c ( dependency.excludeTypes ))
         }
 
-        assert ( filters || useScopeTransitivityFilters ) : \
+        assert ( filters || ( ! useScopeTransitivityFilters )) : \
                "No filters found in <dependency> [$dependency]. Specify filters like <includeScope> or <includeGroupIds>."
         filters
     }
