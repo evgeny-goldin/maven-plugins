@@ -715,6 +715,22 @@ class GMojoUtils
     }
 
 
+    /**
+     * Determines if scope specified matches include/exclude scopes provided.
+     *
+     * @param scope        scope to check
+     * @param includeScope include scopes
+     * @param excludeScope exclude scopes
+     * @return true if scope specified matches include/exclude scopes provided,
+     *         false otherwise
+     */
+    static boolean scopeMatches( String scope, List<String> includeScope, List<String> excludeScope )
+    {
+        ( includeScope.empty ||   ( scope in includeScope )) &&
+        ( excludeScope.empty || ! ( scope in excludeScope ))
+    }
+
+
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static ConstantsBean constants (){ GCommons.constants ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )

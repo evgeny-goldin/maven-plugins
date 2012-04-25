@@ -176,9 +176,11 @@ final class CopyMojoHelper
     {
         try
         {
-            final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
+            final includeScope                  = split( dependency.includeScope )
+            final excludeScope                  = split( dependency.excludeScope )
+            final request                       = new CollectRequest( toAetherDependency( artifact ), mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
-            mojo.repoSession.dependencySelector = new ScopeDependencySelector( split( dependency.includeScope ), split( dependency.excludeScope ))
+            mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScope , excludeScope )
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
             mojo.repoSession.dependencySelector = previousSelector
 
@@ -188,7 +190,7 @@ final class CopyMojoHelper
                 return Collections.emptyList()
             }
 
-            Collection<Artifact> childArtifacts = rootNode.children.
+            final childArtifacts = rootNode.children.
             findAll {
                 DependencyNode childNode ->
                 (( ! childNode.dependency.optional ) || dependency.includeOptional )
@@ -217,13 +219,23 @@ final class CopyMojoHelper
                 childArtifacts = artifactsInProcess
             }
 
-            childArtifacts
+            /**
+             * Filtering out the final result before returning it since initial artifact was added to
+             * recursion set without checking its scope.
+             */
+            childArtifacts.findAll { Artifact a -> scopeMatches( a.scope, includeScope, excludeScope ) }
         }
         catch ( e )
         {
             if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
             return Collections.emptyList()
         }
+    }
+
+
+    private org.sonatype.aether.graph.Dependency toAetherDependency( Artifact artifact )
+    {
+        new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null )
     }
 
 
