@@ -26,9 +26,12 @@ class CopyDependency extends ArtifactItem
     CopyDependency( Dependency mavenDependency, CopyDependency copyDependency )
     {
         this( toMavenArtifact( mavenDependency ))
+
+        assert (( this.gav ) && ( ! copyDependency.gav ))
+
         this.includeScope      = copyDependency.includeScope
         this.excludeScope      = copyDependency.excludeScope
-        this.excludeTransitive = copyDependency.excludeTransitive
+        this.excludeTransitive = ( ! copyDependency.transitive )
     }
 
 

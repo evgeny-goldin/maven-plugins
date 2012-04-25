@@ -665,7 +665,8 @@ class GMojoUtils
          */
         Map<String, List<Artifact>> mapping = artifacts.inject( [:].withDefault{ [] } ) {
             Map m, Artifact a ->
-            m[ "$a.groupId::$a.artifactId::$a.type::$a.classifier" ] << a
+            assert a.groupId && a.artifactId
+            m[ "$a.groupId::$a.artifactId::${ a.type ?: '' }::${ a.classifier ?: '' }" ] << a
             m
         }
 
