@@ -414,7 +414,7 @@ class CopyMojo extends BaseGroovyMojo
     {
         assert dependencies
 
-        Collection<CopyDependency> result = dependencies.
+        final result = dependencies.
         collect {
             CopyDependency d ->
             helper.resolveDependencies( d, failIfNotFound )
@@ -424,14 +424,14 @@ class CopyMojo extends BaseGroovyMojo
             CopyDependency d ->
             assert d.groupId && d.artifactId && d.artifact.file.file
 
-            final prevDestFileName = d.destFileName
-            d.destFileName         = ( d.groupId.startsWith( IVY_PREFIX )) ?
-                                     /**
-                                      * Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact)
-                                      * in "destFileName" which now needs to be removed.
-                                      */
-                                     ( prevDestFileName ?: d.artifact.file.name ) :
-                                     helper.artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
+            d.destFileName = d.destFileName ?:
+                             ( d.groupId.startsWith( IVY_PREFIX )) ?
+                               /**
+                                * Ivy dependencies may carry a fake <classifier> (serving as a pattern to name the artifact)
+                                * in "destFileName" which now needs to be removed.
+                                */
+                                d.artifact.file.name :
+                                helper.artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
             d
         }
 

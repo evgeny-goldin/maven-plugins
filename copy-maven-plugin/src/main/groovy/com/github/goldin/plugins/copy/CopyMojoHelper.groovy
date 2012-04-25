@@ -65,13 +65,12 @@ final class CopyMojoHelper
 
 
     /**
-     * Scans all dependencies this project has (including transitive ones) and filters them with scoping
-     * and transitivity filters provided in dependency specified. If dependency specified is a "single"
-     * one then it is resolved normally.
+     * Scans project dependencies, resolves and filters them using dependency provided.
+     * If dependency specified is a "single" one then it is resolved normally.
      *
-     * @param d              dependency to resolve
+     * @param d              dependency to resolve, either "single" or "filtering" one
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
-     * @return               project's dependencies that passed all filters
+     * @return               project's dependencies that passed all filters, resolved
      */
     @Requires({ d })
     @Ensures({ result || ( ! failIfNotFound ) })
@@ -115,7 +114,8 @@ final class CopyMojoHelper
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
             assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved using [$d]"
-            return dependencies
+            assert dependencies.every { it.artifact.file.file }
+            dependencies
         }
         catch( e )
         {
@@ -132,7 +132,7 @@ final class CopyMojoHelper
                 }
 
                 log.warn( "$errorMessage: $exceptionMessage" )
-                return []
+                []
             }
 
             throw new MojoExecutionException( errorMessage, e )
