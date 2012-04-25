@@ -656,8 +656,6 @@ class GMojoUtils
      */
     static Collection<Artifact> eliminateDuplicates( Collection<Artifact> artifacts )
     {
-        assert artifacts
-
         if ( artifacts.size() < 2 ) { return artifacts }
 
         /**

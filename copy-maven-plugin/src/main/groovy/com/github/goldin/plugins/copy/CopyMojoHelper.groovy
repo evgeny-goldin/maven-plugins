@@ -128,11 +128,11 @@ final class CopyMojoHelper
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
+            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifact${ general().s( dependencies.size())} found" )
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved with [$dependency]"
-            assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
+            assert ( dependencies || ( ! failIfNotFound ) || ( dependency.optional )), "No dependencies resolved with [$dependency]"
+            assert dependencies.every { it.artifact?.file?.file || ( ! failIfNotFound ) || it.optional }
             dependencies
         }
         catch( e )
@@ -178,7 +178,8 @@ final class CopyMojoHelper
         {
             final includeScope                  = split( dependency.includeScope )
             final excludeScope                  = split( dependency.excludeScope )
-            final request                       = new CollectRequest( toAetherDependency( artifact ), mojo.remoteRepos )
+            final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
+                                                                      mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
             mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScope , excludeScope )
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
@@ -228,14 +229,8 @@ final class CopyMojoHelper
         catch ( e )
         {
             if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
-            return Collections.emptyList()
+            Collections.emptyList()
         }
-    }
-
-
-    private org.sonatype.aether.graph.Dependency toAetherDependency( Artifact artifact )
-    {
-        new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null )
     }
 
 
