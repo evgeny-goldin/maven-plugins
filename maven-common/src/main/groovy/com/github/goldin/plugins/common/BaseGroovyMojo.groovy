@@ -3,6 +3,7 @@ package com.github.goldin.plugins.common
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.execution.MavenSession
+import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.gcontracts.annotations.Ensures
@@ -92,7 +93,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
             }
             catch ( e )
             {
-                if (( ! artifact.optional ) && failOnError ) { throw new RuntimeException( errorMessage, e ) }
+                if (( ! artifact.optional ) && failOnError ) { throw new MojoExecutionException( errorMessage, e ) }
             }
         }
 

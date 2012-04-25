@@ -164,7 +164,7 @@ class CopyMojo extends BaseGroovyMojo
                         throw new MojoExecutionException( errorMessage, e )
                     }
 
-                    ( shouldFailWith ? log.&info : log.&error )( errorMessage )
+                    ( shouldFailWith ? log.&info : log.&warn )( errorMessage )
                 }
 
                 if ( shouldFailWith && ( ! failed ))
@@ -420,9 +420,13 @@ class CopyMojo extends BaseGroovyMojo
             helper.resolveDependencies( d, failIfNotFound )
         }.
         flatten().
+        findAll {
+            // Filtering out (optional) unresolved artifacts
+            CopyDependency d ->
+            d.artifact?.file?.file
+        }.
         collect {
             CopyDependency d ->
-            assert d.groupId && d.artifactId && d.artifact.file.file
 
             d.destFileName = d.destFileName ?:
                              ( d.groupId.startsWith( IVY_PREFIX )) ?
@@ -435,8 +439,8 @@ class CopyMojo extends BaseGroovyMojo
             d
         }
 
-        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), \
-               "No dependencies resolved with [$dependencies]"
+        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), "No dependencies resolved with [$dependencies]"
+        assert result.every { it.artifact.file.file }
         result
     }
 
