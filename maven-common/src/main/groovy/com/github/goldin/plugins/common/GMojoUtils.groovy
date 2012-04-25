@@ -10,6 +10,7 @@ import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
+import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.BuildPluginManager
@@ -509,15 +510,18 @@ class GMojoUtils
      * @param scope      artifact {@code <scope>}
      * @param type       artifact {@code <type>}
      * @param classifier artifact {@code <classifier>}
+     * @param optional   whether artifact is optional
      * @param file       artifact local file, may be {@code null}
      *
      * @return new Maven {@link Artifact}
      */
-    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier, File file = null )
+    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier,
+                                      boolean optional, File file = null )
     {
         assert groupId && artifactId && version
 
-        final a = new DefaultArtifact( groupId, artifactId, version, scope ?: 'compile', type, classifier, new DefaultArtifactHandler())
+        final a = new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ),
+                                       scope ?: 'compile', type, classifier, new DefaultArtifactHandler(), optional )
         if ( file ) { a.file = verify().file( file ) }
         a
     }
@@ -532,7 +536,7 @@ class GMojoUtils
     static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact a, String scope )
     {
         assert a
-        toMavenArtifact( a.groupId, a.artifactId, a.version, scope, a.extension, a.classifier, a.file )
+        toMavenArtifact( a.groupId, a.artifactId, a.version, scope, a.extension, a.classifier, false, a.file )
     }
 
 

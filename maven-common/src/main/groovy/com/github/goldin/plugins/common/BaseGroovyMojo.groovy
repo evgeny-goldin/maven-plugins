@@ -81,6 +81,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Ensures({ result.is( artifact ) })
     final Artifact resolveArtifact( Artifact artifact, boolean failOnError )
     {
+        final errorMessage = "Failed to resolve ${ artifact.optional ? 'optional artifact ' : '' }[$artifact]"
+
         if ( ! artifact.file )
         {
             final request = new ArtifactRequest( toAetherArtifact( artifact ), remoteRepos, null )
@@ -90,11 +92,16 @@ abstract class BaseGroovyMojo extends GroovyMojo
             }
             catch ( e )
             {
-                if ( failOnError ) { throw new RuntimeException( "Failed to resolve [$artifact]", e ) }
+                if (( ! artifact.optional ) && failOnError ) { throw new RuntimeException( errorMessage, e ) }
             }
         }
 
-        if ( failOnError ) { assert artifact.file?.file, "Failed to resolve [$artifact]" }
+        if ( ! artifact.file?.file )
+        {
+            assert ( artifact.optional || ( ! failOnError )), errorMessage
+            log.warn( errorMessage )
+        }
+
         artifact
     }
 

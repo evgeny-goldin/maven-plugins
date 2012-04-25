@@ -79,7 +79,7 @@ final class CopyMojoHelper
         /**
          * When GAV coordinates are specified we convert the dependency to Maven artifact
          */
-        final mavenArtifact = d.gav ? toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier ) :
+        final mavenArtifact = d.gav ? toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, d.optional ) :
                                       null
         if ( d.single )
         {
