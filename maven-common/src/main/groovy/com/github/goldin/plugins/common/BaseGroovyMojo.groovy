@@ -105,6 +105,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * @param artifact           Maven artifact to collect transitive dependencies of
      * @param includeScope       scope of artifacts to include
      * @param excludeScope       scope of artifacts to exclude
+     * @param includeTransitive  whether transitive dependencies should be included
      * @param includeOptional    whether optional dependencies should be included
      * @param failOnError        whether execution should fail if failed to collect dependencies
      * @param artifactsInProcess internal variable with default value used by recursive iteration, shouldn't be used by caller!
@@ -114,12 +115,13 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ artifact && ( artifact.scope != null ) })
     @Ensures({ result })
-    final Collection<Artifact> collectTransitiveDependencies ( Artifact      artifact,
-                                                               String        includeScope,
-                                                               String        excludeScope,
-                                                               boolean       includeOptional,
-                                                               boolean       failOnError,
-                                                               Set<Artifact> artifactsInProcess = [ artifact ].toSet())
+    final Collection<Artifact> collectDependencies ( Artifact      artifact,
+                                                     String        includeScope,
+                                                     String        excludeScope,
+                                                     boolean       includeTransitive,
+                                                     boolean       includeOptional,
+                                                     boolean       failOnError,
+                                                     Set<Artifact> artifactsInProcess = [ artifact ].toSet())
     {
         try
         {
@@ -131,36 +133,44 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
             if ( ! rootNode )
             {
-                assert ( ! failOnError ), "Failed to collect [$artifact] transitive dependencies"
+                assert ( ! failOnError ), "Failed to collect [$artifact] dependencies"
                 return Collections.emptyList()
             }
 
-            /**
-             * Recursively iterating over node's children and collecting their transitive dependencies.
-             * The problem is the graph at this point contains only partial data, some of node's children
-             * may have dependencies not shown by the graph we have (I don't know why).
-             */
-            rootNode.children.
+            Collection<Artifact> dependencies = rootNode.children.
             findAll {
                 DependencyNode childNode ->
                 (( ! childNode.dependency.optional ) || includeOptional )
             }.
-            each {
+            collect {
                 DependencyNode childNode ->
-                Artifact       childArtifact = toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
-
-                if ( ! ( childArtifact in artifactsInProcess ))
-                {
-                    collectTransitiveDependencies( childArtifact, includeScope, excludeScope, includeOptional, failOnError,
-                                                   ( Set<Artifact> )( artifactsInProcess << childArtifact ))
-                }
+                toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
             }
 
-            artifactsInProcess
+            if ( includeTransitive )
+            {
+                /**
+                 * Recursively iterating over node's children and collecting their transitive dependencies.
+                 * The problem is the graph at this point contains only partial data, some of node's children
+                 * may have dependencies not shown by the graph we have (I don't know why).
+                 */
+                dependencies.each {
+                    Artifact a ->
+                    if ( ! ( a in artifactsInProcess ))
+                    {
+                        collectDependencies( a, includeScope, excludeScope, includeTransitive, includeOptional, failOnError,
+                                             ( Set<Artifact> )( artifactsInProcess << a ))
+                    }
+                }
+
+                dependencies = artifactsInProcess
+            }
+
+            dependencies
         }
         catch ( e )
         {
-            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] transitive dependencies", e ) }
+            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
             return Collections.emptyList()
         }
     }

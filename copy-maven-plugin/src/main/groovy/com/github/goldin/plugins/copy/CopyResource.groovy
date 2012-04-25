@@ -219,18 +219,8 @@ final class CopyResource extends Resource implements Cloneable
     {
         if ( this.dependenciesAtM2 != null ) { return this.dependenciesAtM2 }
 
-        boolean singleDependency = ( dependencies().size() == 1 ) &&
-                                   ( dependencies()[ 0 ].with {
-                                       getExcludeTransitive( true ) &&
-                                       ( ! [ includeOptional,
-                                             includeScope,       excludeScope,
-                                             includeGroupIds,    excludeGroupIds,
-                                             includeArtifactIds, excludeArtifactIds,
-                                             includeClassifiers, excludeClassifiers,
-                                             includeTypes,       excludeTypes ].any())
-                                   })
-
-        ( singleDependency ) || ( ! ( this.filter || this.process ))
+        boolean singleDependency = ( dependencies().size() == 1 ) && ( dependencies()[ 0 ].single )
+        return (( singleDependency ) || ( ! ( this.filter || this.process )))
     }
 
 

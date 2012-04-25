@@ -18,36 +18,72 @@ class CopyDependency extends ArtifactItem
     Boolean stripVersion             // Whether version number should be removed from file names
     Boolean excludeTransitive        // Whether transitive dependencies should be excluded
 
-    boolean getExcludeTransitive ( boolean singleDependency )
+    String  includeScope
+    String  excludeScope
+
+    String  includeGroupIds
+    String  excludeGroupIds
+
+    String  includeArtifactIds
+    String  excludeArtifactIds
+
+    String  includeClassifiers
+    String  excludeClassifiers
+
+    String  includeTypes
+    String  excludeTypes
+
+
+    /**
+     * Determines if current dependency has its GAV coordinates defined: groupId, artifactId, version.
+     * @return true if current dependency has its GAV coordinates defined,
+     *         false otherwise
+     */
+    boolean isGav ()
     {
-        /**
-         * For single dependency resolution default "excludeTransitive" is true: single dependency is resolved without transitive dependencies by default
-         * For filtered dependencies default "excludeTransitive" is false: filtered dependencies are resolved with transitive dependencies by default
-         */
-        ( excludeTransitive == null ) ? singleDependency : excludeTransitive
+        groupId && artifactId && version
     }
 
 
-    String includeScope
-    String excludeScope
+    /**
+     * Determines if current dependency is "single" or "filtering".
+     *
+     * "Single" dependencies result in a single artifact being resolved specified with its GAV coordinates.
+     * "Filtering" dependencies result in multiple artifacts being resolved through their include/exclude attributes.
+     *
+     * @return true if dependency is "single", false otherwise.
+     */
+    boolean isSingle()
+    {
+        gav &&
+        (( excludeTransitive == null ) || ( excludeTransitive )) &&
+        ( ! [ includeOptional,
+              includeScope,       excludeScope,
+              includeGroupIds,    excludeGroupIds,
+              includeArtifactIds, excludeArtifactIds,
+              includeClassifiers, excludeClassifiers,
+              includeTypes,       excludeTypes ].any())
+    }
 
-    String includeGroupIds
-    String excludeGroupIds
-
-    String includeArtifactIds
-    String excludeArtifactIds
-
-    String includeClassifiers
-    String excludeClassifiers
-
-    String includeTypes
-    String excludeTypes
+    /**
+     * Determines if current dependency is transitive or not.
+     * When {@link #excludeTransitive} is not specified then the return value is false for "single" dependencies
+     * and true for "filtering" dependencies.
+     *
+     * @return true if dependency is transitive, false otherwise.
+     */
+    boolean isTransitive ()
+    {
+        ( excludeTransitive == null ) ? ( ! single ) : ( ! excludeTransitive )
+    }
 
 
     @Override
     String toString ()
     {
-        def s = [ excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
+        def s = [ "optional \"$optional\"",
+                  "includeOptional \"$includeOptional\"",
+                  excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
                   includeScope              ? "includeScope \"$includeScope\""             : '',
                   excludeScope              ? "excludeScope \"$excludeScope\""             : '',
                   includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
@@ -60,6 +96,6 @@ class CopyDependency extends ArtifactItem
                   excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
                 ].grep().join( ', ' )
 
-        (( groupId && artifactId ) ? super.toString() + ' ' : '' ) + ( s ?: '' )
+        ( gav ? ( super.toString() + ' ' ) : '' ) + s
     }
 }

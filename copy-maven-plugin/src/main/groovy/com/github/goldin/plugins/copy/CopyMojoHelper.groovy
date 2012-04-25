@@ -66,26 +66,25 @@ final class CopyMojoHelper
 
     /**
      * Scans all dependencies this project has (including transitive ones) and filters them with scoping
-     * and transitivity filters provided in dependency specified. If dependency specified is not "filtering"
+     * and transitivity filters provided in dependency specified. If dependency specified is a "single"
      * one then it is resolved normally.
      *
-     * @param d              filtering dependency
+     * @param d              dependency to resolve
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
      * @return               project's dependencies that passed all filters
      */
     @Requires({ d })
-    @Ensures({ result != null })
+    @Ensures({ result || ( ! failIfNotFound ) })
     protected List<CopyDependency> resolveDependencies ( CopyDependency d, boolean failIfNotFound )
     {
-        assert d
-        final singleDependency = d.groupId && d.artifactId
-        final mavenArtifact    = singleDependency ?
-            toMavenArtifact( d.groupId, d.artifactId, d.version, d.includeScope, d.type, d.classifier ) :
-            null
+        /**
+         * When GAV coordinates are specified we convert the dependency to Maven artifact
+         */
+        final mavenArtifact = d.gav ? toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier ) :
+                                      null
 
-        if ( singleDependency && d.getExcludeTransitive( singleDependency ))
+        if ( d.single )
         {
-            // Simplest case: single <dependency> + <excludeTransitive> is undefined or "true" - resolved dependency is returned
             d.artifact = mojoInstance.resolveArtifact( mavenArtifact, failIfNotFound )
             return [ d ]
         }
@@ -93,13 +92,19 @@ final class CopyMojoHelper
         /**
          * Iterating over all dependencies and selecting those passing the filters.
          */
-        List<ArtifactsFilter> filters   = getFilters( d, singleDependency )
-        Collection<Artifact>  artifacts = singleDependency ?
-            mojoInstance.collectTransitiveDependencies( mavenArtifact, d.includeScope, d.excludeScope, d.includeOptional, failIfNotFound ) :
-            mojoInstance.project.artifacts
+
+        Collection<Artifact> artifacts = mavenArtifact ?
+            // For GAV dependency we collect its dependencies
+            mojoInstance.collectDependencies( mavenArtifact, d.includeScope, d.excludeScope, d.transitive, d.includeOptional, failIfNotFound ) :
+            // Otherwise, we take all project's transitive dependencies
+            mojoInstance.project.artifacts.findAll { ( ! it.optional ) || d.includeOptional }
 
         try
         {
+            /**
+             * When GAV coordinates appear, scope and transitivity were applied already by {@link BaseGroovyMojo#collectDependencies} call above.
+             */
+            final                filters      = getFilters( d, ( mavenArtifact == null ))
             List<CopyDependency> dependencies =
                 artifacts.
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
@@ -115,9 +120,7 @@ final class CopyMojoHelper
         }
         catch( e )
         {
-            String errorMessage =
-                'Failed to resolve and filter dependencies' +
-                ( singleDependency ? " using ${ d.optional ? 'optional ' : '' }<dependency> [$d]" : '' )
+            String errorMessage = "Failed to resolve and filter dependencies using [$d]"
 
             if ( d.optional || ( ! failIfNotFound ))
             {
@@ -138,27 +141,33 @@ final class CopyMojoHelper
     }
 
 
-    private List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean singleDependency )
+    /**
+     * Retrieves filters defined by "filtering" dependency.
+     *
+     * @param dependency                  "filtering" dependency
+     * @param useScopeTransitivityFilters whether scope and transitivity filters should be added
+     * @return filters defined by "filtering" dependency
+     */
+    @Requires({ dependency && ( ! dependency.single ) && false }) // Checking GContracts
+    @Ensures({  result     && false })                            // Checking GContracts
+    private List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean useScopeTransitivityFilters )
     {
-        /**
-         * If we got here it's either because dependency is not single (filtered) or because *it is* single
-         * with transitivity explicitly enabled (excludeTransitive is set to "false").
-         */
-        assert dependency
-        // noinspection GroovyPointlessBoolean
-        assert ( ! singleDependency ) || ( dependency.excludeTransitive == false )
+        assert dependency && ( ! dependency.single )
 
         def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
-        def directDependencies        = singleDependency ?
-            [ dependency ] as Set :                   // For single dependency it is it's own direct dependency
-            mojoInstance.project.dependencyArtifacts  // Direct project dependencies for filtered dependencies
+        final directDependencies      = dependency.gav ?
+            [ dependency ] as Set :                   // For regular  dependency it is it's own direct dependency
+            mojoInstance.project.dependencyArtifacts  // For filtered dependencies it is direct project dependencies
 
-        filters << new ProjectTransitivityFilter( directDependencies, dependency.getExcludeTransitive( singleDependency ))
-
-        if ( dependency.includeScope || dependency.excludeScope )
+        if ( useScopeTransitivityFilters )
         {
-            filters << new ScopeFilter( split( dependency.includeScope ), split( dependency.excludeScope ))
+            filters << new ProjectTransitivityFilter( directDependencies, ( ! dependency.transitive ))
+
+            if ( dependency.includeScope || dependency.excludeScope )
+            {
+                filters << new ScopeFilter( split( dependency.includeScope ), split( dependency.excludeScope ))
+            }
         }
 
         if ( dependency.includeGroupIds || dependency.excludeGroupIds )
@@ -181,9 +190,8 @@ final class CopyMojoHelper
             filters << new TypeFilter( c ( dependency.includeTypes ), c ( dependency.excludeTypes ))
         }
 
-        assert ( singleDependency || ( filters.size() > 1 )) : \
-               'No filters found in <dependency>. Specify filters like <includeScope> or <includeGroupIds>.'
-
+        assert ( filters || useScopeTransitivityFilters ) : \
+               "No filters found in <dependency> [$dependency]. Specify filters like <includeScope> or <includeGroupIds>."
         filters
     }
 
