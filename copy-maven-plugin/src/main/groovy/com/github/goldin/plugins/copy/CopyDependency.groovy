@@ -81,21 +81,23 @@ class CopyDependency extends ArtifactItem
     @Override
     String toString ()
     {
-        def s = [ "optional \"$optional\"",
-                  "includeOptional \"$includeOptional\"",
-                  excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
-                  includeScope              ? "includeScope \"$includeScope\""             : '',
-                  excludeScope              ? "excludeScope \"$excludeScope\""             : '',
-                  includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
-                  excludeGroupIds           ? "excludeGroupIds \"$excludeGroupIds\""       : '',
-                  includeArtifactIds        ? "includeArtifactIds \"$includeArtifactIds\"" : '',
-                  excludeArtifactIds        ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
-                  includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
-                  excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
-                  includeTypes              ? "includeTypes \"$includeTypes\""             : '',
-                  excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
-                ].grep().join( ', ' )
+        final original = (( groupId || artifactId ) ? super.toString(): '' )
+        final us       = [ "optional \"$optional\"",
+                           "includeOptional \"$includeOptional\"",
+                           excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
+                           includeScope              ? "includeScope \"$includeScope\""             : '',
+                           excludeScope              ? "excludeScope \"$excludeScope\""             : '',
+                           includeGroupIds           ? "includeGroupIds \"$includeGroupIds\""       : '',
+                           excludeGroupIds           ? "excludeGroupIds \"$excludeGroupIds\""       : '',
+                           includeArtifactIds        ? "includeArtifactIds \"$includeArtifactIds\"" : '',
+                           excludeArtifactIds        ? "excludeArtifactIds \"$excludeArtifactIds\"" : '',
+                           includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
+                           excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
+                           includeTypes              ? "includeTypes \"$includeTypes\""             : '',
+                           excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
+                         ].grep().join( ', ' )
 
-        ( gav ? ( super.toString() + ' ' ) : '' ) + s
+
+        original? "$original, $us" : us
     }
 }
