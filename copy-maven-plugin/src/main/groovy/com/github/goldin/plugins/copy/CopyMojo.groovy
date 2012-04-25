@@ -436,7 +436,7 @@ class CopyMojo extends BaseGroovyMojo
         }
 
         assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), \
-               "No dependencies resolved using [$dependencies]"
+               "No dependencies resolved with [$dependencies]"
         result
     }
 

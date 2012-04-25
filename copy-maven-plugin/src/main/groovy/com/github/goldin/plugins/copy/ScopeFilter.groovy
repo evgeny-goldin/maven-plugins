@@ -1,13 +1,9 @@
 package com.github.goldin.plugins.copy
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.shared.artifact.filter.collection.AbstractArtifactsFilter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.collection.DependencySelector
-import org.sonatype.aether.graph.Dependency
-import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 
 
 /**
@@ -16,14 +12,13 @@ import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
  */
 class ScopeFilter extends AbstractArtifactsFilter
 {
-    private final DependencySelector selector
+    private final List<String> includeScope = []
+    private final List<String> excludeScope = []
 
     ScopeFilter ( List<String> includeScope, List<String> excludeScope )
-    {   /**
-         * Aether dependency selector works correctly with both scopes
-         * See {@link ScopeDependencySelector#selectDependency}.
-         */
-        selector = new ScopeDependencySelector( includeScope, excludeScope )
+    {
+        this.includeScope.addAll( includeScope )
+        this.excludeScope.addAll( excludeScope )
     }
 
 
@@ -34,7 +29,8 @@ class ScopeFilter extends AbstractArtifactsFilter
     {
         artifacts.findAll {
             Artifact a ->
-            selector.selectDependency( new Dependency( toAetherArtifact( a ), null ))
+            ( includeScope.empty ||   ( a.scope in includeScope )) &&
+            ( excludeScope.empty || ! ( a.scope in excludeScope ))
         }.
         toSet()
     }

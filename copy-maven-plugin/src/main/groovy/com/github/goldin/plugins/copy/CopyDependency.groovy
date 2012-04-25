@@ -83,8 +83,7 @@ class CopyDependency extends ArtifactItem
     String toString ()
     {
         final original = (( groupId || artifactId ) ? super.toString(): '' )
-        final us       = [ "optional \"$optional\"",
-                           "includeOptional \"$includeOptional\"",
+        final us       = [ "includeOptional \"$includeOptional\"",
                            excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
                            includeScope              ? "includeScope \"$includeScope\""             : '',
                            excludeScope              ? "excludeScope \"$excludeScope\""             : '',
@@ -95,7 +94,8 @@ class CopyDependency extends ArtifactItem
                            includeClassifiers        ? "includeClassifiers \"$includeClassifiers\"" : '',
                            excludeClassifiers        ? "excludeClassifiers \"$excludeClassifiers\"" : '',
                            includeTypes              ? "includeTypes \"$includeTypes\""             : '',
-                           excludeTypes              ? "excludeTypes \"$excludeTypes\""             : ''
+                           excludeTypes              ? "excludeTypes \"$excludeTypes\""             : '',
+                           "optional \"$optional\""
                          ].grep().join( ', ' )
 
 

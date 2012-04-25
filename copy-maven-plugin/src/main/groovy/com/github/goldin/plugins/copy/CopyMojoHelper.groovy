@@ -113,13 +113,13 @@ final class CopyMojoHelper
             log.info( "Resolving dependencies [$d]: [${ dependencies.size() }] artifacts found" )
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved using [$d]"
+            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved with [$d]"
             assert dependencies.every { it.artifact.file.file }
             dependencies
         }
         catch( e )
         {
-            String errorMessage = "Failed to resolve and filter dependencies using [$d]"
+            String errorMessage = "Failed to resolve and filter dependencies with [$d]"
 
             if ( d.optional || ( ! failIfNotFound ))
             {
