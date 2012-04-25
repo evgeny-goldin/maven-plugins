@@ -7,12 +7,12 @@ import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
+import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.collection.CollectRequest
-import org.sonatype.aether.graph.Dependency
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 
@@ -81,10 +81,10 @@ final class CopyMojoHelper
     protected List<CopyDependency> resolveDependencies ( CopyDependency dependency, boolean failIfNotFound )
     {
         /**
-         * When GAV coordinates are specified we convert the dependency to Maven artifact
+         * We convert GAV dependency to Maven artifact to use it later
          */
         final mavenArtifact = dependency.gav ?
-            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) } :
+            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
             null
 
         if ( dependency.single )
@@ -97,20 +97,32 @@ final class CopyMojoHelper
          * Iterating over all dependencies and selecting those passing the filters.
          */
 
-        Collection<Artifact> artifacts = dependency.gav ?
-            // For GAV dependency we collect its dependencies and eliminate duplicates (same coordinates, different versions)
-            eliminateDuplicates( collectDependencies( dependency, mavenArtifact, failIfNotFound )) :
-            // Otherwise, we take all project's transitive dependencies
-            mojo.project.artifacts.findAll { ( ! it.optional ) || dependency.includeOptional }
+        final artifacts = dependency.gav ?
+            /**
+             * For regular GAV dependency we collect its dependencies
+             */
+            collectDependencies( dependency, mavenArtifact, failIfNotFound ) :
+            /**
+             * Otherwise, we take all project's direct dependencies and collect their dependencies.
+             * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
+             * so we can't use it.
+             */
+            ( Collection<Artifact> ) mojo.project.dependencies.
+            collect {
+                Dependency mavenDependency ->
+                final copyDependency = new CopyDependency( mavenDependency, dependency )
+                collectDependencies( copyDependency, copyDependency.artifact, failIfNotFound )
+            }.
+            flatten()
 
         try
         {
             /**
              * When GAV coordinates appear, scope and transitivity were applied already by {@link #collectDependencies} call above.
              */
-            final                filters      = getFilters( dependency, ( ! dependency.gav ))
+            final                filters      = composeFilters( dependency )
             List<CopyDependency> dependencies =
-                artifacts.
+                eliminateDuplicates( artifacts.toSet()).
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                 collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, failIfNotFound )) }
 
@@ -164,7 +176,7 @@ final class CopyMojoHelper
     {
         try
         {
-            final request                       = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
+            final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
             mojo.repoSession.dependencySelector = new ScopeDependencySelector( split( dependency.includeScope ), split( dependency.excludeScope ))
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
@@ -224,25 +236,12 @@ final class CopyMojoHelper
      */
     @Requires({ dependency && ( ! dependency.single ) && false }) // Checking GContracts
     @Ensures({  result     && false })                            // Checking GContracts
-    private List<ArtifactsFilter> getFilters( CopyDependency dependency, boolean useScopeTransitivityFilters )
+    private List<ArtifactsFilter> composeFilters ( CopyDependency dependency )
     {
         assert dependency && ( ! dependency.single )
 
         def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
-        final directDependencies      = dependency.gav ?
-            [ dependency ] as Set :           // For regular  dependency it is it's own direct dependency
-            mojo.project.dependencyArtifacts  // For filtered dependencies it is direct project dependencies
-
-        if ( useScopeTransitivityFilters )
-        {
-            filters << new ProjectTransitivityFilter( directDependencies, ( ! dependency.transitive ))
-
-            if ( dependency.includeScope || dependency.excludeScope )
-            {
-                filters << new ScopeFilter( split( dependency.includeScope ), split( dependency.excludeScope ))
-            }
-        }
 
         if ( dependency.includeGroupIds || dependency.excludeGroupIds )
         {
@@ -264,8 +263,6 @@ final class CopyMojoHelper
             filters << new TypeFilter( c ( dependency.includeTypes ), c ( dependency.excludeTypes ))
         }
 
-        assert ( filters || ( ! useScopeTransitivityFilters )) : \
-               "No filters found in <dependency> [$dependency]. Specify filters like <includeScope> or <includeGroupIds>."
         filters
     }
 

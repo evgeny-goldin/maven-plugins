@@ -24,6 +24,7 @@ import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import com.github.goldin.gcommons.beans.*
+import org.apache.maven.model.Dependency
 
 
 /**
@@ -530,14 +531,26 @@ class GMojoUtils
 
     /**
      * Converts Aether artifact to Maven {@link Artifact}.
-     * @param a     Aether artifact
+     * @param artifact     Aether artifact
      * @param scope artifact scope
      * @return new Maven {@link Artifact}
      */
-    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact a, String scope )
+    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact artifact, String scope )
     {
-        assert a
-        toMavenArtifact( a.groupId, a.artifactId, a.version, scope, a.extension, a.classifier, false, a.file )
+        assert artifact
+        artifact.with { toMavenArtifact( groupId, artifactId, version, scope, extension, classifier, false, file )}
+    }
+
+
+    /**
+     * Converts Maven model {@link Dependency} to {@link Artifact}.
+     * @param mavenDependency Maven dependency
+     * @return new Maven {@link Artifact}
+     */
+    static Artifact toMavenArtifact( Dependency mavenDependency )
+    {
+        assert mavenDependency
+        mavenDependency.with { toMavenArtifact( groupId, artifactId, version, scope, type, classifier, optional ) }
     }
 
 
