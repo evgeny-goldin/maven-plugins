@@ -1,7 +1,7 @@
 package com.github.goldin.plugins.common
 
-import org.junit.Test
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.junit.Test
 
 
 /**

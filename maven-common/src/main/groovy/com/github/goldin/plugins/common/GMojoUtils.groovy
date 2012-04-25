@@ -27,6 +27,7 @@ import com.github.goldin.gcommons.beans.*
 /**
  * Various Mojo helper methods
  */
+@SuppressWarnings([ 'MethodCount' ])
 class GMojoUtils
 {
     /**
@@ -487,13 +488,15 @@ class GMojoUtils
      */
     static String addDollar( String value, String addDollar )
     {
+        String result = value
+
         if ( value && addDollar && ( 'false' != addDollar ))
         {
             String pattern = ( 'true' == addDollar ) ? '.+?' : split( addDollar ).collect{ String token -> "\\Q$token\\E" }.join( '|' )
-            value          = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
+            result         = value.replaceAll( ~/(?<!\$)(?=\{($pattern)\})/, '\\$' )
         }
 
-        value
+        result
     }
 
 

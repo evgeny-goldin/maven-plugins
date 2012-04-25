@@ -41,9 +41,10 @@ class Replace
      *         <code>pattern</code> is {@code Pattern.compile( getFrom())} and
      *         <code>replacement</code> is {@code quoteReplacement() ? Matcher.quoteReplacement( getTo()) : getTo()}
      */
-    @SuppressWarnings( [ 'ConfusingTernary', 'UnnecessarySemicolon' ] )
+    @SuppressWarnings( [ 'ConfusingTernary', 'TernaryCouldBeElvis', 'UnnecessarySemicolon' ] )
     String replace( String data, File file = null )
     {
+        //noinspection GroovyConditionalCanBeElvis
         String result = ( to                     ? to   :  // If we have <to>, then replacement starts with it
                         ( 'false' != addDollar ) ? data :  // If we have no <to> but <addDollar>, replacement starts with data specified
                                                      '' )  // Otherwise, replacement starts with empty String
