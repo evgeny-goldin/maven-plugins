@@ -222,7 +222,8 @@ final class CopyResource extends Resource implements Cloneable
         boolean singleDependency = ( dependencies().size() == 1 ) &&
                                    ( dependencies()[ 0 ].with {
                                        getExcludeTransitive( true ) &&
-                                       ( ! [ includeScope,       excludeScope,
+                                       ( ! [ includeOptional,
+                                             includeScope,       excludeScope,
                                              includeGroupIds,    excludeGroupIds,
                                              includeArtifactIds, excludeArtifactIds,
                                              includeClassifiers, excludeClassifiers,

@@ -31,17 +31,17 @@ class CopyDependency extends ArtifactItem
     String includeScope
     String excludeScope
 
-    String  includeGroupIds
-    String  excludeGroupIds
+    String includeGroupIds
+    String excludeGroupIds
 
-    String  includeArtifactIds
-    String  excludeArtifactIds
+    String includeArtifactIds
+    String excludeArtifactIds
 
-    String  includeClassifiers
-    String  excludeClassifiers
+    String includeClassifiers
+    String excludeClassifiers
 
-    String  includeTypes
-    String  excludeTypes
+    String includeTypes
+    String excludeTypes
 
 
     @Override
