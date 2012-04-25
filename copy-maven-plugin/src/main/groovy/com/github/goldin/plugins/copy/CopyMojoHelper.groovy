@@ -11,6 +11,10 @@ import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+import org.sonatype.aether.collection.CollectRequest
+import org.sonatype.aether.graph.Dependency
+import org.sonatype.aether.graph.DependencyNode
+import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 
 import java.util.jar.Attributes
 import java.util.jar.Manifest
@@ -25,12 +29,12 @@ import java.util.jar.Manifest
 @SuppressWarnings( 'FinalClassWithProtectedMember' )
 final class CopyMojoHelper
 {
-    private final BaseGroovyMojo mojoInstance
+    private final BaseGroovyMojo mojo
 
-    @Requires({ mojoInstance })
-    CopyMojoHelper ( BaseGroovyMojo mojoInstance )
+    @Requires({ mojo })
+    CopyMojoHelper ( BaseGroovyMojo mojo )
     {
-        this.mojoInstance = mojoInstance
+        this.mojo = mojo
     }
 
 
@@ -68,60 +72,62 @@ final class CopyMojoHelper
      * Scans project dependencies, resolves and filters them using dependency provided.
      * If dependency specified is a "single" one then it is resolved normally.
      *
-     * @param d              dependency to resolve, either "single" or "filtering" one
+     * @param dependency     dependency to resolve, either "single" or "filtering" one
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
      * @return               project's dependencies that passed all filters, resolved
      */
-    @Requires({ d })
+    @Requires({ dependency })
     @Ensures({ result || ( ! failIfNotFound ) })
-    protected List<CopyDependency> resolveDependencies ( CopyDependency d, boolean failIfNotFound )
+    protected List<CopyDependency> resolveDependencies ( CopyDependency dependency, boolean failIfNotFound )
     {
         /**
          * When GAV coordinates are specified we convert the dependency to Maven artifact
          */
-        final mavenArtifact = d.gav ? toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, d.optional ) :
-                                      null
-        if ( d.single )
+        final mavenArtifact = dependency.gav ?
+            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) } :
+            null
+
+        if ( dependency.single )
         {
-            d.artifact = mojoInstance.resolveArtifact( mavenArtifact, failIfNotFound )
-            return [ d ]
+            dependency.artifact = mojo.resolveArtifact( mavenArtifact, failIfNotFound )
+            return [ dependency ]
         }
 
         /**
          * Iterating over all dependencies and selecting those passing the filters.
          */
 
-        Collection<Artifact> artifacts = d.gav ?
-            // For GAV dependency we collect its dependencies
-            mojoInstance.collectDependencies( mavenArtifact, d.includeScope, d.excludeScope, d.transitive, d.includeOptional, failIfNotFound ) :
+        Collection<Artifact> artifacts = dependency.gav ?
+            // For GAV dependency we collect its dependencies and eliminate duplicates (same coordinates, different versions)
+            eliminateDuplicates( collectDependencies( dependency, mavenArtifact, failIfNotFound )) :
             // Otherwise, we take all project's transitive dependencies
-            mojoInstance.project.artifacts.findAll { ( ! it.optional ) || d.includeOptional }
+            mojo.project.artifacts.findAll { ( ! it.optional ) || dependency.includeOptional }
 
         try
         {
             /**
-             * When GAV coordinates appear, scope and transitivity were applied already by {@link BaseGroovyMojo#collectDependencies} call above.
+             * When GAV coordinates appear, scope and transitivity were applied already by {@link #collectDependencies} call above.
              */
-            final                filters      = getFilters( d, ( ! d.gav ))
+            final                filters      = getFilters( dependency, ( ! dependency.gav ))
             List<CopyDependency> dependencies =
                 artifacts.
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                collect { Artifact artifact -> new CopyDependency( mojoInstance.resolveArtifact( artifact, failIfNotFound )) }
+                collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, failIfNotFound )) }
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$d]: [${ dependencies.size() }] artifacts found" )
+            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifacts found" )
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved with [$d]"
+            assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved with [$dependency]"
             assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
             dependencies
         }
         catch( e )
         {
-            String errorMessage = "Failed to resolve and filter dependencies with [$d]"
+            String errorMessage = "Failed to resolve and filter dependencies with [$dependency]"
 
-            if ( d.optional || ( ! failIfNotFound ))
+            if ( dependency.optional || ( ! failIfNotFound ))
             {
                 String exceptionMessage = e.toString()
 
@@ -136,6 +142,75 @@ final class CopyMojoHelper
             }
 
             throw new MojoExecutionException( errorMessage, e )
+        }
+    }
+
+
+    /**
+     * Collects dependencies of the artifact specified.
+     *
+     * @param dependency         dependency artifact originated from
+     * @param artifact           artifact to collect dependencies of
+     * @param failOnError        whether execution should fail if failed to collect dependencies
+     * @param artifactsInProcess internal variable used by recursive iteration, shouldn't be used by caller!
+     * @return                   dependencies collected (not resolved!)
+     */
+    @Requires({ dependency && artifact })
+    @Ensures({ result })
+    final Collection<Artifact> collectDependencies ( CopyDependency dependency,
+                                                     Artifact       artifact,
+                                                     boolean        failOnError,
+                                                     Set<Artifact>  artifactsInProcess = [ artifact ].toSet())
+    {
+        try
+        {
+            final request                       = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
+            final previousSelector              = mojo.repoSession.dependencySelector
+            mojo.repoSession.dependencySelector = new ScopeDependencySelector( split( dependency.includeScope ), split( dependency.excludeScope ))
+            final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
+            mojo.repoSession.dependencySelector = previousSelector
+
+            if ( ! rootNode )
+            {
+                assert ( ! failOnError ), "Failed to collect [$artifact] dependencies"
+                return Collections.emptyList()
+            }
+
+            Collection<Artifact> childArtifacts = rootNode.children.
+            findAll {
+                DependencyNode childNode ->
+                (( ! childNode.dependency.optional ) || dependency.includeOptional )
+            }.
+            collect {
+                DependencyNode childNode ->
+                toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
+            }
+
+            if ( dependency.transitive )
+            {
+                /**
+                 * Recursively iterating over node's children and collecting their transitive dependencies.
+                 * The problem is the graph at this point contains only partial data, some of node's children
+                 * may have dependencies not shown by the graph we have (I don't know why).
+                 */
+                childArtifacts.each {
+                    Artifact childArtifact ->
+                    if ( ! ( childArtifact in artifactsInProcess ))
+                    {
+                        collectDependencies( dependency, childArtifact, failOnError,
+                                             (( Set<Artifact> )( artifactsInProcess << childArtifact )))
+                    }
+                }
+
+                childArtifacts = artifactsInProcess
+            }
+
+            childArtifacts
+        }
+        catch ( e )
+        {
+            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
+            return Collections.emptyList()
         }
     }
 
@@ -156,8 +231,8 @@ final class CopyMojoHelper
         def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
         final directDependencies      = dependency.gav ?
-            [ dependency ] as Set :                   // For regular  dependency it is it's own direct dependency
-            mojoInstance.project.dependencyArtifacts  // For filtered dependencies it is direct project dependencies
+            [ dependency ] as Set :           // For regular  dependency it is it's own direct dependency
+            mojo.project.dependencyArtifacts  // For filtered dependencies it is direct project dependencies
 
         if ( useScopeTransitivityFilters )
         {
@@ -216,32 +291,5 @@ final class CopyMojoHelper
         f.withOutputStream { m.write( it )}
 
         tempDir
-    }
-
-
-    /**
-     * Creates artifact file name, identically to
-     * {@link org.apache.maven.plugin.dependency.utils.DependencyUtil#getFormattedFileName}.
-     *
-     * @param artifact      artifact to create the file name for
-     * @param removeVersion whether version should be removed from the file name
-     * @return artifact file name
-     */
-    String artifactFileName( Artifact artifact, boolean removeVersion )
-    {
-        StringBuilder buffer = new StringBuilder( artifact.artifactId )
-
-        if ( ! removeVersion )
-        {
-            buffer.append( "-${ artifact.version}" )
-        }
-
-        if ( artifact.classifier )
-        {
-            buffer.append( "-${ artifact.classifier}" )
-        }
-
-        buffer.append( ".${ artifact.type }" ).
-        toString()
     }
 }

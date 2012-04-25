@@ -10,6 +10,7 @@ import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
@@ -629,6 +630,74 @@ class GMojoUtils
     static String canonicalPath ( String s )
     {
         ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+    }
+
+
+    /**
+     * Eliminates duplicate versions of the same artifact by choosing the highest version. Duplicate artifacts
+     * are artifacts with identical coordinates, type and classifier but different versions, like "junit:junit:4.1"
+     * and "junit:junit:4.8.2".
+     *
+     * @param list of artifacts containing possible duplicates
+     * @return new list of artifacts with duplicate artifacts eliminated
+     */
+    static Collection<Artifact> eliminateDuplicates( Collection<Artifact> artifacts )
+    {
+        assert artifacts
+
+        if ( artifacts.size() < 2 ) { return artifacts }
+
+        /**
+         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate Artifacts
+         */
+        Map<String, List<Artifact>> mapping = artifacts.inject( [:].withDefault{ [] } ) {
+            Map m, Artifact a ->
+            m[ "$a.groupId::$a.artifactId::$a.type::$a.classifier" ] << a
+            m
+        }
+
+        /**
+         * For every list of duplicates in the mapping, finding the maximal version
+         * if there are more than one element in a list.
+         */
+        final result = mapping.values().collect {
+            List<Artifact> duplicateArtifacts ->
+
+            assert duplicateArtifacts
+            ( duplicateArtifacts.size() < 2 ) ? duplicateArtifacts.first() : duplicateArtifacts.max {
+                Artifact a1, Artifact a2 ->
+                new DefaultArtifactVersion( a1.version ) <=> new DefaultArtifactVersion( a2.version )
+            }
+        }
+
+        result
+    }
+
+
+    /**
+     * Creates artifact file name, identically to
+     * {@link org.apache.maven.plugin.dependency.utils.DependencyUtil#getFormattedFileName}.
+     *
+     * @param artifact      artifact to create the file name for
+     * @param removeVersion whether version should be removed from the file name
+     * @return artifact file name
+     */
+    static String artifactFileName( Artifact artifact, boolean removeVersion )
+    {
+        StringBuilder buffer = new StringBuilder( artifact.artifactId )
+
+        if ( ! removeVersion )
+        {
+            buffer.append( "-${ artifact.version}" )
+        }
+
+        if ( artifact.classifier )
+        {
+            buffer.append( "-${ artifact.classifier}" )
+        }
+
+        buffer.append( ".${ artifact.type }" ).
+        toString()
     }
 
 

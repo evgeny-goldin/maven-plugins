@@ -12,12 +12,8 @@ import org.jfrog.maven.annomojo.annotations.MojoComponent
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
-import org.sonatype.aether.collection.CollectRequest
-import org.sonatype.aether.graph.Dependency
-import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
-import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 
 
 /**
@@ -104,83 +100,6 @@ abstract class BaseGroovyMojo extends GroovyMojo
         }
 
         artifact
-    }
-
-
-    /**
-     * Collects transitive dependencies of the artifact specified.
-     *
-     * @param artifact           Maven artifact to collect transitive dependencies of
-     * @param includeScope       scope of artifacts to include
-     * @param excludeScope       scope of artifacts to exclude
-     * @param includeTransitive  whether transitive dependencies should be included
-     * @param includeOptional    whether optional dependencies should be included
-     * @param failOnError        whether execution should fail if failed to collect dependencies
-     * @param artifactsInProcess internal variable with default value used by recursive iteration, shouldn't be used by caller!
-     * @return                   dependencies collected (not resolved!)
-     *
-     * @throws RuntimeException if 'failOnError' is true and collecting dependencies fails
-     */
-    @Requires({ artifact && ( artifact.scope != null ) })
-    @Ensures({ result })
-    final Collection<Artifact> collectDependencies ( Artifact      artifact,
-                                                     String        includeScope,
-                                                     String        excludeScope,
-                                                     boolean       includeTransitive,
-                                                     boolean       includeOptional,
-                                                     boolean       failOnError,
-                                                     Set<Artifact> artifactsInProcess = [ artifact ].toSet())
-    {
-        try
-        {
-            final request                  = new CollectRequest( new Dependency( toAetherArtifact( artifact ), null ), remoteRepos )
-            final previousSelector         = repoSession.dependencySelector
-            repoSession.dependencySelector = new ScopeDependencySelector( split( includeScope ), split( excludeScope ))
-            final rootNode                 = repoSystem.collectDependencies( repoSession, request ).root
-            repoSession.dependencySelector = previousSelector
-
-            if ( ! rootNode )
-            {
-                assert ( ! failOnError ), "Failed to collect [$artifact] dependencies"
-                return Collections.emptyList()
-            }
-
-            Collection<Artifact> dependencies = rootNode.children.
-            findAll {
-                DependencyNode childNode ->
-                (( ! childNode.dependency.optional ) || includeOptional )
-            }.
-            collect {
-                DependencyNode childNode ->
-                toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
-            }
-
-            if ( includeTransitive )
-            {
-                /**
-                 * Recursively iterating over node's children and collecting their transitive dependencies.
-                 * The problem is the graph at this point contains only partial data, some of node's children
-                 * may have dependencies not shown by the graph we have (I don't know why).
-                 */
-                dependencies.each {
-                    Artifact a ->
-                    if ( ! ( a in artifactsInProcess ))
-                    {
-                        collectDependencies( a, includeScope, excludeScope, includeTransitive, includeOptional, failOnError,
-                                             ( Set<Artifact> )( artifactsInProcess << a ))
-                    }
-                }
-
-                dependencies = artifactsInProcess
-            }
-
-            dependencies
-        }
-        catch ( e )
-        {
-            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
-            return Collections.emptyList()
-        }
     }
 
 
