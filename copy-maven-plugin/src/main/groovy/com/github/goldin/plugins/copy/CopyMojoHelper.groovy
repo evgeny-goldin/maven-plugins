@@ -114,7 +114,7 @@ final class CopyMojoHelper
             if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
 
             assert ( dependencies || ( ! failIfNotFound )), "No dependencies resolved with [$d]"
-            assert dependencies.every { it.artifact.file.file }
+            assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
             dependencies
         }
         catch( e )

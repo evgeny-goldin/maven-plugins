@@ -2,15 +2,22 @@ package com.github.goldin.plugins.copy
 
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
+import org.gcontracts.annotations.Requires
 
- /**
+/**
  * Presents a {@code <dependency>} to copy
  */
 @SuppressWarnings( 'StatelessClass' )
 class CopyDependency extends ArtifactItem
 {
     CopyDependency() {}
-    CopyDependency( Artifact artifact ) { super( artifact )  }
+
+    @Requires({ artifact })
+    CopyDependency( Artifact artifact )
+    {
+        super( artifact )
+        this.optional = artifact.optional
+    }
 
 
     boolean optional        = false  // Whether this dependency is optional
