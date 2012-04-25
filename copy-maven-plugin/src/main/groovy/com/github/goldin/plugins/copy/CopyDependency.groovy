@@ -67,14 +67,15 @@ class CopyDependency extends ArtifactItem
 
     /**
      * Determines if current dependency is transitive or not.
-     * When {@link #excludeTransitive} is not specified then the return value is false for "single" dependencies
-     * and true for "filtering" dependencies.
+     * When {@link #excludeTransitive} is not specified then the return value is false for GAV dependencies
+     * and true for "filtering" dependencies. When {@link #excludeTransitive} is specified then its
+     * value is reverted.
      *
      * @return true if dependency is transitive, false otherwise.
      */
     boolean isTransitive ()
     {
-        ( excludeTransitive == null ) ? ( ! single ) : ( ! excludeTransitive )
+        ( excludeTransitive == null ) ? ( ! gav ) : ( ! excludeTransitive )
     }
 
 
