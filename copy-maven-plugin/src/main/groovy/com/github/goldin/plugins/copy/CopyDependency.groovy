@@ -1,8 +1,6 @@
 package com.github.goldin.plugins.copy
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Requires
 
@@ -19,19 +17,6 @@ class CopyDependency extends ArtifactItem
     {
         super( artifact )
         this.optional = artifact.optional
-    }
-
-
-    @Requires({ mavenDependency && copyDependency })
-    CopyDependency( Dependency mavenDependency, CopyDependency copyDependency )
-    {
-        this( toMavenArtifact( mavenDependency ))
-
-        assert (( this.gav ) && ( ! copyDependency.gav ))
-
-        this.includeScope      = copyDependency.includeScope
-        this.excludeScope      = copyDependency.excludeScope
-        this.excludeTransitive = ( ! copyDependency.transitive )
     }
 
 

@@ -98,21 +98,29 @@ final class CopyMojoHelper
          * Iterating over all dependencies and selecting those passing the filters.
          */
 
-        final artifacts = dependency.gav ?
+        final includeScopes = split( dependency.includeScope )
+        final excludeScopes = split( dependency.excludeScope )
+        final artifacts     = dependency.gav ?
             /**
              * For regular GAV dependency we collect its dependencies
              */
-            collectDependencies( dependency, mavenArtifact, verbose, failIfNotFound ) :
+            collectDependencies( mavenArtifact, includeScopes, excludeScopes,
+                                 dependency.transitive, dependency.includeOptional,
+                                 verbose, failIfNotFound ) :
             /**
-             * Otherwise, we take all project's direct dependencies and collect their dependencies.
+             * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
              * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
              * so we can't use it.
              */
             ( Collection<Artifact> ) mojo.project.dependencies.
+            findAll {
+                scopeMatches( it.scope, includeScopes, excludeScopes )
+            }.
             collect {
                 Dependency mavenDependency ->
-                final copyDependency = new CopyDependency( mavenDependency, dependency )
-                collectDependencies( copyDependency, copyDependency.artifact, verbose, failIfNotFound )
+                collectDependencies( toMavenArtifact( mavenDependency ), includeScopes, excludeScopes,
+                                     dependency.transitive, dependency.includeOptional,
+                                     verbose, failIfNotFound )
             }.
             flatten()
 
@@ -162,27 +170,31 @@ final class CopyMojoHelper
     /**
      * Collects dependencies of the artifact specified.
      *
-     * @param dependency          dependency artifact originated from
-     * @param artifact            artifact to collect dependencies of
+     * @param artifact            Artifact to collect dependencies of
+     * @param includeScopes       dependencies scopes to include
+     * @param excludeScopes       dependencies scopes to exclude
+     * @param includeTransitive   whether dependencies should be traversed transitively
+     * @param includeOptional     whether optional dependencies should be included
      * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
      * @param artifactsAggregator internal variable used by recursive iteration, shouldn't be used by caller!
      * @return                    dependencies collected (not resolved!)
      */
-    @Requires({ dependency && artifact })
+    @Requires({ artifact })
     @Ensures({ result != null })
-    final Collection<Artifact> collectDependencies ( CopyDependency dependency,
-                                                     Artifact       artifact,
+    final Collection<Artifact> collectDependencies ( Artifact       artifact,
+                                                     List<String>   includeScopes,
+                                                     List<String>   excludeScopes,
+                                                     boolean        includeTransitive,
+                                                     boolean        includeOptional,
                                                      boolean        verbose,
                                                      boolean        failOnError,
                                                      Set<Artifact>  artifactsAggregator = new HashSet<Artifact>())
     {
-        artifactsAggregator << artifact
+        if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { artifactsAggregator << artifact }
 
         try
         {
-            final includeScopes                 = split( dependency.includeScope )
-            final excludeScopes                 = split( dependency.excludeScope )
             final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
                                                                       mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
@@ -191,7 +203,7 @@ final class CopyMojoHelper
             if ( verbose )
             {
                 mojo.log.info( "Collecting [$artifact] dependencies: include scopes $includeScopes, exclude scopes $excludeScopes, " +
-                               "include transitive [$dependency.transitive], include optional [$dependency.includeOptional]" )
+                               "include transitive [$includeTransitive], include optional [$includeOptional]" )
             }
 
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
@@ -208,14 +220,16 @@ final class CopyMojoHelper
             final childArtifacts = rootNode.children.
             findAll {
                 DependencyNode childNode ->
-                (( ! childNode.dependency.optional ) || dependency.includeOptional )
+                (( ! childNode.dependency.optional ) || includeOptional )
             }.
             collect {
                 DependencyNode childNode ->
                 toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
             }
 
-            if ( dependency.transitive )
+            assert childArtifacts.every { scopeMatches( it.scope, includeScopes, excludeScopes )}
+
+            if ( includeTransitive )
             {   /**
                  * Recursively iterating over node's children and collecting their transitive dependencies.
                  * findAll{ .. } doesn't fit here since we want to check every artifact separately before going recursive.
@@ -226,7 +240,8 @@ final class CopyMojoHelper
                 childArtifacts.each {
                     if ( ! ( it in artifactsAggregator ))
                     {
-                        collectDependencies( dependency, it, verbose, failOnError, artifactsAggregator )
+                        collectDependencies( it, includeScopes, excludeScopes, includeTransitive, includeOptional,
+                                             verbose, failOnError, artifactsAggregator )
                     }
                 }
             }
@@ -235,10 +250,7 @@ final class CopyMojoHelper
                 artifactsAggregator.addAll( childArtifacts )
             }
 
-            /**
-             * Filtering out result since initial artifact was added to recursion set without checking its scope.
-             */
-            artifactsAggregator.findAll { scopeMatches( it.scope, includeScopes, excludeScopes ) }
+            artifactsAggregator
         }
         catch ( e )
         {
