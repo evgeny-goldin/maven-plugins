@@ -85,7 +85,9 @@ abstract class BaseGroovyMojo extends GroovyMojo
             final request = new ArtifactRequest( toAetherArtifact( artifact ), remoteRepos, null )
             try
             {
+                log.info( "Resolving [$artifact]: optional [$artifact.optional], failOnError [$failOnError]" )
                 artifact.file = repoSystem.resolveArtifact( repoSession, request ).artifact?.file
+                log.info( "Resolving [$artifact]: done - [$artifact.file]" )
             }
             catch ( e )
             {
