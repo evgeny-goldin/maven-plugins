@@ -182,7 +182,10 @@ final class CopyMojoHelper
                                                                       mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
             mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScope , excludeScope )
+            mojo.log.info( "Collecting [$artifact] dependencies: scopes [${ dependency.includeScope ?: '' }/${ dependency.excludeScope ?: '' }], " +
+                           "transitive [$dependency.transitive], optional [$dependency.optional]" )
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
+            mojo.log.info( "Collecting [$artifact] dependencies: done" )
             mojo.repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
