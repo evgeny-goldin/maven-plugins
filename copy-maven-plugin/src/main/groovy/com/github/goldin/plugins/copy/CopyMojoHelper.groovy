@@ -1,13 +1,12 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.apache.maven.shared.artifact.filter.collection.*
 
+import org.apache.maven.shared.artifact.filter.collection.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
-import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.gcontracts.annotations.Ensures
@@ -101,6 +100,7 @@ final class CopyMojoHelper
         final includeScopes = split( dependency.includeScope )
         final excludeScopes = split( dependency.excludeScope )
         final artifacts     = dependency.gav ?
+
             /**
              * For regular GAV dependency we collect its dependencies
              */
@@ -116,11 +116,13 @@ final class CopyMojoHelper
             findAll {
                 scopeMatches( it.scope, includeScopes, excludeScopes )
             }.
+            collect { toMavenArtifact( it ) }.
             collect {
-                Dependency mavenDependency ->
-                collectDependencies( toMavenArtifact( mavenDependency ), includeScopes, excludeScopes,
-                                     dependency.transitive, dependency.includeOptional,
-                                     verbose, failIfNotFound )
+                Artifact a ->
+                dependency.transitive ? collectDependencies( a, includeScopes, excludeScopes,
+                                                             dependency.transitive, dependency.includeOptional,
+                                                             verbose, failIfNotFound ) :
+                                        a
             }.
             flatten()
 
@@ -191,6 +193,7 @@ final class CopyMojoHelper
                                                      boolean        failOnError,
                                                      Set<Artifact>  artifactsAggregator = new HashSet<Artifact>())
     {
+        assert artifact.with { groupId && artifactId && version }
         if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { artifactsAggregator << artifact }
 
         try
