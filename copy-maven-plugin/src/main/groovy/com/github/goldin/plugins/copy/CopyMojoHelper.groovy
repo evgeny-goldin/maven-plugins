@@ -170,13 +170,15 @@ final class CopyMojoHelper
      * @return                    dependencies collected (not resolved!)
      */
     @Requires({ dependency && artifact })
-    @Ensures({ result })
+    @Ensures({ result != null })
     final Collection<Artifact> collectDependencies ( CopyDependency dependency,
                                                      Artifact       artifact,
                                                      boolean        verbose,
                                                      boolean        failOnError,
-                                                     Set<Artifact>  artifactsAggregator = [ artifact ].toSet())
+                                                     Set<Artifact>  artifactsAggregator = new HashSet<Artifact>())
     {
+        artifactsAggregator << artifact
+
         try
         {
             final includeScopes                 = split( dependency.includeScope )
@@ -213,8 +215,6 @@ final class CopyMojoHelper
                 toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
             }
 
-            artifactsAggregator.addAll( childArtifacts )
-
             if ( dependency.transitive )
             {   /**
                  * Recursively iterating over node's children and collecting their transitive dependencies.
@@ -230,12 +230,15 @@ final class CopyMojoHelper
                     }
                 }
             }
+            else
+            {
+                artifactsAggregator.addAll( childArtifacts )
+            }
 
             /**
-             * Filtering out the final result before returning it since initial artifact was added to
-             * recursion set without checking its scope.
+             * Filtering out result since initial artifact was added to recursion set without checking its scope.
              */
-            artifactsAggregator.findAll { Artifact a -> scopeMatches( a.scope, includeScopes, excludeScopes ) }
+            artifactsAggregator.findAll { scopeMatches( it.scope, includeScopes, excludeScopes ) }
         }
         catch ( e )
         {
