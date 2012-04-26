@@ -201,19 +201,20 @@ final class CopyMojoHelper
                 toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
             }
 
+            artifactsAggregator.addAll( childArtifacts )
+
             if ( dependency.transitive )
-            {
-                /**
+            {   /**
                  * Recursively iterating over node's children and collecting their transitive dependencies.
-                 * The problem is the graph at this point contains only partial data, some of node's children
-                 * may have dependencies not shown by the graph we have (I don't know why).
+                 * findAll{ .. } doesn't fit here since we want to check every artifact separately before going recursive.
+                 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 * The problem we have is graph at this point containing only partial data, some of node's children
+                 * may have dependencies not shown by it (I don't know why).
                  */
                 childArtifacts.each {
-                    Artifact childArtifact ->
-                    if ( ! ( childArtifact in artifactsAggregator ))
+                    if ( ! ( it in artifactsAggregator ))
                     {
-                        collectDependencies( dependency, childArtifact, failOnError,
-                                             (( Set<Artifact> )( artifactsAggregator << childArtifact )))
+                        collectDependencies( dependency, it, failOnError, artifactsAggregator )
                     }
                 }
             }
