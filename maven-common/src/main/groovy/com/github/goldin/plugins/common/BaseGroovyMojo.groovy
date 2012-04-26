@@ -69,6 +69,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * Resolves local {@link File} of Maven {@link Artifact} and updates it.
      *
      * @param artifact    Maven artifact to resolve
+     * @param verbose     whether resolving process should be logged
      * @param failOnError whether execution should fail if failed to resolve an artifact
      * @return            same artifact with its local file set
      *
@@ -76,7 +77,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ artifact })
     @Ensures({ result.is( artifact ) })
-    final Artifact resolveArtifact( Artifact artifact, boolean failOnError )
+    final Artifact resolveArtifact( Artifact artifact, boolean verbose, boolean failOnError )
     {
         final errorMessage = "Failed to resolve ${ artifact.optional ? 'optional artifact ' : '' }[$artifact]"
 
@@ -85,9 +86,9 @@ abstract class BaseGroovyMojo extends GroovyMojo
             final request = new ArtifactRequest( toAetherArtifact( artifact ), remoteRepos, null )
             try
             {
-                log.info( "Resolving [$artifact]: optional [$artifact.optional], failOnError [$failOnError]" )
+                if ( verbose ) { log.info( "Resolving [$artifact]: optional [$artifact.optional], failOnError [$failOnError]" ) }
                 artifact.file = repoSystem.resolveArtifact( repoSession, request ).artifact?.file
-                log.info( "Resolving [$artifact]: done - [$artifact.file]" )
+                if ( verbose ) { log.info( "Resolving [$artifact]: done - [$artifact.file]" ) }
             }
             catch ( e )
             {

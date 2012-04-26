@@ -73,12 +73,13 @@ final class CopyMojoHelper
      * If dependency specified is a "single" one then it is resolved normally.
      *
      * @param dependency     dependency to resolve, either "single" or "filtering" one
+     * @param verbose        whether resolving process should be logged
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
      * @return               project's dependencies that passed all filters, resolved
      */
     @Requires({ dependency })
     @Ensures({ result || ( ! failIfNotFound ) })
-    protected List<CopyDependency> resolveDependencies ( CopyDependency dependency, boolean failIfNotFound )
+    protected List<CopyDependency> resolveDependencies ( CopyDependency dependency, boolean verbose, boolean failIfNotFound )
     {
         /**
          * We convert GAV dependency to Maven artifact to use it later
@@ -89,7 +90,7 @@ final class CopyMojoHelper
 
         if ( dependency.single )
         {
-            dependency.artifact = mojo.resolveArtifact( mavenArtifact, failIfNotFound )
+            dependency.artifact = mojo.resolveArtifact( mavenArtifact, verbose, failIfNotFound )
             return [ dependency ]
         }
 
@@ -101,7 +102,7 @@ final class CopyMojoHelper
             /**
              * For regular GAV dependency we collect its dependencies
              */
-            collectDependencies( dependency, mavenArtifact, failIfNotFound ) :
+            collectDependencies( dependency, mavenArtifact, verbose, failIfNotFound ) :
             /**
              * Otherwise, we take all project's direct dependencies and collect their dependencies.
              * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
@@ -111,7 +112,7 @@ final class CopyMojoHelper
             collect {
                 Dependency mavenDependency ->
                 final copyDependency = new CopyDependency( mavenDependency, dependency )
-                collectDependencies( copyDependency, copyDependency.artifact, failIfNotFound )
+                collectDependencies( copyDependency, copyDependency.artifact, verbose, failIfNotFound )
             }.
             flatten()
 
@@ -124,7 +125,7 @@ final class CopyMojoHelper
             List<CopyDependency> dependencies =
                 eliminateDuplicates( artifacts.toSet()).
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, failIfNotFound )) }
+                collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, verbose, failIfNotFound )) }
 
             Log log = ThreadLocals.get( Log )
 
@@ -163,6 +164,7 @@ final class CopyMojoHelper
      *
      * @param dependency          dependency artifact originated from
      * @param artifact            artifact to collect dependencies of
+     * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
      * @param artifactsAggregator internal variable used by recursive iteration, shouldn't be used by caller!
      * @return                    dependencies collected (not resolved!)
@@ -171,21 +173,28 @@ final class CopyMojoHelper
     @Ensures({ result })
     final Collection<Artifact> collectDependencies ( CopyDependency dependency,
                                                      Artifact       artifact,
+                                                     boolean        verbose,
                                                      boolean        failOnError,
                                                      Set<Artifact>  artifactsAggregator = [ artifact ].toSet())
     {
         try
         {
-            final includeScope                  = split( dependency.includeScope )
-            final excludeScope                  = split( dependency.excludeScope )
+            final includeScopes                 = split( dependency.includeScope )
+            final excludeScopes                 = split( dependency.excludeScope )
             final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
                                                                       mojo.remoteRepos )
             final previousSelector              = mojo.repoSession.dependencySelector
-            mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScope , excludeScope )
-            mojo.log.info( "Collecting [$artifact] dependencies: scopes [${ dependency.includeScope ?: '' }/${ dependency.excludeScope ?: '' }], " +
-                           "transitive [$dependency.transitive], optional [$dependency.optional]" )
+            mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScopes , excludeScopes )
+
+            if ( verbose )
+            {
+                mojo.log.info( "Collecting [$artifact] dependencies: include scopes $includeScopes, exclude scopes $excludeScopes, " +
+                               "include transitive [$dependency.transitive], include optional [$dependency.includeOptional]" )
+            }
+
             final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
-            mojo.log.info( "Collecting [$artifact] dependencies: done" )
+            if ( verbose ) { mojo.log.info( "Collecting [$artifact] dependencies: done" ) }
+
             mojo.repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
@@ -217,7 +226,7 @@ final class CopyMojoHelper
                 childArtifacts.each {
                     if ( ! ( it in artifactsAggregator ))
                     {
-                        collectDependencies( dependency, it, failOnError, artifactsAggregator )
+                        collectDependencies( dependency, it, verbose, failOnError, artifactsAggregator )
                     }
                 }
             }
@@ -226,7 +235,7 @@ final class CopyMojoHelper
              * Filtering out the final result before returning it since initial artifact was added to
              * recursion set without checking its scope.
              */
-            artifactsAggregator.findAll { Artifact a -> scopeMatches( a.scope, includeScope, excludeScope ) }
+            artifactsAggregator.findAll { Artifact a -> scopeMatches( a.scope, includeScopes, excludeScopes ) }
         }
         catch ( e )
         {

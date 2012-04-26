@@ -320,7 +320,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             boolean resolved = false // Whether any dependency was resolved
 
-            resolve( resourceDependencies, failIfNotFound ).each {
+            resolve( resourceDependencies, verbose, failIfNotFound ).each {
                 CopyDependency d ->
 
                 resolved = true
@@ -371,7 +371,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, failIfNotFound, isStripVersion ).each {
+                resolve( resourceDependencies, verbose, failIfNotFound, isStripVersion ).each {
                     CopyDependency d -> file().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
@@ -404,11 +404,13 @@ class CopyMojo extends BaseGroovyMojo
      * Resolves and filters resource dependencies.
      *
      * @param dependencies   dependencies to resolve and filter
+     * @param verbose        whether resolving process should be logged
      * @param failIfNotFound whether execution should fail if zero artifacts were resolved
      * @param stripVersion   whether dependencies version should be stripped
      * @return               dependencies resolved and filtered
      */
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
+                                                 boolean              verbose,
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
@@ -417,7 +419,7 @@ class CopyMojo extends BaseGroovyMojo
         final result = dependencies.
         collect {
             CopyDependency d ->
-            helper.resolveDependencies( d, failIfNotFound )
+            helper.resolveDependencies( d, verbose, failIfNotFound )
         }.
         flatten().
         findAll {
