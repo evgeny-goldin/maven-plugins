@@ -8,7 +8,7 @@ import com.github.goldin.plugins.jenkins.beans.*
 /**
  * Class describing a Jenkins job
  */
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings([ 'StatelessClass' ])
 class Job
 {
    /**
@@ -73,13 +73,12 @@ class Job
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     * If you add more fields - do not forget to update {@link #extend(Job)}
     * where current job is "extended" with the "parent Job"
-     * DO NOT specify default values, let {@link #extend(Job)} inheritance take car of it.
+    * DO NOT specify default values, let {@link #extend(Job)} inheritance take care of it.
+    * Also, update {@link #verifyAll} where job configuration is checked for correctness.
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
 
     JOB_TYPE             jobType
-    // Maven 2 can't set String to Enum, Maven 3 can
-    void                 setJobType( String jobType ){ this.jobType = ( JOB_TYPE ) JOB_TYPE.valueOf( jobType ) }
     Boolean              buildOnSNAPSHOT
     Boolean              useUpdate
     Boolean              doRevert
@@ -97,17 +96,19 @@ class Job
     String               scmType
     String               getScmClass()
     {
-        assert this.scmType
+        assert scmType
 
         def    scmClass = [ none : 'hudson.scm.NullSCM',
                             cvs  : 'hudson.scm.CVSSCM',
                             svn  : 'hudson.scm.SubversionSCM',
-                            git  : 'hudson.plugins.git.GitSCM' ][ this.scmType ]
-        assert scmClass, "Unknown <scmType>${ this.scmType }</scmType>"
+                            git  : 'hudson.plugins.git.GitSCM' ][ scmType ]
+        assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
                scmClass
     }
 
     Task[]               tasks
+    Task[]               prebuildersTasks
+    Task[]               postbuildersTasks
     String               node
     String               pom
     String               localRepoBase
@@ -135,15 +136,15 @@ class Job
 
     Trigger[]            triggers
     Trigger              trigger
-    List<Trigger>        triggers() { general().list( this.triggers, this.trigger ) }
+    List<Trigger>        triggers() { general().list( triggers, trigger ) }
 
     Parameter[]          parameters
     Parameter            parameter
-    List<Parameter>      parameters() { general().list( this.parameters, this.parameter ) }
+    List<Parameter>      parameters() { general().list( parameters, parameter ) }
 
     Repository[]         repositories
     Repository           repository
-    List<Repository>     repositories() { general().list( this.repositories, this.repository ) }
+    List<Repository>     repositories() { general().list( repositories, repository ) }
 
 
     /**
@@ -154,6 +155,8 @@ class Job
     String               publishers
     String               buildWrappers
     String               properties
+    String               prebuilders
+    String               postbuilders
 
     /**
      * Groovy extension point
@@ -194,25 +197,34 @@ class Job
 
 
     @Override
-    String toString () { "Job \"${ this.originalId }\"" }
+    String toString () { "Job \"${ originalId }\"" }
 
 
     /**
-     * Sets the property specified using the value of another job or default value
+     * Sets the property specified using the value of another job or default value.
+     *
+     * @param property      name of the property to set
+     * @param otherJob      job to copy property value from if current job has this property undefined
+     * @param override      whether current property should be overridden in any case
+     * @param defaultValue  default value to set to the property if other job has it undefined as well
+     * @param verifyClosure closure to pass the resulting property values, it can verify its correctness
      */
     private void set( String  property,
                       Job     otherJob,
                       boolean override,
-                      Closure verifyClosure,
-                      Object  defaultValue )
+                      Object  defaultValue,
+                      Closure verifyClosure = null )
     {
+        assert ( property && otherJob && ( defaultValue != null ))
+
         if (( this[ property ] == null ) || override )
         {
             this[ property ] = otherJob[ property ] ?: defaultValue
         }
 
         assert ( this[ property ] != null ), "[$this] has null [$property]"
-        verifyClosure( this[ property ] )
+
+        if ( verifyClosure ) { verifyClosure( this[ property ] ) }
     }
 
 
@@ -227,65 +239,72 @@ class Job
     @SuppressWarnings( 'AbcComplexity' )
     void extend ( Job parentJob, boolean override = false )
     {
-        set( 'description',       parentJob, override, { verify().notNullOrEmpty( it )}, '&nbsp;' )
-        set( 'scmType',           parentJob, override, { verify().notNullOrEmpty( it )}, 'svn' )
-        set( 'jobType',           parentJob, override, { verify().notNullOrEmpty( it.toString() )}, JOB_TYPE.maven )
-        set( 'node',              parentJob, override, { verify().notNullOrEmpty( it )}, 'master' )
-        set( 'jdkName',           parentJob, override, { verify().notNullOrEmpty( it )}, '(Default)' )
-        set( 'authToken',         parentJob, override, { it }, '' )
-        set( 'scm',               parentJob, override, { it }, '' )
-        set( 'properties',        parentJob, override, { it }, '' )
-        set( 'publishers',        parentJob, override, { it }, '' )
-        set( 'buildWrappers',     parentJob, override, { it }, '' )
-        set( 'process',           parentJob, override, { it }, '' )
-        set( 'useUpdate',         parentJob, override, { it }, false )
-        set( 'doRevert',          parentJob, override, { it }, false )
-        set( 'blockBuildWhenDownstreamBuilding', parentJob, override, { it }, false )
-        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override, { it }, false )
-        set( 'daysToKeep',        parentJob, override, { it }, -1 )
-        set( 'numToKeep',         parentJob, override, { it }, -1 )
-        set( 'descriptionTable',  parentJob, override, { it }, new DescriptionRow[ 0 ])
-        set( 'mail',              parentJob, override, { it }, new Mail())
-        set( 'invoke',            parentJob, override, { it }, new Invoke())
+        set( 'description',                      parentJob, override, '&nbsp;',       { String s   -> verify().notNullOrEmpty( s )} )
+        set( 'scmType',                          parentJob, override, 'svn',          { String s   -> verify().notNullOrEmpty( s )} )
+        set( 'jobType',                          parentJob, override, JOB_TYPE.maven, { JOB_TYPE t -> verify().notNullOrEmpty( t.toString() )} )
+        set( 'node',                             parentJob, override, 'master',       { String s   -> verify().notNullOrEmpty( s )},  )
+        set( 'jdkName',                          parentJob, override, '(Default)',    { String s   -> verify().notNullOrEmpty( s )},  )
+        set( 'authToken',                        parentJob, override, '' )
+        set( 'scm',                              parentJob, override, '' )
+        set( 'buildWrappers',                    parentJob, override, '' )
+        set( 'properties',                       parentJob, override, '' )
+        set( 'prebuilders',                      parentJob, override, '' )
+        set( 'postbuilders',                     parentJob, override, '' )
+        set( 'publishers',                       parentJob, override, '' )
+        set( 'process',                          parentJob, override, '' )
+        set( 'useUpdate',                        parentJob, override, false )
+        set( 'doRevert',                         parentJob, override, false )
+        set( 'blockBuildWhenDownstreamBuilding', parentJob, override, false )
+        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override, false )
+        set( 'daysToKeep',                       parentJob, override, -1 )
+        set( 'numToKeep',                        parentJob, override, -1 )
+        set( 'mail',                             parentJob, override, new Mail())
+        set( 'invoke',                           parentJob, override, new Invoke())
+        set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
+        set( 'prebuildersTasks',                 parentJob, override, new Task[ 0 ])
+        set( 'postbuildersTasks',                parentJob, override, new Task[ 0 ])
 
-        if ((( ! this.triggers())   || ( override )) && parentJob.triggers())
-            { setTriggers ( parentJob.triggers() as Trigger[] ) }
-
-        if ((( ! this.parameters()) || ( override )) && parentJob.parameters())
+        if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
-            setParameters ( parentJob.parameters() as Parameter[] )
+            triggers   =  parentJob.triggers() as Trigger[]
+        }
+
+        if ((( ! parameters()) || ( override )) && parentJob.parameters())
+        {
+            parameters = parentJob.parameters() as Parameter[]
         }
         else if ( parentJob.parameters())
-        {
-            /**
+        {   /**
              * Set gives a lower priority to parentJob parameters - parameters having the
              * same name and type *are not taken*, see {@link Parameter#equals(Object)}
              */
-            setParameters( joinParameters( parentJob.parameters(), this.parameters()) as Parameter[] )
+            parameters = joinParameters( parentJob.parameters(), parameters()) as Parameter[]
         }
 
-        if ((( ! this.repositories()) || ( override )) && parentJob.repositories())
-            { setRepositories ( parentJob.repositories() as Repository[] ) }
-
-        if ( this.jobType == JOB_TYPE.maven )
+        if ((( ! repositories()) || ( override )) && parentJob.repositories())
         {
-            set( 'pom',               parentJob, override, { verify().notNullOrEmpty( it )}, 'pom.xml' )
-            set( 'mavenGoals',        parentJob, override, { verify().notNullOrEmpty( it )}, '-B -e clean install' )
-            set( 'mavenName',         parentJob, override, { verify().notNullOrEmpty( it )}, '' )
-            set( 'mavenOpts',         parentJob, override, { it }, ''    )
-            set( 'buildOnSNAPSHOT',   parentJob, override, { it }, false )
-            set( 'privateRepository', parentJob, override, { it }, false )
-            set( 'archivingDisabled', parentJob, override, { it }, false )
-            set( 'reporters',         parentJob, override, { it }, ''    )
-            set( 'localRepoBase',     parentJob, override, { it }, '' )
-            set( 'localRepo',         parentJob, override, { it }, '' )
-            set( 'deploy',            parentJob, override, { it }, new Deploy())
-            set( 'artifactory',       parentJob, override, { it }, new Artifactory())
+            repositories = parentJob.repositories() as Repository[]
         }
-        else if ( this.jobType == JOB_TYPE.free )
+
+        if ( jobType == JOB_TYPE.free )
         {
-            if ((( ! this.tasks ) || ( override )) && parentJob.tasks )
-                { setTasks ( parentJob.tasks ) }
+            set( 'tasks',             parentJob, override, new Task[ 0 ])
+        }
+
+        if ( jobType == JOB_TYPE.maven )
+        {
+            set( 'pom',               parentJob, override, 'pom.xml',             { String s -> verify().notNullOrEmpty( s )} )
+            set( 'mavenGoals',        parentJob, override, '-B -e clean install', { String s -> verify().notNullOrEmpty( s )} )
+            set( 'mavenName',         parentJob, override, '' )
+            set( 'mavenOpts',         parentJob, override, ''    )
+            set( 'buildOnSNAPSHOT',   parentJob, override, false )
+            set( 'privateRepository', parentJob, override, false )
+            set( 'archivingDisabled', parentJob, override, false )
+            set( 'reporters',         parentJob, override, ''    )
+            set( 'localRepoBase',     parentJob, override, '' )
+            set( 'localRepo',         parentJob, override, '' )
+            set( 'deploy',            parentJob, override, new Deploy())
+            set( 'artifactory',       parentJob, override, new Artifactory())
         }
     }
 
@@ -320,34 +339,34 @@ class Job
     */
     void updateMavenGoals()
     {
-        assert this.jobType == JOB_TYPE.maven
+        assert jobType == JOB_TYPE.maven
 
         /**
          * {..} => ${..}
          */
-        this.mavenGoals = verify().notNullOrEmpty( this.mavenGoals ).addDollar()
+        mavenGoals = verify().notNullOrEmpty( mavenGoals ).addDollar()
 
-        if ( this.privateRepository )
+        if ( privateRepository )
         {
-            assert ( ! ( this.localRepoBase || this.localRepo )), "[${this}] has <privateRepository> set, " +
-                                                                  "<localRepoBase> and <localRepo> shouldn't be specified"
+            assert ( ! ( localRepoBase || localRepo )), "[${this}] has <privateRepository> set, " +
+                                                        "<localRepoBase> and <localRepo> shouldn't be specified"
         }
-        else if ( this.localRepoBase || this.localRepo )
+        else if ( localRepoBase || localRepo )
         {
             /**
              * Adding "-Dmaven.repo.local=/x/y/z" using {@link #localRepoBase} and {@link #localRepo}
              * or replacing it with updated value, if already exists
              */
 
-            this.localRepoPath = (( this.localRepoBase ?: "${ constants().USER_HOME }/.m2/repository" ) +
-                                  '/' +
-                                  ( this.localRepo     ?: '.' )).
-                                 replace( '\\', '/' )
+            localRepoPath = (( localRepoBase ?: "${ constants().USER_HOME }/.m2/repository" ) +
+                              '/' +
+                             ( localRepo     ?: '.' )).
+                            replace( '\\', '/' )
 
-            String localRepoArg = "-Dmaven.repo.local=&quot;${ this.localRepoPath }&quot;"
-            this.mavenGoals     = ( this.mavenGoals.contains( '-Dmaven.repo.local' )) ?
-                                      ( this.mavenGoals.replaceAll( /-Dmaven.repo.local\S+/, localRepoArg )) :
-                                      ( this.mavenGoals +  ' ' + localRepoArg )
+            String localRepoArg = "-Dmaven.repo.local=&quot;${ localRepoPath }&quot;"
+            mavenGoals          = ( mavenGoals.contains( '-Dmaven.repo.local' )) ?
+                                      ( mavenGoals.replaceAll( /-Dmaven.repo.local\S+/, localRepoArg )) :
+                                      ( mavenGoals +  ' ' + localRepoArg )
         }
     }
 
@@ -361,90 +380,94 @@ class Job
      @SuppressWarnings( 'AbcComplexity' )
      void verifyAll ()
      {
-         if ( this.isAbstract ) { return }
+         if ( isAbstract ) { return }
 
-         assert this.id,            "[${ this }] $NOT_CONFIGURED: missing <id>"
-         assert this.jenkinsUrl,    "[${ this }] $NOT_CONFIGURED: missing <jenkinsUrl>"
-         assert this.generationPom, "[${ this }] $NOT_CONFIGURED: missing <generationPom>"
-         assert this.scmClass,      "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
-         assert this.description,   "[${ this }] $NOT_CONFIGURED: missing <description>"
-         assert this.scmType,       "[${ this }] $NOT_CONFIGURED: missing <scmType>"
-         assert this.jobType,       "[${ this }] $NOT_CONFIGURED: missing <jobType>"
-         assert this.node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
-         assert this.jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
+         assert id,            "[${ this }] $NOT_CONFIGURED: missing <id>"
+         assert jenkinsUrl,    "[${ this }] $NOT_CONFIGURED: missing <jenkinsUrl>"
+         assert generationPom, "[${ this }] $NOT_CONFIGURED: missing <generationPom>"
+         assert scmClass,      "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
+         assert description,   "[${ this }] $NOT_CONFIGURED: missing <description>"
+         assert scmType,       "[${ this }] $NOT_CONFIGURED: missing <scmType>"
+         assert jobType,       "[${ this }] $NOT_CONFIGURED: missing <jobType>"
+         assert node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
+         assert jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
 
-         assert ( this.authToken         != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
-         assert ( this.scm               != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
-         assert ( this.properties        != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
-         assert ( this.publishers        != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
-         assert ( this.buildWrappers     != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
-         assert ( this.process           != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
-         assert ( this.useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
-         assert ( this.doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
-         assert ( this.blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
-         assert ( this.blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
-         assert ( this.daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
-         assert ( this.numToKeep         != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
-         assert ( this.descriptionTable  != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
-         assert ( this.mail              != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
-         assert ( this.invoke            != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
+         assert ( authToken         != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
+         assert ( scm               != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
+         assert ( properties        != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
+         assert ( publishers        != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
+         assert ( buildWrappers     != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
+         assert ( prebuilders       != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
+         assert ( postbuilders      != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
+         assert ( process           != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
+         assert ( useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
+         assert ( doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
+         assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
+         assert ( daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
+         assert ( numToKeep         != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
+         assert ( descriptionTable  != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
+         assert ( mail              != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
+         assert ( invoke            != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
+         assert ( prebuildersTasks  != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
+         assert ( postbuildersTasks != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
 
          verifyRepositories()
 
-         if ( this.jobType == JOB_TYPE.free )
-         {
-             assert this.tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
-             for ( task in this.tasks )
-             {
-                 assert ( task.hudsonClass && task.markup ), "Task [$task] - Hudson class or markup is missing"
-             }
+         prebuildersTasks.every  { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
+         postbuildersTasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
 
-             assert ! this.pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
-             assert ! this.mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
-             assert ! this.mavenName,  "[${ this }] $MIS_CONFIGURED: <mavenName> is not active in free-style jobs"
-             assert ( this.mavenOpts         == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
-             assert ( this.buildOnSNAPSHOT   == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
-             assert ( this.privateRepository == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
-             assert ( this.archivingDisabled == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
-             assert ( this.reporters         == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
-             assert ( this.localRepoBase     == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
-             assert ( this.localRepo         == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
-             assert ( this.deploy            == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
-             assert ( this.artifactory       == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
+         if ( jobType == JOB_TYPE.free )
+         {
+             assert tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
+             tasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
+
+             assert ! pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
+             assert ! mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
+             assert ! mavenName,  "[${ this }] $MIS_CONFIGURED: <mavenName> is not active in free-style jobs"
+             assert ( mavenOpts         == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
+             assert ( buildOnSNAPSHOT   == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
+             assert ( privateRepository == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
+             assert ( archivingDisabled == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
+             assert ( reporters         == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
+             assert ( localRepoBase     == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
+             assert ( localRepo         == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
+             assert ( deploy            == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
+             assert ( artifactory       == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
          }
-         else if ( this.jobType == JOB_TYPE.maven )
+         else if ( jobType == JOB_TYPE.maven )
          {
-             assert ! this.tasks, "[${ this }] $MIS_CONFIGURED: <tasks> is not active in maven jobs"
+             assert ! tasks, "[${ this }] $MIS_CONFIGURED: <tasks> is not active in maven jobs"
 
-             assert this.pom,        "[${ this }] $NOT_CONFIGURED: missing <pom>"
-             assert this.mavenGoals, "[${ this }] $NOT_CONFIGURED: missing <mavenGoals>"
-             assert this.mavenName,  "[${ this }] $NOT_CONFIGURED: missing <mavenName>"
+             assert pom,        "[${ this }] $NOT_CONFIGURED: missing <pom>"
+             assert mavenGoals, "[${ this }] $NOT_CONFIGURED: missing <mavenGoals>"
+             assert mavenName,  "[${ this }] $NOT_CONFIGURED: missing <mavenName>"
 
-             assert ( this.mavenOpts         != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
-             assert ( this.buildOnSNAPSHOT   != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
-             assert ( this.privateRepository != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
-             assert ( this.archivingDisabled != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
-             assert ( this.reporters         != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
-             assert ( this.localRepoBase     != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
-             assert ( this.localRepo         != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
-             assert ( this.deploy            != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
-             assert ( this.artifactory       != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
+             assert ( mavenOpts         != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
+             assert ( buildOnSNAPSHOT   != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
+             assert ( privateRepository != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
+             assert ( archivingDisabled != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
+             assert ( reporters         != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
+             assert ( localRepoBase     != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
+             assert ( localRepo         != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
+             assert ( deploy            != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
+             assert ( artifactory       != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
 
-             if ( this.deploy?.url || this.artifactory?.name )
+             if ( deploy?.url || artifactory?.name )
              {
-                 assert ( ! this.archivingDisabled ), \
+                 assert ( ! archivingDisabled ), \
                         "[${ this }] has archiving disabled - artifacts deploy to Maven or Artifactory repository can not be used"
              }
 
-             if ( this.privateRepository )
+             if ( privateRepository )
              {
-                assert ( ! ( this.localRepoBase || this.localRepo || this.localRepoPath )), \
+                assert ( ! ( localRepoBase || localRepo || localRepoPath )), \
                         "[${ this }] has <privateRepository> specified, no <localRepoBase>, <localRepo>, or <localRepoPath> should be defined"
              }
          }
          else
          {
-             throw new IllegalArgumentException ( "Unknown job type [${ this.jobType }]. " +
+             throw new IllegalArgumentException ( "Unknown job type [${ jobType }]. " +
                                                   "Known types are \"${JOB_TYPE.free.name()}\" and \"${JOB_TYPE.maven.name()}\"" )
          }
      }
@@ -459,7 +482,7 @@ class Job
      */
      void verifyRepositories()
      {
-         this.repositories().remote.each
+         repositories().remote.each
          {
              String repoToCheck ->
              int counter = 0

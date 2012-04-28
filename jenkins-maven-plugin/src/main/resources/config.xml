@@ -370,7 +370,6 @@ ${ task.markup }
   <%
        }
   %>
-
   </publishers>
   <buildWrappers>
   <%
@@ -380,4 +379,54 @@ ${ task.markup }
       }
   %>
   </buildWrappers>
+  <prebuilders>
+  <%
+      for ( task in job.prebuildersTasks )
+      {
+  %>
+    <${ task.hudsonClass }>
+${ task.markup }
+    </${ task.hudsonClass }>
+  <%
+      }
+      if ( job.prebuilders )
+      {
+          print job.prebuilders.addDollar()
+      }
+  %>
+  </prebuilders>
+  <postbuilders>
+  <%
+      for ( task in job.postbuildersTasks )
+      {
+  %>
+    <${ task.hudsonClass }>
+${ task.markup }
+    </${ task.hudsonClass }>
+  <%
+      }
+      if ( job.postbuilders )
+      {
+          print job.postbuilders.addDollar()
+      }
+  %>
+  </postbuilders>
+<!--
+  <runPostStepsIfResult>
+      <name>SUCCESS</name>
+      <ordinal>0</ordinal>
+      <color>BLUE</color>
+  </runPostStepsIfResult>
+<runPostStepsIfResult>
+   <name>UNSTABLE</name>
+   <ordinal>1</ordinal>
+   <color>YELLOW</color>
+ </runPostStepsIfResult>
+<runPostStepsIfResult>
+    <name>FAILURE</name>
+    <ordinal>2</ordinal>
+    <color>RED</color>
+  </runPostStepsIfResult>
+-->
+
 </${ ( job.jobType == JOB_TYPE.maven ) ? 'maven2-moduleset' : 'project' }>

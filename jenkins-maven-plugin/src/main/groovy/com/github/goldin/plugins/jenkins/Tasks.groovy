@@ -3,16 +3,19 @@ package com.github.goldin.plugins.jenkins
 
 abstract class Task
 {
-    String getHudsonClass(){ "hudson.tasks.${ this.class.simpleName }" }
-    abstract String getMarkup()
-
     private final String space = ' ' * 8
+    abstract List<String> getProperties()
 
-    String buildMarkup( List<String> properties )
+    final String getHudsonClass()
+    {
+        "hudson.tasks.${ this.class.simpleName }"
+    }
+
+    final String getMarkup()
     {
         List<String> lines = []
 
-        for ( property in properties.grep())
+        for ( property in properties )
         {
             String value = this[ property ] as String
             if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
@@ -27,7 +30,31 @@ abstract class Task
 class Shell extends Task
 {
     String command
-    String getMarkup () { buildMarkup([ 'command' ]) }
+
+    List<String> getProperties(){[ 'command' ]}
+}
+
+
+@SuppressWarnings( 'StatelessClass' )
+class BatchFile extends Task
+{
+    String command
+
+    List<String> getProperties(){[ 'command' ]}
+}
+
+
+@SuppressWarnings( 'StatelessClass' )
+class Ant extends Task
+{
+    String antName
+    String targets
+    String antOpts    = ''
+    String buildFile  = 'build.xml'
+    String properties = ''
+
+    List<String> getProperties(){[ ( antName ? 'antName' : '' ),
+                                   'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
 }
 
 
@@ -41,31 +68,7 @@ class Maven extends Task
     String  properties           = ''
     boolean usePrivateRepository = false
 
-    String getMarkup ()
-    {
-        buildMarkup( ( List<String> ) [ 'targets', 'mavenName', 'jvmOptions',
-                                        ( pom == 'false' ? '' : 'pom' ),
-                                        'properties', 'usePrivateRepository' ] )
-    }
-}
-
-
-@SuppressWarnings( 'StatelessClass' )
-class BatchFile extends Task
-{
-    String command
-    String getMarkup () { buildMarkup([ 'command' ]) }
-}
-
-
-@SuppressWarnings( 'StatelessClass' )
-class Ant extends Task
-{
-    String antName
-    String targets
-    String antOpts    = ''
-    String buildFile  = 'build.xml'
-    String properties = ''
-    String getMarkup () { buildMarkup([ ( antName ? 'antName' : '' ),
-                                        'targets', 'antOpts', 'buildFile', 'properties' ]) }
+    List<String> getProperties(){[ 'targets', 'mavenName', 'jvmOptions',
+                                   ( pom == 'false' ? '' : 'pom' ),
+                                   'properties', 'usePrivateRepository' ].grep() }
 }
