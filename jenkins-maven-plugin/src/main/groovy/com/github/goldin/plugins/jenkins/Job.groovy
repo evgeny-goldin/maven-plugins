@@ -113,6 +113,7 @@ class Job
     Boolean              archivingDisabled
     Boolean              blockBuildWhenDownstreamBuilding
     Boolean              blockBuildWhenUpstreamBuilding
+    Boolean              appendTasks
     String               jenkinsUrl
     String               generationPom
     String               parent
@@ -231,28 +232,51 @@ class Job
     /**
      * Sets the property specified using the value of another job or default value.
      *
-     * @param property      name of the property to set
-     * @param otherJob      job to copy property value from if current job has this property undefined
+     * @param propertyName  name of the property to set
+     * @param parentJob     job to copy property value from if current job has this property undefined
      * @param override      whether current property should be overridden in any case
      * @param defaultValue  default value to set to the property if other job has it undefined as well
      * @param verifyClosure closure to pass the resulting property values, it can verify its correctness
      */
-    private void set( String  property,
-                      Job     otherJob,
+    private void set( String  propertyName,
+                      Job     parentJob,
                       boolean override,
                       Object  defaultValue,
                       Closure verifyClosure = null )
     {
-        assert ( property && otherJob && ( defaultValue != null ))
+        assert ( propertyName && parentJob && ( defaultValue != null ))
 
-        if (( this[ property ] == null ) || override )
+        if (( this[ propertyName ] == null ) || override )
         {
-            this[ property ] = otherJob[ property ] ?: defaultValue
+            this[ propertyName ] = parentJob[ propertyName ] ?: defaultValue
         }
 
-        assert ( this[ property ] != null ), "[$this] has null [$property]"
+        assert ( this[ propertyName ] != null ), "[$this] has null [$propertyName]"
 
-        if ( verifyClosure ) { verifyClosure( this[ property ] ) }
+        if ( verifyClosure ) { verifyClosure( this[ propertyName ] ) }
+    }
+
+
+    /**
+     * Sets job's tasks using property name and parent job specified.
+     *
+     * @param propertyName  name of the property to set
+     * @param parentJob     job to copy tasks from if current job has tasks undefined
+     * @param override      whether current job tasks should be overridden in any case
+     */
+    private void setTasks( String  propertyName,
+                           Job     parentJob,
+                           boolean override )
+    {
+        assert ( propertyName && parentJob )
+
+        Task[] parentTasks   = ( Task[] ) ( parentJob[ propertyName ] ?: [] as Task[] )
+        Task[] ourTasks      = ( Task[] ) ( this[ propertyName ]      ?: [] as Task[] )
+        this[ propertyName ] = ( override    ) ? parentTasks :
+                               ( appendTasks ) ? ( parentTasks.toList() + ourTasks.toList()) as Task[] :
+                                                 ourTasks ?: parentTasks
+
+        assert ( this[ propertyName ] != null ), "[$this] has null [$propertyName]"
     }
 
 
@@ -285,13 +309,14 @@ class Job
         set( 'doRevert',                         parentJob, override, false )
         set( 'blockBuildWhenDownstreamBuilding', parentJob, override, false )
         set( 'blockBuildWhenUpstreamBuilding',   parentJob, override, false )
+        set( 'appendTasks',                      parentJob, override, false )
         set( 'daysToKeep',                       parentJob, override, -1 )
         set( 'numToKeep',                        parentJob, override, -1 )
         set( 'mail',                             parentJob, override, new Mail())
         set( 'invoke',                           parentJob, override, new Invoke())
         set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
-        set( 'prebuildersTasks',                 parentJob, override, new Task[ 0 ])
-        set( 'postbuildersTasks',                parentJob, override, new Task[ 0 ])
+        setTasks( 'prebuildersTasks',            parentJob, override )
+        setTasks( 'postbuildersTasks',           parentJob, override )
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
@@ -317,7 +342,7 @@ class Job
 
         if ( jobType == JobType.free )
         {
-            set( 'tasks',             parentJob, override, new Task[ 0 ])
+            setTasks( 'tasks',        parentJob, override )
         }
 
         if ( jobType == JobType.maven )
@@ -442,6 +467,7 @@ class Job
 
          assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
          assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
+         assert ( appendTasks                      != null ), "[${ this }] $NOT_CONFIGURED: 'appendTasks' is null?"
 
          verifyRepositories()
 
