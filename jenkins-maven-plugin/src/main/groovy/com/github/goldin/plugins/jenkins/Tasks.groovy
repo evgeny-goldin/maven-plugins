@@ -4,7 +4,7 @@ package com.github.goldin.plugins.jenkins
 abstract class Task
 {
     private final String space = ' ' * 8
-    abstract List<String> getProperties()
+    abstract List<String> getPropertyNames()
 
     final String getHudsonClass()
     {
@@ -15,7 +15,7 @@ abstract class Task
     {
         List<String> lines = []
 
-        for ( property in properties )
+        for ( property in propertyNames )
         {
             String value = this[ property ] as String
             if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
@@ -31,7 +31,7 @@ class Shell extends Task
 {
     String command
 
-    List<String> getProperties(){[ 'command' ]}
+    List<String> getPropertyNames(){[ 'command' ]}
 }
 
 
@@ -40,7 +40,7 @@ class BatchFile extends Task
 {
     String command
 
-    List<String> getProperties(){[ 'command' ]}
+    List<String> getPropertyNames(){[ 'command' ]}
 }
 
 
@@ -53,8 +53,8 @@ class Ant extends Task
     String buildFile  = 'build.xml'
     String properties = ''
 
-    List<String> getProperties(){[ ( antName ? 'antName' : '' ),
-                                   'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
+    List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ),
+                                      'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
 }
 
 
@@ -68,7 +68,7 @@ class Maven extends Task
     String  properties           = ''
     boolean usePrivateRepository = false
 
-    List<String> getProperties(){[ 'targets', 'mavenName', 'jvmOptions',
-                                   ( pom == 'false' ? '' : 'pom' ),
-                                   'properties', 'usePrivateRepository' ].grep() }
+    List<String> getPropertyNames(){[ 'targets', 'mavenName', 'jvmOptions',
+                                      ( pom == 'false' ? '' : 'pom' ),
+                                      'properties', 'usePrivateRepository' ].grep() }
 }

@@ -183,7 +183,7 @@ class JenkinsMojo extends BaseGroovyMojo
             job.extend( job.parent ? composeJob( allJobs, job.parent ) :
                                      new Job())
 
-            if ( job.mavenGoals && ( job.jobType == Job.JOB_TYPE.maven ))
+            if ( job.mavenGoals && ( job.jobType == Job.JobType.maven ))
             {
                 /**
                  * Top-level "base" job may have no maven goals set and it has nowhere to "inherit" it from

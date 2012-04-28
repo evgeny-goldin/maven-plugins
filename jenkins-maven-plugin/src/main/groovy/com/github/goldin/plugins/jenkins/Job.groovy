@@ -2,6 +2,7 @@ package com.github.goldin.plugins.jenkins
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.plugin.MojoExecutionException
+import org.gcontracts.annotations.Requires
 import com.github.goldin.plugins.jenkins.beans.*
 
 
@@ -32,15 +33,41 @@ class Job
     /**
      * Job types supported
      */
-    static enum JOB_TYPE
+    static enum JobType
     {
         free  ( 'Free-Style' ),
         maven ( 'Maven'      )
 
         final String description
-        JOB_TYPE ( String description ) { this.description = description }
+
+        @Requires({ description })
+        JobType ( String description )
+        {
+            this.description = description
+        }
     }
 
+    /**
+     * "runPostStepsIfResult" types supported
+     */
+    static enum PostStepResult
+    {
+        success  ( 'SUCCESS',  0, 'BLUE'   ),
+        unstable ( 'UNSTABLE', 1, 'YELLOW' ),
+        all      ( 'FAILURE',  2, 'RED'    )
+
+        final String name
+        final int    ordinal
+        final String color
+
+        @Requires({ name && color })
+        PostStepResult( String name, int ordinal, String color )
+        {
+            this.name    = name
+            this.ordinal = ordinal
+            this.color   = color
+        }
+    }
 
     /**
      * Individual property, not inherited from parent job
@@ -78,7 +105,7 @@ class Job
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
 
-    JOB_TYPE             jobType
+    JobType              jobType
     Boolean              buildOnSNAPSHOT
     Boolean              useUpdate
     Boolean              doRevert
@@ -133,6 +160,7 @@ class Job
     Invoke               invoke
     Job[]                invokedBy
     String               authToken
+    PostStepResult       runPostStepsIfResult
 
     Trigger[]            triggers
     Trigger              trigger
@@ -239,11 +267,12 @@ class Job
     @SuppressWarnings( 'AbcComplexity' )
     void extend ( Job parentJob, boolean override = false )
     {
-        set( 'description',                      parentJob, override, '&nbsp;',       { String s   -> verify().notNullOrEmpty( s )} )
-        set( 'scmType',                          parentJob, override, 'svn',          { String s   -> verify().notNullOrEmpty( s )} )
-        set( 'jobType',                          parentJob, override, JOB_TYPE.maven, { JOB_TYPE t -> verify().notNullOrEmpty( t.toString() )} )
-        set( 'node',                             parentJob, override, 'master',       { String s   -> verify().notNullOrEmpty( s )},  )
-        set( 'jdkName',                          parentJob, override, '(Default)',    { String s   -> verify().notNullOrEmpty( s )},  )
+        set( 'description',                      parentJob, override, '&nbsp;',           { String         s -> assert s } )
+        set( 'scmType',                          parentJob, override, 'svn',              { String         s -> assert s } )
+        set( 'jobType',                          parentJob, override, JobType.maven,      { JobType        t -> assert t } )
+        set( 'node',                             parentJob, override, 'master',           { String         s -> assert s } )
+        set( 'jdkName',                          parentJob, override, '(Default)',        { String         s -> assert s } )
+        set( 'runPostStepsIfResult',             parentJob, override, PostStepResult.all, { PostStepResult r -> assert r } )
         set( 'authToken',                        parentJob, override, '' )
         set( 'scm',                              parentJob, override, '' )
         set( 'buildWrappers',                    parentJob, override, '' )
@@ -286,15 +315,15 @@ class Job
             repositories = parentJob.repositories() as Repository[]
         }
 
-        if ( jobType == JOB_TYPE.free )
+        if ( jobType == JobType.free )
         {
             set( 'tasks',             parentJob, override, new Task[ 0 ])
         }
 
-        if ( jobType == JOB_TYPE.maven )
+        if ( jobType == JobType.maven )
         {
-            set( 'pom',               parentJob, override, 'pom.xml',             { String s -> verify().notNullOrEmpty( s )} )
-            set( 'mavenGoals',        parentJob, override, '-B -e clean install', { String s -> verify().notNullOrEmpty( s )} )
+            set( 'pom',               parentJob, override, 'pom.xml',             { String s -> assert s } )
+            set( 'mavenGoals',        parentJob, override, '-B -e clean install', { String s -> assert s } )
             set( 'mavenName',         parentJob, override, '' )
             set( 'mavenOpts',         parentJob, override, ''    )
             set( 'buildOnSNAPSHOT',   parentJob, override, false )
@@ -339,7 +368,7 @@ class Job
     */
     void updateMavenGoals()
     {
-        assert jobType == JOB_TYPE.maven
+        assert jobType == JobType.maven
 
         /**
          * {..} => ${..}
@@ -392,32 +421,34 @@ class Job
          assert node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
          assert jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
 
-         assert ( authToken         != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
-         assert ( scm               != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
-         assert ( properties        != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
-         assert ( publishers        != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
-         assert ( buildWrappers     != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
-         assert ( prebuilders       != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
-         assert ( postbuilders      != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
-         assert ( process           != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
-         assert ( useUpdate         != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
-         assert ( doRevert          != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( runPostStepsIfResult != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
+         assert ( authToken            != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
+         assert ( scm                  != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
+         assert ( properties           != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
+         assert ( publishers           != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
+         assert ( buildWrappers        != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
+         assert ( prebuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
+         assert ( postbuilders         != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
+         assert ( process              != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
+         assert ( useUpdate            != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
+         assert ( doRevert             != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( daysToKeep           != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
+         assert ( numToKeep            != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
+         assert ( descriptionTable     != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
+         assert ( mail                 != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
+         assert ( invoke               != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
+         assert ( prebuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
+         assert ( postbuildersTasks    != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
+
          assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
          assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
-         assert ( daysToKeep        != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
-         assert ( numToKeep         != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
-         assert ( descriptionTable  != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
-         assert ( mail              != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
-         assert ( invoke            != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
-         assert ( prebuildersTasks  != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
-         assert ( postbuildersTasks != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
 
          verifyRepositories()
 
          prebuildersTasks.every  { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
          postbuildersTasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
 
-         if ( jobType == JOB_TYPE.free )
+         if ( jobType == JobType.free )
          {
              assert tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
              tasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
@@ -435,7 +466,7 @@ class Job
              assert ( deploy            == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
              assert ( artifactory       == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
          }
-         else if ( jobType == JOB_TYPE.maven )
+         else if ( jobType == JobType.maven )
          {
              assert ! tasks, "[${ this }] $MIS_CONFIGURED: <tasks> is not active in maven jobs"
 
@@ -468,7 +499,7 @@ class Job
          else
          {
              throw new IllegalArgumentException ( "Unknown job type [${ jobType }]. " +
-                                                  "Known types are \"${JOB_TYPE.free.name()}\" and \"${JOB_TYPE.maven.name()}\"" )
+                                                  "Known types are \"${JobType.free.name()}\" and \"${JobType.maven.name()}\"" )
          }
      }
 

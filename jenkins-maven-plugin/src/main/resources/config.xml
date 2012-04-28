@@ -5,7 +5,7 @@ import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.jenkins.*
 import com.github.goldin.plugins.jenkins.beans.*
 import com.github.goldin.plugins.jenkins.Job.*
-import com.github.goldin.plugins.jenkins.Job.JOB_TYPE
+import com.github.goldin.plugins.jenkins.Job.JobType
 import com.github.goldin.plugins.common.*
 %>
 
@@ -13,7 +13,7 @@ import com.github.goldin.plugins.common.*
     <!-- Generated automatically by [${ job.generationPom }] ${ timestamp ?: '' } -->
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
-<${ ( job.jobType == JOB_TYPE.maven ) ? 'maven2-moduleset' : 'project' }>
+<${ ( job.jobType == JobType.maven ) ? 'maven2-moduleset' : 'project' }>
   <actions/>
   <description><![CDATA[<center>
     <h4>
@@ -218,7 +218,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <%
-        if ( job.jobType == JOB_TYPE.maven )
+        if ( job.jobType == JobType.maven )
         {
   %>
   <rootPOM>${ job.pom }</rootPOM>
@@ -254,7 +254,7 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   </reporters>
   <%
         }
-        else if ( job.jobType == JOB_TYPE.free )
+        else if ( job.jobType == JobType.free )
         {
   %>
   <builders>
@@ -281,7 +281,7 @@ ${ task.markup }
             print job.publishers.addDollar()
       }
 
-      if (( job.mail?.recipients ) && ( job.jobType != JOB_TYPE.maven ))
+      if (( job.mail?.recipients ) && ( job.jobType != JobType.maven ))
       {
   %>
       <hudson.tasks.Mailer>
@@ -292,7 +292,7 @@ ${ task.markup }
   <%
       }
 
-      if (( job.deploy?.url ) && ( job.jobType == JOB_TYPE.maven ))
+      if (( job.deploy?.url ) && ( job.jobType == JobType.maven ))
       {
   %>
       <hudson.maven.RedeployPublisher>
@@ -304,7 +304,7 @@ ${ task.markup }
   <%
       }
 
-      if (( job.artifactory?.name ) && ( job.jobType == JOB_TYPE.maven ))
+      if (( job.artifactory?.name ) && ( job.jobType == JobType.maven ))
       {
   %>
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -411,22 +411,9 @@ ${ task.markup }
       }
   %>
   </postbuilders>
-<!--
   <runPostStepsIfResult>
-      <name>SUCCESS</name>
-      <ordinal>0</ordinal>
-      <color>BLUE</color>
+      <name>${ job.runPostStepsIfResult.name }</name>
+      <ordinal>${ job.runPostStepsIfResult.ordinal }</ordinal>
+      <color>${ job.runPostStepsIfResult.color }</color>
   </runPostStepsIfResult>
-<runPostStepsIfResult>
-   <name>UNSTABLE</name>
-   <ordinal>1</ordinal>
-   <color>YELLOW</color>
- </runPostStepsIfResult>
-<runPostStepsIfResult>
-    <name>FAILURE</name>
-    <ordinal>2</ordinal>
-    <color>RED</color>
-  </runPostStepsIfResult>
--->
-
-</${ ( job.jobType == JOB_TYPE.maven ) ? 'maven2-moduleset' : 'project' }>
+</${ ( job.jobType == JobType.maven ) ? 'maven2-moduleset' : 'project' }>

@@ -2,7 +2,7 @@
 import com.github.goldin.plugins.jenkins.*
 import com.github.goldin.plugins.jenkins.beans.*
 import com.github.goldin.plugins.jenkins.Job.*
-import com.github.goldin.plugins.jenkins.Job.JOB_TYPE
+import com.github.goldin.plugins.jenkins.Job.JobType
 
 def jobLink ( String jenkinsUrl, String jobId ) {
     """<a href=\"${ jenkinsUrl }/job/${ jobId }\">
@@ -42,7 +42,7 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         <td>${ job.jdkName }</td>
     </tr>
     <%
-      if ( job.jobType == JOB_TYPE.maven )
+      if ( job.jobType == JobType.maven )
       {
           def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
                            job.localRepoPath     ? job.localRepoPath :
