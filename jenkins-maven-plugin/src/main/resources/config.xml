@@ -398,36 +398,40 @@ ${ task.markup }
       }
   %>
   </buildWrappers>
-  <prebuilders>
   <%
-      for ( task in job.prebuildersTasks )
+      if ( job.jobType == JobType.maven )
       {
   %>
+  <prebuilders>
+      <%
+          for ( task in job.prebuildersTasks )
+          {
+      %>
     <${ task.hudsonClass }>
 ${ task.markup }
     </${ task.hudsonClass }>
   <%
-      }
-      if ( job.prebuilders )
-      {
-          print job.prebuilders.addDollar()
-      }
+          }
+          if ( job.prebuilders )
+          {
+              print job.prebuilders.addDollar()
+          }
   %>
   </prebuilders>
   <postbuilders>
   <%
-      for ( task in job.postbuildersTasks )
-      {
+          for ( task in job.postbuildersTasks )
+          {
   %>
     <${ task.hudsonClass }>
 ${ task.markup }
     </${ task.hudsonClass }>
   <%
-      }
-      if ( job.postbuilders )
-      {
-          print job.postbuilders.addDollar()
-      }
+          }
+          if ( job.postbuilders )
+          {
+              print job.postbuilders.addDollar()
+          }
   %>
   </postbuilders>
   <runPostStepsIfResult>
@@ -435,4 +439,7 @@ ${ task.markup }
       <ordinal>${ job.runPostStepsIfResult.ordinal }</ordinal>
       <color>${ job.runPostStepsIfResult.color }</color>
   </runPostStepsIfResult>
+  <%
+      }
+  %>
 </${ ( job.jobType == JobType.maven ) ? 'maven2-moduleset' : 'project' }>
