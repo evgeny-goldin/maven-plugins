@@ -473,11 +473,11 @@ class GMojoUtils
     /**
      * Splits a delimiter-separated String.
      *
-     * @param s     String to split
-     * @param delim delimiter regex expression to split the String with
+     * @param s          String to split
+     * @param delimRegex delimiter regex expression to split the String with
      * @return result of {@code s.split( delim )*.trim().grep()}
      */
-    static List<String> split( String s, String delim = ',' ) { ( s ?: '' ).split( delim )*.trim().grep() as List }
+    static List<String> split( String s, String delimRegex = ',' ) { ( s ?: '' ).split( delimRegex )*.trim().grep() as List }
 
 
     /**

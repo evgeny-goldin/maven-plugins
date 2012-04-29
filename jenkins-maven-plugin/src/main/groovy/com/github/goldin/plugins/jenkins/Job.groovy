@@ -99,10 +99,10 @@ class Job
 
     /**
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    * If you add more fields - do not forget to update {@link #extend(Job)}
-    * where current job is "extended" with the "parent Job"
-    * DO NOT specify default values, let {@link #extend(Job)} inheritance take care of it.
-    * Also, update {@link #verifyAll} where job configuration is checked for correctness.
+    * When adding fields:
+    * 1) Update {@link #extend(Job)} where current job is "extended" with the "parent Job"
+    * 2) DO NOT specify default values, let {@link #extend(Job)} inheritance take care of it.
+    * 3) Update {@link #verifyAll} where job configuration is checked for correctness.
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
 
@@ -125,18 +125,6 @@ class Job
     Integer              artifactDaysToKeep
     Integer              artifactNumToKeep
     String               scmType
-    String               getScmClass()
-    {
-        assert scmType
-
-        def    scmClass = [ none : 'hudson.scm.NullSCM',
-                            cvs  : 'hudson.scm.CVSSCM',
-                            svn  : 'hudson.scm.SubversionSCM',
-                            git  : 'hudson.plugins.git.GitSCM' ][ scmType ]
-        assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
-               scmClass
-    }
-
     Task[]               tasks
     Task[]               prebuildersTasks
     Task[]               postbuildersTasks
@@ -144,23 +132,16 @@ class Job
     String               pom
     String               localRepoBase
     String               localRepo
-    String               localRepoPath // See updateMavenGoals()
+    void                 setLocalRepo ( String localRepo ){ this.localRepo = fixIllegalChars( localRepo, 'Local repo' ) }
+    String               localRepoPath
     Artifactory          artifactory
-
-    void setLocalRepo ( String localRepo )
-    {
-        /**
-         * Local repo should never have any illegal characters in it since it becomes a folder name later
-         */
-        this.localRepo = fixIllegalChars( localRepo, 'Local repo' )
-    }
-
     String               mavenGoals
     String               mavenName
     String               jdkName
     String               mavenOpts
     String               quietPeriod
     String               scmCheckoutRetryCount
+    String               gitHubUrl
     Deploy               deploy
     Mail                 mail
     Invoke               invoke
@@ -197,12 +178,26 @@ class Job
      */
     String               process
 
+    /**
+     * Converts {@link #scmType} to SCM class name.
+     */
+    String getScmClass()
+    {
+        assert scmType
+
+        def    scmClass = [ none : 'hudson.scm.NullSCM',
+                            cvs  : 'hudson.scm.CVSSCM',
+                            svn  : 'hudson.scm.SubversionSCM',
+                            git  : 'hudson.plugins.git.GitSCM' ][ scmType ]
+        assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
+               scmClass
+    }
 
 
    /**
     * Retrieves job description table
     */
-    String getHtmlDescriptionTable() { makeTemplate( '/descriptionTable.html', [ job : this ] ) }
+    String getDescriptionTableMarkup() { makeTemplate( '/descriptionTable.html', [ job : this ] ) }
 
 
     /**
@@ -232,6 +227,22 @@ class Job
 
     @Override
     String toString () { "Job \"${ originalId }\"" }
+
+
+    /**
+     * Sets properties specified by calling {@link #set} for each one.
+     *
+     * @param propertyNames name of the properties to set
+     * @param parentJob     job to copy property value from if current job has this property undefined
+     * @param override      whether current property should be overridden in any case
+     */
+    private void setMany( List<String> propertyNames,
+                          Job          parentJob,
+                          boolean      override )
+    {
+        assert propertyNames && parentJob
+        propertyNames.each { set( it, parentJob, override ) }
+    }
 
 
     /**
@@ -308,33 +319,19 @@ class Job
     @SuppressWarnings( 'AbcComplexity' )
     void extend ( Job parentJob, boolean override = false )
     {
-        set( 'description',                      parentJob, override, '&nbsp;',           { String         s -> assert s } )
-        set( 'scmType',                          parentJob, override, 'svn',              { String         s -> assert s } )
-        set( 'jobType',                          parentJob, override, JobType.maven,      { JobType        t -> assert t } )
-        set( 'node',                             parentJob, override, 'master',           { String         s -> assert s } )
-        set( 'jdkName',                          parentJob, override, '(Default)',        { String         s -> assert s } )
+        set( 'description',      parentJob, override, '&nbsp;',      { String  s -> assert s } )
+        set( 'scmType',          parentJob, override, 'svn',         { String  s -> assert s } )
+        set( 'jobType',          parentJob, override, JobType.maven, { JobType t -> assert t } )
+        set( 'node',             parentJob, override, 'master',      { String  s -> assert s } )
+        set( 'jdkName',          parentJob, override, '(Default)',   { String  s -> assert s } )
+        set( 'mail',             parentJob, override, new Mail())
+        set( 'invoke',           parentJob, override, new Invoke())
+        set( 'descriptionTable', parentJob, override, new DescriptionRow[ 0 ])
 
-        set( 'mail',                             parentJob, override, new Mail())
-        set( 'invoke',                           parentJob, override, new Invoke())
-        set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
-
-        set( 'authToken',                        parentJob, override )
-        set( 'scm',                              parentJob, override )
-        set( 'buildWrappers',                    parentJob, override )
-        set( 'properties',                       parentJob, override )
-        set( 'publishers',                       parentJob, override )
-        set( 'process',                          parentJob, override )
-        set( 'quietPeriod',                      parentJob, override )
-        set( 'scmCheckoutRetryCount',            parentJob, override )
-        set( 'useUpdate',                        parentJob, override )
-        set( 'doRevert',                         parentJob, override )
-        set( 'blockBuildWhenDownstreamBuilding', parentJob, override )
-        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override )
-        set( 'appendTasks',                      parentJob, override )
-        set( 'daysToKeep',                       parentJob, override )
-        set( 'numToKeep',                        parentJob, override )
-        set( 'artifactDaysToKeep',               parentJob, override )
-        set( 'artifactNumToKeep',                parentJob, override )
+        setMany( split( '|authToken|scm|buildWrappers|properties|publishers|process|quietPeriod|scmCheckoutRetryCount|gitHubUrl' +
+                        '|useUpdate|doRevert|blockBuildWhenDownstreamBuilding|blockBuildWhenUpstreamBuilding|appendTasks|daysToKeep' +
+                        '|numToKeep|artifactDaysToKeep|artifactNumToKeep', '\\|' ),
+                 parentJob, override )
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
@@ -365,24 +362,18 @@ class Job
 
         if ( jobType == JobType.maven )
         {
-            set( 'pom',               parentJob, override, 'pom.xml',             { String s -> assert s } )
-            set( 'mavenGoals',        parentJob, override, '-B -e clean install', { String s -> assert s } )
-            set( 'mavenName',         parentJob, override )
-            set( 'mavenOpts',         parentJob, override )
-            set( 'reporters',         parentJob, override )
-            set( 'localRepoBase',     parentJob, override )
-            set( 'localRepo',         parentJob, override )
-            set( 'buildOnSNAPSHOT',   parentJob, override )
-            set( 'privateRepository', parentJob, override )
-            set( 'archivingDisabled', parentJob, override )
-            set( 'deploy',            parentJob, override, new Deploy())
-            set( 'artifactory',       parentJob, override, new Artifactory())
-
-            set( 'prebuilders',            parentJob, override )
-            set( 'postbuilders',           parentJob, override )
+            set( 'pom',                    parentJob, override, 'pom.xml',             { String s         -> assert s } )
+            set( 'mavenGoals',             parentJob, override, '-B -e clean install', { String s         -> assert s } )
+            set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all,    { PostStepResult r -> assert r } )
+            set( 'deploy',                 parentJob, override, new Deploy())
+            set( 'artifactory',            parentJob, override, new Artifactory())
             setTasks( 'prebuildersTasks',  parentJob, override )
             setTasks( 'postbuildersTasks', parentJob, override )
-            set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all, { PostStepResult r -> assert r } )
+
+            setMany( split( '|mavenName|mavenOpts|reporters|localRepoBase|localRepo|buildOnSNAPSHOT' +
+                            '|privateRepository|archivingDisabled|prebuilders|postbuilders', '\\|' ),
+                     parentJob, override )
+
         }
     }
 
@@ -487,6 +478,7 @@ class Job
          assert ( invoke                != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
          assert ( quietPeriod           != null ), "[${ this }] $NOT_CONFIGURED: 'quietPeriod' is null?"
          assert ( scmCheckoutRetryCount != null ), "[${ this }] $NOT_CONFIGURED: 'scmCheckoutRetryCount' is null?"
+         assert ( gitHubUrl             != null ), "[${ this }] $NOT_CONFIGURED: 'gitHubUrl' is null?"
 
          assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
          assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"

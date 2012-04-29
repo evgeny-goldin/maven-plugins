@@ -26,7 +26,7 @@ import com.github.goldin.plugins.common.*
 </center>
 ${ job.description.trimMultiline() }
 <p/>
-${ job.htmlDescriptionTable.trimMultiline() }]]></description>
+${ job.descriptionTableMarkup.trimMultiline() }]]></description>
   <%
       if ( job.displayName )
       {
@@ -51,6 +51,14 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <%
       if ( job.properties )  { print job.properties.addDollar() }
       if ( job.parameters()) { print getTemplate( '/parameters.xml' ).make([ job : job ]) }
+      if ( job.gitHubUrl )
+      {
+  %>
+      <com.coravy.hudson.plugins.github.GithubProjectProperty>
+        <projectUrl>${ job.gitHubUrl }</projectUrl>
+      </com.coravy.hudson.plugins.github.GithubProjectProperty>
+  <%
+      }
   %>
   </properties>
   <scm class="${ job.scmClass }">
