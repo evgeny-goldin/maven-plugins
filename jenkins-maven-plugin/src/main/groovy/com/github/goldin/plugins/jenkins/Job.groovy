@@ -89,12 +89,13 @@ class Job
     }
 
     /**
-     * Individual boolean properties, not inherited from parent job
+     * Individual properties, *not inherited* from parent job
      * @see #extend
      */
-    boolean              isAbstract = false
+    boolean              isAbstract  = false
     void                 setAbstract( boolean isAbstract ) { this.isAbstract = isAbstract }
-    boolean              disabled   = false
+    boolean              disabled    = false
+    String               displayName = ''
 
     /**
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,6 +157,8 @@ class Job
     String               mavenName
     String               jdkName
     String               mavenOpts
+    String               quietPeriod
+    String               scmCheckoutRetryCount
     Deploy               deploy
     Mail                 mail
     Invoke               invoke
@@ -235,16 +238,28 @@ class Job
      * @param propertyName  name of the property to set
      * @param parentJob     job to copy property value from if current job has this property undefined
      * @param override      whether current property should be overridden in any case
-     * @param defaultValue  default value to set to the property if other job has it undefined as well
+     * @param defaultValue  default value to set to the property if other job has it undefined as well,
+     *                      if unspecified or null, then {@code ''} for {@code String},
+     *                      {@code false} for {@code Boolean} and {@code -1} for {@code Integer} properties are used
      * @param verifyClosure closure to pass the resulting property values, it can verify its correctness
      */
     private void set( String  propertyName,
                       Job     parentJob,
                       boolean override,
-                      Object  defaultValue,
+                      Object  defaultValue  = null,
                       Closure verifyClosure = null )
     {
-        assert ( propertyName && parentJob && ( defaultValue != null ))
+        assert propertyName && parentJob
+
+        final propertyType = metaClass.getMetaProperty( propertyName ).type
+        // noinspection GroovyAssignmentToMethodParameter
+        defaultValue       = ( defaultValue != null    ) ? defaultValue :
+                             ( propertyType == String  ) ? ''           :
+                             ( propertyType == Boolean ) ? false        :
+                             ( propertyType == Integer ) ? -1           :
+                                                           null
+
+        assert ( defaultValue != null ), "Default value should be specified for unknown property type [$propertyType]"
 
         if (( this[ propertyName ] == null ) || override )
         {
@@ -297,21 +312,23 @@ class Job
         set( 'node',                             parentJob, override, 'master',           { String         s -> assert s } )
         set( 'jdkName',                          parentJob, override, '(Default)',        { String         s -> assert s } )
         set( 'runPostStepsIfResult',             parentJob, override, PostStepResult.all, { PostStepResult r -> assert r } )
-        set( 'authToken',                        parentJob, override, '' )
-        set( 'scm',                              parentJob, override, '' )
-        set( 'buildWrappers',                    parentJob, override, '' )
-        set( 'properties',                       parentJob, override, '' )
-        set( 'prebuilders',                      parentJob, override, '' )
-        set( 'postbuilders',                     parentJob, override, '' )
-        set( 'publishers',                       parentJob, override, '' )
-        set( 'process',                          parentJob, override, '' )
-        set( 'useUpdate',                        parentJob, override, false )
-        set( 'doRevert',                         parentJob, override, false )
-        set( 'blockBuildWhenDownstreamBuilding', parentJob, override, false )
-        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override, false )
-        set( 'appendTasks',                      parentJob, override, false )
-        set( 'daysToKeep',                       parentJob, override, -1 )
-        set( 'numToKeep',                        parentJob, override, -1 )
+        set( 'authToken',                        parentJob, override )
+        set( 'scm',                              parentJob, override )
+        set( 'buildWrappers',                    parentJob, override )
+        set( 'properties',                       parentJob, override )
+        set( 'prebuilders',                      parentJob, override )
+        set( 'postbuilders',                     parentJob, override )
+        set( 'publishers',                       parentJob, override )
+        set( 'process',                          parentJob, override )
+        set( 'quietPeriod',                      parentJob, override )
+        set( 'scmCheckoutRetryCount',            parentJob, override )
+        set( 'useUpdate',                        parentJob, override )
+        set( 'doRevert',                         parentJob, override )
+        set( 'blockBuildWhenDownstreamBuilding', parentJob, override )
+        set( 'blockBuildWhenUpstreamBuilding',   parentJob, override )
+        set( 'appendTasks',                      parentJob, override )
+        set( 'daysToKeep',                       parentJob, override )
+        set( 'numToKeep',                        parentJob, override )
         set( 'mail',                             parentJob, override, new Mail())
         set( 'invoke',                           parentJob, override, new Invoke())
         set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
@@ -349,14 +366,14 @@ class Job
         {
             set( 'pom',               parentJob, override, 'pom.xml',             { String s -> assert s } )
             set( 'mavenGoals',        parentJob, override, '-B -e clean install', { String s -> assert s } )
-            set( 'mavenName',         parentJob, override, '' )
-            set( 'mavenOpts',         parentJob, override, ''    )
-            set( 'buildOnSNAPSHOT',   parentJob, override, false )
-            set( 'privateRepository', parentJob, override, false )
-            set( 'archivingDisabled', parentJob, override, false )
-            set( 'reporters',         parentJob, override, ''    )
-            set( 'localRepoBase',     parentJob, override, '' )
-            set( 'localRepo',         parentJob, override, '' )
+            set( 'mavenName',         parentJob, override )
+            set( 'mavenOpts',         parentJob, override )
+            set( 'reporters',         parentJob, override )
+            set( 'localRepoBase',     parentJob, override )
+            set( 'localRepo',         parentJob, override )
+            set( 'buildOnSNAPSHOT',   parentJob, override )
+            set( 'privateRepository', parentJob, override )
+            set( 'archivingDisabled', parentJob, override )
             set( 'deploy',            parentJob, override, new Deploy())
             set( 'artifactory',       parentJob, override, new Artifactory())
         }
@@ -446,24 +463,26 @@ class Job
          assert node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
          assert jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
 
-         assert ( runPostStepsIfResult != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
-         assert ( authToken            != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
-         assert ( scm                  != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
-         assert ( properties           != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
-         assert ( publishers           != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
-         assert ( buildWrappers        != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
-         assert ( prebuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
-         assert ( postbuilders         != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
-         assert ( process              != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
-         assert ( useUpdate            != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
-         assert ( doRevert             != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
-         assert ( daysToKeep           != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
-         assert ( numToKeep            != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
-         assert ( descriptionTable     != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
-         assert ( mail                 != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
-         assert ( invoke               != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
-         assert ( prebuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
-         assert ( postbuildersTasks    != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
+         assert ( runPostStepsIfResult  != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
+         assert ( authToken             != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
+         assert ( scm                   != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
+         assert ( properties            != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
+         assert ( publishers            != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
+         assert ( buildWrappers         != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
+         assert ( prebuilders           != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
+         assert ( postbuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
+         assert ( process               != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
+         assert ( useUpdate             != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
+         assert ( doRevert              != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
+         assert ( daysToKeep            != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
+         assert ( numToKeep             != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
+         assert ( descriptionTable      != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
+         assert ( mail                  != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
+         assert ( invoke                != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
+         assert ( prebuildersTasks      != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
+         assert ( postbuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
+         assert ( quietPeriod           != null ), "[${ this }] $NOT_CONFIGURED: 'quietPeriod' is null?"
+         assert ( scmCheckoutRetryCount != null ), "[${ this }] $NOT_CONFIGURED: 'scmCheckoutRetryCount' is null?"
 
          assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
          assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"

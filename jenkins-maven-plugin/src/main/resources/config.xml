@@ -28,6 +28,12 @@ ${ job.description.trimMultiline() }
 <p/>
 ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <%
+      if ( job.displayName )
+      {
+  %>
+  <displayName>${ job.displayName }</displayName>
+  <%
+      }
       if (( job.daysToKeep > -1 ) || ( job.numToKeep > -1 ))
       {
   %>
@@ -188,7 +194,20 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
      }
      %>
   </scm>
-
+  <%
+      if ( job.quietPeriod )
+      {
+  %>
+  <quietPeriod>${ job.quietPeriod }</quietPeriod>
+  <%
+      }
+      if ( job.scmCheckoutRetryCount )
+      {
+  %>
+  <scmCheckoutRetryCount>${ job.scmCheckoutRetryCount }</scmCheckoutRetryCount>
+  <%
+      }
+  %>
   <assignedNode>${ job.node ?: '' }</assignedNode>
   <canRoam>${ job.node ? false : true }</canRoam>
   <disabled>${ job.disabled }</disabled>
