@@ -48,8 +48,8 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
   %>
   <keepDependencies>false</keepDependencies>
   <properties>
+      ${ job.properties.addDollar() }
   <%
-      if ( job.properties )  { print job.properties.addDollar() }
       if ( job.parameters()) { print getTemplate( '/parameters.xml' ).make([ job : job ]) }
       if ( job.gitHubUrl )
       {
@@ -198,11 +198,8 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
     <scmName>${ gitRepo.gitScmName }</scmName>
      <%
      }
-     if ( job.scm )
-     {
-        print job.scm.addDollar()
-     }
      %>
+     ${ job.scm.addDollar() }
   </scm>
   <%
       if ( job.quietPeriod )
@@ -264,13 +261,10 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
   <mavenValidationLevel>0</mavenValidationLevel>
   <runHeadless>false</runHeadless>
   <reporters>
+      ${ job.reporters.addDollar() }
   <%
-            if ( job.reporters )
-            {
-                print job.reporters.addDollar()
-            }
-            if ( job.mail?.recipients )
-            {
+        if ( job.mail?.recipients )
+        {
   %>
       <hudson.maven.reporters.MavenMailer>
         <recipients>${ job.mail.recipients }</recipients>
@@ -278,7 +272,7 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
         <sendToIndividuals>${ job.mail.sendToIndividuals }</sendToIndividuals>
       </hudson.maven.reporters.MavenMailer>
   <%
-            }
+        }
   %>
   </reporters>
   <%
@@ -287,29 +281,14 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
         {
   %>
   <builders>
-  <%
-            for ( task in job.tasks )
-            {
-  %>
-    <${ task.hudsonClass }>
-${ task.markup }
-    </${ task.hudsonClass }>
-  <%
-            }
-  %>
+${ job.tasks*.markup.join( '\n' ) }
   </builders>
   <%
         }
   %>
-
-
   <publishers>
+${ job.publishers.addDollar() }
   <%
-      if ( job.publishers )
-      {
-            print job.publishers.addDollar()
-      }
-
       if (( job.mail?.recipients ) && ( job.jobType != JobType.maven ))
       {
   %>
@@ -401,48 +380,21 @@ ${ task.markup }
   %>
   </publishers>
   <buildWrappers>
-  <%
-      if ( job.buildWrappers )
-      {
-          print job.buildWrappers.addDollar()
-      }
-  %>
+${ job.buildWrappers.addDollar() }
   </buildWrappers>
   <%
       if ( job.jobType == JobType.maven )
       {
   %>
   <prebuilders>
-      <%
-          for ( task in job.prebuildersTasks )
-          {
-      %>
-    <${ task.hudsonClass }>
-${ task.markup }
-    </${ task.hudsonClass }>
-  <%
-          }
-          if ( job.prebuilders )
-          {
-              print job.prebuilders.addDollar()
-          }
-  %>
+${ ( job.groovys().findAll{ it.pre }*.markup +
+     job.prebuildersTasks*.markup            +
+     job.prebuilders.addDollar()).join( '\n' ).deleteEmptyLines() }
   </prebuilders>
   <postbuilders>
-  <%
-          for ( task in job.postbuildersTasks )
-          {
-  %>
-    <${ task.hudsonClass }>
-${ task.markup }
-    </${ task.hudsonClass }>
-  <%
-          }
-          if ( job.postbuilders )
-          {
-              print job.postbuilders.addDollar()
-          }
-  %>
+${ ( job.groovys().findAll{ ! it.pre }*.markup +
+     job.postbuildersTasks*.markup             +
+     job.postbuilders.addDollar()).join( '\n' ).deleteEmptyLines() }
   </postbuilders>
   <runPostStepsIfResult>
       <name>${ job.runPostStepsIfResult.name }</name>

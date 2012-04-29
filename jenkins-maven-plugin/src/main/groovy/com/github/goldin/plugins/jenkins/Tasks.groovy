@@ -3,17 +3,14 @@ package com.github.goldin.plugins.jenkins
 
 abstract class Task
 {
-    private final String space = ' ' * 8
+    final String space = ' ' * 4
+    String   getClassName  (){ "hudson.tasks.${ this.class.simpleName }" }
+    String   getExtraMarkup(){ '' }
     abstract List<String> getPropertyNames()
-
-    final String getHudsonClass()
-    {
-        "hudson.tasks.${ this.class.simpleName }"
-    }
 
     final String getMarkup()
     {
-        List<String> lines = []
+        List<String> lines = [ extraMarkup ]
 
         for ( property in propertyNames )
         {
@@ -21,7 +18,7 @@ abstract class Task
             if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
         }
 
-        space + lines.join( "\n$space" )
+        "<$className>\n" + space + lines.grep().join( "\n$space" ) + "\n</$className>"
     }
 }
 
@@ -31,6 +28,7 @@ class Shell extends Task
 {
     String command
 
+    @Override
     List<String> getPropertyNames(){[ 'command' ]}
 }
 
@@ -40,6 +38,7 @@ class BatchFile extends Task
 {
     String command
 
+    @Override
     List<String> getPropertyNames(){[ 'command' ]}
 }
 
@@ -53,6 +52,7 @@ class Ant extends Task
     String buildFile  = 'build.xml'
     String properties = ''
 
+    @Override
     List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ),
                                       'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
 }
@@ -68,7 +68,44 @@ class Maven extends Task
     String  properties           = ''
     boolean usePrivateRepository = false
 
+    @Override
     List<String> getPropertyNames(){[ 'targets', 'mavenName', 'jvmOptions',
                                       ( pom == 'false' ? '' : 'pom' ),
                                       'properties', 'usePrivateRepository' ].grep() }
+}
+
+
+@SuppressWarnings( 'StatelessClass' )
+class Groovy extends Task
+{
+    boolean pre       // Whether groovy task is executed as pre or post-step
+    String  command
+    String  file
+    String  groovyName
+    String  parameters
+    String  scriptParameters
+    String  properties
+    String  javaOpts
+    String  classPath
+
+    @Override
+    String getClassName ( ) { 'hudson.plugins.groovy.Groovy' }
+
+    @Override
+    String getExtraMarkup ( )
+    {
+        assert ( command || file ), "Either <command> or <file> needs to be specified for <groovy>"
+        final className  = command ? 'hudson.plugins.groovy.StringScriptSource' :
+                                     'hudson.plugins.groovy.FileScriptSource'
+        final commandTag = command ? 'command' :
+                                     'scriptFile'
+
+        """|<scriptSource class=\"$className\">
+           |$space$space<$commandTag>${ command ?: file }</$commandTag>
+           |$space</scriptSource>""".stripMargin()
+    }
+
+    @Override
+    List<String> getPropertyNames (){ [ 'groovyName', 'parameters', 'scriptParameters',
+                                        'properties', 'javaOpts', 'classPath' ] }
 }

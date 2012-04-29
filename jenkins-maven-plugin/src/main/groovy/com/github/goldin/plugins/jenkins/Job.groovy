@@ -150,6 +150,10 @@ class Job
     String               authToken
     PostStepResult       runPostStepsIfResult
 
+    Groovy[]             groovys
+    Groovy               groovy
+    List<Groovy>         groovys(){ general().list( groovys, groovy )}
+
     Trigger[]            triggers
     Trigger              trigger
     List<Trigger>        triggers() { general().list( triggers, trigger ) }
@@ -336,7 +340,7 @@ class Job
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
-            triggers   =  parentJob.triggers() as Trigger[]
+            triggers = parentJob.triggers() as Trigger[]
         }
 
         if ((( ! parameters()) || ( override )) && parentJob.parameters())
@@ -356,9 +360,14 @@ class Job
             repositories = parentJob.repositories() as Repository[]
         }
 
+        if ((( ! groovys()) || ( override )) && parentJob.groovys())
+        {
+            groovys = parentJob.groovys() as Groovy[]
+        }
+
         if ( jobType == JobType.free )
         {
-            setTasks( 'tasks',        parentJob, override )
+            setTasks( 'tasks', parentJob, override )
         }
 
         if ( jobType == JobType.maven )
@@ -490,7 +499,6 @@ class Job
          if ( jobType == JobType.free )
          {
              assert tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
-             tasks.every { assert it.hudsonClass && it.markup, "Free-Style task [$it] - Hudson class or markup is missing" }
 
              assert ! pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
              assert ! mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
@@ -535,9 +543,6 @@ class Job
              assert ( prebuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
              assert ( postbuildersTasks    != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
              assert ( runPostStepsIfResult != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
-
-             prebuildersTasks.every  { assert it.hudsonClass && it.markup, "prebuildersTasks  [$it] - Hudson class or markup is missing" }
-             postbuildersTasks.every { assert it.hudsonClass && it.markup, "postbuildersTasks [$it] - Hudson class or markup is missing" }
 
              if ( deploy?.url || artifactory?.name )
              {
