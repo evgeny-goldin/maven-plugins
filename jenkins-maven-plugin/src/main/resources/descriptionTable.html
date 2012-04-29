@@ -33,6 +33,35 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         <td  width="15%" valign="top">Job</td>
         <td>${ jobLink( job.jenkinsUrl, job.id ) }</td>
     </tr>
+    <%
+      if ( job.displayName )
+      {
+    %>
+    <tr>
+        <td valign="top">Display name</td>
+        <td>${ job.displayName }</td>
+    </tr>
+    <%
+      }
+      if ( job.quietPeriod )
+      {
+    %>
+    <tr>
+        <td valign="top">Quiet period</td>
+        <td><code>${ job.quietPeriod }</code></td>
+    </tr>
+    <%
+      }
+      if ( job.scmCheckoutRetryCount )
+      {
+    %>
+    <tr>
+        <td valign="top">Retry Count</td>
+        <td><code>${ job.scmCheckoutRetryCount }</code></td>
+    </tr>
+    <%
+      }
+    %>
     <tr>
         <td valign="top">Job type</td>
         <td>${ job.jobType.description }</td>

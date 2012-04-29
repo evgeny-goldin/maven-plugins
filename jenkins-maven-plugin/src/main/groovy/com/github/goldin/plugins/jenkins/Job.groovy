@@ -311,13 +311,10 @@ class Job
         set( 'jobType',                          parentJob, override, JobType.maven,      { JobType        t -> assert t } )
         set( 'node',                             parentJob, override, 'master',           { String         s -> assert s } )
         set( 'jdkName',                          parentJob, override, '(Default)',        { String         s -> assert s } )
-        set( 'runPostStepsIfResult',             parentJob, override, PostStepResult.all, { PostStepResult r -> assert r } )
         set( 'authToken',                        parentJob, override )
         set( 'scm',                              parentJob, override )
         set( 'buildWrappers',                    parentJob, override )
         set( 'properties',                       parentJob, override )
-        set( 'prebuilders',                      parentJob, override )
-        set( 'postbuilders',                     parentJob, override )
         set( 'publishers',                       parentJob, override )
         set( 'process',                          parentJob, override )
         set( 'quietPeriod',                      parentJob, override )
@@ -332,8 +329,6 @@ class Job
         set( 'mail',                             parentJob, override, new Mail())
         set( 'invoke',                           parentJob, override, new Invoke())
         set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
-        setTasks( 'prebuildersTasks',            parentJob, override )
-        setTasks( 'postbuildersTasks',           parentJob, override )
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
@@ -376,6 +371,12 @@ class Job
             set( 'archivingDisabled', parentJob, override )
             set( 'deploy',            parentJob, override, new Deploy())
             set( 'artifactory',       parentJob, override, new Artifactory())
+
+            set( 'prebuilders',            parentJob, override )
+            set( 'postbuilders',           parentJob, override )
+            setTasks( 'prebuildersTasks',  parentJob, override )
+            setTasks( 'postbuildersTasks', parentJob, override )
+            set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all, { PostStepResult r -> assert r } )
         }
     }
 
@@ -463,14 +464,11 @@ class Job
          assert node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
          assert jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
 
-         assert ( runPostStepsIfResult  != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
          assert ( authToken             != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
          assert ( scm                   != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
          assert ( properties            != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
          assert ( publishers            != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
          assert ( buildWrappers         != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
-         assert ( prebuilders           != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
-         assert ( postbuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
          assert ( process               != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
          assert ( useUpdate             != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
          assert ( doRevert              != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
@@ -479,8 +477,6 @@ class Job
          assert ( descriptionTable      != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
          assert ( mail                  != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
          assert ( invoke                != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
-         assert ( prebuildersTasks      != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
-         assert ( postbuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
          assert ( quietPeriod           != null ), "[${ this }] $NOT_CONFIGURED: 'quietPeriod' is null?"
          assert ( scmCheckoutRetryCount != null ), "[${ this }] $NOT_CONFIGURED: 'scmCheckoutRetryCount' is null?"
 
@@ -490,26 +486,29 @@ class Job
 
          verifyRepositories()
 
-         prebuildersTasks.every  { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
-         postbuildersTasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
-
          if ( jobType == JobType.free )
          {
              assert tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
-             tasks.every { assert it.hudsonClass && it.markup, "Task [$it] - Hudson class or markup is missing" }
+             tasks.every { assert it.hudsonClass && it.markup, "Free-Style task [$it] - Hudson class or markup is missing" }
 
              assert ! pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
              assert ! mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
              assert ! mavenName,  "[${ this }] $MIS_CONFIGURED: <mavenName> is not active in free-style jobs"
-             assert ( mavenOpts         == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
-             assert ( buildOnSNAPSHOT   == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
-             assert ( privateRepository == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
-             assert ( archivingDisabled == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
-             assert ( reporters         == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
-             assert ( localRepoBase     == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
-             assert ( localRepo         == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
-             assert ( deploy            == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
-             assert ( artifactory       == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
+
+             assert ( mavenOpts            == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
+             assert ( buildOnSNAPSHOT      == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
+             assert ( privateRepository    == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
+             assert ( archivingDisabled    == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
+             assert ( reporters            == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
+             assert ( localRepoBase        == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
+             assert ( localRepo            == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
+             assert ( deploy               == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
+             assert ( artifactory          == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
+             assert ( prebuilders          == null ), "[${ this }] $MIS_CONFIGURED: <prebuilders> is not active in free-style jobs"
+             assert ( postbuilders         == null ), "[${ this }] $MIS_CONFIGURED: <postbuilders> is not active in free-style jobs"
+             assert ( prebuildersTasks     == null ), "[${ this }] $MIS_CONFIGURED: <prebuildersTasks> is not active in free-style jobs"
+             assert ( postbuildersTasks    == null ), "[${ this }] $MIS_CONFIGURED: <postbuildersTasks> is not active in free-style jobs"
+             assert ( runPostStepsIfResult == null ), "[${ this }] $MIS_CONFIGURED: <runPostStepsIfResult> is not active in free-style jobs"
          }
          else if ( jobType == JobType.maven )
          {
@@ -519,15 +518,23 @@ class Job
              assert mavenGoals, "[${ this }] $NOT_CONFIGURED: missing <mavenGoals>"
              assert mavenName,  "[${ this }] $NOT_CONFIGURED: missing <mavenName>"
 
-             assert ( mavenOpts         != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
-             assert ( buildOnSNAPSHOT   != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
-             assert ( privateRepository != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
-             assert ( archivingDisabled != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
-             assert ( reporters         != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
-             assert ( localRepoBase     != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
-             assert ( localRepo         != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
-             assert ( deploy            != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
-             assert ( artifactory       != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
+             assert ( mavenOpts            != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
+             assert ( buildOnSNAPSHOT      != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
+             assert ( privateRepository    != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
+             assert ( archivingDisabled    != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
+             assert ( reporters            != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
+             assert ( localRepoBase        != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
+             assert ( localRepo            != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
+             assert ( deploy               != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
+             assert ( artifactory          != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
+             assert ( prebuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
+             assert ( postbuilders         != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
+             assert ( prebuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
+             assert ( postbuildersTasks    != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
+             assert ( runPostStepsIfResult != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
+
+             prebuildersTasks.every  { assert it.hudsonClass && it.markup, "prebuildersTasks  [$it] - Hudson class or markup is missing" }
+             postbuildersTasks.every { assert it.hudsonClass && it.markup, "postbuildersTasks [$it] - Hudson class or markup is missing" }
 
              if ( deploy?.url || artifactory?.name )
              {
