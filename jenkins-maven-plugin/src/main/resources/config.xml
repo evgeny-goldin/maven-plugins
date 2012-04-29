@@ -34,12 +34,14 @@ ${ job.htmlDescriptionTable.trimMultiline() }]]></description>
   <displayName>${ job.displayName }</displayName>
   <%
       }
-      if (( job.daysToKeep > -1 ) || ( job.numToKeep > -1 ))
+      if ( [ job.daysToKeep, job.numToKeep, job.artifactDaysToKeep, job.artifactNumToKeep ].any{ it > -1 } )
       {
   %>
   <logRotator>
-    <daysToKeep>${ job.daysToKeep }</daysToKeep>
-    <numToKeep>${ job.numToKeep }</numToKeep>
+      <daysToKeep>${ job.daysToKeep }</daysToKeep>
+      <numToKeep>${ job.numToKeep }</numToKeep>
+      <artifactDaysToKeep>${ job.artifactDaysToKeep }</artifactDaysToKeep>
+      <artifactNumToKeep>${ job.artifactNumToKeep }</artifactNumToKeep>
   </logRotator>
   <%
       }

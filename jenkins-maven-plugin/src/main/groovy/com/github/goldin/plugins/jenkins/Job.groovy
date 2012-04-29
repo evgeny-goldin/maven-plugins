@@ -120,8 +120,10 @@ class Job
     String               parent
     String               description
     DescriptionRow[]     descriptionTable
-    Integer              daysToKeep // Number of days to keep old builds
-    Integer              numToKeep  // Number of old builds to keep
+    Integer              daysToKeep
+    Integer              numToKeep
+    Integer              artifactDaysToKeep
+    Integer              artifactNumToKeep
     String               scmType
     String               getScmClass()
     {
@@ -311,6 +313,11 @@ class Job
         set( 'jobType',                          parentJob, override, JobType.maven,      { JobType        t -> assert t } )
         set( 'node',                             parentJob, override, 'master',           { String         s -> assert s } )
         set( 'jdkName',                          parentJob, override, '(Default)',        { String         s -> assert s } )
+
+        set( 'mail',                             parentJob, override, new Mail())
+        set( 'invoke',                           parentJob, override, new Invoke())
+        set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
+
         set( 'authToken',                        parentJob, override )
         set( 'scm',                              parentJob, override )
         set( 'buildWrappers',                    parentJob, override )
@@ -326,9 +333,8 @@ class Job
         set( 'appendTasks',                      parentJob, override )
         set( 'daysToKeep',                       parentJob, override )
         set( 'numToKeep',                        parentJob, override )
-        set( 'mail',                             parentJob, override, new Mail())
-        set( 'invoke',                           parentJob, override, new Invoke())
-        set( 'descriptionTable',                 parentJob, override, new DescriptionRow[ 0 ])
+        set( 'artifactDaysToKeep',               parentJob, override )
+        set( 'artifactNumToKeep',                parentJob, override )
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
@@ -474,6 +480,8 @@ class Job
          assert ( doRevert              != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
          assert ( daysToKeep            != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
          assert ( numToKeep             != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
+         assert ( artifactDaysToKeep    != null ), "[${ this }] $NOT_CONFIGURED: 'artifactDaysToKeep' is null?"
+         assert ( artifactNumToKeep     != null ), "[${ this }] $NOT_CONFIGURED: 'artifactNumToKeep' is null?"
          assert ( descriptionTable      != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
          assert ( mail                  != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
          assert ( invoke                != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
