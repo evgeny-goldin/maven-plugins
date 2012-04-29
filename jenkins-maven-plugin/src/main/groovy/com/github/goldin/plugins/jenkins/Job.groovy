@@ -115,6 +115,7 @@ class Job
     Boolean              blockBuildWhenDownstreamBuilding
     Boolean              blockBuildWhenUpstreamBuilding
     Boolean              appendTasks
+    Boolean              incrementalBuild
     String               jenkinsUrl
     String               generationPom
     String               parent
@@ -371,7 +372,7 @@ class Job
             setTasks( 'postbuildersTasks', parentJob, override )
 
             setMany( split( '|mavenName|mavenOpts|reporters|localRepoBase|localRepo|buildOnSNAPSHOT' +
-                            '|privateRepository|archivingDisabled|prebuilders|postbuilders', '\\|' ),
+                            '|privateRepository|archivingDisabled|prebuilders|postbuilders|incrementalBuild', '\\|' ),
                      parentJob, override )
 
         }
@@ -497,6 +498,7 @@ class Job
 
              assert ( mavenOpts            == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
              assert ( buildOnSNAPSHOT      == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
+             assert ( incrementalBuild     == null ), "[${ this }] $MIS_CONFIGURED: <incrementalBuild> is not active in free-style jobs"
              assert ( privateRepository    == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
              assert ( archivingDisabled    == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
              assert ( reporters            == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
@@ -520,6 +522,7 @@ class Job
 
              assert ( mavenOpts            != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
              assert ( buildOnSNAPSHOT      != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
+             assert ( incrementalBuild     != null ), "[${ this }] $NOT_CONFIGURED: 'incrementalBuild' is null?"
              assert ( privateRepository    != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
              assert ( archivingDisabled    != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
              assert ( reporters            != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"

@@ -255,7 +255,7 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
   <mavenName>${ job.mavenName }</mavenName>
   <mavenOpts>${ job.mavenOpts ?: '' }</mavenOpts>
   <aggregatorStyleBuild>true</aggregatorStyleBuild>
-  <incrementalBuild>false</incrementalBuild>
+  <incrementalBuild>${ job.incrementalBuild }</incrementalBuild>
   <usePrivateRepository>${ job.privateRepository }</usePrivateRepository>
   <ignoreUpstremChanges>${ ! job.buildOnSNAPSHOT }</ignoreUpstremChanges>
   <archivingDisabled>${ job.archivingDisabled }</archivingDisabled>
