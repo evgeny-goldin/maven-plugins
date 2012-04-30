@@ -1,21 +1,37 @@
 package com.github.goldin.plugins.jenkins
 
+/**
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Free-Style projects tasks
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
 
+@SuppressWarnings([ 'GetterMethodCouldBeProperty' ])
 abstract class Task
 {
     final String space = ' ' * 4
 
-    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
+    /**
+     * Class name wrapping a task.
+     */
     String   getClassName  (){ "hudson.tasks.${ this.class.simpleName }" }
 
-    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
+    /**
+     * Extra markup added by task
+     */
     String   getExtraMarkup(){ '' }
 
+    /**
+     * Name of properties forming a task markup.
+     */
     abstract List<String> getPropertyNames()
 
+    /**
+     * Builds task markup to be used in resulting config.
+     */
     final String getMarkup()
     {
-        List<String> lines = [ extraMarkup ]
+        List<String> lines = [ extraMarkup.trim() ]
 
         for ( property in propertyNames )
         {
@@ -23,7 +39,10 @@ abstract class Task
             if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
         }
 
-        "<$className>\n" + space + lines.grep().join( "\n$space" ) + "\n</$className>"
+        final content = lines.grep().join( "\n$space" )
+
+        className ? "<$className>\n$space$content\n</$className>" :
+                    content
     }
 }
 
@@ -80,7 +99,7 @@ class Maven extends Task
 }
 
 
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings([ 'StatelessClass', 'GetterMethodCouldBeProperty' ])
 class Groovy extends Task
 {
     boolean pre       // Whether groovy task is executed as pre or post-step
@@ -94,8 +113,7 @@ class Groovy extends Task
     String  classPath
 
     @Override
-    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
-    String getClassName ( ) { 'hudson.plugins.groovy.Groovy' }
+    String getClassName () { 'hudson.plugins.groovy.Groovy' }
 
     @Override
     String getExtraMarkup ( )
@@ -114,4 +132,20 @@ class Groovy extends Task
     @Override
     List<String> getPropertyNames (){ [ 'groovyName', 'parameters', 'scriptParameters',
                                         'properties', 'javaOpts', 'classPath' ] }
+}
+
+
+@SuppressWarnings([ 'StatelessClass', 'GetterMethodCouldBeProperty' ])
+class Xml extends Task
+{
+    String content
+
+    @Override
+    String getClassName (){ '' }
+
+    @Override
+    String getExtraMarkup ( ){ content }
+
+    @Override
+    List<String> getPropertyNames (){[]}
 }

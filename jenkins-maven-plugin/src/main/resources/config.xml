@@ -389,12 +389,12 @@ ${ job.buildWrappers.addDollar() }
   <prebuilders>
 ${ ( job.groovys().findAll{ it.pre }*.markup +
      job.prebuildersTasks*.markup            +
-     job.prebuilders.addDollar()).join( '\n' ).deleteEmptyLines() }
+     job.prebuilders.addDollar()).join( '\n' ) }
   </prebuilders>
   <postbuilders>
 ${ ( job.groovys().findAll{ ! it.pre }*.markup +
      job.postbuildersTasks*.markup             +
-     job.postbuilders.addDollar()).join( '\n' ).deleteEmptyLines() }
+     job.postbuilders.addDollar()).join( '\n' ) }
   </postbuilders>
   <runPostStepsIfResult>
       <name>${ job.runPostStepsIfResult.name }</name>
