@@ -177,15 +177,18 @@ class JenkinsMojo extends BaseGroovyMojo
             Job job ->
 
             /**
+             * Whether job's parent is a real or an abstract one
+             */
+            job.parentIsReal = ( job.parent && ( ! allJobs[ job.parent ].isAbstract ))
+
+            /**
              * "Extending" each job with a <parent> jobs or with default values
              */
 
-            job.extend( job.parent ? composeJob( allJobs, job.parent ) :
-                                     new Job())
+            job.extend( job.parent ? composeJob( allJobs, job.parent ) : new Job())
 
             if ( job.mavenGoals && ( job.jobType == Job.JobType.maven ))
-            {
-                /**
+            {   /**
                  * Top-level "base" job may have no maven goals set and it has nowhere to "inherit" it from
                  */
                 job.updateMavenGoals()

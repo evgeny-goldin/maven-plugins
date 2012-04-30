@@ -116,9 +116,10 @@ class Job
     Boolean              blockBuildWhenUpstreamBuilding
     Boolean              appendTasks
     Boolean              incrementalBuild
+    Boolean              parentIsReal
+    String               parent
     String               jenkinsUrl
     String               generationPom
-    String               parent
     String               description
     DescriptionRow[]     descriptionTable
     Integer              daysToKeep

@@ -729,6 +729,21 @@ class GMojoUtils
     }
 
 
+    /**
+     * Escapes {@code <}, {@code >} and {@code "} characters.
+     *
+     * @param s String to escape
+     * @return String with {@code <}, {@code >} and {@code "} characters escaped
+     */
+    static String escapeHtml( String s )
+    {
+        assert s
+        s.replace( '<', '&lt;'   ).
+          replace( '>', '&gt;'   ).
+          replace( '"', '&quot;' )
+    }
+
+
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static ConstantsBean constants (){ GCommons.constants ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )

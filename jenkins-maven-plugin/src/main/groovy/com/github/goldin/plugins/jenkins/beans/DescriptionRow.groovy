@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.jenkins.beans
 
+import com.github.goldin.plugins.common.GMojoUtils
 
 /**
  * Description table row
@@ -11,10 +12,8 @@ class DescriptionRow
     boolean bottom     = true
     boolean escapeHTML = true
 
-    String getKey()           { escape( this.key   ) }
-    String getValue()         { escape( this.value ) }
-    String escape ( String s ){ this.escapeHTML ?
-                                    s.replace( '<', '&lt;' ).replace( '>', '&gt;' ).replace( '"', '&quot;' ) :
-                                    s }
+    String getKey()   { escape( this.key   ) }
+    String getValue() { escape( this.value ) }
+    private String escape ( String s ){ this.escapeHTML ? GMojoUtils.escapeHtml( s ) : s }
 }
 

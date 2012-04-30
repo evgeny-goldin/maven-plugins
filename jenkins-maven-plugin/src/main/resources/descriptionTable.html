@@ -4,106 +4,77 @@ import com.github.goldin.plugins.jenkins.beans.*
 import com.github.goldin.plugins.jenkins.Job.*
 import com.github.goldin.plugins.jenkins.Job.JobType
 
-def jobLink ( String jenkinsUrl, String jobId ) {
-    """<a href=\"${ jenkinsUrl }/job/${ jobId }\">
-    <strong>${ jobId }</strong>
-    </a>""".stripIndent()
+String jobLink ( String jenkinsUrl, String jobId )
+{
+    assert jenkinsUrl && jobId
+    "<a href='${ jenkinsUrl }/job/${ jobId }'><strong>${ jobId }</strong></a>"
+}
+
+String tableRow ( String title, String value, boolean isCode = false )
+{
+    if ( value )
+    {
+        """|<tr>
+           |     <td valign='top'>$title</td>
+           |     <td>${ isCode ? '<strong><code>' + value + '</code></strong>' : value }</td>
+           |</tr>""".stripMargin()
+    }
+    else
+    {
+        ''
+    }
 }
 
 %>
 
 <table border="1" width="100%" cellpadding="3" cellspacing="3">
     <%
-        job.descriptionTable.each
+        for ( row in job.descriptionTable.findAll{ ! it.bottom } )
         {
-            DescriptionRow row ->
-
-            if ( ! row.bottom )
-            {
     %>
     <tr>
-        <td  width="15%" valign="top">${ row.key }</td>
+        <td  width="15%" valign='top'>${ row.key }</td>
         <td>${ row.value }</td>
     </tr>
     <%
-            }
         }
     %>
     <tr>
-        <td  width="15%" valign="top">Job</td>
+        <td  width="15%" valign='top'>Job</td>
         <td>${ jobLink( job.jenkinsUrl, job.id ) }</td>
     </tr>
-    <%
-      if ( job.displayName )
-      {
-    %>
+    ${ tableRow( 'Display name', job.displayName           ) }
+    ${ tableRow( 'Parent',       job.parent ? ( job.parentIsReal ? jobLink( job.jenkinsUrl, job.parent ) : job.parent ) : '' ) }
+    ${ tableRow( 'Quiet period', job.quietPeriod,           true ) }
+    ${ tableRow( 'Retry count',  job.scmCheckoutRetryCount, true ) }
     <tr>
-        <td valign="top">Display name</td>
-        <td>${ job.displayName }</td>
-    </tr>
-    <%
-      }
-      if ( job.quietPeriod )
-      {
-    %>
-    <tr>
-        <td valign="top">Quiet period</td>
-        <td><code>${ job.quietPeriod }</code></td>
-    </tr>
-    <%
-      }
-      if ( job.scmCheckoutRetryCount )
-      {
-    %>
-    <tr>
-        <td valign="top">Retry Count</td>
-        <td><code>${ job.scmCheckoutRetryCount }</code></td>
-    </tr>
-    <%
-      }
-    %>
-    <tr>
-        <td valign="top">Job type</td>
+        <td valign='top'>Job type</td>
         <td>${ job.jobType.description }</td>
     </tr>
-    <tr>
-        <td valign="top">Java</td>
-        <td>${ job.jdkName }</td>
-    </tr>
+    ${ tableRow( 'JDK name', ( job.jdkName ? '"' + job.jdkName + '"' : '' ), true ) }
     <%
-      if ( job.jobType == JobType.maven )
-      {
-          def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
-                           job.localRepoPath     ? job.localRepoPath :
-                                                   "&lt;user-home&gt;/.m2/repository" )
+        if ( job.jobType == JobType.maven )
+        {
+            def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
+                             job.localRepoPath     ? job.localRepoPath :
+                                                     "&lt;user-home&gt;/.m2/repository" )
     %>
+    ${ tableRow( 'Maven name', ( job.mavenName ? '"' + job.mavenName + '"' : '' ), true ) }
     <tr>
-        <td valign="top">Maven</td>
-        <td>${ job.mavenName }</td>
-    </tr>
-    <tr>
-        <td valign="top">Maven goals</td>
+        <td valign='top'>Maven goals</td>
         <td><strong><code>${ job.mavenGoals }</code></strong></td>
     </tr>
     <tr>
-        <td valign="top">Maven repository</td>
+        <td valign='top'>Maven repository</td>
         <td><strong><code>"${ repoPath }"</code></strong></td>
     </tr>
+    ${ tableRow( 'Maven options', job.mavenOpts, true ) }
     <%
-          if ( job.mavenOpts )
-          {
+            if ( job.artifactory?.name )
+            {
     %>
     <tr>
-        <td valign="top">Maven options</td>
-        <td><strong><code>${ job.mavenOpts }</code></strong></td>
-    </tr>
-    <%
-          }
-          if ( job.artifactory?.name )
-          {
-    %>
-    <tr>
-        <td valign="top">Deployed to Artifactory</td>
+        <td valign='top'>Deployed to Artifactory</td>
         <td><a href="${ job.artifactory.name }">
             <strong><code>${ job.artifactory.name }</code></strong>
             </a> =>
@@ -113,39 +84,31 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         </td>
     </tr>
     <%
-          }
-      }
-      if ( job.mail?.recipients )
-      {
+            }
+        }
     %>
-    <tr>
-        <td valign="top">Mail recipients</td>
-        <td><strong><code>${ job.mail.recipients }</code></strong></td>
-    </tr>
+    ${ tableRow( 'Mail recipients', job.mail?.recipients, true ) }
     <%
-      }
-      if ( job.scmType == 'svn' )
-      {
+        if ( job.scmType == 'svn' )
+        {
     %>
     <tr>
-        <td valign="top">SVN update policy</td>
+        <td valign='top'>SVN update policy</td>
         <td>Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]</td>
     </tr>
     <%
-      }
+        }
     %>
     <tr>
-        <td valign="top">Node</td>
-        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/">
-            <strong>${ job.node }</strong>
-            </a></td>
+        <td valign='top'>Node</td>
+        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/"><strong>${ job.node }</strong></a></td>
     </tr>
     <%
-      if ( job.triggers())
-      {
+        if ( job.triggers())
+        {
     %>
     <tr>
-        <td valign="top">Triggers</td>
+        <td valign='top'>Triggers</td>
         <td>
             <%
                 job.triggers().each
@@ -159,12 +122,12 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         </td>
     </tr>
     <%
-      }
-      if ( job.repositories())
-      {
+        }
+        if ( job.repositories())
+        {
     %>
     <tr>
-        <td valign="top">Repositories</td>
+        <td valign='top'>Repositories</td>
         <td>
             <%
                 job.repositories().each
@@ -188,19 +151,19 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         </td>
     </tr>
     <tr>
-        <td valign="top">POM</td>
+        <td valign='top'>POM</td>
         <td>
             - <a href="${ pomUrl }"><strong><code>${ pomUrl }</code></strong></a><br/>
         </td>
     </tr>
     <%
                 }
-      }
-      if ( job.invoke?.jobs )
-      {
+        }
+        if ( job.invoke?.jobs )
+        {
     %>
     <tr>
-        <td valign="top">Invokes</td>
+        <td valign='top'>Invokes</td>
         <td>
             <%
                 job.invoke.jobsSplit.each
@@ -214,12 +177,12 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         </td>
     </tr>
     <%
-      }
-      if ( job.invokedBy )
-      {
+        }
+        if ( job.invokedBy )
+        {
     %>
     <tr>
-        <td valign="top">Invoked by</td>
+        <td valign='top'>Invoked by</td>
         <td>
             <%
                 job.invokedBy.each
@@ -233,20 +196,15 @@ def jobLink ( String jenkinsUrl, String jobId ) {
         </td>
     </tr>
     <%
-      }
-      job.descriptionTable.each
-      {
-          DescriptionRow row ->
-
-          if ( row.bottom )
-          {
+        }
+        for ( row in job.descriptionTable.findAll{ it.bottom } )
+        {
     %>
     <tr>
-        <td valign="top">${ row.key }</td>
+        <td valign='top'>${ row.key }</td>
         <td>${ row.value }</td>
     </tr>
     <%
-          }
-      }
+        }
     %>
 </table>
