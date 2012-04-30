@@ -4,8 +4,13 @@ package com.github.goldin.plugins.jenkins
 abstract class Task
 {
     final String space = ' ' * 4
+
+    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
     String   getClassName  (){ "hudson.tasks.${ this.class.simpleName }" }
+
+    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
     String   getExtraMarkup(){ '' }
+
     abstract List<String> getPropertyNames()
 
     final String getMarkup()
@@ -89,12 +94,13 @@ class Groovy extends Task
     String  classPath
 
     @Override
+    @SuppressWarnings( 'GetterMethodCouldBeProperty' )
     String getClassName ( ) { 'hudson.plugins.groovy.Groovy' }
 
     @Override
     String getExtraMarkup ( )
     {
-        assert ( command || file ), "Either <command> or <file> needs to be specified for <groovy>"
+        assert ( command || file ), 'Either <command> or <file> needs to be specified for <groovy>'
         final className  = command ? 'hudson.plugins.groovy.StringScriptSource' :
                                      'hudson.plugins.groovy.FileScriptSource'
         final commandTag = command ? 'command' :
