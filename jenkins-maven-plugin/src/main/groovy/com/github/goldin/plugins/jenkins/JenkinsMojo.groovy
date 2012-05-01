@@ -70,7 +70,6 @@ class JenkinsMojo extends BaseGroovyMojo
          */
         for ( job in jobs )
         {
-            job.verifyAll()
             jobNamePad   = Math.max( jobNamePad,   job.toString().size())
             jobParentPad = Math.max( jobParentPad, jobParent( job ).size())
         }
@@ -212,7 +211,7 @@ class JenkinsMojo extends BaseGroovyMojo
             job.invokedBy = invokedBy as Job[]
         }
 
-        allJobs.values()
+        allJobs.values()*.validate()
     }
 
 

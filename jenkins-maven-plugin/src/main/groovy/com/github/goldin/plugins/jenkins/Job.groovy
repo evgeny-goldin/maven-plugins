@@ -25,10 +25,16 @@ class Job
            'con',  'nul',  'prn' ])
 
     /**
-     * Error messages to display when jobs are not properly configured
+     * Error messages to display when jobs is not properly configured
      */
-    private static final String NOT_CONFIGURED = 'is not configured correctly'
-    private static final String MIS_CONFIGURED = 'is mis-configured'
+    private static String notConfigured( String errorMessage ){ "[${ this }] is not configured correctly: $errorMessage" }
+    private static String misConfigured( String errorMessage ){ "[${ this }] is mis-configured: $errorMessage" }
+
+    /**
+     * Default Maven goals used in Maven projects and Maven tasks in free-style projects.
+     */
+    static final String DEFAULT_MAVEN_GOALS = '-B -e clean install'
+
 
     /**
      * Job types supported
@@ -102,7 +108,7 @@ class Job
     * When adding fields:
     * 1) Update {@link #extend(Job)} where current job is "extended" with the "parent Job"
     * 2) DO NOT specify default values, let {@link #extend(Job)} inheritance take care of it.
-    * 3) Update {@link #verifyAll} where job configuration is checked for correctness.
+    * 3) Update {@link #validate} where job configuration is validated for correctness.
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
 
@@ -378,9 +384,9 @@ class Job
 
         if ( jobType == JobType.maven )
         {
-            set( 'pom',                    parentJob, override, 'pom.xml',             { String s         -> assert s } )
-            set( 'mavenGoals',             parentJob, override, '-B -e clean install', { String s         -> assert s } )
-            set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all,    { PostStepResult r -> assert r } )
+            set( 'pom',                    parentJob, override, 'pom.xml',           { String s         -> assert s } )
+            set( 'mavenGoals',             parentJob, override, DEFAULT_MAVEN_GOALS, { String s         -> assert s } )
+            set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all,  { PostStepResult r -> assert r } )
             set( 'deploy',                 parentJob, override, new Deploy())
             set( 'artifactory',            parentJob, override, new Artifactory())
             setTasks( 'prebuildersTasks',  parentJob, override )
@@ -457,98 +463,97 @@ class Job
 
 
     /**
-     * Verifies job is fully configured before config file is created
+     * Validates job is fully configured.
      *
-     * All job properties used "as-is" (without "if" and safe navigation operator)
-     * in "config.xml" and "descriptionTable.html" are verified to be defined
+     * @return validated {@link Job} instance
      */
      @SuppressWarnings( 'AbcComplexity' )
-     void verifyAll ()
+     Job validate ()
      {
-         if ( isAbstract ) { return }
+         if ( isAbstract ) { return this }
 
-         assert id,            "[${ this }] $NOT_CONFIGURED: missing <id>"
-         assert jenkinsUrl,    "[${ this }] $NOT_CONFIGURED: missing <jenkinsUrl>"
-         assert generationPom, "[${ this }] $NOT_CONFIGURED: missing <generationPom>"
-         assert scmClass,      "[${ this }] $NOT_CONFIGURED: unknown <scmType>?"
-         assert description,   "[${ this }] $NOT_CONFIGURED: missing <description>"
-         assert scmType,       "[${ this }] $NOT_CONFIGURED: missing <scmType>"
-         assert jobType,       "[${ this }] $NOT_CONFIGURED: missing <jobType>"
-         assert node,          "[${ this }] $NOT_CONFIGURED: missing <node>"
-         assert jdkName,       "[${ this }] $NOT_CONFIGURED: missing <jdkName>"
+         assert id,                                notConfigured( 'missing <id>' )
+         assert jenkinsUrl,                        notConfigured( 'missing <jenkinsUrl>' )
+         assert generationPom,                     notConfigured( 'missing <generationPom>' )
+         assert scmClass,                          notConfigured( 'unknown <scmType>' )
+         assert description,                       notConfigured( 'missing <description>' )
+         assert scmType,                           notConfigured( 'missing <scmType>' )
+         assert jobType,                           notConfigured( 'missing <jobType>' )
+         assert node,                              notConfigured( 'missing <node>' )
+         assert jdkName,                           notConfigured( 'missing <jdkName>' )
 
-         assert ( authToken             != null ), "[${ this }] $NOT_CONFIGURED: 'authToken' is null?"
-         assert ( scm                   != null ), "[${ this }] $NOT_CONFIGURED: 'scm' is null?"
-         assert ( properties            != null ), "[${ this }] $NOT_CONFIGURED: 'properties' is null?"
-         assert ( publishers            != null ), "[${ this }] $NOT_CONFIGURED: 'publishers' is null?"
-         assert ( buildWrappers         != null ), "[${ this }] $NOT_CONFIGURED: 'buildWrappers' is null?"
-         assert ( process               != null ), "[${ this }] $NOT_CONFIGURED: 'process' is null?"
-         assert ( useUpdate             != null ), "[${ this }] $NOT_CONFIGURED: 'useUpdate' is null?"
-         assert ( doRevert              != null ), "[${ this }] $NOT_CONFIGURED: 'doRevert' is null?"
-         assert ( daysToKeep            != null ), "[${ this }] $NOT_CONFIGURED: 'daysToKeep' is null?"
-         assert ( numToKeep             != null ), "[${ this }] $NOT_CONFIGURED: 'numToKeep' is null?"
-         assert ( artifactDaysToKeep    != null ), "[${ this }] $NOT_CONFIGURED: 'artifactDaysToKeep' is null?"
-         assert ( artifactNumToKeep     != null ), "[${ this }] $NOT_CONFIGURED: 'artifactNumToKeep' is null?"
-         assert ( descriptionTable      != null ), "[${ this }] $NOT_CONFIGURED: 'descriptionTable' is null?"
-         assert ( mail                  != null ), "[${ this }] $NOT_CONFIGURED: 'mail' is null?"
-         assert ( invoke                != null ), "[${ this }] $NOT_CONFIGURED: 'invoke' is null?"
-         assert ( quietPeriod           != null ), "[${ this }] $NOT_CONFIGURED: 'quietPeriod' is null?"
-         assert ( scmCheckoutRetryCount != null ), "[${ this }] $NOT_CONFIGURED: 'scmCheckoutRetryCount' is null?"
-         assert ( gitHubUrl             != null ), "[${ this }] $NOT_CONFIGURED: 'gitHubUrl' is null?"
+         assert ( authToken             != null ), notConfigured( '"authToken" is null' )
+         assert ( scm                   != null ), notConfigured( '"scm" is null' )
+         assert ( properties            != null ), notConfigured( '"properties" is null' )
+         assert ( publishers            != null ), notConfigured( '"publishers" is null' )
+         assert ( buildWrappers         != null ), notConfigured( '"buildWrappers" is null' )
+         assert ( process               != null ), notConfigured( '"process" is null' )
+         assert ( useUpdate             != null ), notConfigured( '"useUpdate" is null' )
+         assert ( doRevert              != null ), notConfigured( '"doRevert" is null' )
+         assert ( daysToKeep            != null ), notConfigured( '"daysToKeep" is null' )
+         assert ( numToKeep             != null ), notConfigured( '"numToKeep" is null' )
+         assert ( artifactDaysToKeep    != null ), notConfigured( '"artifactDaysToKeep" is null' )
+         assert ( artifactNumToKeep     != null ), notConfigured( '"artifactNumToKeep" is null' )
+         assert ( descriptionTable      != null ), notConfigured( '"descriptionTable" is null' )
+         assert ( mail                  != null ), notConfigured( '"mail" is null' )
+         assert ( invoke                != null ), notConfigured( '"invoke" is null' )
+         assert ( quietPeriod           != null ), notConfigured( '"quietPeriod" is null' )
+         assert ( scmCheckoutRetryCount != null ), notConfigured( '"scmCheckoutRetryCount" is null' )
+         assert ( gitHubUrl             != null ), notConfigured( '"gitHubUrl" is null' )
 
-         assert ( blockBuildWhenDownstreamBuilding != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenDownstreamBuilding' is null?"
-         assert ( blockBuildWhenUpstreamBuilding   != null ), "[${ this }] $NOT_CONFIGURED: 'blockBuildWhenUpstreamBuilding' is null?"
-         assert ( appendTasks                      != null ), "[${ this }] $NOT_CONFIGURED: 'appendTasks' is null?"
+         assert ( blockBuildWhenDownstreamBuilding != null ), notConfigured( '"blockBuildWhenDownstreamBuilding" is null' )
+         assert ( blockBuildWhenUpstreamBuilding   != null ), notConfigured( '"blockBuildWhenUpstreamBuilding" is null' )
+         assert ( appendTasks                      != null ), notConfigured( '"appendTasks" is null' )
 
-         verifyRepositories()
+         validateRepositories()
 
          if ( jobType == JobType.free )
          {
-             assert tasks, "[${ this }] $NOT_CONFIGURED: missing '<tasks>'"
+             assert tasks,                            notConfigured( 'missing "<tasks>"' )
 
-             assert ! pom,        "[${ this }] $MIS_CONFIGURED: <pom> is not active in free-style jobs"
-             assert ! mavenGoals, "[${ this }] $MIS_CONFIGURED: <mavenGoals> is not active in free-style jobs"
-             assert ! mavenName,  "[${ this }] $MIS_CONFIGURED: <mavenName> is not active in free-style jobs"
+             assert ! pom,                            misConfigured( '<pom> is not active in free-style jobs' )
+             assert ! mavenGoals,                     misConfigured( '<mavenGoals> is not active in free-style jobs' )
+             assert ! mavenName,                      misConfigured( '<mavenName> is not active in free-style jobs' )
 
-             assert ( mavenOpts            == null ), "[${ this }] $MIS_CONFIGURED: <mavenOpts> is not active in free-style jobs"
-             assert ( buildOnSNAPSHOT      == null ), "[${ this }] $MIS_CONFIGURED: <buildOnSNAPSHOT> is not active in free-style jobs"
-             assert ( incrementalBuild     == null ), "[${ this }] $MIS_CONFIGURED: <incrementalBuild> is not active in free-style jobs"
-             assert ( privateRepository    == null ), "[${ this }] $MIS_CONFIGURED: <privateRepository> is not active in free-style jobs"
-             assert ( archivingDisabled    == null ), "[${ this }] $MIS_CONFIGURED: <archivingDisabled> is not active in free-style jobs"
-             assert ( reporters            == null ), "[${ this }] $MIS_CONFIGURED: <reporters> is not active in free-style jobs"
-             assert ( localRepoBase        == null ), "[${ this }] $MIS_CONFIGURED: <localRepoBase> is not active in free-style jobs"
-             assert ( localRepo            == null ), "[${ this }] $MIS_CONFIGURED: <localRepo> is not active in free-style jobs"
-             assert ( deploy               == null ), "[${ this }] $MIS_CONFIGURED: <deploy> is not active in free-style jobs"
-             assert ( artifactory          == null ), "[${ this }] $MIS_CONFIGURED: <artifactory> is not active in free-style jobs"
-             assert ( prebuilders          == null ), "[${ this }] $MIS_CONFIGURED: <prebuilders> is not active in free-style jobs"
-             assert ( postbuilders         == null ), "[${ this }] $MIS_CONFIGURED: <postbuilders> is not active in free-style jobs"
-             assert ( prebuildersTasks     == null ), "[${ this }] $MIS_CONFIGURED: <prebuildersTasks> is not active in free-style jobs"
-             assert ( postbuildersTasks    == null ), "[${ this }] $MIS_CONFIGURED: <postbuildersTasks> is not active in free-style jobs"
-             assert ( runPostStepsIfResult == null ), "[${ this }] $MIS_CONFIGURED: <runPostStepsIfResult> is not active in free-style jobs"
+             assert ( mavenOpts            == null ), misConfigured( '<mavenOpts> is not active in free-style jobs' )
+             assert ( buildOnSNAPSHOT      == null ), misConfigured( '<buildOnSNAPSHOT> is not active in free-style jobs' )
+             assert ( incrementalBuild     == null ), misConfigured( '<incrementalBuild> is not active in free-style jobs' )
+             assert ( privateRepository    == null ), misConfigured( '<privateRepository> is not active in free-style jobs' )
+             assert ( archivingDisabled    == null ), misConfigured( '<archivingDisabled> is not active in free-style jobs' )
+             assert ( reporters            == null ), misConfigured( '<reporters> is not active in free-style jobs' )
+             assert ( localRepoBase        == null ), misConfigured( '<localRepoBase> is not active in free-style jobs' )
+             assert ( localRepo            == null ), misConfigured( '<localRepo> is not active in free-style jobs' )
+             assert ( deploy               == null ), misConfigured( '<deploy> is not active in free-style jobs' )
+             assert ( artifactory          == null ), misConfigured( '<artifactory> is not active in free-style jobs' )
+             assert ( prebuilders          == null ), misConfigured( '<prebuilders> is not active in free-style jobs' )
+             assert ( postbuilders         == null ), misConfigured( '<postbuilders> is not active in free-style jobs' )
+             assert ( prebuildersTasks     == null ), misConfigured( '<prebuildersTasks> is not active in free-style jobs' )
+             assert ( postbuildersTasks    == null ), misConfigured( '<postbuildersTasks> is not active in free-style jobs' )
+             assert ( runPostStepsIfResult == null ), misConfigured( '<runPostStepsIfResult> is not active in free-style jobs' )
          }
          else if ( jobType == JobType.maven )
          {
-             assert ! tasks, "[${ this }] $MIS_CONFIGURED: <tasks> is not active in maven jobs"
+             assert ! tasks,                          misConfigured( '<tasks> is not active in maven jobs' )
 
-             assert pom,        "[${ this }] $NOT_CONFIGURED: missing <pom>"
-             assert mavenGoals, "[${ this }] $NOT_CONFIGURED: missing <mavenGoals>"
-             assert mavenName,  "[${ this }] $NOT_CONFIGURED: missing <mavenName>"
+             assert pom,                              notConfigured( 'missing <pom>' )
+             assert mavenGoals,                       notConfigured( 'missing <mavenGoals>' )
+             assert mavenName,                        notConfigured( 'missing <mavenName>' )
 
-             assert ( mavenOpts            != null ), "[${ this }] $NOT_CONFIGURED: 'mavenOpts' is null?"
-             assert ( buildOnSNAPSHOT      != null ), "[${ this }] $NOT_CONFIGURED: 'buildOnSNAPSHOT' is null?"
-             assert ( incrementalBuild     != null ), "[${ this }] $NOT_CONFIGURED: 'incrementalBuild' is null?"
-             assert ( privateRepository    != null ), "[${ this }] $NOT_CONFIGURED: 'privateRepository' is null?"
-             assert ( archivingDisabled    != null ), "[${ this }] $NOT_CONFIGURED: 'archivingDisabled' is null?"
-             assert ( reporters            != null ), "[${ this }] $NOT_CONFIGURED: 'reporters' is null?"
-             assert ( localRepoBase        != null ), "[${ this }] $NOT_CONFIGURED: 'localRepoBase' is null?"
-             assert ( localRepo            != null ), "[${ this }] $NOT_CONFIGURED: 'localRepo' is null?"
-             assert ( deploy               != null ), "[${ this }] $NOT_CONFIGURED: 'deploy' is null?"
-             assert ( artifactory          != null ), "[${ this }] $NOT_CONFIGURED: 'artifactory' is null?"
-             assert ( prebuilders          != null ), "[${ this }] $NOT_CONFIGURED: 'prebuilders' is null?"
-             assert ( postbuilders         != null ), "[${ this }] $NOT_CONFIGURED: 'postbuilders' is null?"
-             assert ( prebuildersTasks     != null ), "[${ this }] $NOT_CONFIGURED: 'prebuildersTasks' is null?"
-             assert ( postbuildersTasks    != null ), "[${ this }] $NOT_CONFIGURED: 'postbuildersTasks' is null?"
-             assert ( runPostStepsIfResult != null ), "[${ this }] $NOT_CONFIGURED: 'runPostStepsIfResult' is null?"
+             assert ( mavenOpts            != null ), notConfigured( '"mavenOpts" is null' )
+             assert ( buildOnSNAPSHOT      != null ), notConfigured( '"buildOnSNAPSHOT" is null' )
+             assert ( incrementalBuild     != null ), notConfigured( '"incrementalBuild" is null' )
+             assert ( privateRepository    != null ), notConfigured( '"privateRepository" is null' )
+             assert ( archivingDisabled    != null ), notConfigured( '"archivingDisabled" is null' )
+             assert ( reporters            != null ), notConfigured( '"reporters" is null' )
+             assert ( localRepoBase        != null ), notConfigured( '"localRepoBase" is null' )
+             assert ( localRepo            != null ), notConfigured( '"localRepo" is null' )
+             assert ( deploy               != null ), notConfigured( '"deploy" is null' )
+             assert ( artifactory          != null ), notConfigured( '"artifactory" is null' )
+             assert ( prebuilders          != null ), notConfigured( '"prebuilders" is null' )
+             assert ( postbuilders         != null ), notConfigured( '"postbuilders" is null' )
+             assert ( prebuildersTasks     != null ), notConfigured( '"prebuildersTasks" is null' )
+             assert ( postbuildersTasks    != null ), notConfigured( '"postbuildersTasks" is null' )
+             assert ( runPostStepsIfResult != null ), notConfigured( '"runPostStepsIfResult" is null' )
 
              if ( deploy?.url || artifactory?.name )
              {
@@ -567,6 +572,8 @@ class Job
              throw new IllegalArgumentException ( "Unknown job type [${ jobType }]. " +
                                                   "Known types are \"${JobType.free.name()}\" and \"${JobType.maven.name()}\"" )
          }
+
+         this
      }
 
 
@@ -577,9 +584,14 @@ class Job
      *
      * Otherwise, Jenkins fails when project is checked out!
      */
-     void verifyRepositories()
+     void validateRepositories ()
      {
-         for ( repoToCheck in repositories().remote )
+         if ( gitHubUrl )
+         {
+            assert repositories(), "[${ this }]: Missing <repository> or <repositories>"
+         }
+
+         for ( repo in repositories().remote )
          {
              int counter = 0
 
@@ -587,22 +599,21 @@ class Job
              {
                  String otherRepo ->
 
-                 if (( repoToCheck == otherRepo ) && (( ++counter ) != 1 ))
+                 if (( repo == otherRepo ) && (( ++counter ) != 1 ))
                  {
                      /**
                       * Repository should only equal to itself once
                       */
 
-                     throw new MojoExecutionException( "[${ this }]: Repo [$repoToCheck] is duplicated" )
+                     throw new MojoExecutionException( "[${ this }]: Repo [$repo] is duplicated" )
                  }
 
-                 if (( ! ( repoToCheck == otherRepo )) && ( otherRepo.toLowerCase().contains( repoToCheck.toLowerCase() + '/' )))
+                 if (( ! ( repo == otherRepo )) && ( otherRepo.toLowerCase().contains( repo.toLowerCase() + '/' )))
                  {
                      throw new MojoExecutionException(
-                         "[${ this }]: Repo [$repoToCheck] is duplicated in [$otherRepo] - you should remove [$otherRepo]" )
+                         "[${ this }]: Repo [$repo] is duplicated in [$otherRepo] - you should remove [$otherRepo]" )
                  }
              }
          }
      }
-
 }

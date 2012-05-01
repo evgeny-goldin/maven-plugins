@@ -45,15 +45,51 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     <%
         if ( job.jobType == JobType.maven )
         {
-            def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
-                             job.localRepoPath     ? job.localRepoPath :
-                                                     '&lt;user-home&gt;/.m2/repository' )
+            final repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
+                               job.localRepoPath     ? job.localRepoPath : '&lt;user-home&gt;/.m2/repository' )
+
+            if ( job.prebuildersTasks )
+            {
+    %>
+    <tr>
+    <td valign='top'>Pre-build steps</td>
+    <td>
+    <%
+                for ( task in job.prebuildersTasks )
+                {
+    %>
+        - ${ task.description }<br/>
+    <%
+                }
+    %>
+    </td>
+    </tr>
+    <%
+            }
     %>
     ${ tableRow( 'Maven name',       job.mavenName,  true, true ) }
     ${ tableRow( 'Maven goals',      job.mavenGoals, true ) }
     ${ tableRow( 'Maven repository', repoPath,       true, true ) }
     ${ tableRow( 'Maven options',    job.mavenOpts,  true ) }
     <%
+            if ( job.postbuildersTasks )
+            {
+    %>
+    <tr>
+    <td valign='top'>Post-build steps</td>
+    <td>
+    <%
+                for ( task in job.postbuildersTasks )
+                {
+    %>
+        - ${ task.description }<br/>
+    <%
+                }
+    %>
+    </td>
+    </tr>
+    <%
+            }
             if ( job.artifactory?.name )
             {
     %>
@@ -101,6 +137,25 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     </tr>
     <%
         }
+        else if ( job.jobType == JobType.free )
+        {
+    %>
+    <tr>
+    <td valign='top'>Build steps</td>
+    <td>
+    <%
+            for ( task in job.tasks )
+            {
+    %>
+        - ${ task.description }<br/>
+    <%
+            }
+    %>
+    </td>
+    </tr>
+    <%
+        }
+
         if ( job.repositories())
         {
     %>

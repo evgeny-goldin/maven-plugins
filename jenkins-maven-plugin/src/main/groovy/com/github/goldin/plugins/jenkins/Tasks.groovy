@@ -27,6 +27,11 @@ abstract class Task
     abstract List<String> getPropertyNames()
 
     /**
+     * Description to use in job description table
+     */
+    abstract String       getDescription()
+
+    /**
      * Builds task markup to be used in resulting config.
      */
     final String getMarkup()
@@ -54,6 +59,9 @@ class Shell extends Task
 
     @Override
     List<String> getPropertyNames(){[ 'command' ]}
+
+    @Override
+    String getDescription () { "shell: \"$command\"" }
 }
 
 
@@ -64,6 +72,9 @@ class BatchFile extends Task
 
     @Override
     List<String> getPropertyNames(){[ 'command' ]}
+
+    @Override
+    String getDescription () { "batch: \"$command\"" }
 }
 
 
@@ -79,13 +90,16 @@ class Ant extends Task
     @Override
     List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ),
                                       'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
+
+    @Override
+    String getDescription () { "ant: \"${ targets ?: 'default targets' }\", file \"$buildFile\"" }
 }
 
 
 @SuppressWarnings( 'StatelessClass' )
 class Maven extends Task
 {
-    String  targets              = '-B -e clean install'
+    String  targets              = Job.DEFAULT_MAVEN_GOALS
     String  mavenName            = '(Default)'
     String  jvmOptions           = ''
     String  pom                  = 'pom.xml'
@@ -96,6 +110,9 @@ class Maven extends Task
     List<String> getPropertyNames(){[ 'targets', 'mavenName', 'jvmOptions',
                                       ( pom == 'false' ? '' : 'pom' ),
                                       'properties', 'usePrivateRepository' ].grep() }
+
+    @Override
+    String getDescription () { "maven: \"${ targets }\", POM \"$pom\", Maven name \"$mavenName\"" }
 }
 
 
@@ -132,6 +149,9 @@ class Groovy extends Task
     @Override
     List<String> getPropertyNames (){ [ 'groovyName', 'parameters', 'scriptParameters',
                                         'properties', 'javaOpts', 'classPath' ] }
+
+    @Override
+    String getDescription () { "groovy: \"${ command ? (( command.size() > 30 ) ? command.substring( 0, 30 ) + ' ..' : command ) : file }\", Groovy name \"$groovyName\"" }
 }
 
 
@@ -148,4 +168,7 @@ class Xml extends Task
 
     @Override
     List<String> getPropertyNames (){[]}
+
+    @Override
+    String getDescription () { "custom XML task" }
 }
