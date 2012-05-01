@@ -19,6 +19,14 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
                |</tr>""".stripMargin() :
             ''
 }
+
+String tasks ( tasks )
+{
+    assert tasks
+    "<table>" +
+    tasks.collect{ "<tr><td>- <strong>${ it.title }</strong></td><td>:</td><td>&quot;<code>${ it.commandCut }</code>&quot;</td></tr>" }.join( '' ) +
+    "</table>"
+}
 %>
 
 <table border='1' width='100%' cellpadding='3' cellspacing='3'>
@@ -52,17 +60,10 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
             {
     %>
     <tr>
-    <td valign='top'>Pre-build steps</td>
-    <td>
-    <%
-                for ( task in job.prebuildersTasks )
-                {
-    %>
-        - ${ task.description }<br/>
-    <%
-                }
-    %>
-    </td>
+        <td valign='top'>Pre-build steps</td>
+        <td>
+        ${ tasks( job.prebuildersTasks ) }
+        </td>
     </tr>
     <%
             }
@@ -77,16 +78,9 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     %>
     <tr>
     <td valign='top'>Post-build steps</td>
-    <td>
-    <%
-                for ( task in job.postbuildersTasks )
-                {
-    %>
-        - ${ task.description }<br/>
-    <%
-                }
-    %>
-    </td>
+        <td>
+        ${ tasks( job.postbuildersTasks ) }
+        </td>
     </tr>
     <%
             }
@@ -142,16 +136,9 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     %>
     <tr>
     <td valign='top'>Build steps</td>
-    <td>
-    <%
-            for ( task in job.tasks )
-            {
-    %>
-        - ${ task.description }<br/>
-    <%
-            }
-    %>
-    </td>
+        <td>
+        ${ tasks( job.tasks ) }
+        </td>
     </tr>
     <%
         }
