@@ -68,11 +68,9 @@ class JenkinsMojo extends BaseGroovyMojo
         /**
          * Verifying job's state and calculating logging pads
          */
-        jobs.each {
-            Job job ->
-
+        for ( job in jobs )
+        {
             job.verifyAll()
-
             jobNamePad   = Math.max( jobNamePad,   job.toString().size())
             jobParentPad = Math.max( jobParentPad, jobParent( job ).size())
         }
@@ -80,9 +78,8 @@ class JenkinsMojo extends BaseGroovyMojo
         /**
          * Generating config files
          */
-        jobs.each {
-            Job job ->
-
+        for ( job in jobs )
+        {
             String configPath = ''
 
             if ( job.isAbstract )
@@ -145,19 +142,16 @@ class JenkinsMojo extends BaseGroovyMojo
          * - For each repository - setting it's "local" part
          *   (most of the time it is omitted by user since it can be calculated from "remote" part)
          */
-        jobs().each
+        for ( job in jobs())
         {
-            Job job ->
             Job prevJob = allJobs.put( job.id, job )
             assert ( ! prevJob ), "[$job] is defined more than once"
 
             job.jenkinsUrl    = jenkinsUrl
             job.generationPom = generationPom
 
-            job.repositories().each
+            for ( repo in job.repositories())
             {
-                Repository repo ->
-
                 repo.remote = verify().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
                 assert  ( ! ( verify().notNullOrEmpty( repo.remote )).endsWith( '/' ))
 
@@ -171,11 +165,8 @@ class JenkinsMojo extends BaseGroovyMojo
             }
         }
 
-
-        jobs().each
+        for( job in jobs())
         {
-            Job job ->
-
             /**
              * Whether job's parent is a real or an abstract one
              */
@@ -198,25 +189,26 @@ class JenkinsMojo extends BaseGroovyMojo
              * Verifying all jobs invoked are defined
              */
 
-            job.invoke?.jobsSplit?.each
+            for ( invokedJobId in job.invoke?.jobsSplit )
             {
-                String invokedJobId ->
                 assert allJobs[ invokedJobId ], "[$job] invokes job [$invokedJobId] but it's not defined. " +
                                                 "Defined jobs: ${ allJobs.keySet() }"
             }
 
            /**
-            * Updating "Invoked By" list
+            * Updating "Child Jobs" and "Invoked By" list
             */
 
+            List<Job> childJobs = []
             List<Job> invokedBy = []
 
-            jobs().findAll{ it.id != job.id }.each
+            for ( otherJob in jobs().findAll{ it.id != job.id } )
             {
-                Job otherJob ->
+                if ( otherJob.parent == job.id )                       { childJobs << otherJob }
                 if ( otherJob.invoke?.jobsSplit?.any{ it == job.id } ) { invokedBy << otherJob }
             }
 
+            job.childJobs = childJobs as Job[]
             job.invokedBy = invokedBy as Job[]
         }
 
@@ -248,8 +240,8 @@ class JenkinsMojo extends BaseGroovyMojo
              */
 
             resultJob = new Job( id: "Composition of jobs [$parentJobs]" )
-            split( parentJobs ).each {
-                String parentJobId ->
+            for ( parentJobId in split( parentJobs ))
+            {
                 Job    parentJob = allJobs[ parentJobId ]
                 assert parentJob, "Parent job [$parentJobId] is undefined"
 

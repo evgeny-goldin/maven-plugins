@@ -4,7 +4,7 @@ import com.github.goldin.plugins.jenkins.beans.*
 import com.github.goldin.plugins.jenkins.Job.*
 import com.github.goldin.plugins.jenkins.Job.JobType
 
-String jobLink ( String jenkinsUrl, String jobId )
+String jobLink ( String jobId )
 {
     assert jenkinsUrl && jobId
     "<a href='$jenkinsUrl/job/$jobId'><strong>$jobId</strong></a>"
@@ -24,7 +24,7 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
 <table border='1' width='100%' cellpadding='3' cellspacing='3'>
     <tr>
         <td width='15%' valign='top'>Job</td>
-        <td width='85%'>${ jobLink( job.jenkinsUrl, job.id ) }</td>
+        <td width='85%'>${ jobLink( job.id ) }</td>
     </tr>
     <%
         for ( row in job.descriptionTable.findAll{ ! it.bottom } )
@@ -35,7 +35,9 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
         }
     %>
     ${ tableRow( 'Display name', job.displayName           ) }
-    ${ tableRow( 'Parent',       job.parent ? ( job.parentIsReal ? jobLink( job.jenkinsUrl, job.parent ) : job.parent ) : '' ) }
+    ${ tableRow( 'Parent',       job.parent ? ( job.parentIsReal ? jobLink( job.parent ) : job.parent ) : '' ) }
+    ${ tableRow( 'Child job' + ( job.childJobs.size() == 1 ? '' : 's' ),
+                 job.childJobs.collect{ jobLink( it.id ) }.join( ', ' )) }
     ${ tableRow( 'Job type',     job.jobType.description ) }
     ${ tableRow( 'Node',         '<a href=\'' + job.jenkinsUrl + '/label/' + job.node + '\'/><strong>' + job.node + '</strong></a>' ) }
     ${ tableRow( 'Quiet period', job.quietPeriod,           true ) }
@@ -144,7 +146,7 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
             {
                 String invokedJobId ->
     %>
-            - ${ jobLink( job.jenkinsUrl, invokedJobId ) } when this job ${ job.invoke.condition[ 1 ] }<br/>
+            - ${ jobLink( invokedJobId ) } when this job ${ job.invoke.condition[ 1 ] }<br/>
     <%
             }
     %>
@@ -163,7 +165,7 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
             {
                 Job invokedBy ->
     %>
-            - ${ jobLink( invokedBy.jenkinsUrl, invokedBy.id ) } when it ${ invokedBy.invoke.condition[ 1 ] }<br/>
+            - ${ jobLink( invokedBy.id ) } when it ${ invokedBy.invoke.condition[ 1 ] }<br/>
     <%
             }
     %>

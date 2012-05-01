@@ -147,6 +147,7 @@ class Job
     Deploy               deploy
     Mail                 mail
     Invoke               invoke
+    Job[]                childJobs
     Job[]                invokedBy
     String               authToken
     PostStepResult       runPostStepsIfResult
@@ -203,7 +204,7 @@ class Job
    /**
     * Retrieves job description table
     */
-    String getDescriptionTableMarkup() { makeTemplate( '/descriptionTable.html', [ job : this ] ) }
+    String getDescriptionTableMarkup() { makeTemplate( '/descriptionTable.html', [ job : this, jenkinsUrl : jenkinsUrl ] ) }
 
 
     /**
@@ -574,9 +575,8 @@ class Job
      */
      void verifyRepositories()
      {
-         repositories().remote.each
+         for ( repoToCheck in repositories().remote )
          {
-             String repoToCheck ->
              int counter = 0
 
              repositories().remote.each
