@@ -230,7 +230,6 @@ class GoldinCommandLineJobRunner
      *
      * @return the error message
      */
-    @SuppressWarnings([ 'GetterMethodCouldBeProperty' ])
     static String getErrorMessage() { message }
 
     /**

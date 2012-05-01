@@ -6,7 +6,7 @@ package com.github.goldin.plugins.jenkins
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
-@SuppressWarnings([ 'GetterMethodCouldBeProperty' ])
+
 abstract class Task
 {
     final String space = ' ' * 4
@@ -127,7 +127,7 @@ class Maven extends Task
 }
 
 
-@SuppressWarnings([ 'StatelessClass', 'GetterMethodCouldBeProperty' ])
+@SuppressWarnings([ 'StatelessClass' ])
 class Groovy extends Task
 {
     boolean pre       // Whether groovy task is executed as pre or post-step
@@ -169,7 +169,7 @@ class Groovy extends Task
 }
 
 
-@SuppressWarnings([ 'StatelessClass', 'GetterMethodCouldBeProperty' ])
+@SuppressWarnings([ 'StatelessClass' ])
 class Xml extends Task
 {
     String content
