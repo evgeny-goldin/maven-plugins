@@ -35,7 +35,7 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
         }
     %>
     ${ tableRow( 'Display name', job.displayName           ) }
-    ${ tableRow( 'Parent',       job.parent ? ( job.parentIsReal ? jobLink( job.parent ) : job.parent ) : '' ) }
+    ${ tableRow( 'Parent job',   job.parent ? ( job.parentIsReal ? jobLink( job.parent ) : job.parent ) : '' ) }
     ${ tableRow( 'Child job' + ( job.childJobs.size() == 1 ? '' : 's' ),
                  job.childJobs.collect{ jobLink( it.id ) }.join( ', ' )) }
     ${ tableRow( 'Job type',     job.jobType.description ) }
