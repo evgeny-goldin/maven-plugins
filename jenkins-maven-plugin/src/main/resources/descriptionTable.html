@@ -36,8 +36,7 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     %>
     ${ tableRow( 'Display name', job.displayName           ) }
     ${ tableRow( 'Parent job',   job.parent ? ( job.parentIsReal ? jobLink( job.parent ) : job.parent ) : '' ) }
-    ${ tableRow( 'Child job' + ( job.childJobs.size() == 1 ? '' : 's' ),
-                 job.childJobs.collect{ jobLink( it.id ) }.join( ', ' )) }
+    ${ tableRow( 'Child job' + ( job.childJobs.size() == 1 ? '' : 's' ), job.childJobs.collect{ jobLink( it.id ) }.join( ', ' )) }
     ${ tableRow( 'Job type',     job.jobType.description ) }
     ${ tableRow( 'Node',         '<a href=\'' + job.jenkinsUrl + '/label/' + job.node + '\'/><strong>' + job.node + '</strong></a>' ) }
     ${ tableRow( 'Quiet period', job.quietPeriod,           true ) }
@@ -89,15 +88,15 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
     <tr>
         <td valign='top'>Triggers</td>
         <td>
-            <%
+    <%
                 job.triggers().each
                 {
                     Trigger trigger ->
-            %>
+    %>
             - <strong><code>${ trigger.type }</code></strong>${ trigger.expression ? ': <code>"' + trigger.expression + '"</code>' : '' }${ trigger.description ? ' <em>(' + trigger.description + ')</em>' : '' }<br/>
-            <%
+    <%
                 }
-            %>
+    %>
         </td>
     </tr>
     <%
