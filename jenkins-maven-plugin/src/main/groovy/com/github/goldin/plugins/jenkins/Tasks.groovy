@@ -27,9 +27,16 @@ abstract class Task
     abstract List<String> getPropertyNames()
 
     /**
-     * Description to use in job description table
+     * Title and command used in description table
      */
-    abstract String       getDescription()
+    abstract String getTitle()
+    abstract String getCommand()
+    final    String getCommandCut(){ cut( command ) }
+
+    /**
+     * Cuts long commands.
+     */
+    final cut( String s ){ (( s.size() > 80 ) ? s.substring( 0, 80 ) + ' ..' : s ) }
 
     /**
      * Builds task markup to be used in resulting config.
@@ -55,44 +62,46 @@ abstract class Task
 @SuppressWarnings( 'StatelessClass' )
 class Shell extends Task
 {
-    String command
+    String command = ''
 
     @Override
     List<String> getPropertyNames(){[ 'command' ]}
 
     @Override
-    String getDescription () { "shell: \"$command\"" }
+    String getTitle () { 'shell' }
 }
 
 
 @SuppressWarnings( 'StatelessClass' )
 class BatchFile extends Task
 {
-    String command
+    String command = ''
 
     @Override
     List<String> getPropertyNames(){[ 'command' ]}
 
     @Override
-    String getDescription () { "batch: \"$command\"" }
+    String getTitle () { 'batch' }
 }
 
 
 @SuppressWarnings( 'StatelessClass' )
 class Ant extends Task
 {
-    String antName
-    String targets
+    String antName    = ''
+    String targets    = ''
     String antOpts    = ''
     String buildFile  = 'build.xml'
     String properties = ''
 
     @Override
-    List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ),
-                                      'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
+    List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
 
     @Override
-    String getDescription () { "ant: \"${ targets ?: 'default targets' }\", file \"$buildFile\"" }
+    String getTitle()  { 'ant' }
+
+    @Override
+    String getCommand(){ targets ?: 'default targets' }
 }
 
 
@@ -110,9 +119,11 @@ class Maven extends Task
     List<String> getPropertyNames(){[ 'targets', 'mavenName', 'jvmOptions',
                                       ( pom == 'false' ? '' : 'pom' ),
                                       'properties', 'usePrivateRepository' ].grep() }
+    @Override
+    String getTitle()  { 'maven' }
 
     @Override
-    String getDescription () { "maven: \"${ targets }\", POM \"$pom\", Maven name \"$mavenName\"" }
+    String getCommand(){ targets }
 }
 
 
@@ -151,7 +162,10 @@ class Groovy extends Task
                                         'properties', 'javaOpts', 'classPath' ] }
 
     @Override
-    String getDescription () { "groovy: \"${ command ? (( command.size() > 30 ) ? command.substring( 0, 30 ) + ' ..' : command ) : file }\", Groovy name \"$groovyName\"" }
+    String getTitle()  { 'groovy' }
+
+    @Override
+    String getCommand(){ command ?: file }
 }
 
 
@@ -170,5 +184,8 @@ class Xml extends Task
     List<String> getPropertyNames (){[]}
 
     @Override
-    String getDescription () { "custom XML task" }
+    String getTitle()  { 'xml' }
+
+    @Override
+    String getCommand(){ 'custom task' }
 }
