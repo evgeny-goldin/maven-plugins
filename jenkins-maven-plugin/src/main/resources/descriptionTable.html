@@ -20,12 +20,16 @@ String tableRow ( String title, String value, boolean code = false, boolean quot
             ''
 }
 
-String tasks ( tasks )
+String tasks ( Task[] tasks )
 {
     assert tasks
-    "<table>" +
-    tasks.collect{ "<tr><td>- <strong>${ it.title }</strong></td><td>:</td><td>&quot;<code>${ it.commandCut }</code>&quot;</td></tr>" }.join( '' ) +
-    "</table>"
+
+    ( tasks.size() == 1 ) ?
+        "- <strong>${ tasks[ 0 ].title }</strong> : &quot;<code>${ tasks[ 0 ].commandCut }</code>&quot;"
+        :
+        "<table>" +
+        tasks.collect{ "<tr><td>- <strong>${ it.title }</strong></td><td> : </td><td>&quot;<code>${ it.commandCut }</code>&quot;</td></tr>" }.join( '' ) +
+        "</table>"
 }
 %>
 
