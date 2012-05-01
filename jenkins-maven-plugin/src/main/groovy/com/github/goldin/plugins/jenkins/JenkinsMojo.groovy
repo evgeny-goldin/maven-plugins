@@ -168,15 +168,15 @@ class JenkinsMojo extends BaseGroovyMojo
         for( job in jobs())
         {
             /**
-             * Whether job's parent is a real or an abstract one
-             */
-            job.parentIsReal = ( job.parent && ( ! allJobs[ job.parent ].isAbstract ))
-
-            /**
              * "Extending" each job with a <parent> jobs or with default values
              */
 
             job.extend( job.parent ? composeJob( allJobs, job.parent ) : new Job())
+
+            /**
+             * Whether job's parent is a real or an abstract one
+             */
+            job.parentIsReal = ( job.parent && ( ! allJobs[ job.parent ].isAbstract ))
 
             if ( job.mavenGoals && ( job.jobType == Job.JobType.maven ))
             {   /**

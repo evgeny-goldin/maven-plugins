@@ -116,10 +116,7 @@ class Job
     Boolean              blockBuildWhenUpstreamBuilding
     Boolean              appendTasks
     Boolean              incrementalBuild
-    Boolean              parentIsReal
     String               parent
-    String               jenkinsUrl
-    String               generationPom
     String               description
     DescriptionRow[]     descriptionTable
     Integer              daysToKeep
@@ -147,8 +144,6 @@ class Job
     Deploy               deploy
     Mail                 mail
     Invoke               invoke
-    Job[]                childJobs
-    Job[]                invokedBy
     String               authToken
     PostStepResult       runPostStepsIfResult
 
@@ -184,6 +179,15 @@ class Job
      * Groovy extension point
      */
     String               process
+
+    /**
+     * Set by {@link JenkinsMojo#configureJobs}
+     */
+    String               jenkinsUrl
+    String               generationPom
+    Boolean              parentIsReal
+    Job[]                childJobs
+    Job[]                invokedBy
 
     /**
      * Converts {@link #scmType} to SCM class name.
