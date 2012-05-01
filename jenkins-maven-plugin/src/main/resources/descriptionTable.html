@@ -7,78 +7,61 @@ import com.github.goldin.plugins.jenkins.Job.JobType
 String jobLink ( String jenkinsUrl, String jobId )
 {
     assert jenkinsUrl && jobId
-    "<a href='${ jenkinsUrl }/job/${ jobId }'><strong>${ jobId }</strong></a>"
+    "<a href='$jenkinsUrl/job/$jobId'><strong>$jobId</strong></a>"
 }
 
-String tableRow ( String title, String value, boolean isCode = false )
+String tableRow ( String title, String value, boolean code = false, boolean quotes = false )
 {
-    if ( value )
-    {
-        """|<tr>
-           |     <td valign='top'>$title</td>
-           |     <td>${ isCode ? '<strong><code>' + value + '</code></strong>' : value }</td>
-           |</tr>""".stripMargin()
-    }
-    else
-    {
-        ''
-    }
+    final valueQuoted = ( quotes ? '"' + value + '"' : value )
+    value ? """|<tr>
+               |     <td valign='top'>$title</td>
+               |     <td>${ code ? ( '<strong><code>' + valueQuoted + '</code></strong>' ) : valueQuoted }</td>
+               |</tr>""".stripMargin() :
+            ''
 }
-
 %>
 
-<table border="1" width="100%" cellpadding="3" cellspacing="3">
+<table border='1' width='100%' cellpadding='3' cellspacing='3'>
+    <tr>
+        <td width='15%' valign='top'>Job</td>
+        <td width='85%'>${ jobLink( job.jenkinsUrl, job.id ) }</td>
+    </tr>
     <%
         for ( row in job.descriptionTable.findAll{ ! it.bottom } )
         {
     %>
-    <tr>
-        <td  width="15%" valign='top'>${ row.key }</td>
-        <td>${ row.value }</td>
-    </tr>
+    ${ tableRow( row.key, row.value ) }
     <%
         }
     %>
-    <tr>
-        <td  width="15%" valign='top'>Job</td>
-        <td>${ jobLink( job.jenkinsUrl, job.id ) }</td>
-    </tr>
     ${ tableRow( 'Display name', job.displayName           ) }
     ${ tableRow( 'Parent',       job.parent ? ( job.parentIsReal ? jobLink( job.jenkinsUrl, job.parent ) : job.parent ) : '' ) }
+    ${ tableRow( 'Job type',     job.jobType.description ) }
+    ${ tableRow( 'Node',         '<a href=\'' + job.jenkinsUrl + '/label/' + job.node + '\'/><strong>' + job.node + '</strong></a>' ) }
     ${ tableRow( 'Quiet period', job.quietPeriod,           true ) }
     ${ tableRow( 'Retry count',  job.scmCheckoutRetryCount, true ) }
-    <tr>
-        <td valign='top'>Job type</td>
-        <td>${ job.jobType.description }</td>
-    </tr>
-    ${ tableRow( 'JDK name', ( job.jdkName ? '"' + job.jdkName + '"' : '' ), true ) }
+    ${ tableRow( 'JDK name',     job.jdkName,               true, true ) }
     <%
         if ( job.jobType == JobType.maven )
         {
             def repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
                              job.localRepoPath     ? job.localRepoPath :
-                                                     "&lt;user-home&gt;/.m2/repository" )
+                                                     '&lt;user-home&gt;/.m2/repository' )
     %>
-    ${ tableRow( 'Maven name', ( job.mavenName ? '"' + job.mavenName + '"' : '' ), true ) }
-    <tr>
-        <td valign='top'>Maven goals</td>
-        <td><strong><code>${ job.mavenGoals }</code></strong></td>
-    </tr>
-    <tr>
-        <td valign='top'>Maven repository</td>
-        <td><strong><code>"${ repoPath }"</code></strong></td>
-    </tr>
-    ${ tableRow( 'Maven options', job.mavenOpts, true ) }
+    ${ tableRow( 'Maven name',       job.mavenName,  true, true ) }
+    ${ tableRow( 'Maven goals',      job.mavenGoals, true ) }
+    ${ tableRow( 'Maven repository', repoPath,       true, true ) }
+    ${ tableRow( 'Maven options',    job.mavenOpts,  true ) }
     <%
             if ( job.artifactory?.name )
             {
     %>
     <tr>
         <td valign='top'>Deployed to Artifactory</td>
-        <td><a href="${ job.artifactory.name }">
+        <td><a href='${ job.artifactory.name }'>
             <strong><code>${ job.artifactory.name }</code></strong>
             </a> =>
-            <a href="${ job.artifactory.name }/${ job.artifactory.repository }/">
+            <a href='${ job.artifactory.name }/${ job.artifactory.repository }/'>
             <strong><code>"${ job.artifactory.repository }"</code></strong>
             </a>
         </td>
@@ -98,12 +81,6 @@ String tableRow ( String title, String value, boolean isCode = false )
     </tr>
     <%
         }
-    %>
-    <tr>
-        <td valign='top'>Node</td>
-        <td><a href="${ job.jenkinsUrl }/label/${ job.node }/"><strong>${ job.node }</strong></a></td>
-    </tr>
-    <%
         if ( job.triggers())
         {
     %>
@@ -129,35 +106,32 @@ String tableRow ( String title, String value, boolean isCode = false )
     <tr>
         <td valign='top'>Repositories</td>
         <td>
-            <%
-                job.repositories().each
+    <%
+            job.repositories().each
+            {
+                Repository repo ->
+    %>
+
+            - <a href='${ repo.remoteLink }/'><strong><code>${ repo.remote }</code></strong></a>
+    <%
+                if ( repo.git )
                 {
-                    Repository repo ->
-            %>
-
-            - <a href="${ repo.remoteLink }/"><strong><code>${ repo.remote }</code></strong></a>
-                <% if ( repo.git ) { %>
-                : <a href="${ repo.gitRemoteBranchLink }/">
-                  <strong><code>${ repo.gitBranch }</code></strong>
-                  </a><br/>
-            <%
-                   }
-
+    %>
+                : <a href='${ repo.gitRemoteBranchLink }/'><strong><code>${ repo.gitBranch }</code></strong></a><br/>
+    <%
                 }
-                if ( job.pom ) // Free-Style jobs may not use Maven. Even if they use it - its POM is configured inside Maven <task>
-                {
-                    String pomUrl = job.repositories().first().getRemotePathLink( job.pom )
-            %>
-        </td>
-    </tr>
-    <tr>
-        <td valign='top'>POM</td>
-        <td>
-            - <a href="${ pomUrl }"><strong><code>${ pomUrl }</code></strong></a><br/>
+            }
+    %>
         </td>
     </tr>
     <%
-                }
+            if ( job.pom ) // Free-Style jobs may not use Maven. Even if they use it - its POM is configured inside Maven <task>
+            {
+                String pomUrl = job.repositories().first().getRemotePathLink( job.pom )
+    %>
+    ${ tableRow( 'POM', '- <a href=\'' + pomUrl + '\'><strong><code>' + pomUrl + '</code></strong></a><br/>' ) }
+    <%
+            }
         }
         if ( job.invoke?.jobs )
         {
@@ -165,15 +139,15 @@ String tableRow ( String title, String value, boolean isCode = false )
     <tr>
         <td valign='top'>Invokes</td>
         <td>
-            <%
-                job.invoke.jobsSplit.each
-                {
-                    String invokedJobId ->
-            %>
+    <%
+            job.invoke.jobsSplit.each
+            {
+                String invokedJobId ->
+    %>
             - ${ jobLink( job.jenkinsUrl, invokedJobId ) } when this job ${ job.invoke.condition[ 1 ] }<br/>
-            <%
-                }
-            %>
+    <%
+            }
+    %>
         </td>
     </tr>
     <%
@@ -184,15 +158,15 @@ String tableRow ( String title, String value, boolean isCode = false )
     <tr>
         <td valign='top'>Invoked by</td>
         <td>
-            <%
-                job.invokedBy.each
-                {
-                    Job invokedBy ->
-            %>
+    <%
+            job.invokedBy.each
+            {
+                Job invokedBy ->
+    %>
             - ${ jobLink( invokedBy.jenkinsUrl, invokedBy.id ) } when it ${ invokedBy.invoke.condition[ 1 ] }<br/>
-            <%
-                }
-            %>
+    <%
+            }
+    %>
         </td>
     </tr>
     <%
@@ -200,10 +174,7 @@ String tableRow ( String title, String value, boolean isCode = false )
         for ( row in job.descriptionTable.findAll{ it.bottom } )
         {
     %>
-    <tr>
-        <td valign='top'>${ row.key }</td>
-        <td>${ row.value }</td>
-    </tr>
+    ${ tableRow( row.key, row.value ) }
     <%
         }
     %>
