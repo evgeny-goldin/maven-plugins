@@ -6,7 +6,6 @@ import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.Replace
 import groovy.io.FileType
-import org.apache.maven.plugin.BuildPluginManager
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
@@ -17,7 +16,7 @@ import org.jfrog.maven.annomojo.annotations.*
 
 
 /**
- * MOJO copying resources specified
+ * MOJO copying resources specified.
  */
 @MojoGoal( 'copy' )
 @MojoPhase( 'package' )
@@ -25,11 +24,9 @@ import org.jfrog.maven.annomojo.annotations.*
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
 class CopyMojo extends BaseGroovyMojo
 {
-    /**
-     * Container-injected fields
-     */
-    @MojoComponent
-    public BuildPluginManager pluginManager
+   /**
+    * Container-injected fields
+    */
 
     @MojoComponent
     public MavenProjectHelper mavenProjectHelper
@@ -682,7 +679,7 @@ class CopyMojo extends BaseGroovyMojo
                 data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
             def classifier = (( data.size() == 4 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
 
-            deploy( targetArchive, url, groupId, artifactId, version, classifier, pluginManager )
+            helper.deploy( targetArchive, url, groupId, artifactId, version, classifier )
         }
 
         verify().file( targetArchive )

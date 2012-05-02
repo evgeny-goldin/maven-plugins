@@ -402,6 +402,7 @@
 
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- http://www.jfrog.org/sites/mvn-anno-mojo/latest/ -->
+        <!-- New releases: http://goo.gl/SISr5                -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
         <dependency>
@@ -418,21 +419,9 @@
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.47</version>
+            <version>0.1.48</version>
             <scope>compile</scope>
         </dependency>
-
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- https://github.com/TimMoore/mojo-executor -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-        <dependency>
-            <groupId>org.twdata.maven</groupId>
-            <artifactId>mojo-executor</artifactId>
-            <version>2.0</version>
-            <scope>compile</scope>
-        </dependency>
-
     </dependencies>
 
 </project>

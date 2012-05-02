@@ -12,7 +12,9 @@ import org.apache.maven.plugin.logging.Log
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.collection.CollectRequest
+import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
+import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 
 import java.util.jar.Attributes
@@ -324,5 +326,35 @@ final class CopyMojoHelper
         f.withOutputStream { m.write( it )}
 
         tempDir
+    }
+
+
+    /**
+     * Deploys file to the Maven repo specified.
+     *
+     * @param f          file to deploy
+     * @param url        Maven repository URL
+     * @param groupId    groupId
+     * @param artifactId artifactId
+     * @param version    version
+     * @param classifier classifier, can be <code>null</code>
+     */
+    @Requires({ f && f.file && url && groupId && artifactId && version })
+    void deploy ( File f, String url, String groupId, String artifactId, String version, String classifier )
+    {
+        final description  = "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
+        final request      = new DeployRequest()
+        request.repository = new RemoteRepository( url: url )
+        request.artifacts  = [ toAetherArtifact( toMavenArtifact( groupId, artifactId, version, '', file().extension( f ), classifier, false, f )) ]
+
+        try
+        {
+            mojo.repoSystem.deploy( mojo.repoSession, request )
+            log.info( "Deployed $description" )
+        }
+        catch ( e )
+        {
+            throw new MojoExecutionException( "Failed to deploy $description", e )
+        }
     }
 }

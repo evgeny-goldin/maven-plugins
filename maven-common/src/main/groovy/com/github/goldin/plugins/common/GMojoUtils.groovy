@@ -1,6 +1,5 @@
 package com.github.goldin.plugins.common
 
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
 import groovy.text.SimpleTemplateEngine
@@ -22,7 +21,6 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
-import org.twdata.maven.mojoexecutor.MojoExecutor.Element
 import com.github.goldin.gcommons.beans.*
 import org.apache.maven.model.Dependency
 
@@ -415,57 +413,6 @@ class GMojoUtils
         catch ( e )
         {
             throw new MojoExecutionException( "Failed to copy [$sourceFile] to [$destinationFile]", e )
-        }
-    }
-
-
-    /**
-     * Invokes "maven-deploy-plugin" to deploy the file specified.
-     *
-     * @param f          file to deploy
-     * @param url        Maven repository URL
-     * @param groupId    groupId
-     * @param artifactId artifactId
-     * @param version    version
-     * @param classifier classifier, can be <code>null</code>
-     * @param project    Maven project
-     * @param session    Maven session
-     * @param manager    Maven plugin manager
-     */
-    static void deploy ( File f, String url, String groupId, String artifactId, String version, String classifier,
-                         BuildPluginManager manager )
-    {
-        verify().file( f )
-        verify().notNullOrEmpty( url, groupId, artifactId, version )
-
-        List<Element> config = [ element( 'file',       f.canonicalPath ),
-                                 element( 'url',        url         ),
-                                 element( 'groupId',    groupId     ),
-                                 element( 'artifactId', artifactId  ),
-                                 element( 'version',    version     ),
-                                 element( 'packaging',  file().extension( f )) ]
-        if ( classifier )
-        {
-            config << element( 'classifier', classifier )
-        }
-
-        String description =
-            "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
-
-        try
-        {
-            executeMojo( plugin( 'org.apache.maven.plugins',
-                                 'maven-deploy-plugin',
-                                 '2.7' ),
-                         goal( 'deploy-file' ),
-                         configuration( config as Element[] ),
-                         executionEnvironment( ThreadLocals.get( MavenProject ), ThreadLocals.get( MavenSession ), manager ))
-
-            log.info( "Deployed $description" )
-        }
-        catch ( e )
-        {
-            throw new MojoExecutionException( "Failed to deploy $description", e )
         }
     }
 
