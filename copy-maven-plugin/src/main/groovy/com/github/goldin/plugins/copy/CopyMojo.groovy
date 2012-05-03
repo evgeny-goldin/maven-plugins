@@ -434,7 +434,7 @@ class CopyMojo extends BaseGroovyMojo
                                 * in "destFileName" which now needs to be removed.
                                 */
                                 d.artifact.file.name :
-                                artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
+                                helper.artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
             d
         }
 

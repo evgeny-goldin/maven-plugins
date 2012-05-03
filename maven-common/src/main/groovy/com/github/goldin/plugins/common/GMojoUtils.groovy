@@ -13,7 +13,6 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.monitor.logging.DefaultLog
-import org.apache.maven.plugin.BuildPluginManager
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
@@ -630,33 +629,6 @@ class GMojoUtils
         }
 
         result
-    }
-
-
-    /**
-     * Creates artifact file name, identically to
-     * {@link org.apache.maven.plugin.dependency.utils.DependencyUtil#getFormattedFileName}.
-     *
-     * @param artifact      artifact to create the file name for
-     * @param removeVersion whether version should be removed from the file name
-     * @return artifact file name
-     */
-    static String artifactFileName( Artifact artifact, boolean removeVersion )
-    {
-        StringBuilder buffer = new StringBuilder( artifact.artifactId )
-
-        if ( ! removeVersion )
-        {
-            buffer.append( "-${ artifact.version}" )
-        }
-
-        if ( artifact.classifier )
-        {
-            buffer.append( "-${ artifact.classifier}" )
-        }
-
-        buffer.append( ".${ artifact.type }" ).
-        toString()
     }
 
 

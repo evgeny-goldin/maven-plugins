@@ -330,6 +330,34 @@ final class CopyMojoHelper
 
 
     /**
+     * Creates artifact file name, identically to
+     * {@link org.apache.maven.plugin.dependency.utils.DependencyUtil#getFormattedFileName}.
+     *
+     * @param artifact      artifact to create the file name for
+     * @param removeVersion whether version should be removed from the file name
+     * @return artifact file name
+     */
+    @Requires({ artifact && artifact.artifactId && artifact.version })
+    String artifactFileName( Artifact artifact, boolean removeVersion )
+    {
+        StringBuilder buffer = new StringBuilder( artifact.artifactId )
+
+        if ( ! removeVersion )
+        {
+            buffer.append( "-${ artifact.version}" )
+        }
+
+        if ( artifact.classifier )
+        {
+            buffer.append( "-${ artifact.classifier}" )
+        }
+
+        buffer.append( ".${ artifact.type }" ).
+        toString()
+    }
+
+
+    /**
      * Deploys file to the Maven repo specified.
      *
      * @param f          file to deploy
