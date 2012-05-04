@@ -31,6 +31,7 @@
         <junit-version>4.10</junit-version>
         <ant-version>1.8.3</ant-version>
         <gcontracts-version>1.2.5</gcontracts-version>
+        <aether-version>1.13.1</aether-version>
     </properties>
 
 

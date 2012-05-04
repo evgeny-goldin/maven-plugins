@@ -671,13 +671,13 @@ class CopyMojo extends BaseGroovyMojo
         {
             String[] data = split( resource.deploy, '\\|' )
 
-            assert data?.size()?.with{( it == 3 ) || ( it == 4 )}, \
-                   "Failed to split <deploy> tag data [$resource.deploy]. " +
+            assert data?.size()?.with{( it == 4 ) || ( it == 5 )}, \
+                   "Failed to read <deploy> data [$resource.deploy]. " +
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 
             def ( String url, String groupId, String artifactId, String version ) =
                 data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
-            def classifier = (( data.size() == 4 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
+            def classifier = (( data.size() == 5 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
 
             helper.deploy( targetArchive, url, groupId, artifactId, version, classifier )
         }

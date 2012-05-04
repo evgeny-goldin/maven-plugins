@@ -79,15 +79,28 @@
 
         <dependency>
             <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-impl</artifactId>
-            <version>1.13.1</version>
+            <artifactId>aether-api</artifactId>
+            <version>${aether-version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-util</artifactId>
-            <version>1.13.1</version>
+            <version>${aether-version}</version>
             <scope>compile</scope>
+        </dependency>
+        <!-- For debugging purposes only -->
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-impl</artifactId>
+            <version>${aether-version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-connector-wagon</artifactId>
+            <version>${aether-version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~ -->

@@ -372,7 +372,7 @@ final class CopyMojoHelper
     {
         final description  = "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
         final request      = new DeployRequest()
-        request.repository = new RemoteRepository( url: url )
+        request.repository = new RemoteRepository( url: url, type: 'default' )
         request.artifacts  = [ toAetherArtifact( toMavenArtifact( groupId, artifactId, version, '', file().extension( f ), classifier, false, f )) ]
 
         try
