@@ -253,7 +253,9 @@ ${ job.descriptionTableMarkup.trimMultiline() }]]></description>
   <mavenOpts>${ job.mavenOpts ?: '' }</mavenOpts>
   <aggregatorStyleBuild>true</aggregatorStyleBuild>
   <incrementalBuild>${ job.incrementalBuild }</incrementalBuild>
-  <usePrivateRepository>${ job.privateRepository }</usePrivateRepository>
+  <localRepository class="hudson.maven.local_repo.${ job.privateRepository            ? 'PerJobLocalRepositoryLocator'      :
+                                                     job.privateRepositoryPerExecutor ? 'PerExecutorLocalRepositoryLocator' :
+                                                                                        'DefaultLocalRepositoryLocator' }"/>
   <ignoreUpstremChanges>${ ! job.buildOnSNAPSHOT }</ignoreUpstremChanges>
   <archivingDisabled>${ job.archivingDisabled }</archivingDisabled>
   <resolveDependencies>false</resolveDependencies>

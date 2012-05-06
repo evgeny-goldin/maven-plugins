@@ -117,6 +117,7 @@ class Job
     Boolean              useUpdate
     Boolean              doRevert
     Boolean              privateRepository
+    Boolean              privateRepositoryPerExecutor
     Boolean              archivingDisabled
     Boolean              blockBuildWhenDownstreamBuilding
     Boolean              blockBuildWhenUpstreamBuilding
@@ -393,7 +394,8 @@ class Job
             setTasks( 'postbuildersTasks', parentJob, override )
 
             setMany( split( '|mavenName|mavenOpts|reporters|localRepoBase|localRepo|buildOnSNAPSHOT' +
-                            '|privateRepository|archivingDisabled|prebuilders|postbuilders|incrementalBuild', '\\|' ),
+                            '|privateRepository|privateRepositoryPerExecutor|archivingDisabled' +
+                            '|prebuilders|postbuilders|incrementalBuild', '\\|' ),
                      parentJob, override )
 
         }
@@ -437,9 +439,9 @@ class Job
          */
         mavenGoals = verify().notNullOrEmpty( mavenGoals ).addDollar()
 
-        if ( privateRepository )
+        if ( privateRepository || privateRepositoryPerExecutor )
         {
-            assert ( ! ( localRepoBase || localRepo )), "[${this}] has <privateRepository> set, " +
+            assert ( ! ( localRepoBase || localRepo )), "[${this}] has <privateRepository> or <privateRepositoryPerExecutor> set, " +
                                                         "<localRepoBase> and <localRepo> shouldn't be specified"
         }
         else if ( localRepoBase || localRepo )
@@ -515,21 +517,22 @@ class Job
              assert ! mavenGoals,                     misConfigured( '<mavenGoals> is not active in free-style jobs' )
              assert ! mavenName,                      misConfigured( '<mavenName> is not active in free-style jobs' )
 
-             assert ( mavenOpts            == null ), misConfigured( '<mavenOpts> is not active in free-style jobs' )
-             assert ( buildOnSNAPSHOT      == null ), misConfigured( '<buildOnSNAPSHOT> is not active in free-style jobs' )
-             assert ( incrementalBuild     == null ), misConfigured( '<incrementalBuild> is not active in free-style jobs' )
-             assert ( privateRepository    == null ), misConfigured( '<privateRepository> is not active in free-style jobs' )
-             assert ( archivingDisabled    == null ), misConfigured( '<archivingDisabled> is not active in free-style jobs' )
-             assert ( reporters            == null ), misConfigured( '<reporters> is not active in free-style jobs' )
-             assert ( localRepoBase        == null ), misConfigured( '<localRepoBase> is not active in free-style jobs' )
-             assert ( localRepo            == null ), misConfigured( '<localRepo> is not active in free-style jobs' )
-             assert ( deploy               == null ), misConfigured( '<deploy> is not active in free-style jobs' )
-             assert ( artifactory          == null ), misConfigured( '<artifactory> is not active in free-style jobs' )
-             assert ( prebuilders          == null ), misConfigured( '<prebuilders> is not active in free-style jobs' )
-             assert ( postbuilders         == null ), misConfigured( '<postbuilders> is not active in free-style jobs' )
-             assert ( prebuildersTasks     == null ), misConfigured( '<prebuildersTasks> is not active in free-style jobs' )
-             assert ( postbuildersTasks    == null ), misConfigured( '<postbuildersTasks> is not active in free-style jobs' )
-             assert ( runPostStepsIfResult == null ), misConfigured( '<runPostStepsIfResult> is not active in free-style jobs' )
+             assert ( mavenOpts                    == null ), misConfigured( '<mavenOpts> is not active in free-style jobs' )
+             assert ( buildOnSNAPSHOT              == null ), misConfigured( '<buildOnSNAPSHOT> is not active in free-style jobs' )
+             assert ( incrementalBuild             == null ), misConfigured( '<incrementalBuild> is not active in free-style jobs' )
+             assert ( privateRepository            == null ), misConfigured( '<privateRepository> is not active in free-style jobs' )
+             assert ( privateRepositoryPerExecutor == null ), misConfigured( '<privateRepositoryPerExecutor> is not active in free-style jobs' )
+             assert ( archivingDisabled            == null ), misConfigured( '<archivingDisabled> is not active in free-style jobs' )
+             assert ( reporters                    == null ), misConfigured( '<reporters> is not active in free-style jobs' )
+             assert ( localRepoBase                == null ), misConfigured( '<localRepoBase> is not active in free-style jobs' )
+             assert ( localRepo                    == null ), misConfigured( '<localRepo> is not active in free-style jobs' )
+             assert ( deploy                       == null ), misConfigured( '<deploy> is not active in free-style jobs' )
+             assert ( artifactory                  == null ), misConfigured( '<artifactory> is not active in free-style jobs' )
+             assert ( prebuilders                  == null ), misConfigured( '<prebuilders> is not active in free-style jobs' )
+             assert ( postbuilders                 == null ), misConfigured( '<postbuilders> is not active in free-style jobs' )
+             assert ( prebuildersTasks             == null ), misConfigured( '<prebuildersTasks> is not active in free-style jobs' )
+             assert ( postbuildersTasks            == null ), misConfigured( '<postbuildersTasks> is not active in free-style jobs' )
+             assert ( runPostStepsIfResult         == null ), misConfigured( '<runPostStepsIfResult> is not active in free-style jobs' )
          }
          else if ( jobType == JobType.maven )
          {
@@ -539,21 +542,22 @@ class Job
              assert mavenGoals,                       notConfigured( 'missing <mavenGoals>' )
              assert mavenName,                        notConfigured( 'missing <mavenName>' )
 
-             assert ( mavenOpts            != null ), notConfigured( '"mavenOpts" is null' )
-             assert ( buildOnSNAPSHOT      != null ), notConfigured( '"buildOnSNAPSHOT" is null' )
-             assert ( incrementalBuild     != null ), notConfigured( '"incrementalBuild" is null' )
-             assert ( privateRepository    != null ), notConfigured( '"privateRepository" is null' )
-             assert ( archivingDisabled    != null ), notConfigured( '"archivingDisabled" is null' )
-             assert ( reporters            != null ), notConfigured( '"reporters" is null' )
-             assert ( localRepoBase        != null ), notConfigured( '"localRepoBase" is null' )
-             assert ( localRepo            != null ), notConfigured( '"localRepo" is null' )
-             assert ( deploy               != null ), notConfigured( '"deploy" is null' )
-             assert ( artifactory          != null ), notConfigured( '"artifactory" is null' )
-             assert ( prebuilders          != null ), notConfigured( '"prebuilders" is null' )
-             assert ( postbuilders         != null ), notConfigured( '"postbuilders" is null' )
-             assert ( prebuildersTasks     != null ), notConfigured( '"prebuildersTasks" is null' )
-             assert ( postbuildersTasks    != null ), notConfigured( '"postbuildersTasks" is null' )
-             assert ( runPostStepsIfResult != null ), notConfigured( '"runPostStepsIfResult" is null' )
+             assert ( mavenOpts                    != null ), notConfigured( '"mavenOpts" is null' )
+             assert ( buildOnSNAPSHOT              != null ), notConfigured( '"buildOnSNAPSHOT" is null' )
+             assert ( incrementalBuild             != null ), notConfigured( '"incrementalBuild" is null' )
+             assert ( privateRepository            != null ), notConfigured( '"privateRepository" is null' )
+             assert ( privateRepositoryPerExecutor != null ), notConfigured( '"privateRepositoryPerExecutor" is null' )
+             assert ( archivingDisabled            != null ), notConfigured( '"archivingDisabled" is null' )
+             assert ( reporters                    != null ), notConfigured( '"reporters" is null' )
+             assert ( localRepoBase                != null ), notConfigured( '"localRepoBase" is null' )
+             assert ( localRepo                    != null ), notConfigured( '"localRepo" is null' )
+             assert ( deploy                       != null ), notConfigured( '"deploy" is null' )
+             assert ( artifactory                  != null ), notConfigured( '"artifactory" is null' )
+             assert ( prebuilders                  != null ), notConfigured( '"prebuilders" is null' )
+             assert ( postbuilders                 != null ), notConfigured( '"postbuilders" is null' )
+             assert ( prebuildersTasks             != null ), notConfigured( '"prebuildersTasks" is null' )
+             assert ( postbuildersTasks            != null ), notConfigured( '"postbuildersTasks" is null' )
+             assert ( runPostStepsIfResult         != null ), notConfigured( '"runPostStepsIfResult" is null' )
 
              if ( deploy?.url || artifactory?.name )
              {
@@ -561,16 +565,20 @@ class Job
                         "[${ this }] has archiving disabled - artifacts deploy to Maven or Artifactory repository can not be used"
              }
 
-             if ( privateRepository )
+             assert ( ! ( privateRepository && privateRepositoryPerExecutor )), \
+                    "[${ this }] - both <privateRepository> and <privateRepositoryPerExecutor> can't be set to \"true\""
+
+             if ( privateRepository || privateRepositoryPerExecutor )
              {
                 assert ( ! ( localRepoBase || localRepo || localRepoPath )), \
-                        "[${ this }] has <privateRepository> specified, no <localRepoBase>, <localRepo>, or <localRepoPath> should be defined"
+                        "[${ this }] has <privateRepository> or <privateRepositoryPerExecutor> specified, " +
+                        "no <localRepoBase>, <localRepo>, or <localRepoPath> should be defined"
              }
          }
          else
          {
              throw new IllegalArgumentException ( "Unknown job type [${ jobType }]. " +
-                                                  "Known types are \"${JobType.free.name()}\" and \"${JobType.maven.name()}\"" )
+                                                  "Known types are \"${ JobType.free.name() }\" and \"${ JobType.maven.name() }\"" )
          }
 
          this

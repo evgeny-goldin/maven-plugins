@@ -57,8 +57,10 @@ String tasks ( Task[] tasks )
     <%
         if ( job.jobType == JobType.maven )
         {
-            final repoPath = ( job.privateRepository ? "&lt;user-home&gt;/.jenkins/jobs/${ job.id }/workspace/.repository" :
-                               job.localRepoPath     ? job.localRepoPath : '&lt;user-home&gt;/.m2/repository' )
+            final repoPath = ( job.privateRepository ?            ".jenkins/jobs/${ job.id }/workspace/.repository" :
+                               job.privateRepositoryPerExecutor ? '.jenkins/maven-repositories/X'                   :
+                               job.localRepoPath                ? job.localRepoPath                                 :
+                                                                  '.m2/repository' )
 
             if ( job.prebuildersTasks )
             {
