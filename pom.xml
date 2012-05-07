@@ -239,22 +239,21 @@
                 </configuration>
             </plugin>
 
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Displaying Maven progress report in TeamCity -->
-            <!-- http://goo.gl/Imrm6                          -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
                 <version>${gmaven-version}</version>
                 <executions>
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Displaying Maven progress report in TeamCity -->
+                    <!-- http://goo.gl/Imrm6                          -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     <execution>
                         <id>display-progress-report</id>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>execute</goal>
                         </goals>
-                        <phase>initialize</phase>
                         <configuration>
                             <source>
                                 if ( System.getProperty( 'teamcity.version' ))
@@ -264,21 +263,12 @@
                             </source>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Compiling Groovy sources and tests                               -->
-            <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
-            <!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code    -->
-            <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119     -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>${gmaven-version}</version>
-                <executions>
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Compiling Groovy sources and tests                               -->
+                    <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
+                    <!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code    -->
+                    <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119     -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     <execution>
                         <id>compile-groovy</id>
                         <phase>compile</phase>
