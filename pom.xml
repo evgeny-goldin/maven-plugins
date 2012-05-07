@@ -239,6 +239,34 @@
                 </configuration>
             </plugin>
 
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Displaying Maven progress report in TeamCity -->
+            <!-- http://goo.gl/Imrm6                          -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>${gmaven-version}</version>
+                <executions>
+                    <execution>
+                        <id>display-progress-report</id>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <source>
+                                if ( System.getProperty( 'teamcity.version' ))
+                                {
+                                    println "##teamcity[progressMessage '${project.groupId}:${project.artifactId}']"
+                                }
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Compiling Groovy sources and tests                               -->
             <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
