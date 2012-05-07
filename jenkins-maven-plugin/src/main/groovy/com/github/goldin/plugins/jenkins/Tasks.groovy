@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.jenkins
 
+import org.gcontracts.annotations.Requires
+
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Free-Style projects tasks
@@ -14,7 +16,7 @@ abstract class Task
     /**
      * Class name wrapping a task.
      */
-    String   getClassName  (){ "hudson.tasks.${ this.class.simpleName }" }
+    String getMarkupClassName (){ "hudson.tasks.${ this.class.simpleName }" }
 
     /**
      * Extra markup added by task
@@ -22,39 +24,43 @@ abstract class Task
     String   getExtraMarkup(){ '' }
 
     /**
-     * Name of properties forming a task markup.
+     * Name of properties forming task markup
      */
     abstract List<String> getPropertyNames()
 
     /**
      * Title and command used in description table
      */
-    abstract String getTitle()
-    abstract String getCommand()
-    final    String getCommandCut(){ cut( command ) }
+    abstract String getDescriptionTableTitle ()
+    abstract String getDescriptionTableCommand()
 
     /**
-     * Cuts long commands.
+     * Validates task configuration correctness.
      */
-    final cut( String s ){ (( s.size() > 80 ) ? s.substring( 0, 80 ) + ' ..' : s ) }
+    abstract void validate()
+
+    @Requires({ descriptionTableCommand && descriptionTableTitle })
+    final    String getCommandShortened(){ descriptionTableCommand.with { size() > 80 ? substring( 0, 80 ) + ' ..' : delegate }}
 
     /**
      * Builds task markup to be used in resulting config.
      */
     final String getMarkup()
     {
-        List<String> lines = [ extraMarkup.trim() ]
+        validate()
 
-        for ( property in propertyNames )
+        List<String> markupLines = [ extraMarkup.trim() ]
+
+        for ( propertyName in propertyNames )
         {
-            String value = this[ property ] as String
-            if ( value ) { lines << "<$property>${ value.trim() }</$property>" }
+            assert propertyName
+            markupLines << "<$propertyName>${ this[ propertyName ].toString().trim() }</$propertyName>"
         }
 
-        final content = lines.grep().join( "\n$space" )
+        final content = markupLines.grep().join( "\n$space" )
 
-        className ? "<$className>\n$space$content\n</$className>" :
-                    content
+        markupClassName ? "<$markupClassName>\n$space$content\n</$markupClassName>" :
+                          content
     }
 }
 
@@ -68,7 +74,13 @@ class Shell extends Task
     List<String> getPropertyNames(){[ 'command' ]}
 
     @Override
-    String getTitle () { 'shell' }
+    String getDescriptionTableTitle  (){ 'shell' }
+
+    @Override
+    String getDescriptionTableCommand(){ command }
+
+    @Override
+    void validate (){ assert command, "Task <shell>: <command> is not specified" }
 }
 
 
@@ -81,7 +93,13 @@ class BatchFile extends Task
     List<String> getPropertyNames(){[ 'command' ]}
 
     @Override
-    String getTitle () { 'batch' }
+    String getDescriptionTableTitle  () { 'batch' }
+
+    @Override
+    String getDescriptionTableCommand(){ command }
+
+    @Override
+    void validate (){ assert command, "Task <batchFile>: <command> is not specified" }
 }
 
 
@@ -98,10 +116,13 @@ class Ant extends Task
     List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
 
     @Override
-    String getTitle()  { 'ant' }
+    String getDescriptionTableTitle  (){ 'ant' }
 
     @Override
-    String getCommand(){ targets ?: 'default targets' }
+    String getDescriptionTableCommand(){ targets ?: 'default targets' }
+
+    @Override
+    void validate (){ assert buildFile, "Task <ant>: <buildFile> is not specified" }
 }
 
 
@@ -120,28 +141,35 @@ class Maven extends Task
                                       ( pom == 'false' ? '' : 'pom' ),
                                       'properties', 'usePrivateRepository' ].grep() }
     @Override
-    String getTitle()  { 'maven' }
+    String getDescriptionTableTitle  (){ 'maven' }
 
     @Override
-    String getCommand(){ targets }
+    String getDescriptionTableCommand(){ targets }
+
+    @Override
+    void validate ()
+    {
+        assert targets, "Task <maven>: <targets> not specified"
+        assert pom,     "Task <maven>: <pom> is not specified"
+    }
 }
 
 
 @SuppressWarnings([ 'StatelessClass' ])
 class Groovy extends Task
 {
-    boolean pre       // Whether groovy task is executed as pre or post-step
-    String  command
-    String  file
-    String  groovyName
-    String  parameters
-    String  scriptParameters
-    String  properties
-    String  javaOpts
-    String  classPath
+    boolean pre              = false       // Whether groovy task is executed as pre or post-step
+    String  command          = ''
+    String  file             = ''
+    String  groovyName       = ''
+    String  parameters       = ''
+    String  scriptParameters = ''
+    String  properties       = ''
+    String  javaOpts         = ''
+    String  classPath        = ''
 
     @Override
-    String getClassName () { 'hudson.plugins.groovy.Groovy' }
+    String getMarkupClassName () { 'hudson.plugins.groovy.Groovy' }
 
     @Override
     String getExtraMarkup ( )
@@ -162,20 +190,61 @@ class Groovy extends Task
                                         'properties', 'javaOpts', 'classPath' ] }
 
     @Override
-    String getTitle()  { 'groovy' }
+    String getDescriptionTableTitle  (){ 'groovy' }
 
     @Override
-    String getCommand(){ command ?: file }
+    String getDescriptionTableCommand(){ command ?: file }
+
+    @Override
+    void validate ()
+    {
+        assert   ( command || file ), "Task <groovy>: <command> or <file> needs to be specified"
+        assert ! ( command && file ), "Task <groovy>: both <command> and <file> can't be used"
+    }
+}
+
+
+@SuppressWarnings([ 'StatelessClass' ])
+class Gradle extends Task
+{
+    String  description        = ''
+    String  switches           = ''
+    String  tasks              = ''
+    String  rootBuildScriptDir = '.'
+    String  buildFile          = 'build.gradle'
+    String  gradleName         = ''
+    boolean useWrapper         = false
+
+    @Override
+    String getMarkupClassName (){ 'hudson.plugins.gradle.Gradle' }
+
+    @Override
+    List<String> getPropertyNames (){ [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
+                                        'buildFile', 'gradleName', 'useWrapper' ] }
+
+    @Override
+    String getDescriptionTableTitle  (){ 'gradle' }
+
+    @Override
+    String getDescriptionTableCommand(){ tasks ?: 'default tasks' }
+
+    @Override
+    void validate ()
+    {
+        assert rootBuildScriptDir,             "Task <gradle>: <rootBuildScriptDir> is not specified"
+        assert buildFile,                      "Task <gradle>: <buildFile> is not specified"
+        assert ! ( gradleName && useWrapper ), "Task <gradle>: both <gradleName> and <useWrapper> can't be used"
+    }
 }
 
 
 @SuppressWarnings([ 'StatelessClass' ])
 class Xml extends Task
 {
-    String content
+    String content = ''
 
     @Override
-    String getClassName (){ '' }
+    String getMarkupClassName (){ '' }
 
     @Override
     String getExtraMarkup ( ){ content }
@@ -184,8 +253,11 @@ class Xml extends Task
     List<String> getPropertyNames (){[]}
 
     @Override
-    String getTitle()  { 'xml' }
+    String getDescriptionTableTitle  (){ 'xml' }
 
     @Override
-    String getCommand(){ 'custom task' }
+    String getDescriptionTableCommand(){ 'custom task' }
+
+    @Override
+    void validate (){ assert content, "Task <xml>: <content> is not specified" }
 }

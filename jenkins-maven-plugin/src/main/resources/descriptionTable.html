@@ -25,10 +25,10 @@ String tasks ( Task[] tasks )
     assert tasks
 
     ( tasks.size() == 1 ) ?
-        "- <strong>${ tasks[ 0 ].title }</strong> : &quot;<code>${ tasks[ 0 ].commandCut }</code>&quot;"
+        "- <strong>${ tasks[ 0 ].descriptionTableTitle }</strong> : &quot;<code>${ tasks[ 0 ].commandShortened }</code>&quot;"
         :
         "<table>" +
-        tasks.collect{ "<tr><td>- <strong>${ it.title }</strong></td><td> : </td><td>&quot;<code>${ it.commandCut }</code>&quot;</td></tr>" }.join( '' ) +
+        tasks.collect{ "<tr><td>- <strong>${ it.descriptionTableTitle }</strong></td><td> : </td><td>&quot;<code>${ it.commandShortened }</code>&quot;</td></tr>" }.join( '' ) +
         "</table>"
 }
 %>
