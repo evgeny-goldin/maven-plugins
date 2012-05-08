@@ -209,7 +209,7 @@ class Gradle extends Task
 {
     String  description        = ''
     String  switches           = ''
-    String  tasks              = ''
+    String  tasks              = 'build'
     String  rootBuildScriptDir = '.'
     String  buildFile          = 'build.gradle'
     String  gradleName         = ''
