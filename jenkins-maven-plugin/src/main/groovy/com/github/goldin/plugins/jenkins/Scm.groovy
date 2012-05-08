@@ -194,7 +194,19 @@ class Hg extends Scm
     String getScmClass(){ 'hudson.plugins.mercurial.MercurialSCM' }
 
     @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories ){}
+    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
+    {
+        assert repositories.size() == 1, "[${ job }] - multiple Mercurial repositories are not supported"
+        final repository = repositories.first()
+
+        builder.with {
+            source( repository.remote )
+            modules()
+            branch()
+            subdir()
+            clean( true )
+        }
+    }
 }
 
 
