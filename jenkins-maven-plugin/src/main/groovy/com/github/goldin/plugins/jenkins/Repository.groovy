@@ -56,7 +56,8 @@ class Repository
     String  gitMergeBranch        = ''
     String  gitRepoBrowser        = ''
     String  gitRepoBrowserUrl     = ''
-    String  gitRepoBrowserClass() {
+    String  gitRepoBrowserClass()
+    {
         gitRepoBrowser == 'githubweb'    ? 'hudson.plugins.git.browser.GithubWeb'    :
         gitRepoBrowser == 'gitoriousweb' ? 'hudson.plugins.git.browser.GitoriousWeb' :
         gitRepoBrowser == 'gitweb'       ? 'hudson.plugins.git.browser.GitWeb'       :

@@ -130,7 +130,6 @@ class Job
     Integer              numToKeep
     Integer              artifactDaysToKeep
     Integer              artifactNumToKeep
-    String               scmType
     Task[]               tasks
     Task[]               prebuildersTasks
     Task[]               postbuildersTasks
@@ -171,6 +170,32 @@ class Job
     List<Repository>     repositories() { general().list( repositories, repository ) }
 
 
+    String                         scmType
+    private final Map<String, Scm> scmTypeMapping = [ none : new None(),
+                                                      cvs  : new Cvs(),
+                                                      svn  : new Svn(),
+                                                      hg   : new Hg(),
+                                                      git  : new Git() ].asImmutable()
+    @Requires({ scmTypeMapping })
+    String getScmMarkup()
+    {
+        if ( repositories() || ( 'none' == scmType ))
+        {
+            assert scmType && scmTypeMapping
+            final  scm = scmTypeMapping[ scmType ]
+            assert scm, "Unknown <scmType>${ scmType }</scmType>, known types are ${ scmTypeMapping.keySet() }"
+
+            scm.job          = this
+            scm.repositories = repositories()
+            scm.markup
+        }
+        else
+        {
+            ''
+        }
+    }
+
+
     /**
      * Extension points - tags accepting raw XML content wrapped in <![CDATA[ ... ]]>
      */
@@ -195,21 +220,6 @@ class Job
     Boolean              parentIsReal
     Job[]                childJobs
     Job[]                invokedBy
-
-    /**
-     * Converts {@link #scmType} to SCM class name.
-     */
-    String getScmClass()
-    {
-        assert scmType
-
-        def    scmClass = [ none : 'hudson.scm.NullSCM',
-                            cvs  : 'hudson.scm.CVSSCM',
-                            svn  : 'hudson.scm.SubversionSCM',
-                            git  : 'hudson.plugins.git.GitSCM' ][ scmType ]
-        assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
-               scmClass
-    }
 
 
    /**
@@ -477,15 +487,14 @@ class Job
          assert id,                                notConfigured( 'missing <id>' )
          assert jenkinsUrl,                        notConfigured( 'missing <jenkinsUrl>' )
          assert generationPom,                     notConfigured( 'missing <generationPom>' )
-         assert scmClass,                          notConfigured( 'unknown <scmType>' )
          assert description,                       notConfigured( 'missing <description>' )
-         assert scmType,                           notConfigured( 'missing <scmType>' )
          assert jobType,                           notConfigured( 'missing <jobType>' )
+         assert scmType,                           notConfigured( 'missing <scmType>' )
          assert node,                              notConfigured( 'missing <node>' )
          assert jdkName,                           notConfigured( 'missing <jdkName>' )
 
-         assert ( authToken             != null ), notConfigured( '"authToken" is null' )
          assert ( scm                   != null ), notConfigured( '"scm" is null' )
+         assert ( authToken             != null ), notConfigured( '"authToken" is null' )
          assert ( properties            != null ), notConfigured( '"properties" is null' )
          assert ( publishers            != null ), notConfigured( '"publishers" is null' )
          assert ( buildWrappers         != null ), notConfigured( '"buildWrappers" is null' )
@@ -586,11 +595,7 @@ class Job
 
 
     /**
-     * Verifies remote repositories for correctness:
-     * - No remote repository appears more than once
-     * - No remote repository appears as part of another remote repository
-     *
-     * Otherwise, Jenkins fails when project is checked out!
+     * Validates remote repositories for correctness.
      */
      void validateRepositories ()
      {
