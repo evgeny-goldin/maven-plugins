@@ -604,6 +604,11 @@ class Job
             assert repositories(), "[${ this }]: Missing <repository> or <repositories>"
          }
 
+         if ( repositories())
+         {
+            assert scmType, "[${ this }]: Missing <scmType>"
+         }
+
          for ( repo in repositories().remote )
          {
              int counter = 0

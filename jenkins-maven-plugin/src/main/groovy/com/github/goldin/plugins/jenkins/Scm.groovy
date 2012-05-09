@@ -200,10 +200,10 @@ class Hg extends Scm
         final repository = repositories.first()
 
         builder.with {
-            source( repository.remote )
-            modules()
-            branch()
-            subdir()
+            source ( repository.remote )
+            modules( repository.hgModules )
+            addIf( builder, 'branch', repository.hgBranch )
+            addIf( builder, 'subdir', repository.hgSubdir )
             clean( true )
         }
     }

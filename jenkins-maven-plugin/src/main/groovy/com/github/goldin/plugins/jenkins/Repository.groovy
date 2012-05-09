@@ -83,6 +83,14 @@ class Repository
     boolean isCVS()        { ( remote.startsWith( ':pserver:' ) || ( ! ( isGit() || isSvn()))) }
 
 
+    /**
+     * Hg-specific properties
+     */
+
+    String hgModules = ''
+    String hgBranch  = 'default'
+    String hgSubdir  = ''
+
    /**
     * Sets repository remote and HTTP URL.
     * @param remote repository remote URL
