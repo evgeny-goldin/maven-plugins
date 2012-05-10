@@ -86,9 +86,10 @@ class Repository
      * Hg-specific properties
      */
 
-    String hgModules = ''
-    String hgBranch  = 'default'
-    String hgSubdir  = ''
+    String  hgBranch  = 'default'
+    boolean hgClean   = false
+    String  hgModules = ''
+    String  hgSubdir  = ''
     String  getHgRepoBrowserClass()
     {
         ( repoBrowser == 'bitbucket'       ? 'hudson.plugins.mercurial.browser.BitBucket'       :

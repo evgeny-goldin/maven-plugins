@@ -208,7 +208,7 @@ class Hg extends Scm
             modules( repository.hgModules )
             addIf( builder, 'branch', repository.hgBranch )
             addIf( builder, 'subdir', repository.hgSubdir )
-            clean( true )
+            clean( repository.hgClean )
 
             if ( repository.hgRepoBrowserClass && repository.repoBrowserUrl )
             {
