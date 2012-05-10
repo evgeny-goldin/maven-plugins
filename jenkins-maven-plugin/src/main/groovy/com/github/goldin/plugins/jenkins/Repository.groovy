@@ -12,6 +12,8 @@ class Repository
     String  remote
     String  remoteLink
     String  local
+    String  repoBrowser    = ''
+    String  repoBrowserUrl = ''
 
     /**
      * CVS-specific properties
@@ -21,16 +23,15 @@ class Repository
     String  cvsBranch               = ''
     String  cvsRsh                  = ''     // "CVS_RSH" advanced option
     String  cvsExcludedRegions      = ''     // "Excluded Regions" advanced option
-    String  cvsRepositoryBrowser    = ''     // "Repository browser" advanced option, 'ViewCVS' or 'FishEye'
-    String  cvsRepositoryBrowserUrl = ''     // "Repository browser URL" advanced option
     boolean cvsTag                  = false  // "This is a tag, not a branch" option
     boolean cvsUpdate               = true   // "Use update" advanced option
     boolean cvsLegacy               = false  // "Legacy mode" advanced option
 
-    String getCvsRepositoryBrowserClass()
+    String getCvsRepoBrowserClass ()
     {
-        [ ViewCVS : 'hudson.scm.browsers.ViewCVS',
-          FishEye : 'hudson.scm.browsers.FishEyeCVS' ][ cvsRepositoryBrowser ]
+        ( repoBrowser == 'ViewCVS' ? 'hudson.scm.browsers.ViewCVS'    :
+          repoBrowser == 'FishEye' ? 'hudson.scm.browsers.FishEyeCVS' :
+                                     '' )
     }
 
     /**
@@ -54,15 +55,13 @@ class Repository
     String  gitConfigEmail        = ''
     String  gitMergeRepo          = ''
     String  gitMergeBranch        = ''
-    String  gitRepoBrowser        = ''
-    String  gitRepoBrowserUrl     = ''
-    String  gitRepoBrowserClass()
+    String  getGitRepoBrowserClass()
     {
-        gitRepoBrowser == 'githubweb'    ? 'hudson.plugins.git.browser.GithubWeb'    :
-        gitRepoBrowser == 'gitoriousweb' ? 'hudson.plugins.git.browser.GitoriousWeb' :
-        gitRepoBrowser == 'gitweb'       ? 'hudson.plugins.git.browser.GitWeb'       :
-        gitRepoBrowser == 'redmineweb'   ? 'hudson.plugins.git.browser.RedmineWeb'   :
-                                           ''
+        ( repoBrowser == 'githubweb'    ? 'hudson.plugins.git.browser.GithubWeb'    :
+          repoBrowser == 'gitoriousweb' ? 'hudson.plugins.git.browser.GitoriousWeb' :
+          repoBrowser == 'gitweb'       ? 'hudson.plugins.git.browser.GitWeb'       :
+          repoBrowser == 'redmineweb'   ? 'hudson.plugins.git.browser.RedmineWeb'   :
+                                          '' )
     }
 
     boolean gitPruneBranches      = false
@@ -90,6 +89,17 @@ class Repository
     String hgModules = ''
     String hgBranch  = 'default'
     String hgSubdir  = ''
+    String  getHgRepoBrowserClass()
+    {
+        ( repoBrowser == 'bitbucket'       ? 'hudson.plugins.mercurial.browser.BitBucket'       :
+          repoBrowser == 'fisheye'         ? 'hudson.plugins.mercurial.browser.FishEye'         :
+          repoBrowser == 'googlecode'      ? 'hudson.plugins.mercurial.browser.GoogleCode'      :
+          repoBrowser == 'hgweb'           ? 'hudson.plugins.mercurial.browser.HgWeb'           :
+          repoBrowser == 'kiln'            ? 'hudson.plugins.mercurial.browser.KilnHG'          :
+          repoBrowser == 'rhodecode'       ? 'hudson.plugins.mercurial.browser.RhodeCode'       :
+          repoBrowser == 'rhodecodelegacy' ? 'hudson.plugins.mercurial.browser.RhodeCodeLegacy' :
+                                             '' )
+    }
 
    /**
     * Sets repository remote and HTTP URL.

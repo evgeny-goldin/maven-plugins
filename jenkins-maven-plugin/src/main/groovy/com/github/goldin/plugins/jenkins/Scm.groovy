@@ -74,6 +74,7 @@ class Cvs extends Scm
         final repository = repositories.first()
 
         builder.with {
+
             cvsroot( repository.remote )
             addIf( builder, 'module', repository.cvsModule )
             addIf( builder, 'branch', repository.cvsBranch )
@@ -81,10 +82,10 @@ class Cvs extends Scm
             canUseUpdate( repository.cvsUpdate )
             flatten( ! repository.cvsLegacy )
 
-            if ( repository.cvsRepositoryBrowser && repository.cvsRepositoryBrowserUrl )
+            if ( repository.cvsRepoBrowserClass && repository.repoBrowserUrl )
             {
-                repositoryBrowser( class: repository.cvsRepositoryBrowserClass ) {
-                    url( repository.cvsRepositoryBrowserUrl )
+                repositoryBrowser( class: repository.cvsRepoBrowserClass ) {
+                    url( repository.repoBrowserUrl )
                 }
             }
 
@@ -104,6 +105,7 @@ class Svn extends Scm
     void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
     {
         builder.with {
+
             locations {
                 for ( repository in repositories ) {
                     "${ scmClass }_-ModuleLocation" {
@@ -130,6 +132,7 @@ class Git extends Scm
         final gitRepository = repositories.first()
 
         builder.with {
+
             configVersion( 2 )
             userRemoteConfigs {
                 for ( repository in repositories ) {
@@ -167,10 +170,10 @@ class Git extends Scm
             buildChooser( class: 'hudson.plugins.git.util.DefaultBuildChooser' )
             gitTool( 'Default' )
 
-            if ( gitRepository.gitRepoBrowserClass() && gitRepository.gitRepoBrowserUrl )
+            if ( gitRepository.gitRepoBrowserClass && gitRepository.repoBrowserUrl )
             {
-                browser( class: gitRepository.gitRepoBrowserClass()) {
-                    url( gitRepository.gitRepoBrowserUrl )
+                browser( class: gitRepository.gitRepoBrowserClass ) {
+                    url( gitRepository.repoBrowserUrl )
                 }
             }
 
@@ -200,11 +203,19 @@ class Hg extends Scm
         final repository = repositories.first()
 
         builder.with {
+
             source ( repository.remote )
             modules( repository.hgModules )
             addIf( builder, 'branch', repository.hgBranch )
             addIf( builder, 'subdir', repository.hgSubdir )
             clean( true )
+
+            if ( repository.hgRepoBrowserClass && repository.repoBrowserUrl )
+            {
+                browser( class: repository.hgRepoBrowserClass ) {
+                    url( repository.repoBrowserUrl )
+                }
+            }
         }
     }
 }

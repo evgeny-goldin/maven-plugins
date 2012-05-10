@@ -170,20 +170,20 @@ class Job
     List<Repository>     repositories() { general().list( repositories, repository ) }
 
 
-    String                         scmType
-    private final Map<String, Scm> scmTypeMapping = [ none : new None(),
-                                                      cvs  : new Cvs(),
-                                                      svn  : new Svn(),
-                                                      hg   : new Hg(),
-                                                      git  : new Git() ].asImmutable()
-    @Requires({ scmTypeMapping })
+    String               scmType
     String getScmMarkup()
     {
         if ( repositories() || ( 'none' == scmType ))
         {
-            assert scmType && scmTypeMapping
-            final  scm = scmTypeMapping[ scmType ]
-            assert scm, "Unknown <scmType>${ scmType }</scmType>, known types are ${ scmTypeMapping.keySet() }"
+            assert scmType
+            Scm scm = ( scmType == 'none' ? new None() :
+                        scmType == 'cvs'  ? new Cvs()  :
+                        scmType == 'svn'  ? new Svn()  :
+                        scmType == 'hg'   ? new Hg()   :
+                        scmType == 'git'  ? new Git()  :
+                                            null )
+
+            assert scm, "Unknown <scmType>${ scmType }</scmType>"
 
             scm.job          = this
             scm.repositories = repositories()
