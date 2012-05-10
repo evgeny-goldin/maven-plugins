@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.jenkins
 
 import org.gcontracts.annotations.Requires
+import groovy.xml.MarkupBuilder
 
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -11,7 +12,10 @@ import org.gcontracts.annotations.Requires
 
 abstract class Task
 {
-    final String space = ' ' * 4
+    /**
+     * Raw XML content that can be set for the task.
+     */
+    String content = ''
 
     /**
      * Class name wrapping a task.
@@ -19,14 +23,9 @@ abstract class Task
     String getMarkupClassName (){ "hudson.tasks.${ this.class.simpleName }" }
 
     /**
-     * Extra markup added by task
+     * Builds task's markup.
      */
-    String   getExtraMarkup(){ '' }
-
-    /**
-     * Name of properties forming task markup
-     */
-    abstract List<String> getPropertyNames()
+    abstract void buildMarkup( MarkupBuilder builder )
 
     /**
      * Title and command used in description table
@@ -39,28 +38,39 @@ abstract class Task
      */
     abstract void validate()
 
+    /**
+     * Used by the template - retrieves a shortened version of tasks's "command".
+     */
     @Requires({ descriptionTableCommand && descriptionTableTitle })
-    final    String getCommandShortened(){ descriptionTableCommand.with { size() > 80 ? substring( 0, 80 ) + ' ..' : delegate }}
+    final String getCommandShortened(){ descriptionTableCommand.with { size() > 80 ? substring( 0, 80 ) + ' ..' : delegate }}
 
     /**
-     * Builds task markup to be used in resulting config.
+     * Adds property values to the builder specified.
+     */
+    @Requires({ builder && propertyNames })
+    final void addProperties( MarkupBuilder builder, Collection<String> propertyNames )
+    {
+        for ( propertyName in propertyNames )
+        {
+            assert propertyName
+            builder."${ propertyName }"( this[ propertyName ] )
+        }
+    }
+
+    /**
+     * Builds task's markup.
      */
     final String getMarkup()
     {
         validate()
 
-        List<String> markupLines = [ extraMarkup.trim() ]
+        if ( content ) { return content }
 
-        for ( propertyName in propertyNames )
-        {
-            assert propertyName
-            markupLines << "<$propertyName>${ this[ propertyName ].toString().trim() }</$propertyName>"
-        }
-
-        final content = markupLines.grep().join( "\n$space" )
-
-        markupClassName ? "<$markupClassName>\n$space$content\n</$markupClassName>" :
-                          content
+        final writer         = new StringWriter()
+        final builder        = new MarkupBuilder( new IndentPrinter( writer, ' ' * 4 ))
+        builder.doubleQuotes = true
+        builder."${ markupClassName }" { buildMarkup( builder ) }
+        writer.toString()
     }
 }
 
@@ -71,7 +81,10 @@ class Shell extends Task
     String command = ''
 
     @Override
-    List<String> getPropertyNames(){[ 'command' ]}
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'command' ])
+    }
 
     @Override
     String getDescriptionTableTitle  (){ 'shell' }
@@ -90,7 +103,10 @@ class BatchFile extends Task
     String command = ''
 
     @Override
-    List<String> getPropertyNames(){[ 'command' ]}
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'command' ])
+    }
 
     @Override
     String getDescriptionTableTitle  () { 'batch' }
@@ -113,7 +129,10 @@ class Ant extends Task
     String properties = ''
 
     @Override
-    List<String> getPropertyNames(){[ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep() }
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep())
+    }
 
     @Override
     String getDescriptionTableTitle  (){ 'ant' }
@@ -137,9 +156,13 @@ class Maven extends Task
     boolean usePrivateRepository = false
 
     @Override
-    List<String> getPropertyNames(){[ 'targets', 'mavenName', 'jvmOptions',
-                                      ( pom == 'false' ? '' : 'pom' ),
-                                      'properties', 'usePrivateRepository' ].grep() }
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'targets', 'mavenName', 'jvmOptions',
+                                  ( pom == 'false' ? '' : 'pom' ),
+                                  'properties', 'usePrivateRepository' ].grep())
+    }
+
     @Override
     String getDescriptionTableTitle  (){ 'maven' }
 
@@ -172,22 +195,17 @@ class Groovy extends Task
     String getMarkupClassName () { 'hudson.plugins.groovy.Groovy' }
 
     @Override
-    String getExtraMarkup ( )
+    void buildMarkup ( MarkupBuilder builder )
     {
-        assert ( command || file ), 'Either <command> or <file> needs to be specified for <groovy>'
-        final className  = command ? 'hudson.plugins.groovy.StringScriptSource' :
-                                     'hudson.plugins.groovy.FileScriptSource'
-        final commandTag = command ? 'command' :
-                                     'scriptFile'
+        final className = 'hudson.plugins.groovy.' + ( command ? 'StringScriptSource' : 'FileScriptSource' )
 
-        """|<scriptSource class=\"$className\">
-           |$space$space<$commandTag>${ command ?: file }</$commandTag>
-           |$space</scriptSource>""".stripMargin()
+        builder.scriptSource( class: className ) {
+            "${ command ? 'command' : 'scriptFile' }"( command ?: file )
+        }
+
+        addProperties( builder, [ 'groovyName', 'parameters', 'scriptParameters',
+                                  'properties', 'javaOpts', 'classPath' ])
     }
-
-    @Override
-    List<String> getPropertyNames (){ [ 'groovyName', 'parameters', 'scriptParameters',
-                                        'properties', 'javaOpts', 'classPath' ] }
 
     @Override
     String getDescriptionTableTitle  (){ 'groovy' }
@@ -219,8 +237,11 @@ class Gradle extends Task
     String getMarkupClassName (){ 'hudson.plugins.gradle.Gradle' }
 
     @Override
-    List<String> getPropertyNames (){ [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
-                                        'buildFile', 'gradleName', 'useWrapper' ] }
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
+                                  'buildFile', 'gradleName', 'useWrapper' ])
+    }
 
     @Override
     String getDescriptionTableTitle  (){ 'gradle' }
@@ -241,16 +262,8 @@ class Gradle extends Task
 @SuppressWarnings([ 'StatelessClass' ])
 class Xml extends Task
 {
-    String content = ''
-
     @Override
-    String getMarkupClassName (){ '' }
-
-    @Override
-    String getExtraMarkup ( ){ content }
-
-    @Override
-    List<String> getPropertyNames (){[]}
+    void buildMarkup ( MarkupBuilder builder ){}
 
     @Override
     String getDescriptionTableTitle  (){ 'xml' }

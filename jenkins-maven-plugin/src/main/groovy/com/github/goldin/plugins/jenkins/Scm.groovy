@@ -36,8 +36,9 @@ abstract class Scm
      */
     final String getMarkup()
     {
-        final writer  = new StringWriter()
-        final builder = new MarkupBuilder( new IndentPrinter( writer, ' ' * 4 ))
+        final writer         = new StringWriter()
+        final builder        = new MarkupBuilder( new IndentPrinter( writer, ' ' * 4 ))
+        builder.doubleQuotes = true
 
         builder.scm( class: scmClass ) {
             assert job && ( repositories || ( ! verifyRepositories()))
