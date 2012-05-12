@@ -1,4 +1,4 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # http://evgeny-goldin.com/wiki/Maven-plugins
-# http://evgeny-goldin.com/wiki/Maven-assert-plugin
+# http://evgeny-goldin.com/wiki/Assert-maven-plugin
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
