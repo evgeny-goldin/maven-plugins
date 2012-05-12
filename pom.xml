@@ -405,47 +405,6 @@
                             </execution>
                         </executions>
                     </plugin>
-
-                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-                    <!-- Creating sources and Javadoc archives -->
-                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>2.1.2</version>
-                        <executions>
-                            <execution>
-                                <id>pack-sources</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>**/*.java</include>
-                                        <include>**/*.groovy</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.8.1</version>
-                        <executions>
-                            <execution>
-                                <id>pack-javadoc</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
                 </plugins>
             </build>
         </profile>
@@ -488,6 +447,111 @@
             <modules>
                 <module>groovydoc</module>
             </modules>
+        </profile>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Maven Central deploy -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~ -->
+
+        <profile>
+            <id>deploy</id>
+            <build>
+                <plugins>
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Creating sources and Javadoc archives -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>pack-sources</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.8.1</version>
+                        <executions>
+                            <execution>
+                                <id>pack-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Archives GPG-signing and Maven Central deploy to staging repo -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-and-deploy-jar</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>sign-and-deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
+                                    <repositoryId>sonatype-nexus-staging</repositoryId>
+                                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                                    <pomFile>${project.basedir}/pom.xml</pomFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>sign-and-deploy-sources</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>sign-and-deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-sources.jar</file>
+                                    <repositoryId>sonatype-nexus-staging</repositoryId>
+                                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                                    <classifier>sources</classifier>
+                                    <pomFile>${project.basedir}/pom.xml</pomFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>sign-and-deploy-javadoc</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>sign-and-deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-javadoc.jar</file>
+                                    <repositoryId>sonatype-nexus-staging</repositoryId>
+                                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                                    <classifier>javadoc</classifier>
+                                    <pomFile>${project.basedir}/pom.xml</pomFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
     </profiles>
