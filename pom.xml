@@ -341,12 +341,15 @@
 
     <profiles>
 
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Profile adding static files to archives -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Profile adding additional release files  -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
         <profile>
             <id>addFiles</id>
+            <modules>
+                <module>groovydoc</module>
+            </modules>
             <build>
                 <plugins>
 
@@ -479,17 +482,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- GroovyDoc-generating profile -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-        <profile>
-            <id>groovydoc</id>
-            <modules>
-                <module>groovydoc</module>
-            </modules>
         </profile>
     </profiles>
 </project>
