@@ -1,4 +1,4 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # http://evgeny-goldin.com/wiki/Maven-plugins
-# http://evgeny-goldin.com/wiki/Maven-copy-plugin
+# http://evgeny-goldin.com/wiki/Copy-maven-plugin
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
