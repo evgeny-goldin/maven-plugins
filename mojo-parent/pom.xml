@@ -15,9 +15,9 @@
 
     <parent>
         <groupId>com.github.goldin</groupId>
-        <artifactId>deploy-parent</artifactId>
+        <artifactId>main.plugins</artifactId>
         <version>0.2.4</version>
-        <relativePath>../deploy-parent</relativePath>
+        <relativePath>..</relativePath>
     </parent>
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
