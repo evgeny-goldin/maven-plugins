@@ -17,7 +17,7 @@ def gcommonsVersion = project.properties[ 'gcommons-version' ]
 def version         = project.version
 
 File   destinationDir = new File( groovydocDir, version.contains( '-SNAPSHOT' ) ? '' : version ).canonicalFile
-assert destinationDir.mkdirs()
+assert destinationDir.with{ directory || mkdirs() }
 
 def d               = new Date()
 def time            = new SimpleDateFormat( "HH:mm '(GMT'Z')'", new Locale( 'en' )).format( d )
