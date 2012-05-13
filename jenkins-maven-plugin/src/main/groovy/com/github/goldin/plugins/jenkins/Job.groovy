@@ -179,8 +179,8 @@ class Job
             Scm scm = ( scmType == 'none' ? new None() :
                         scmType == 'cvs'  ? new Cvs()  :
                         scmType == 'svn'  ? new Svn()  :
-                        scmType == 'hg'   ? new Hg()   :
                         scmType == 'git'  ? new Git()  :
+                        scmType == 'hg'   ? new Hg()   :
                                             null )
 
             assert scm, "Unknown <scmType>${ scmType }</scmType>"

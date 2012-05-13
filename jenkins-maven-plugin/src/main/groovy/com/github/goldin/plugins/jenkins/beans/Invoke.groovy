@@ -11,10 +11,10 @@ class Invoke
 {
     String      jobs               // Comma-separated job IDs to invoke
     Set<String> jobsSplit          // Job IDs to invoke (split)
-    boolean     always    = false  // Whether other jobs should always be invoked
-    boolean     stable    = true   // Whether other jobs should be invoked if build is stable
-    boolean     unstable  = false  // Whether other jobs should be invoked if build is unstable (tests failed)
-    boolean     failed    = false  // Whether other jobs should be invoked if build has failed
+    boolean     always    = false  // Whether jobs should always be invoked
+    boolean     stable    = true   // Whether jobs should be invoked if build is stable
+    boolean     unstable  = false  // Whether jobs should be invoked if build is unstable (tests failed)
+    boolean     failed    = false  // Whether jobs should be invoked if build has failed
 
     /**
      * Job parameters
@@ -22,7 +22,7 @@ class Invoke
 
     boolean     triggerWithoutParameters = false  // Trigger build without parameters
     boolean     currentBuildParams       = false  // Current build parameters
-    boolean     subversionRevisionParam  = false  // Subversion revision parameters
+    boolean     subversionRevisionParam  = false  // "Subversion revision" parameter
     boolean     gitCommitParam           = false  // Pass-through Git Commit that was built
     String      params                            // Predefined parameters
     String      propertiesFileParams              // Parameters from properties file

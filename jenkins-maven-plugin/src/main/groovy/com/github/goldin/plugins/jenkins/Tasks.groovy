@@ -76,50 +76,6 @@ abstract class Task
 
 
 @SuppressWarnings( 'StatelessClass' )
-class Shell extends Task
-{
-    String command = ''
-
-    @Override
-    void buildMarkup ( MarkupBuilder builder )
-    {
-        addProperties( builder, [ 'command' ])
-    }
-
-    @Override
-    String getDescriptionTableTitle  (){ 'shell' }
-
-    @Override
-    String getDescriptionTableCommand(){ command }
-
-    @Override
-    void validate (){ assert command, "Task <shell>: <command> is not specified" }
-}
-
-
-@SuppressWarnings( 'StatelessClass' )
-class BatchFile extends Task
-{
-    String command = ''
-
-    @Override
-    void buildMarkup ( MarkupBuilder builder )
-    {
-        addProperties( builder, [ 'command' ])
-    }
-
-    @Override
-    String getDescriptionTableTitle  () { 'batch' }
-
-    @Override
-    String getDescriptionTableCommand(){ command }
-
-    @Override
-    void validate (){ assert command, "Task <batchFile>: <command> is not specified" }
-}
-
-
-@SuppressWarnings( 'StatelessClass' )
 class Ant extends Task
 {
     String antName    = ''
@@ -146,34 +102,60 @@ class Ant extends Task
 
 
 @SuppressWarnings( 'StatelessClass' )
-class Maven extends Task
+class BatchFile extends Task
 {
-    String  targets              = Job.DEFAULT_MAVEN_GOALS
-    String  mavenName            = '(Default)'
-    String  jvmOptions           = ''
-    String  pom                  = 'pom.xml'
-    String  properties           = ''
-    boolean usePrivateRepository = false
+    String command = ''
 
     @Override
     void buildMarkup ( MarkupBuilder builder )
     {
-        addProperties( builder, [ 'targets', 'mavenName', 'jvmOptions',
-                                  ( pom == 'false' ? '' : 'pom' ),
-                                  'properties', 'usePrivateRepository' ].grep())
+        addProperties( builder, [ 'command' ])
     }
 
     @Override
-    String getDescriptionTableTitle  (){ 'maven' }
+    String getDescriptionTableTitle  () { 'batch' }
 
     @Override
-    String getDescriptionTableCommand(){ targets }
+    String getDescriptionTableCommand(){ command }
+
+    @Override
+    void validate (){ assert command, "Task <batchFile>: <command> is not specified" }
+}
+
+
+@SuppressWarnings([ 'StatelessClass' ])
+class Gradle extends Task
+{
+    String  gradleName         = ''
+    String  description        = ''
+    String  switches           = ''
+    String  tasks              = 'build'
+    String  rootBuildScriptDir = '.'
+    String  buildFile          = 'build.gradle'
+    boolean useWrapper         = false
+
+    @Override
+    String getMarkupClassName (){ 'hudson.plugins.gradle.Gradle' }
+
+    @Override
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
+                                  'buildFile', 'gradleName', 'useWrapper' ])
+    }
+
+    @Override
+    String getDescriptionTableTitle  (){ 'gradle' }
+
+    @Override
+    String getDescriptionTableCommand(){ tasks ?: 'default tasks' }
 
     @Override
     void validate ()
     {
-        assert targets, "Task <maven>: <targets> not specified"
-        assert pom,     "Task <maven>: <pom> is not specified"
+        assert rootBuildScriptDir,             "Task <gradle>: <rootBuildScriptDir> is not specified"
+        assert buildFile,                      "Task <gradle>: <buildFile> is not specified"
+        assert ! ( gradleName && useWrapper ), "Task <gradle>: both <gradleName> and <useWrapper> can't be used"
     }
 }
 
@@ -181,10 +163,10 @@ class Maven extends Task
 @SuppressWarnings([ 'StatelessClass' ])
 class Groovy extends Task
 {
+    String  groovyName       = ''
     boolean pre              = false       // Whether groovy task is executed as pre or post-step
     String  command          = ''
     String  file             = ''
-    String  groovyName       = ''
     String  parameters       = ''
     String  scriptParameters = ''
     String  properties       = ''
@@ -221,42 +203,60 @@ class Groovy extends Task
     }
 }
 
-
-@SuppressWarnings([ 'StatelessClass' ])
-class Gradle extends Task
+@SuppressWarnings( 'StatelessClass' )
+class Maven extends Task
 {
-    String  description        = ''
-    String  switches           = ''
-    String  tasks              = 'build'
-    String  rootBuildScriptDir = '.'
-    String  buildFile          = 'build.gradle'
-    String  gradleName         = ''
-    boolean useWrapper         = false
-
-    @Override
-    String getMarkupClassName (){ 'hudson.plugins.gradle.Gradle' }
+    String  mavenName            = '(Default)'
+    String  targets              = Job.DEFAULT_MAVEN_GOALS
+    String  jvmOptions           = ''
+    String  pom                  = 'pom.xml'
+    String  properties           = ''
+    boolean usePrivateRepository = false
 
     @Override
     void buildMarkup ( MarkupBuilder builder )
     {
-        addProperties( builder, [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
-                                  'buildFile', 'gradleName', 'useWrapper' ])
+        addProperties( builder, [ 'targets', 'mavenName', 'jvmOptions',
+                                  ( pom == 'false' ? '' : 'pom' ),
+                                  'properties', 'usePrivateRepository' ].grep())
     }
 
     @Override
-    String getDescriptionTableTitle  (){ 'gradle' }
+    String getDescriptionTableTitle  (){ 'maven' }
 
     @Override
-    String getDescriptionTableCommand(){ tasks ?: 'default tasks' }
+    String getDescriptionTableCommand(){ targets }
 
     @Override
     void validate ()
     {
-        assert rootBuildScriptDir,             "Task <gradle>: <rootBuildScriptDir> is not specified"
-        assert buildFile,                      "Task <gradle>: <buildFile> is not specified"
-        assert ! ( gradleName && useWrapper ), "Task <gradle>: both <gradleName> and <useWrapper> can't be used"
+        assert targets, "Task <maven>: <targets> not specified"
+        assert pom,     "Task <maven>: <pom> is not specified"
     }
 }
+
+
+@SuppressWarnings( 'StatelessClass' )
+class Shell extends Task
+{
+    String command = ''
+
+    @Override
+    void buildMarkup ( MarkupBuilder builder )
+    {
+        addProperties( builder, [ 'command' ])
+    }
+
+    @Override
+    String getDescriptionTableTitle  (){ 'shell' }
+
+    @Override
+    String getDescriptionTableCommand(){ command }
+
+    @Override
+    void validate (){ assert command, "Task <shell>: <command> is not specified" }
+}
+
 
 
 @SuppressWarnings([ 'StatelessClass' ])

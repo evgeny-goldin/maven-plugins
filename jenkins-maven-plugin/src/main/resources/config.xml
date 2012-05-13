@@ -184,10 +184,6 @@ ${ job.publishers.addDollar() }
       if (( job.artifactory?.name ) && ( job.jobType == JobType.maven ))
       {
   %>
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Requires "Artifactory Plugin" v2.0.0                          -->
-        <!-- http://wiki.jenkins-ci.org/display/JENKINS/Artifactory+Plugin -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <org.jfrog.hudson.ArtifactoryRedeployPublisher>
             <details>
                 <artifactoryName>${ job.artifactory.name }</artifactoryName>
@@ -212,10 +208,6 @@ ${ job.publishers.addDollar() }
                             job.invoke.gitCommitParam     || job.invoke.params                  ||
                             job.invoke.propertiesFileParams )
   %>
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- Requires "Parameterized Trigger Plugin" v2.8                            -->
-        <!-- http://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <hudson.plugins.parameterizedtrigger.BuildTrigger>
             <configs>
                 <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
