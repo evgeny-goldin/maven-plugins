@@ -4,7 +4,7 @@
 set -e
 set -o pipefail
 
-version=0.2.4
+version=0.2.5
 command="mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=sonatype-nexus-staging -Dgpg.passphrase=$gpgPassphrase"
 rootDir=`pwd`
 
