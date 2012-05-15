@@ -419,8 +419,9 @@
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
         <dependency>
-            <groupId>org.jfrog.maven.annomojo</groupId>
-            <artifactId>maven-plugin-anno</artifactId>
+        <!-- http://evgeny-goldin.org/youtrack/issue/pl-632 -->
+            <groupId>br.com.ingenieux.maven.annomojo</groupId>
+            <artifactId>org.jfrog.maven.maven-plugin-anno</artifactId>
             <version>${annomojo-version}</version>
             <scope>compile</scope>
         </dependency>

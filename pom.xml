@@ -166,8 +166,9 @@
                           <version>2.9</version>
                         </dependency>
                         <dependency>
-                            <groupId>org.jfrog.maven.annomojo</groupId>
-                            <artifactId>maven-plugin-tools-anno</artifactId>
+                        <!-- http://evgeny-goldin.org/youtrack/issue/pl-632 -->
+                            <groupId>br.com.ingenieux.maven.annomojo</groupId>
+                            <artifactId>org.jfrog.maven.maven-plugin-tools-anno</artifactId>
                             <version>${annomojo-version}</version>
                             <scope>runtime</scope>
                         </dependency>
