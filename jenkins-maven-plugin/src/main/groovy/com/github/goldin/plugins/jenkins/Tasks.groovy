@@ -17,15 +17,18 @@ abstract class Task
      */
     String content = ''
 
+
     /**
      * Class name wrapping a task.
      */
     String getMarkupClassName (){ "hudson.tasks.${ this.class.simpleName }" }
 
+
     /**
      * Builds task's markup.
      */
     abstract void buildMarkup( MarkupBuilder builder )
+
 
     /**
      * Title and command used in description table
@@ -33,16 +36,19 @@ abstract class Task
     abstract String getDescriptionTableTitle ()
     abstract String getDescriptionTableCommand()
 
+
     /**
      * Validates task configuration correctness.
      */
     abstract void validate()
+
 
     /**
      * Used by the template - retrieves a shortened version of tasks's "command".
      */
     @Requires({ descriptionTableCommand && descriptionTableTitle })
     final String getCommandShortened(){ descriptionTableCommand.with { size() > 80 ? substring( 0, 80 ) + ' ..' : delegate }}
+
 
     /**
      * Adds property values to the builder specified.

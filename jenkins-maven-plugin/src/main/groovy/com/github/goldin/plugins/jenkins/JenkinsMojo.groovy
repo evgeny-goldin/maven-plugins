@@ -7,6 +7,7 @@ import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
 
 
 /**
@@ -79,7 +80,7 @@ class JenkinsMojo extends BaseGroovyMojo
          */
         for ( job in jobs )
         {
-            String configPath = ''
+            String configPath
 
             if ( job.isAbstract )
             {
@@ -87,29 +88,26 @@ class JenkinsMojo extends BaseGroovyMojo
             }
             else
             {
-                File configFile = new File( outputDirectory, "${ job.id }/config.xml" )
-                configPath      = configFile.canonicalPath.replace( '\\', '/' )
-                def  timestamp  = timestamp ? 'on ' + new Date().format( timestampFormat ) : null
-                def  config     = makeTemplate( '/config.xml', [ job : job, timestamp : timestamp ], endOfLine, true )
-                Node rootNode   = verify().notNull( new XmlParser().parseText( config ))
-
-                file().mkdirs( configFile.parentFile )
+                final config     = new ConfigMarkup( job, ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )).markup
+                final configFile = new File( outputDirectory, "${ job.id }/config.xml" )
+                configPath       = configFile.canonicalPath.replace( '\\', '/' )
 
                 if ( job.process )
                 {
-                    def printer                = new XmlNodePrinter( configFile.newPrintWriter( 'UTF-8' ))
-                    printer.preserveWhitespace = true
-                    String expression          = job.process.trim().with {
+                    final rootNode    = new XmlParser().parseText( config )
+                    final writer      = new StringWriter( config.size())
+                    String expression = job.process.trim().with {
                         endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
                     }
 
                     eval( expression, null, null, 'config', config, 'node', rootNode, 'file', configFile )
-                    printer.print( rootNode )
+                    new XmlNodePrinter( new PrintWriter( writer )).print( rootNode )
+                    config = writer.toString()
                 }
-                else
-                {
-                    configFile.write( config, 'UTF-8' )
-                }
+
+                file().mkdirs( file().delete( configFile ).parentFile )
+                configFile.write( config.trim().replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )),
+                                  'UTF-8' )
 
                 verify().file( configFile )
             }

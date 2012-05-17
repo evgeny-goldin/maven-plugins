@@ -84,7 +84,7 @@ class Job
 
     void setId( String id )
     {
-        assert id?.trim()?.length()
+        assert id?.trim()
 
         /**
          * Job Id should never have any illegal characters in it since it becomes a folder name later
@@ -217,15 +217,9 @@ class Job
      */
     String               jenkinsUrl
     String               generationPom
-    Boolean              parentIsReal
+    Boolean              parentIsReal // Whether parent job is a real one or an abstract one
     Job[]                childJobs
     Job[]                invokedBy
-
-
-   /**
-    * Retrieves job description table
-    */
-    String getDescriptionTableMarkup() { makeTemplate( '/descriptionTable.html', [ job : this, jenkinsUrl : jenkinsUrl ] ) }
 
 
     /**
