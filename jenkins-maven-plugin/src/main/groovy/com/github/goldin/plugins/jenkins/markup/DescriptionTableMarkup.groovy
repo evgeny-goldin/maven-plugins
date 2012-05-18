@@ -53,30 +53,114 @@ class DescriptionTableMarkup extends Markup
                     }
                 })}
 
-                addRow( 'Job type',     job.jobType.description )
-                addRow( 'Node',         { addNodeLink( job.node )})
-                addRow( 'Quiet period', job.quietPeriod,           true )
-                addRow( 'Retry count',  job.scmCheckoutRetryCount, true )
-                addRow( 'JDK name',     job.jdkName,               true, true )
+                addRow( 'Job type',        job.jobType.description )
+                addRow( 'Node',            { addNodeLink( job.node )})
+                addRow( 'Quiet period',    job.quietPeriod,           true )
+                addRow( 'Retry count',     job.scmCheckoutRetryCount, true )
+                addRow( 'JDK name',        job.jdkName,               true, true )
+                addRow( 'Mail recipients', job.mail?.recipients,      true )
 
-                if ( job.jobType == Job.JobType.maven )
+                if ( job.scmType == 'svn' )
                 {
-                    addMavenRows()
+                    addRow( 'Svn update policy', "Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]" )
+                }
+
+                if ( job.repositories())               { addRepositories() }
+                if ( job.triggers())                   { addTriggers    () }
+                if ( job.jobType == Job.JobType.maven ){ addMavenRows   () }
+                if ( job.jobType == Job.JobType.free  ){ addRow( 'Build steps', { addTasks( job.tasks ) })}
+
+                for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ it.bottom } )
+                {
+                    addRow( row.key, row.value )
                 }
             }
         }
     }
 
 
-    @Requires({ link && title })
-    @Ensures({ result })
-    void addHref    ( String link, String title ) { builder.a( href: link ){ strong( title ) }}
-    void addJobLink ( String jobId  )             { addHref( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  ) }
-    void addNodeLink( String nodeId )             { addHref( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId ) }
+    /**
+     * Adds repositories row to the table.
+     */
+    void addRepositories()
+    {
+        addRow( "${ job.scmType.capitalize() } repositor${ ( job.repositories().size() == 1 ) ? 'y' : 'ies' }", {
+            for ( repository in job.repositories())
+            {
+                add( '- ' ); addLink( repository.remoteLink, repository.remote )
+                if ( repository.git ) { add( ' : ' ); addLink( repository.gitRemoteBranchLink, repository.gitBranch )}
+            }
+        })
+    }
 
 
     /**
-     * Adds a table row to {@link #builder}.
+     * Adds triggers row to the table.
+     */
+    void addTriggers()
+    {
+        addRow( 'Triggers', {
+            for ( trigger in job.triggers())
+            {
+                add( '- ' ); builder.strong { code { trigger.type }}
+                if ( trigger.expression  ){ add( " : ${ tag( 'code', "'" + trigger.expression + "'" )}" ) }
+                if ( trigger.description ){ builder.em(  "(${ trigger.description })" )}
+            }
+        })
+    }
+
+
+    /**
+     * Adds Maven rows to the table.
+     */
+    void addMavenRows ( )
+    {
+        builder.with {
+
+            final repoPath = ( job.privateRepository ?            ".jenkins/jobs/${ job.id }/workspace/.repository" :
+                               job.privateRepositoryPerExecutor ? '.jenkins/maven-repositories/X'                   :
+                                                                  job.localRepoPath ?: '.m2/repository' )
+
+            if ( job.prebuildersTasks ){ addRow( 'Pre-build steps', { addTasks( job.prebuildersTasks ) })}
+
+            addRow( 'Maven name',       job.mavenName,  true, true )
+            addRow( 'Maven goals',      job.mavenGoals, true, true )
+            addRow( 'Maven repository', repoPath,       true, true )
+            addRow( 'Maven options',    job.mavenOpts,  true, true )
+
+            if ( job.postbuildersTasks ){ addRow( 'Post-build steps', { addTasks( job.postbuildersTasks ) })}
+            if ( job.artifactory?.name ){ addArtifactory() }
+        }
+    }
+
+
+    /**
+     * Adds Artifactory row to the table.
+     */
+    void addArtifactory()
+    {
+        addRow( 'Deployed to Artifactory', {
+            addLink ( job.artifactory.name, job.artifactory.name )
+            add     ( ' =&gt; ' )
+            addLink ( "${ job.artifactory.name }/${ job.artifactory.repository }/", job.artifactory.repository )
+        })
+    }
+
+
+    /**
+     * Adds a link to the {@link #builder}.
+     * @param link  HTTP link address
+     * @param title link title
+     */
+    @Requires({ link && title })
+    @Ensures({ result })
+    void addLink    ( String link, String title ) { builder.a( href: link ){ strong( title ) }}
+    void addJobLink ( String jobId  )             { addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
+    void addNodeLink( String nodeId )             { addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
+
+
+    /**
+     * Adds a table row to the {@link #builder}.
      *
      * @param title   row title
      * @param value   row value to display
@@ -89,37 +173,33 @@ class DescriptionTableMarkup extends Markup
         if ( value )
         {   // noinspection GroovyAssignmentToMethodParameter
             value = ( isQuote ? '"' + value + '"' : value )
-            addRow( title, { isCode ? builder.strong { code ( value ) } : add( value ) })
+            addRow( title, { isCode ? builder.strong { code { add( value ) }} : add( value ) })
         }
     }
 
 
+    /**
+     * Adds a table row to the {@link #builder}.
+     *
+     * @param title         row title
+     * @param valueClosure  {@link Closure} to invoke to add the value to the {@link #builder}
+     */
     @Requires({ title })
-    void addRow ( String title, Closure value )
+    void addRow ( String title, Closure valueClosure )
     {
         builder.with {
             tr {
                 td( valign: 'top', title )
-                td(){ value() }
-            }
-        }
-    }
-
-    void addMavenRows ( )
-    {
-        builder.with {
-
-            final repoPath = ( job.privateRepository ?            ".jenkins/jobs/${ job.id }/workspace/.repository" :
-                               job.privateRepositoryPerExecutor ? '.jenkins/maven-repositories/X'                   :
-                                                                  job.localRepoPath ?: '.m2/repository' )
-            if ( job.prebuildersTasks )
-            {
-                addRow( 'Pre-build steps', { addTasks( job.prebuildersTasks ) })
+                td(){ valueClosure() }
             }
         }
     }
 
 
+    /**
+     * Adds tasks specified to the {@link #builder}.
+     * @param tasks task to add
+     */
     @Requires({ tasks })
     void addTasks ( Task[] tasks )
     {
@@ -137,7 +217,7 @@ class DescriptionTableMarkup extends Markup
                     for ( task in tasks ) {
                         tr {
                             td{ add ( "- ${    tag( 'strong', task.descriptionTableTitle )}" )}
-                            td( ' : ' )
+                            td{ add ( ' : ' )}
                             td{ add ( "$QUOT${ tag( 'code',   task.commandShortened )}$QUOT" )}
                         }
                     }
