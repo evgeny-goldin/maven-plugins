@@ -49,10 +49,6 @@ abstract class Markup
     final void add ( String value ) { builder.mkp.yieldUnescaped( value ) }
 
 
-
-    final String tag( String tagName, String value ){ "<$tagName>$value</$tagName>" }
-
-
     /**
      * Retrieves a markup generated with the builder.
      * @return markup generated with the builder

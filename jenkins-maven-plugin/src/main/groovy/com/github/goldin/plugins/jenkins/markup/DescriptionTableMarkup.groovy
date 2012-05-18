@@ -55,10 +55,10 @@ class DescriptionTableMarkup extends Markup
 
                 addRow( 'Job type',        job.jobType.description )
                 addRow( 'Node',            { addNodeLink( job.node )})
-                addRow( 'Quiet period',    job.quietPeriod,           true )
-                addRow( 'Retry count',     job.scmCheckoutRetryCount, true )
-                addRow( 'JDK name',        job.jdkName,               true, true )
-                addRow( 'Mail recipients', job.mail?.recipients,      true )
+                addRow( 'JDK name',        job.jdkName, true )
+                addRow( 'Mail recipients', job.mail?.recipients )
+                addRow( 'Quiet period',    job.quietPeriod )
+                addRow( 'Retry count',     job.scmCheckoutRetryCount )
 
                 if ( job.scmType == 'svn' )
                 {
@@ -87,8 +87,8 @@ class DescriptionTableMarkup extends Markup
         addRow( "${ job.scmType.capitalize() } repositor${ ( job.repositories().size() == 1 ) ? 'y' : 'ies' }", {
             for ( repository in job.repositories())
             {
-                add( '- ' ); addLink( repository.remoteLink, repository.remote )
-                if ( repository.git ) { add( ' : ' ); addLink( repository.gitRemoteBranchLink, repository.gitBranch )}
+                addBullet( job.repositories())
+                addLink( repository.remoteLink, repository.remote )
             }
         })
     }
@@ -102,12 +102,14 @@ class DescriptionTableMarkup extends Markup
         addRow( 'Triggers', {
             for ( trigger in job.triggers())
             {
-                add( '- ' ); builder.strong { code { trigger.type }}
-                if ( trigger.expression  ){ add( " : ${ tag( 'code', "'" + trigger.expression + "'" )}" ) }
-                if ( trigger.description ){ builder.em(  "(${ trigger.description })" )}
+                addBullet( job.triggers())
+                add( strong ( code( trigger.type )))
+                if ( trigger.expression  ){ add( " : ${ code( trigger.expression )}" ) }
+                if ( trigger.description ){ builder.em( "(${  trigger.description })" )}
             }
         })
     }
+
 
 
     /**
@@ -123,10 +125,10 @@ class DescriptionTableMarkup extends Markup
 
             if ( job.prebuildersTasks ){ addRow( 'Pre-build steps', { addTasks( job.prebuildersTasks ) })}
 
-            addRow( 'Maven name',       job.mavenName,  true, true )
-            addRow( 'Maven goals',      job.mavenGoals, true, true )
-            addRow( 'Maven repository', repoPath,       true, true )
-            addRow( 'Maven options',    job.mavenOpts,  true, true )
+            addRow( 'Maven name',       job.mavenName,  true )
+            addRow( 'Maven goals',      job.mavenGoals, true )
+            addRow( 'Maven repository', repoPath,       true )
+            addRow( 'Maven options',    job.mavenOpts,  true )
 
             if ( job.postbuildersTasks ){ addRow( 'Post-build steps', { addTasks( job.postbuildersTasks ) })}
             if ( job.artifactory?.name ){ addArtifactory() }
@@ -154,9 +156,19 @@ class DescriptionTableMarkup extends Markup
      */
     @Requires({ link && title })
     @Ensures({ result })
-    void addLink    ( String link, String title ) { builder.a( href: link ){ strong( title ) }}
-    void addJobLink ( String jobId  )             { addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
-    void addNodeLink( String nodeId )             { addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
+    void   addLink    ( String link, String title ){ builder.a( href: link ){ add( strong( title )) }}
+
+
+    /**
+     * Various small helper methods.
+     */
+
+    void   addJobLink ( String   jobId   ){ addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
+    void   addNodeLink( String   nodeId  ){ addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
+    void   addBullet  ( Object[] objects ){ if ( objects.size() > 1 ){ add( '- ' ) }}
+    String tag        ( String tagName, String value ){ "<$tagName>$value</$tagName>" }
+    String code       ( String expression )           { tag( 'code',   QUOT + expression + QUOT )}
+    String strong     ( String expression )           { tag( 'strong', expression )}
 
 
     /**
@@ -165,16 +177,11 @@ class DescriptionTableMarkup extends Markup
      * @param title   row title
      * @param value   row value to display
      * @param isCode  whether value should be quoted
-     * @param isQuote whether value should be displayed as {@code <code>}
      */
     @Requires({ title })
-    void addRow ( String title, String value, boolean isCode = false, boolean isQuote = false )
+    void addRow ( String title, String value, boolean isCode = false )
     {
-        if ( value )
-        {   // noinspection GroovyAssignmentToMethodParameter
-            value = ( isQuote ? '"' + value + '"' : value )
-            addRow( title, { isCode ? builder.strong { code { add( value ) }} : add( value ) })
-        }
+        if ( value ) { addRow( title, { add( isCode ? strong ( code ( value )) : value ) })}
     }
 
 
@@ -208,17 +215,17 @@ class DescriptionTableMarkup extends Markup
         builder.with {
             if ( tasks.size() == 1 )
             {
-                add( "- ${    tag( 'strong', tasks[ 0 ].descriptionTableTitle )} : " +
-                     "$QUOT${ tag( 'code',   tasks[ 0 ].commandShortened )}$QUOT" )
+                add( "${ strong( tasks[ 0 ].descriptionTableTitle )} : " +
+                     "${ code  ( tasks[ 0 ].commandShortened )}" )
             }
             else
             {
                 table {
                     for ( task in tasks ) {
                         tr {
-                            td{ add ( "- ${    tag( 'strong', task.descriptionTableTitle )}" )}
+                            td{ add ( "- ${ strong( task.descriptionTableTitle )}" )}
                             td{ add ( ' : ' )}
-                            td{ add ( "$QUOT${ tag( 'code',   task.commandShortened )}$QUOT" )}
+                            td{ add ( "${ code(     task.commandShortened )}" )}
                         }
                     }
                 }
