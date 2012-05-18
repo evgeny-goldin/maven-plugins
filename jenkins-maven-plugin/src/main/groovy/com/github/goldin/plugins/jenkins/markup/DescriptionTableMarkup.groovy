@@ -2,10 +2,11 @@ package com.github.goldin.plugins.jenkins.markup
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.jenkins.Job
-import com.github.goldin.plugins.jenkins.Task
 import com.github.goldin.plugins.jenkins.beans.DescriptionRow
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+
+import com.github.goldin.plugins.jenkins.Task
 
 
 /**
@@ -23,7 +24,62 @@ class DescriptionTableMarkup extends Markup
     }
 
 
+    /**
+     * Adds a link to the {@link #builder}.
+     * @param link  HTTP link address
+     * @param title link title
+     */
+    @Requires({ link && title })
+    @Ensures({ result })
+    private void addLink ( String link, String title ){ builder.a( href: link ){ add( strong( title )) }}
+
+
+    /**
+     * Various helper methods.
+     */
+
+    private void addJobLink ( String   jobId   ){ addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
+    private void addNodeLink( String   nodeId  ){ addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
+    private void addBullet  ( Object[] objects ){ if ( objects.size() > 1 ){ add( '- ' ) }}
+
+
+    /**
+     * Adds a table row to the {@link #builder}.
+     *
+     * @param title   row title
+     * @param value   row value to display, no row added if evaluates to Groovy false
+     * @param isCode  whether value should be quoted
+     */
+    @Requires({ title })
+    void addRow ( String title, String value, boolean isCode = false )
+    {
+        if ( value ) { addRow( title, { add( isCode ? strong ( code ( value )) : value ) })}
+    }
+
+
+    /**
+     * Adds a table row to the {@link #builder}.
+     *
+     * @param title         row title
+     * @param valueClosure  {@link Closure} to invoke to add the value to the {@link #builder}
+     */
+    @Requires({ title && valueClosure })
+    void addRow ( String title, Closure valueClosure )
+    {
+        builder.with {
+            tr {
+                td( valign: 'top', title )
+                td(){ valueClosure() }
+            }
+        }
+    }
+
+
+    /**
+     * Builds description table markup using {@link #builder}.
+     */
     @Override
+    @Requires({ job })
     void buildMarkup ()
     {
         builder.with {
@@ -65,10 +121,12 @@ class DescriptionTableMarkup extends Markup
                     addRow( 'Svn update policy', "Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]" )
                 }
 
-                if ( job.repositories())               { addRepositories() }
-                if ( job.triggers())                   { addTriggers    () }
-                if ( job.jobType == Job.JobType.maven ){ addMavenRows   () }
+                if ( job.repositories())               { addRepositories  ()}
+                if ( job.triggers())                   { addTriggers      ()}
+                if ( job.jobType == Job.JobType.maven ){ addMavenRows     ()}
                 if ( job.jobType == Job.JobType.free  ){ addRow( 'Build steps', { addTasks( job.tasks ) })}
+                if ( job.invoke?.jobs                 ){ addInvokeJobs    ()}
+                if ( job.invokedBy                    ){ addInvokedByJobs ()}
 
                 for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ it.bottom } )
                 {
@@ -82,6 +140,7 @@ class DescriptionTableMarkup extends Markup
     /**
      * Adds repositories row to the table.
      */
+    @Requires({ job.repositories() })
     void addRepositories()
     {
         addRow( "${ job.scmType.capitalize() } repositor${ ( job.repositories().size() == 1 ) ? 'y' : 'ies' }", {
@@ -91,12 +150,19 @@ class DescriptionTableMarkup extends Markup
                 addLink( repository.remoteLink, repository.remote )
             }
         })
+
+        if ( job.pom )
+        {
+            final pomUrl = job.repositories().first().getRemotePathLink( job.pom )
+            addRow( 'POM', { addLink( pomUrl, pomUrl ) })
+        }
     }
 
 
     /**
      * Adds triggers row to the table.
      */
+    @Requires({ job.triggers() })
     void addTriggers()
     {
         addRow( 'Triggers', {
@@ -111,11 +177,45 @@ class DescriptionTableMarkup extends Markup
     }
 
 
+    /**
+     * Adds jobs invoked by this job to the table.
+     */
+    @Requires({ job.invoke.jobs })
+    void addInvokeJobs ( )
+    {
+        addRow( 'Invokes', {
+            for ( jobId in job.invoke.jobsSplit )
+            {
+                addBullet( job.invoke.jobsSplit as String[] )
+                addJobLink( jobId )
+                add( "when this job ${ job.invoke.condition[ 1 ] }" )
+            }
+        })
+    }
+
+
+    /**
+     * Adds jobs this job is invoked by to the table.
+     */
+    @Requires({ job.invokedBy })
+    void addInvokedByJobs ( )
+    {
+        addRow( 'Invoked by', {
+            for ( invokedBy in job.invokedBy )
+            {
+                addBullet( job.invokedBy )
+                addJobLink( invokedBy.id )
+                add( "when it ${ invokedBy.invoke.condition[ 1 ]}" )
+            }
+        })
+    }
+
 
     /**
      * Adds Maven rows to the table.
      */
-    void addMavenRows ( )
+    @Requires({ job.jobType == Job.JobType.maven })
+    void addMavenRows()
     {
         builder.with {
 
@@ -139,6 +239,7 @@ class DescriptionTableMarkup extends Markup
     /**
      * Adds Artifactory row to the table.
      */
+    @Requires({ job.artifactory.name })
     void addArtifactory()
     {
         addRow( 'Deployed to Artifactory', {
@@ -146,60 +247,6 @@ class DescriptionTableMarkup extends Markup
             add     ( ' =&gt; ' )
             addLink ( "${ job.artifactory.name }/${ job.artifactory.repository }/", job.artifactory.repository )
         })
-    }
-
-
-    /**
-     * Adds a link to the {@link #builder}.
-     * @param link  HTTP link address
-     * @param title link title
-     */
-    @Requires({ link && title })
-    @Ensures({ result })
-    void   addLink    ( String link, String title ){ builder.a( href: link ){ add( strong( title )) }}
-
-
-    /**
-     * Various small helper methods.
-     */
-
-    void   addJobLink ( String   jobId   ){ addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
-    void   addNodeLink( String   nodeId  ){ addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
-    void   addBullet  ( Object[] objects ){ if ( objects.size() > 1 ){ add( '- ' ) }}
-    String tag        ( String tagName, String value ){ "<$tagName>$value</$tagName>" }
-    String code       ( String expression )           { tag( 'code',   QUOT + expression + QUOT )}
-    String strong     ( String expression )           { tag( 'strong', expression )}
-
-
-    /**
-     * Adds a table row to the {@link #builder}.
-     *
-     * @param title   row title
-     * @param value   row value to display
-     * @param isCode  whether value should be quoted
-     */
-    @Requires({ title })
-    void addRow ( String title, String value, boolean isCode = false )
-    {
-        if ( value ) { addRow( title, { add( isCode ? strong ( code ( value )) : value ) })}
-    }
-
-
-    /**
-     * Adds a table row to the {@link #builder}.
-     *
-     * @param title         row title
-     * @param valueClosure  {@link Closure} to invoke to add the value to the {@link #builder}
-     */
-    @Requires({ title })
-    void addRow ( String title, Closure valueClosure )
-    {
-        builder.with {
-            tr {
-                td( valign: 'top', title )
-                td(){ valueClosure() }
-            }
-        }
     }
 
 

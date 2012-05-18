@@ -50,9 +50,18 @@ abstract class Markup
 
 
     /**
+     * Helper methods
+     */
+    String code   ( String   expression )           { tag( 'code',   QUOT + expression + QUOT )}
+    String strong ( String   expression )           { tag( 'strong', expression )}
+    String tag    ( String   tagName, String value ){ "<$tagName>$value</$tagName>" }
+
+
+    /**
      * Retrieves a markup generated with the builder.
      * @return markup generated with the builder
      */
+    @Requires({ builder })
     @Ensures({ result })
     final String getMarkup()
     {
