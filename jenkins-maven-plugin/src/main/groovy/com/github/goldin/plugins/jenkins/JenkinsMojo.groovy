@@ -61,60 +61,46 @@ class JenkinsMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
-        int             jobNamePad   = 0; // Number of characters to pad the job name, when logged
-        int             jobParentPad = 0; // Number of characters to pad the job parent, when logged
-        def             jobParent    = { Job job -> job.parent ? "<parent>${ job.parent }</parent>" : 'No <parent>' }
-        Collection<Job> jobs         = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
+        final jobs       = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
+        final jobNamePad = jobs*.toString()*.size().max()
 
-        /**
-         * Verifying job's state and calculating logging pads
-         */
         for ( job in jobs )
         {
-            jobNamePad   = Math.max( jobNamePad,   job.toString().size())
-            jobParentPad = Math.max( jobParentPad, jobParent( job ).size())
+            final configPath = ( job.isAbstract ? "abstract job" : generateConfigFile( job ).canonicalPath.replace( '\\', '/' ))
+            log.info( "${ job.toString().padRight( jobNamePad ) }  ==>  ${ configPath }" )
         }
+    }
 
-        /**
-         * Generating config files
-         */
-        for ( job in jobs )
+
+    /**
+     * Generates config file for the job specified.
+     *
+     * @param job job definition to generate config file for
+     * @return config file generated
+     */
+    @Requires({ outputDirectory && job && ( ! job.isAbstract ) })
+    @Ensures({ result.file })
+    File generateConfigFile( Job job )
+    {
+        final configFile   = new File( outputDirectory, "${ job.id }/config.xml" )
+        final configMarkup = new ConfigMarkup( job, ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )).markup
+
+        if ( job.process )
         {
-            String configPath
-
-            if ( job.isAbstract )
-            {
-                configPath = "${ job } is abstract"
-            }
-            else
-            {
-                final config     = new ConfigMarkup( job, ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )).markup
-                final configFile = new File( outputDirectory, "${ job.id }/config.xml" )
-                configPath       = configFile.canonicalPath.replace( '\\', '/' )
-
-                if ( job.process )
-                {
-                    final rootNode    = new XmlParser().parseText( config )
-                    final writer      = new StringWriter( config.size())
-                    String expression = job.process.trim().with {
-                        endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
-                    }
-
-                    eval( expression, null, null, 'config', config, 'node', rootNode, 'file', configFile )
-                    new XmlNodePrinter( new PrintWriter( writer )).print( rootNode )
-                    config = writer.toString()
-                }
-
-                file().mkdirs( file().delete( configFile ).parentFile )
-                configFile.write( config.trim().replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )),
-                                  'UTF-8' )
-
-                verify().file( configFile )
+            final rootNode    = new XmlParser().parseText( configMarkup )
+            String expression = job.process.trim().with {
+                endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
             }
 
-            assert configPath
-            log.info( "${ job.toString().padRight( jobNamePad ) }  ${ jobParent( job ).padRight( jobParentPad ) }  ==>  [${ configPath }]" )
+            eval( expression, null, null, 'config', configMarkup, 'node', rootNode, 'file', configFile )
+            final writer = new StringWriter( configMarkup.size())
+            new XmlNodePrinter( new PrintWriter( writer )).print( rootNode )
+            configMarkup = writer.toString()
         }
+
+        file().mkdirs( file().delete( configFile ).parentFile )
+        configFile.write( configMarkup.trim().replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )), 'UTF-8' )
+        verify().file( configFile )
     }
 
 
