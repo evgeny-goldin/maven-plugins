@@ -29,7 +29,7 @@ class None extends Scm
     None( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void buildMarkup(){ builder.scm( class: 'hudson.scm.NullSCM' ){}}
+    void addMarkup (){ builder.scm( class: 'hudson.scm.NullSCM' ){}}
 }
 
 
@@ -38,7 +38,7 @@ class Cvs extends Scm
     Cvs( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void buildMarkup ()
+    void addMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple CVS repositories are not supported"
         final repository = repositories.first()
@@ -70,7 +70,7 @@ class Svn extends Scm
     Svn( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void buildMarkup ()
+    void addMarkup ()
     {
         builder.with {
             scm( class: 'hudson.scm.SubversionSCM' ) {
@@ -95,13 +95,13 @@ class Git extends Scm
     Git( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void buildMarkup ()
+    void addMarkup ()
     {
         final gitRepository = repositories.first()
 
         builder.with {
 
-            scm( class:  'hudson.plugins.git.GitSCM' ) {
+            scm( class: 'hudson.plugins.git.GitSCM' ) {
 
                 configVersion( 2 )
                 userRemoteConfigs {
@@ -166,7 +166,7 @@ class Hg extends Scm
     Hg( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void buildMarkup ()
+    void addMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple Mercurial repositories are not supported"
         final repository = repositories.first()

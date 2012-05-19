@@ -4,7 +4,6 @@ import com.github.goldin.plugins.jenkins.Job
 import com.github.goldin.plugins.jenkins.beans.ParameterType
 import org.gcontracts.annotations.Requires
 
-
 /**
  * Generates Jenkins config file XML markup.
  */
@@ -25,19 +24,21 @@ class ConfigMarkup extends Markup
      * Builds Jenkins config XML markup using this object markup builder.
      */
     @Override
-    void buildMarkup ()
+    void addMarkup ()
     {
+        final isMaven = Job.JobType.maven.is( job.jobType )
+
         builder.with {
-            mkp.with {
-                xmlDeclaration( version: '1.0', encoding: 'UTF-8' )
-                add( '<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->\n' )
-                add( "<!-- Generated automatically by [${ job.generationPom }]${ timestamp } -->\n" )
-                add( '<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->\n' )
-            }
-            "${ Job.JobType.maven.is( job.jobType ) ? 'maven2-moduleset' : 'project' }" {
+
+            mkp.xmlDeclaration( version: '1.0', encoding: 'UTF-8' )
+
+            add( '<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->\n' )
+            add( "<!-- Generated automatically by [${ job.generationPom }]${ timestamp } -->\n" )
+            add( '<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->\n' )
+
+            "${ isMaven ? 'maven2-moduleset' : 'project' }" {
                 actions()
                 addDescription()
-
                 if ( job.displayName ){ displayName( job.displayName ) }
                 if ( [ job.daysToKeep, job.numToKeep, job.artifactDaysToKeep, job.artifactNumToKeep ].any{ it > -1 } )
                 {
@@ -51,6 +52,19 @@ class ConfigMarkup extends Markup
                 keepDependencies( false )
                 addProperties()
                 addScm()
+                add( 'quietPeriod',           job.quietPeriod )
+                add( 'scmCheckoutRetryCount', job.scmCheckoutRetryCount )
+                assignedNode( job.node ?: '' )
+                canRoam( job.node ? false : true )
+                disabled( job.disabled )
+                blockBuildWhenDownstreamBuilding( job.blockBuildWhenDownstreamBuilding )
+                blockBuildWhenUpstreamBuilding( job.blockBuildWhenUpstreamBuilding )
+                jdk( job.jdkName )
+                add( 'authToken', job.authToken )
+                addTriggers()
+                concurrentBuild( false )
+                if ( isMaven ){ addMaven() }
+                else          { builders{ job.tasks*.addMarkup() }}
             }
         }
     }
@@ -112,7 +126,67 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
         /**
          * {@link com.github.goldin.plugins.jenkins.Scm}
          */
-        if  ( scmBuilderClass ){ scmBuilderClass.newInstance( builder, job ).buildMarkup() }
+        if  ( scmBuilderClass ){ scmBuilderClass.newInstance( builder, job ).addMarkup() }
         add( job.scm )
+    }
+
+
+    /**
+     * Adds {@code <triggers>} section to the {@link #builder}.
+     */
+    void addTriggers()
+    {
+        builder.with {
+            triggers( class: 'vector' ) {
+                for ( trigger in job.triggers())
+                {
+                    "${ trigger.triggerClass }" {
+                        spec(( trigger.description ? "#${ trigger.description }\n" : '' ) + trigger.expression )
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Adds {@code <triggers>} section to the {@link #builder}.
+     */
+    void addMaven()
+    {
+        assert Job.JobType.maven.is( job.jobType )
+
+        builder.with {
+            rootPOM( job.pom )
+            goals( job.mavenGoals )
+            mavenName( job.mavenName )
+            mavenOpts( job.mavenOpts ?: '' )
+            aggregatorStyleBuild( true )
+            incrementalBuild( job.incrementalBuild )
+
+            if ( job.privateRepository || job.privateRepositoryPerExecutor )
+            {
+                localRepository( class: "hudson.maven.local_repo.${ job.privateRepository ? 'PerJobLocalRepositoryLocator' : 'PerExecutorLocalRepositoryLocator' }" )
+            }
+
+            ignoreUpstremChanges( ! job.buildOnSNAPSHOT )
+            archivingDisabled( job.archivingDisabled )
+            resolveDependencies( false )
+            processPlugins( false )
+            mavenValidationLevel( 0 )
+            runHeadless( false )
+
+            reporters {
+                add( job.reporters )
+                if ( job.mail.recipients )
+                {
+                    'hudson.maven.reporters.MavenMailer' {
+                        recipients( job.mail.recipients )
+                        dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
+                        sendToIndividuals( job.mail.sendToIndividuals )
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,8 @@
 package com.github.goldin.plugins.jenkins
 
+import com.github.goldin.plugins.jenkins.markup.Markup
 import org.gcontracts.annotations.Requires
-import groovy.xml.MarkupBuilder
+
 
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -10,14 +11,8 @@ import groovy.xml.MarkupBuilder
  */
 
 
-abstract class Task
+abstract class Task extends Markup
 {
-    /**
-     * Raw XML content that can be set for the task.
-     */
-    String content = ''
-
-
     /**
      * Class name wrapping a task.
      */
@@ -25,15 +20,15 @@ abstract class Task
 
 
     /**
-     * Builds task's markup.
+     * Adds task's markup.
      */
-    abstract void buildMarkup( MarkupBuilder builder )
+    abstract void addTaskMarkup ()
 
 
     /**
      * Title and command used in description table
      */
-    abstract String getDescriptionTableTitle ()
+    abstract String getDescriptionTableTitle  ()
     abstract String getDescriptionTableCommand()
 
 
@@ -51,10 +46,10 @@ abstract class Task
 
 
     /**
-     * Adds property values to the builder specified.
+     * Adds property values to the {@link #builder}.
      */
-    @Requires({ builder && propertyNames })
-    final void addProperties( MarkupBuilder builder, Collection<String> propertyNames )
+    @Requires({ propertyNames })
+    final void addProperties( Collection<String> propertyNames )
     {
         for ( propertyName in propertyNames )
         {
@@ -63,20 +58,15 @@ abstract class Task
         }
     }
 
+
     /**
-     * Builds task's markup.
+     * Adds task's markup to the {@link #builder}.
      */
-    final String getMarkup()
+    @Override
+    void addMarkup ()
     {
         validate()
-
-        if ( content ) { return content }
-
-        final writer         = new StringWriter()
-        final builder        = new MarkupBuilder( new IndentPrinter( writer, ' ' * 4 ))
-        builder.doubleQuotes = true
-        builder."${ markupClassName }" { buildMarkup( builder ) }
-        writer.toString()
+        builder."${ markupClassName }" { addTaskMarkup() }
     }
 }
 
@@ -91,10 +81,7 @@ class Ant extends Task
     String properties = ''
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
-    {
-        addProperties( builder, [ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep())
-    }
+    void addTaskMarkup (){ addProperties([ ( antName ? 'antName' : '' ), 'targets', 'antOpts', 'buildFile', 'properties' ].grep()) }
 
     @Override
     String getDescriptionTableTitle  (){ 'ant' }
@@ -113,10 +100,7 @@ class BatchFile extends Task
     String command = ''
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
-    {
-        addProperties( builder, [ 'command' ])
-    }
+    void addTaskMarkup (){ addProperties([ 'command' ]) }
 
     @Override
     String getDescriptionTableTitle  () { 'batch' }
@@ -144,10 +128,10 @@ class Gradle extends Task
     String getMarkupClassName (){ 'hudson.plugins.gradle.Gradle' }
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
+    void addTaskMarkup ()
     {
-        addProperties( builder, [ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
-                                  'buildFile', 'gradleName', 'useWrapper' ])
+        addProperties([ 'description', 'switches', 'tasks', 'rootBuildScriptDir',
+                        'buildFile', 'gradleName', 'useWrapper' ])
     }
 
     @Override
@@ -183,7 +167,7 @@ class Groovy extends Task
     String getMarkupClassName () { 'hudson.plugins.groovy.Groovy' }
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
+    void addTaskMarkup ()
     {
         final className = 'hudson.plugins.groovy.' + ( command ? 'StringScriptSource' : 'FileScriptSource' )
 
@@ -191,8 +175,7 @@ class Groovy extends Task
             "${ command ? 'command' : 'scriptFile' }"( command ?: file )
         }
 
-        addProperties( builder, [ 'groovyName', 'parameters', 'scriptParameters',
-                                  'properties', 'javaOpts', 'classPath' ])
+        addProperties([ 'groovyName', 'parameters', 'scriptParameters', 'properties', 'javaOpts', 'classPath' ])
     }
 
     @Override
@@ -220,11 +203,9 @@ class Maven extends Task
     boolean usePrivateRepository = false
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
+    void addTaskMarkup ()
     {
-        addProperties( builder, [ 'targets', 'mavenName', 'jvmOptions',
-                                  ( pom == 'false' ? '' : 'pom' ),
-                                  'properties', 'usePrivateRepository' ].grep())
+        addProperties([ 'targets', 'mavenName', 'jvmOptions', ( pom == 'false' ? '' : 'pom' ), 'properties', 'usePrivateRepository' ].grep())
     }
 
     @Override
@@ -248,10 +229,7 @@ class Shell extends Task
     String command = ''
 
     @Override
-    void buildMarkup ( MarkupBuilder builder )
-    {
-        addProperties( builder, [ 'command' ])
-    }
+    void addTaskMarkup (){ addProperties([ 'command' ]) }
 
     @Override
     String getDescriptionTableTitle  (){ 'shell' }
@@ -268,8 +246,16 @@ class Shell extends Task
 @SuppressWarnings([ 'StatelessClass' ])
 class Xml extends Task
 {
+    /**
+     * Raw XML content that can be set for the task.
+     */
+    String content = ''
+
     @Override
-    void buildMarkup ( MarkupBuilder builder ){}
+    void addMarkup (){ add( content ) }
+
+    @Override
+    void addTaskMarkup (){ assert false /* Shouldn't be called */ }
 
     @Override
     String getDescriptionTableTitle  (){ 'xml' }

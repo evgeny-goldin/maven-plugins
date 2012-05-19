@@ -44,9 +44,9 @@ abstract class Markup
 
 
     /**
-     * Builds a markup using {@link #builder}.
+     * Adds a markup to the {@link #builder}.
      */
-    abstract void buildMarkup()
+    abstract void addMarkup ()
 
 
     /**
@@ -86,7 +86,7 @@ abstract class Markup
     {
         assert this.writer, "This instance was created using another MarkupBuilder, there's no access to the writer"
 
-        buildMarkup()
+        addMarkup()
         verify().notNullOrEmpty( this.writer.toString())
     }
 }

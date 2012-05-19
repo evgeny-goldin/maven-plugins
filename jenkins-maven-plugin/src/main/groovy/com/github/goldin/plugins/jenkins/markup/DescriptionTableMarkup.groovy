@@ -80,7 +80,7 @@ class DescriptionTableMarkup extends Markup
      */
     @Override
     @Requires({ job })
-    void buildMarkup ()
+    void addMarkup ()
     {
         builder.with {
             table( border: '1', width: '100%', cellpadding:'3', cellspacing:'3' ) {
