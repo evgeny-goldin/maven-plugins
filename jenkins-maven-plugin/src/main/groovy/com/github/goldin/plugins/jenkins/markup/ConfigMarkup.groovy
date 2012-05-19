@@ -4,19 +4,25 @@ import com.github.goldin.plugins.jenkins.Job
 import com.github.goldin.plugins.jenkins.beans.ParameterType
 import org.gcontracts.annotations.Requires
 
+
 /**
  * Generates Jenkins config file XML markup.
  */
 class ConfigMarkup extends Markup
 {
-    private final Job    job
-    private final String timestamp
+    private final Job     job
+    private final String  timestamp
+    private final boolean isMavenJob
+
 
     @Requires({ job && ( timestamp != null ) })
     ConfigMarkup ( Job job, String timestamp )
     {
-        this.job       = job
-        this.timestamp = timestamp
+        super()
+
+        this.job        = job
+        this.timestamp  = timestamp
+        this.isMavenJob = Job.JobType.maven.is( job.jobType )
     }
 
 
@@ -26,8 +32,6 @@ class ConfigMarkup extends Markup
     @Override
     void addMarkup ()
     {
-        final isMaven = Job.JobType.maven.is( job.jobType )
-
         builder.with {
 
             mkp.xmlDeclaration( version: '1.0', encoding: 'UTF-8' )
@@ -36,7 +40,7 @@ class ConfigMarkup extends Markup
             add( "<!-- Generated automatically by [${ job.generationPom }]${ timestamp } -->\n" )
             add( '<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->\n' )
 
-            "${ isMaven ? 'maven2-moduleset' : 'project' }" {
+            "${ isMavenJob ? 'maven2-moduleset' : 'project' }" {
                 actions()
                 addDescription()
                 if ( job.displayName ){ displayName( job.displayName ) }
@@ -63,8 +67,11 @@ class ConfigMarkup extends Markup
                 add( 'authToken', job.authToken )
                 addTriggers()
                 concurrentBuild( false )
-                if ( isMaven ){ addMaven() }
-                else          { builders{ job.tasks*.addMarkup() }}
+                if ( isMavenJob ){ addMaven() }
+                else             { builders{ job.tasks*.addMarkup() }}
+                addPublishers()
+                buildWrappers{ add( job.buildWrappers ) }
+                if ( isMavenJob ){ addMavenBuilders() }
             }
         }
     }
@@ -154,9 +161,10 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
      */
     void addMaven()
     {
-        assert Job.JobType.maven.is( job.jobType )
+        assert isMavenJob
 
         builder.with {
+
             rootPOM( job.pom )
             goals( job.mavenGoals )
             mavenName( job.mavenName )
@@ -184,6 +192,127 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
                         recipients( job.mail.recipients )
                         dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
                         sendToIndividuals( job.mail.sendToIndividuals )
+                    }
+                }
+            }
+
+
+        }
+    }
+
+
+    /**
+     * Adds Maven {@code <prebuilders>} and {@code <postbuilders>} to the {@link #builder}.
+     */
+    void addMavenBuilders()
+    {
+        assert isMavenJob
+
+        prebuilders {
+            add( job.prebuilders )
+            job.groovys().findAll{ it.pre }*.addMarkup()
+            job.prebuildersTasks*.addMarkup()
+        }
+
+        postbuilders {
+            add( job.postbuilders )
+            job.groovys().findAll{ ! it.pre }*.addMarkup()
+            job.postbuildersTasks*.addMarkup()
+        }
+
+        runPostStepsIfResult {
+            name   ( job.runPostStepsIfResult.name    )
+            ordinal( job.runPostStepsIfResult.ordinal )
+            color  ( job.runPostStepsIfResult.color   )
+        }
+    }
+
+
+    /**
+     * Adds {@code <publishers>} section to the {@link #builder}.
+     */
+    void addPublishers()
+    {
+        add( job.publishers )
+
+        if (( job.mail.recipients ) && ( ! isMavenJob ))
+        {
+            'hudson.tasks.Mailer' {
+                recipients( job.mail.recipients )
+                dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
+                sendToIndividuals( job.mail.sendToIndividuals )
+            }
+        }
+
+        if (( job.deploy.url ) && ( isMavenJob ))
+        {
+            'hudson.maven.RedeployPublisher' {
+                id( job.deploy.id )
+                url( job.deploy.url )
+                uniqueVersion( job.deploy.uniqueVersion )
+                evenIfUnstable( job.deploy.evenIfUnstable )
+            }
+        }
+
+        if (( job.artifactory.name ) && ( isMavenJob ))
+        {
+            'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
+                details {
+                    artifactoryName( job.artifactory.name )
+                    repositoryKey( job.artifactory.repository )
+                    snapshotsRepositoryKey( job.artifactory.snapshotsRepository )
+                }
+                deployArtifacts( job.artifactory.deployArtifacts )
+                username( job.artifactory.user )
+                scrambledPassword( job.artifactory.scrambledPassword )
+                includeEnvVars( job.artifactory.includeEnvVars )
+                skipBuildInfoDeploy( job.artifactory.skipBuildInfoDeploy )
+                evenIfUnstable( job.artifactory.evenIfUnstable )
+                runChecks( job.artifactory.runChecks )
+                violationRecipients( job.artifactory.violationRecipients )
+            }
+        }
+
+        if ( job.invoke.jobs )
+        {
+            'hudson.plugins.parameterizedtrigger.BuildTrigger' {
+                configs {
+                    'hudson.plugins.parameterizedtrigger.BuildTriggerConfig' {
+
+                        final anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
+                                             job.invoke.gitCommitParam     || job.invoke.params                  ||
+                                             job.invoke.propertiesFileParams )
+
+                        if ( ! anyConfigs )
+                        {
+                            configs( class: 'java.util.Collections$EmptyList' )
+                        }
+                        else
+                        {
+                            configs {
+                                if ( job.invoke.currentBuildParams      ){ 'hudson.plugins.parameterizedtrigger.CurrentBuildParameters'()}
+                                if ( job.invoke.subversionRevisionParam ){ 'hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters'()}
+                                if ( job.invoke.gitCommitParam          ){ 'hudson.plugins.git.GitRevisionBuildParameters'()}
+
+                                if ( job.invoke.params )
+                                {
+                                    'hudson.plugins.parameterizedtrigger.PredefinedBuildParameters' {
+                                        builder.properties( job.invoke.params.readLines()*.trim().join( '\n' ))
+                                    }
+                                }
+
+                                if ( job.invoke.propertiesFileParams )
+                                {
+                                    'hudson.plugins.parameterizedtrigger.FileBuildParameters' {
+                                        propertiesFile( job.invoke.propertiesFileParams )
+                                    }
+                                }
+                            }
+                        }
+
+                        projects( job.invoke.jobs )
+                        condition( job.invoke.condition[ 0 ] )
+                        triggerWithNoParameters( job.invoke.triggerWithoutParameters )
                     }
                 }
             }
