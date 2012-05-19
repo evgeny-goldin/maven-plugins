@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.jenkins.markup
 
 import com.github.goldin.plugins.jenkins.Job
+import com.github.goldin.plugins.jenkins.beans.ParameterType
 import org.gcontracts.annotations.Requires
 
 
@@ -36,13 +37,28 @@ class ConfigMarkup extends Markup
             "${ Job.JobType.maven.is( job.jobType ) ? 'maven2-moduleset' : 'project' }" {
                 actions()
                 addDescription()
+
+                if ( job.displayName ){ displayName( job.displayName ) }
+                if ( [ job.daysToKeep, job.numToKeep, job.artifactDaysToKeep, job.artifactNumToKeep ].any{ it > -1 } )
+                {
+                    logRotator {
+                        daysToKeep( job.daysToKeep )
+                        numToKeep( job.numToKeep )
+                        artifactDaysToKeep( job.artifactDaysToKeep )
+                        artifactNumToKeep( job.artifactNumToKeep )
+                    }
+                }
+                keepDependencies( false )
+                addProperties()
+                job.scmMarkupBuilder?.addMarkup( builder )
+                if ( job.scm ){ add( job.scm ) }
             }
         }
     }
 
 
     /**
-     * Adds config's {@code <description>} section.
+     * Adds config's {@code <description>} section to the {@link #builder}.
      */
     void addDescription ()
     {
@@ -64,4 +80,27 @@ ${ new DescriptionTableMarkup( job ).markup }
 ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is not positioned correctly due to String content injected
         }
     }
+
+
+    /**
+     * Adds {@code <properties>} section to the {@link #builder}.
+     */
+    void addProperties()
+    {
+        builder.with {
+            builder.properties {
+                if ( job.properties  ) { add( job.properties )}
+                if ( job.parameters()) {
+                    'hudson.model.ParametersDefinitionProperty' {
+                        parameterDefinitions {
+                            job.parameters().findAll{ it.type != ParameterType.jira }*.addMarkup( builder )
+                        }
+                    }
+                    job.parameters().findAll{ it.type == ParameterType.jira }*.addMarkup( builder )
+                }
+                if ( job.gitHubUrl ) { 'com.coravy.hudson.plugins.github.GithubProjectProperty' { projectUrl( job.gitHubUrl ) }}
+            }
+        }
+    }
+
 }

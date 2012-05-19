@@ -4,48 +4,42 @@ import groovy.xml.MarkupBuilder
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
+
 abstract class Scm
 {
     Job              job
     List<Repository> repositories
+    MarkupBuilder    builder
 
     @Ensures({ result })
     abstract String getScmClass()
 
-    @Requires({ builder && job && ( repositories != null ) })
-    abstract void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
-
-
     /**
-     * Whether repositories should be verified to be defined
+     * Adds SCM-specific markup to the {@link #builder}.
      */
-    boolean verifyRepositories(){ true }
+    abstract void addMarkup ()
+
 
     /**
      * Adds tag specified to the builder only if value specified evaluates to true according to the Groovy Truth.
      */
-    final void addIf( MarkupBuilder builder, String tagName, Object value )
+    final void add ( String tagName, Object value )
     {
         if ( value ) { builder."$tagName"( value ) }
     }
+
 
     /**
      * Builds SCM section markup.
      *
      * @return SCM section markup
      */
-    final String getMarkup()
+    @Requires({ builder })
+    final String addMarkup( MarkupBuilder builder )
     {
-        final writer         = new StringWriter()
-        final builder        = new MarkupBuilder( new IndentPrinter( writer, ' ' * 4 ))
-        builder.doubleQuotes = true
-
-        builder.scm( class: scmClass ) {
-            assert job && ( repositories || ( ! verifyRepositories()))
-            buildMarkup( builder, job, repositories )
-        }
-
-        writer.toString()
+        this.builder = builder
+        assert this.builder && job && ( repositories || ( this.class == None ))
+        builder.scm( class: scmClass ) { addMarkup() }
     }
 }
 
@@ -56,10 +50,7 @@ class None extends Scm
     String getScmClass(){ 'hudson.scm.NullSCM' }
 
     @Override
-    boolean verifyRepositories(){ false }
-
-    @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories ){}
+    void addMarkup (){}
 }
 
 
@@ -69,7 +60,7 @@ class Cvs extends Scm
     String getScmClass(){ 'hudson.scm.CVSSCM' }
 
     @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
+    void addMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple CVS repositories are not supported"
         final repository = repositories.first()
@@ -77,9 +68,9 @@ class Cvs extends Scm
         builder.with {
 
             cvsroot( repository.remote )
-            addIf( builder, 'module', repository.cvsModule )
-            addIf( builder, 'branch', repository.cvsBranch )
-            addIf( builder, 'cvsRsh', repository.cvsRsh )
+            add( 'module', repository.cvsModule )
+            add( 'branch', repository.cvsBranch )
+            add( 'cvsRsh', repository.cvsRsh )
             canUseUpdate( repository.cvsUpdate )
             flatten( ! repository.cvsLegacy )
 
@@ -103,7 +94,7 @@ class Svn extends Scm
     String getScmClass(){ 'hudson.scm.SubversionSCM' }
 
     @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
+    void addMarkup ()
     {
         builder.with {
 
@@ -111,7 +102,7 @@ class Svn extends Scm
                 for ( repository in repositories ) {
                     "${ scmClass }_-ModuleLocation" {
                         remote( repository.remote )
-                        addIf( builder, 'local', repository.local )
+                        add( 'local', repository.local )
                     }
                 }
             }
@@ -128,7 +119,7 @@ class Git extends Scm
     String getScmClass(){ 'hudson.plugins.git.GitSCM' }
 
     @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
+    void addMarkup ()
     {
         final gitRepository = repositories.first()
 
@@ -151,7 +142,7 @@ class Git extends Scm
                     }
                 }
             }
-            addIf( builder, 'localBranch', gitRepository.gitLocalBranch )
+            add( 'localBranch', gitRepository.gitLocalBranch )
 
             if ( gitRepository.gitMergeRepo || gitRepository.gitMergeBranch )
             {
@@ -198,7 +189,7 @@ class Hg extends Scm
     String getScmClass(){ 'hudson.plugins.mercurial.MercurialSCM' }
 
     @Override
-    void buildMarkup( MarkupBuilder builder, Job job, List<Repository> repositories )
+    void addMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple Mercurial repositories are not supported"
         final repository = repositories.first()
@@ -207,8 +198,8 @@ class Hg extends Scm
 
             source ( repository.remote )
             modules( repository.hgModules )
-            addIf( builder, 'branch', repository.hgBranch )
-            addIf( builder, 'subdir', repository.hgSubdir )
+            add( 'branch', repository.hgBranch )
+            add( 'subdir', repository.hgSubdir )
             clean( repository.hgClean )
 
             if ( repository.hgRepoBrowserClass && repository.repoBrowserUrl )
@@ -220,5 +211,3 @@ class Hg extends Scm
         }
     }
 }
-
-

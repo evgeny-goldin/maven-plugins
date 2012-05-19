@@ -171,7 +171,7 @@ class Job
 
 
     String               scmType
-    String getScmMarkup()
+    Scm getScmMarkupBuilder ()
     {
         if ( repositories() || ( 'none' == scmType ))
         {
@@ -187,11 +187,11 @@ class Job
 
             scm.job          = this
             scm.repositories = repositories()
-            scm.markup
+            scm
         }
         else
         {
-            ''
+            null
         }
     }
 
@@ -294,7 +294,7 @@ class Job
                              ( propertyType == Integer ) ? -1           :
                                                            null
 
-        assert ( defaultValue != null ), "Default value should be specified for unknown property type [$propertyType]"
+        assert ( defaultValue != null ), "Default value should be specified for property [$propertyName], unknown property type [$propertyType]"
 
         if (( this[ propertyName ] == null ) || override )
         {
