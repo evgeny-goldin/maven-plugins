@@ -208,22 +208,24 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
     {
         assert isMavenJob
 
-        prebuilders {
-            add( job.prebuilders )
-            job.groovys().findAll{ it.pre }*.addMarkup()
-            job.prebuildersTasks*.addMarkup()
-        }
+        builder.with {
+            prebuilders {
+                add( job.prebuilders )
+                job.groovys().findAll{ it.pre }*.addMarkup()
+                job.prebuildersTasks*.addMarkup()
+            }
 
-        postbuilders {
-            add( job.postbuilders )
-            job.groovys().findAll{ ! it.pre }*.addMarkup()
-            job.postbuildersTasks*.addMarkup()
-        }
+            postbuilders {
+                add( job.postbuilders )
+                job.groovys().findAll{ ! it.pre }*.addMarkup()
+                job.postbuildersTasks*.addMarkup()
+            }
 
-        runPostStepsIfResult {
-            name   ( job.runPostStepsIfResult.name    )
-            ordinal( job.runPostStepsIfResult.ordinal )
-            color  ( job.runPostStepsIfResult.color   )
+            runPostStepsIfResult {
+                name   ( job.runPostStepsIfResult.name    )
+                ordinal( job.runPostStepsIfResult.ordinal )
+                color  ( job.runPostStepsIfResult.color   )
+            }
         }
     }
 
@@ -235,84 +237,86 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
     {
         add( job.publishers )
 
-        if (( job.mail.recipients ) && ( ! isMavenJob ))
-        {
-            'hudson.tasks.Mailer' {
-                recipients( job.mail.recipients )
-                dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
-                sendToIndividuals( job.mail.sendToIndividuals )
-            }
-        }
-
-        if (( job.deploy.url ) && ( isMavenJob ))
-        {
-            'hudson.maven.RedeployPublisher' {
-                id( job.deploy.id )
-                url( job.deploy.url )
-                uniqueVersion( job.deploy.uniqueVersion )
-                evenIfUnstable( job.deploy.evenIfUnstable )
-            }
-        }
-
-        if (( job.artifactory.name ) && ( isMavenJob ))
-        {
-            'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
-                details {
-                    artifactoryName( job.artifactory.name )
-                    repositoryKey( job.artifactory.repository )
-                    snapshotsRepositoryKey( job.artifactory.snapshotsRepository )
+        builder.with {
+            if (( ! isMavenJob ) && ( job.mail.recipients ))
+            {
+                'hudson.tasks.Mailer' {
+                    recipients( job.mail.recipients )
+                    dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
+                    sendToIndividuals( job.mail.sendToIndividuals )
                 }
-                deployArtifacts( job.artifactory.deployArtifacts )
-                username( job.artifactory.user )
-                scrambledPassword( job.artifactory.scrambledPassword )
-                includeEnvVars( job.artifactory.includeEnvVars )
-                skipBuildInfoDeploy( job.artifactory.skipBuildInfoDeploy )
-                evenIfUnstable( job.artifactory.evenIfUnstable )
-                runChecks( job.artifactory.runChecks )
-                violationRecipients( job.artifactory.violationRecipients )
             }
-        }
 
-        if ( job.invoke.jobs )
-        {
-            'hudson.plugins.parameterizedtrigger.BuildTrigger' {
-                configs {
-                    'hudson.plugins.parameterizedtrigger.BuildTriggerConfig' {
+            if (( isMavenJob ) && ( job.deploy.url ))
+            {
+                'hudson.maven.RedeployPublisher' {
+                    id( job.deploy.id )
+                    url( job.deploy.url )
+                    uniqueVersion( job.deploy.uniqueVersion )
+                    evenIfUnstable( job.deploy.evenIfUnstable )
+                }
+            }
 
-                        final anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
-                                             job.invoke.gitCommitParam     || job.invoke.params                  ||
-                                             job.invoke.propertiesFileParams )
+            if (( isMavenJob ) && ( job.artifactory.name ))
+            {
+                'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
+                    details {
+                        artifactoryName( job.artifactory.name )
+                        repositoryKey( job.artifactory.repository )
+                        snapshotsRepositoryKey( job.artifactory.snapshotsRepository )
+                    }
+                    deployArtifacts( job.artifactory.deployArtifacts )
+                    username( job.artifactory.user )
+                    scrambledPassword( job.artifactory.scrambledPassword )
+                    includeEnvVars( job.artifactory.includeEnvVars )
+                    skipBuildInfoDeploy( job.artifactory.skipBuildInfoDeploy )
+                    evenIfUnstable( job.artifactory.evenIfUnstable )
+                    runChecks( job.artifactory.runChecks )
+                    violationRecipients( job.artifactory.violationRecipients )
+                }
+            }
 
-                        if ( ! anyConfigs )
-                        {
-                            configs( class: 'java.util.Collections$EmptyList' )
-                        }
-                        else
-                        {
-                            configs {
-                                if ( job.invoke.currentBuildParams      ){ 'hudson.plugins.parameterizedtrigger.CurrentBuildParameters'()}
-                                if ( job.invoke.subversionRevisionParam ){ 'hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters'()}
-                                if ( job.invoke.gitCommitParam          ){ 'hudson.plugins.git.GitRevisionBuildParameters'()}
+            if ( job.invoke.jobs )
+            {
+                'hudson.plugins.parameterizedtrigger.BuildTrigger' {
+                    configs {
+                        'hudson.plugins.parameterizedtrigger.BuildTriggerConfig' {
 
-                                if ( job.invoke.params )
-                                {
-                                    'hudson.plugins.parameterizedtrigger.PredefinedBuildParameters' {
-                                        builder.properties( job.invoke.params.readLines()*.trim().join( '\n' ))
+                            final anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
+                                                 job.invoke.gitCommitParam     || job.invoke.params                  ||
+                                                 job.invoke.propertiesFileParams )
+
+                            if ( ! anyConfigs )
+                            {
+                                configs( class: 'java.util.Collections$EmptyList' )
+                            }
+                            else
+                            {
+                                configs {
+                                    if ( job.invoke.currentBuildParams      ){ 'hudson.plugins.parameterizedtrigger.CurrentBuildParameters'()}
+                                    if ( job.invoke.subversionRevisionParam ){ 'hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters'()}
+                                    if ( job.invoke.gitCommitParam          ){ 'hudson.plugins.git.GitRevisionBuildParameters'()}
+
+                                    if ( job.invoke.params )
+                                    {
+                                        'hudson.plugins.parameterizedtrigger.PredefinedBuildParameters' {
+                                            builder.properties( job.invoke.params.readLines()*.trim().join( '\n' ))
+                                        }
                                     }
-                                }
 
-                                if ( job.invoke.propertiesFileParams )
-                                {
-                                    'hudson.plugins.parameterizedtrigger.FileBuildParameters' {
-                                        propertiesFile( job.invoke.propertiesFileParams )
+                                    if ( job.invoke.propertiesFileParams )
+                                    {
+                                        'hudson.plugins.parameterizedtrigger.FileBuildParameters' {
+                                            propertiesFile( job.invoke.propertiesFileParams )
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        projects( job.invoke.jobs )
-                        condition( job.invoke.condition[ 0 ] )
-                        triggerWithNoParameters( job.invoke.triggerWithoutParameters )
+                            projects( job.invoke.jobs )
+                            condition( job.invoke.condition[ 0 ] )
+                            triggerWithNoParameters( job.invoke.triggerWithoutParameters )
+                        }
                     }
                 }
             }
