@@ -50,8 +50,7 @@ class ConfigMarkup extends Markup
                 }
                 keepDependencies( false )
                 addProperties()
-                job.scmMarkupBuilder?.addMarkup( builder )
-                if ( job.scm ){ add( job.scm ) }
+                addScm()
             }
         }
     }
@@ -89,7 +88,7 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
     {
         builder.with {
             builder.properties {
-                if ( job.properties  ) { add( job.properties )}
+                add( job.properties )
                 if ( job.parameters()) {
                     'hudson.model.ParametersDefinitionProperty' {
                         parameterDefinitions {
@@ -103,4 +102,17 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
         }
     }
 
+
+    /**
+     * Adds {@code <scm>} section to the {@link #builder}.
+     */
+    void addScm()
+    {
+        final scmBuilderClass = job.scmMarkupBuilderClass
+        /**
+         * {@link com.github.goldin.plugins.jenkins.Scm}
+         */
+        if  ( scmBuilderClass ){ scmBuilderClass.newInstance( builder, job ).buildMarkup() }
+        add( job.scm )
+    }
 }

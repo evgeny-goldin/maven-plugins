@@ -171,23 +171,19 @@ class Job
 
 
     String               scmType
-    Scm getScmMarkupBuilder ()
+    Class<? extends Scm> getScmMarkupBuilderClass()
     {
         if ( repositories() || ( 'none' == scmType ))
         {
             assert scmType
-            Scm scm = ( scmType == 'none' ? new None() :
-                        scmType == 'cvs'  ? new Cvs()  :
-                        scmType == 'svn'  ? new Svn()  :
-                        scmType == 'git'  ? new Git()  :
-                        scmType == 'hg'   ? new Hg()   :
-                                            null )
-
-            assert scm, "Unknown <scmType>${ scmType }</scmType>"
-
-            scm.job          = this
-            scm.repositories = repositories()
-            scm
+            Class<? extends Scm> scmClass = ( scmType == 'none' ? None :
+                                              scmType == 'cvs'  ? Cvs  :
+                                              scmType == 'svn'  ? Svn  :
+                                              scmType == 'git'  ? Git  :
+                                              scmType == 'hg'   ? Hg   :
+                                                                  null )
+            assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
+            scmClass
         }
         else
         {

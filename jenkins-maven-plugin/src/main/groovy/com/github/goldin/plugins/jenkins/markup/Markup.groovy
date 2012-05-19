@@ -34,6 +34,15 @@ abstract class Markup
     }
 
 
+    @Requires({ builder })
+    @Ensures({ this.builder })
+    Markup( MarkupBuilder builder )
+    {
+        this.writer  = null
+        this.builder = builder
+    }
+
+
     /**
      * Builds a markup using {@link #builder}.
      */
@@ -41,12 +50,22 @@ abstract class Markup
 
 
     /**
-     * Helper method, a {@link groovy.xml.MarkupBuilderHelper#yieldUnescaped} wrapper.
+     * Helper method, a {@link groovy.xml.MarkupBuilderHelper#yieldUnescaped} wrapper - adds a value specified
+     * to the {@link #builder}, unescaped, if it evaluates to Groovy {@code true}.
      *
-     * @param value value to add to the builder, unescaped.
+     * @param value value to add to the {@link #builder}, unescaped.
      */
     @Requires({ value })
-    final void add ( String value ) { builder.mkp.yieldUnescaped( value ) }
+    final void add ( String value ) { if ( value ) { builder.mkp.yieldUnescaped( value ) }}
+
+
+    /**
+     * Adds tag and a value to the {@link #builder} if value evaluates to Groovy {@code true}.
+     * @param tagName name of the tag to add
+     * @param value   tag's value to add
+     */
+    @Requires({ tagName })
+    final void add ( String tagName, Object value ) { if ( value ) { builder."$tagName"( value ) }}
 
 
     /**
@@ -65,6 +84,8 @@ abstract class Markup
     @Ensures({ result })
     final String getMarkup()
     {
+        assert this.writer, "This instance was created using another MarkupBuilder, there's no access to the writer"
+
         buildMarkup()
         verify().notNullOrEmpty( this.writer.toString())
     }

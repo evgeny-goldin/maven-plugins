@@ -1,88 +1,65 @@
 package com.github.goldin.plugins.jenkins
 
+import com.github.goldin.plugins.jenkins.markup.Markup
 import groovy.xml.MarkupBuilder
-import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
 
-abstract class Scm
+abstract class Scm extends Markup
 {
-    Job              job
-    List<Repository> repositories
-    MarkupBuilder    builder
-
-    @Ensures({ result })
-    abstract String getScmClass()
-
-    /**
-     * Adds SCM-specific markup to the {@link #builder}.
-     */
-    abstract void addMarkup ()
+    final Job              job
+    final List<Repository> repositories
 
 
-    /**
-     * Adds tag specified to the builder only if value specified evaluates to true according to the Groovy Truth.
-     */
-    final void add ( String tagName, Object value )
+    @Requires({ builder && job })
+    Scm( MarkupBuilder builder, Job job )
     {
-        if ( value ) { builder."$tagName"( value ) }
-    }
+        super( builder )
 
+        this.job          = job
+        this.repositories = job.repositories()
 
-    /**
-     * Builds SCM section markup.
-     *
-     * @return SCM section markup
-     */
-    @Requires({ builder })
-    final String addMarkup( MarkupBuilder builder )
-    {
-        this.builder = builder
-        assert this.builder && job && ( repositories || ( this.class == None ))
-        builder.scm( class: scmClass ) { addMarkup() }
+        assert this.builder && this.job && ( this.repositories || ( this.class == None ))
     }
 }
 
 
 class None extends Scm
 {
-    @Override
-    String getScmClass(){ 'hudson.scm.NullSCM' }
+    None( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void addMarkup (){}
+    void buildMarkup(){ builder.scm( class: 'hudson.scm.NullSCM' ){}}
 }
 
 
 class Cvs extends Scm
 {
-    @Override
-    String getScmClass(){ 'hudson.scm.CVSSCM' }
+    Cvs( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void addMarkup ()
+    void buildMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple CVS repositories are not supported"
         final repository = repositories.first()
 
         builder.with {
+            scm( class: 'hudson.scm.CVSSCM' ) {
+                cvsroot( repository.remote )
+                add( 'module', repository.cvsModule )
+                add( 'branch', repository.cvsBranch )
+                add( 'cvsRsh', repository.cvsRsh )
+                canUseUpdate( repository.cvsUpdate )
+                flatten( ! repository.cvsLegacy )
 
-            cvsroot( repository.remote )
-            add( 'module', repository.cvsModule )
-            add( 'branch', repository.cvsBranch )
-            add( 'cvsRsh', repository.cvsRsh )
-            canUseUpdate( repository.cvsUpdate )
-            flatten( ! repository.cvsLegacy )
-
-            if ( repository.cvsRepoBrowserClass && repository.repoBrowserUrl )
-            {
-                repositoryBrowser( class: repository.cvsRepoBrowserClass ) {
-                    url( repository.repoBrowserUrl )
+                if ( repository.cvsRepoBrowserClass && repository.repoBrowserUrl )
+                {
+                    repositoryBrowser( class: repository.cvsRepoBrowserClass ) { url( repository.repoBrowserUrl ) }
                 }
-            }
 
-            isTag( repository.cvsTag )
-            excludedRegions( repository.cvsExcludedRegions )
+                isTag( repository.cvsTag )
+                excludedRegions( repository.cvsExcludedRegions )
+            }
         }
     }
 }
@@ -90,24 +67,24 @@ class Cvs extends Scm
 
 class Svn extends Scm
 {
-    @Override
-    String getScmClass(){ 'hudson.scm.SubversionSCM' }
+    Svn( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void addMarkup ()
+    void buildMarkup ()
     {
         builder.with {
-
-            locations {
-                for ( repository in repositories ) {
-                    "${ scmClass }_-ModuleLocation" {
-                        remote( repository.remote )
-                        add( 'local', repository.local )
+            scm( class: 'hudson.scm.SubversionSCM' ) {
+                locations {
+                    for ( repository in repositories ) {
+                        'hudson.scm.SubversionSCM_-ModuleLocation' {
+                            remote( repository.remote )
+                            add( 'local', repository.local )
+                        }
                     }
                 }
+                useUpdate( job.useUpdate )
+                doRevert( job.doRevert )
             }
-            useUpdate( job.useUpdate )
-            doRevert( job.doRevert )
         }
     }
 }
@@ -115,68 +92,69 @@ class Svn extends Scm
 
 class Git extends Scm
 {
-    @Override
-    String getScmClass(){ 'hudson.plugins.git.GitSCM' }
+    Git( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void addMarkup ()
+    void buildMarkup ()
     {
         final gitRepository = repositories.first()
 
         builder.with {
 
-            configVersion( 2 )
-            userRemoteConfigs {
-                for ( repository in repositories ) {
-                    'hudson.plugins.git.UserRemoteConfig' {
-                        name( repository.gitName )
-                        refspec( repository.gitRefspec )
-                        url( repository.remote )
+            scm( class:  'hudson.plugins.git.GitSCM' ) {
+
+                configVersion( 2 )
+                userRemoteConfigs {
+                    for ( repository in repositories ) {
+                        'hudson.plugins.git.UserRemoteConfig' {
+                            name( repository.gitName )
+                            refspec( repository.gitRefspec )
+                            url( repository.remote )
+                        }
                     }
                 }
-            }
-            branches {
-                for ( repository in repositories ) {
-                    'hudson.plugins.git.BranchSpec' {
-                        name( repository.gitBranch )
+
+                branches {
+                    for ( repository in repositories ) {
+                        'hudson.plugins.git.BranchSpec' {
+                            name( repository.gitBranch )
+                        }
                     }
                 }
-            }
-            add( 'localBranch', gitRepository.gitLocalBranch )
+                add( 'localBranch', gitRepository.gitLocalBranch )
 
-            if ( gitRepository.gitMergeRepo || gitRepository.gitMergeBranch )
-            {
-                userMergeOptions {
-                    mergeRemote( gitRepository.gitMergeRepo )
-                    mergeTarget( gitRepository.gitMergeBranch )
+                if ( gitRepository.gitMergeRepo || gitRepository.gitMergeBranch )
+                {
+                    userMergeOptions {
+                        mergeRemote( gitRepository.gitMergeRepo )
+                        mergeTarget( gitRepository.gitMergeBranch )
+                    }
                 }
-            }
 
-            recursiveSubmodules( gitRepository.gitUpdateSubmodules )
-            doGenerateSubmoduleConfigurations( false )
-            authorOrCommitter( gitRepository.gitCommitAuthor )
-            clean( gitRepository.gitCleanAfterCheckout )
-            wipeOutWorkspace( gitRepository.gitWipeOutWorkspace )
-            pruneBranches( gitRepository.gitPruneBranches )
-            remotePoll( gitRepository.gitRemotePolling )
-            buildChooser( class: 'hudson.plugins.git.util.DefaultBuildChooser' )
-            gitTool( 'Default' )
+                recursiveSubmodules( gitRepository.gitUpdateSubmodules )
+                doGenerateSubmoduleConfigurations( false )
+                authorOrCommitter( gitRepository.gitCommitAuthor )
+                clean( gitRepository.gitCleanAfterCheckout )
+                wipeOutWorkspace( gitRepository.gitWipeOutWorkspace )
+                pruneBranches( gitRepository.gitPruneBranches )
+                remotePoll( gitRepository.gitRemotePolling )
+                buildChooser( class: 'hudson.plugins.git.util.DefaultBuildChooser' )
+                gitTool( 'Default' )
 
-            if ( gitRepository.gitRepoBrowserClass && gitRepository.repoBrowserUrl )
-            {
-                browser( class: gitRepository.gitRepoBrowserClass ) {
-                    url( gitRepository.repoBrowserUrl )
+                if ( gitRepository.gitRepoBrowserClass && gitRepository.repoBrowserUrl )
+                {
+                    browser( class: gitRepository.gitRepoBrowserClass ) { url( gitRepository.repoBrowserUrl ) }
                 }
-            }
 
-            submoduleCfg( class: 'list' )
-            relativeTargetDir( gitRepository.gitLocalSubdirectory )
-            excludedRegions( gitRepository.gitExcludedRegions )
-            excludedUsers( gitRepository.gitExcludedUsers )
-            gitConfigName( gitRepository.gitConfigName )
-            gitConfigEmail( gitRepository.gitConfigEmail )
-            skipTag( gitRepository.gitSkipTag )
-            scmName( gitRepository.gitScmName )
+                submoduleCfg( class: 'list' )
+                relativeTargetDir( gitRepository.gitLocalSubdirectory )
+                excludedRegions( gitRepository.gitExcludedRegions )
+                excludedUsers( gitRepository.gitExcludedUsers )
+                gitConfigName( gitRepository.gitConfigName )
+                gitConfigEmail( gitRepository.gitConfigEmail )
+                skipTag( gitRepository.gitSkipTag )
+                scmName( gitRepository.gitScmName )
+            }
         }
     }
 }
@@ -185,27 +163,25 @@ class Git extends Scm
 @SuppressWarnings([ 'GroovyClassNamingConvention' ])
 class Hg extends Scm
 {
-    @Override
-    String getScmClass(){ 'hudson.plugins.mercurial.MercurialSCM' }
+    Hg( MarkupBuilder builder, Job job ){ super( builder, job )}
 
     @Override
-    void addMarkup ()
+    void buildMarkup ()
     {
         assert repositories.size() == 1, "[${ job }] - multiple Mercurial repositories are not supported"
         final repository = repositories.first()
 
         builder.with {
+            scm( class: 'hudson.plugins.mercurial.MercurialSCM' ) {
+                source ( repository.remote )
+                modules( repository.hgModules )
+                add( 'branch', repository.hgBranch )
+                add( 'subdir', repository.hgSubdir )
+                clean( repository.hgClean )
 
-            source ( repository.remote )
-            modules( repository.hgModules )
-            add( 'branch', repository.hgBranch )
-            add( 'subdir', repository.hgSubdir )
-            clean( repository.hgClean )
-
-            if ( repository.hgRepoBrowserClass && repository.repoBrowserUrl )
-            {
-                browser( class: repository.hgRepoBrowserClass ) {
-                    url( repository.repoBrowserUrl )
+                if ( repository.hgRepoBrowserClass && repository.repoBrowserUrl )
+                {
+                    browser( class: repository.hgRepoBrowserClass ) { url( repository.repoBrowserUrl ) }
                 }
             }
         }
