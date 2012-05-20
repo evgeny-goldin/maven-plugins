@@ -186,7 +186,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
         builder.with {
 
             rootPOM( job.pom )
-            goals( job.mavenGoals )
+            goals{ add( job.mavenGoals ) }
             mavenName( job.mavenName )
             mavenOpts( job.mavenOpts ?: '' )
             aggregatorStyleBuild( true )
