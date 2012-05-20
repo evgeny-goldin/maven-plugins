@@ -43,6 +43,16 @@ class ConfigMarkup extends Markup
 
 
     /**
+     * Adds "extension point" markup
+     * @param extensionPointMarkup custom extension point markup specified by user
+     */
+    private void addExtensionPoint( String extensionPointMarkup )
+    {
+        if ( extensionPointMarkup ) { add( "\n${ indent }${ extensionPointMarkup }\n${ indent }" ) }
+    }
+
+
+    /**
      * Builds Jenkins config XML markup using this object markup builder.
      */
     @Override
@@ -86,7 +96,7 @@ class ConfigMarkup extends Markup
                 if ( isMavenJob ){ addMaven() }
                 else             { builders{ job.tasks*.addMarkup() }}
                 addPublishers()
-                buildWrappers{ add( job.buildWrappers ) }
+                buildWrappers{ addExtensionPoint( job.buildWrappers ) }
                 if ( isMavenJob ){ addMavenBuilders() }
             }
         }
@@ -125,7 +135,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
     {
         builder.with {
             builder.properties {
-                add( job.properties )
+                addExtensionPoint( job.properties )
                 if ( job.parameters()) {
                     'hudson.model.ParametersDefinitionProperty' {
                         parameterDefinitions {
@@ -154,7 +164,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
             scm.repositories = job.repositories()
             scm.addMarkup()
         }
-        add( job.scm )
+        addExtensionPoint( job.scm )
     }
 
 
@@ -205,7 +215,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
             runHeadless( false )
 
             reporters {
-                add( job.reporters )
+                addExtensionPoint( job.reporters )
                 if ( job.mail.recipients )
                 {
                     'hudson.maven.reporters.MavenMailer' {
@@ -228,13 +238,13 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
 
         builder.with {
             prebuilders {
-                add( job.prebuilders )
+                addExtensionPoint( job.prebuilders )
                 job.groovys().findAll{ it.pre }*.addMarkup()
                 job.prebuildersTasks*.addMarkup()
             }
 
             postbuilders {
-                add( job.postbuilders )
+                addExtensionPoint( job.postbuilders )
                 job.groovys().findAll{ ! it.pre }*.addMarkup()
                 job.postbuildersTasks*.addMarkup()
             }
@@ -256,7 +266,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
         builder.with {
 
             publishers {
-                add( job.publishers )
+                addExtensionPoint( job.publishers )
 
                 if (( ! isMavenJob ) && ( job.mail.recipients ))
                 {
