@@ -83,24 +83,14 @@ class JenkinsMojo extends BaseGroovyMojo
     File generateConfigFile( Job job )
     {
         final configFile   = new File( outputDirectory, "${ job.id }/config.xml" )
-        final indent       = ' ' * 4
+        final indent       = ' ' * 2
         final newLine      = (( 'windows' == endOfLine ) ? '\r\n' : '\n' )
         final timestamp    = ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )
         final configMarkup = new ConfigMarkup( job, timestamp, indent, newLine ).markup
 
         if ( job.process )
         {
-            final rootNode    = new XmlParser().parseText( configMarkup )
-            String expression = job.process.trim().with {
-                endsWith( '.groovy' ) ? verify().file( new File(( String ) delegate )).getText( 'UTF-8' ) : delegate
-            }
-
-            eval( expression, null, null, 'config', configMarkup, 'node', rootNode, 'file', configFile )
-            final writer               = new StringWriter( configMarkup.size())
-            final printer              = new XmlNodePrinter( new NewLineIndentPrinter( writer, indent, newLine ))
-            printer.preserveWhitespace = true
-            printer.print( rootNode )
-            configMarkup = writer.toString()
+            configMarkup = process( configMarkup, configFile, job, indent, newLine )
         }
 
         file().mkdirs( file().delete( configFile ).parentFile )
@@ -246,5 +236,40 @@ class JenkinsMojo extends BaseGroovyMojo
         }
 
         resultJob
+    }
+
+
+    /**
+     * Invokes Groovy specified with job's {@code <process>}.
+     *
+     * @param configMarkup original config markup
+     * @param configFile   config file data will be written to
+     * @param job          original job
+     * @param indent       markup indent
+     * @param newLine      markup new line
+     * @return            new config markup
+     */
+    @Requires({ configMarkup && configFile && job && indent && newLine })
+    @Ensures({ result })
+    private String process( String configMarkup, File configFile, Job job, String indent, String newLine )
+    {
+        assert job.process
+
+        final rootNode    = new XmlParser().parseText( configMarkup )
+        String expression = job.process.trim().with {
+            endsWith( '.groovy' ) ? new File(( String ) delegate ).getText( 'UTF-8' ) : delegate
+        }
+
+        /**
+         * Updating rootNode structure with custom Groovy expression.
+         */
+        assert configMarkup && rootNode && configFile
+        eval( expression, null, null, 'config', configMarkup, 'node', rootNode, 'file', configFile )
+
+        final writer               = new StringWriter  ( configMarkup.size())
+        final printer              = new XmlNodePrinter( new NewLineIndentPrinter( writer, indent, newLine ))
+        printer.preserveWhitespace = true // So we have <tag>value</tag> and not <tag>\nvalue\n</tag>
+        printer.print( rootNode )
+        writer.toString()
     }
 }
