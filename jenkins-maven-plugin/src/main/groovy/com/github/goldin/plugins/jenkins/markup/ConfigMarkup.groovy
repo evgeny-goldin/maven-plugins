@@ -133,19 +133,17 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
      */
     void addProperties()
     {
-        builder.with {
-            builder.properties {
-                addExtensionPoint( job.properties )
-                if ( job.parameters()) {
-                    'hudson.model.ParametersDefinitionProperty' {
-                        parameterDefinitions {
-                            job.parameters().findAll{ it.type != ParameterType.jira }*.addMarkup( builder )
-                        }
+        builder.properties {
+            addExtensionPoint( job.properties )
+            if ( job.parameters()) {
+                'hudson.model.ParametersDefinitionProperty' {
+                    parameterDefinitions {
+                        job.parameters().findAll{ it.type != ParameterType.jira }*.addMarkup( builder )
                     }
-                    job.parameters().findAll{ it.type == ParameterType.jira }*.addMarkup( builder )
                 }
-                if ( job.gitHubUrl ) { 'com.coravy.hudson.plugins.github.GithubProjectProperty' { projectUrl( job.gitHubUrl ) }}
+                job.parameters().findAll{ it.type == ParameterType.jira }*.addMarkup( builder )
             }
+            if ( job.gitHubUrl ) { 'com.coravy.hudson.plugins.github.GithubProjectProperty' { projectUrl( job.gitHubUrl ) }}
         }
     }
 
@@ -173,13 +171,11 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
      */
     void addTriggers()
     {
-        builder.with {
-            triggers( class: 'vector' ) {
-                for ( trigger in job.triggers())
-                {
-                    "${ trigger.triggerClass }" {
-                        spec(( trigger.description ? "# ${ trigger.description }\n" : '' ) + trigger.expression )
-                    }
+        builder.triggers( class: 'vector' ) {
+            for ( trigger in job.triggers())
+            {
+                "${ trigger.triggerClass }" {
+                    spec(( trigger.description ? "# ${ trigger.description }\n" : '' ) + trigger.expression )
                 }
             }
         }
@@ -263,90 +259,87 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
      */
     void addPublishers()
     {
-        builder.with {
+        builder.publishers {
+            addExtensionPoint( job.publishers )
 
-            publishers {
-                addExtensionPoint( job.publishers )
-
-                if (( ! isMavenJob ) && ( job.mail.recipients ))
-                {
-                    'hudson.tasks.Mailer' {
-                        recipients( job.mail.recipients )
-                        dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
-                        sendToIndividuals( job.mail.sendToIndividuals )
-                    }
+            if (( ! isMavenJob ) && ( job.mail.recipients ))
+            {
+                'hudson.tasks.Mailer' {
+                    recipients( job.mail.recipients )
+                    dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
+                    sendToIndividuals( job.mail.sendToIndividuals )
                 }
+            }
 
-                if (( isMavenJob ) && ( job.deploy.url ))
-                {
-                    'hudson.maven.RedeployPublisher' {
-                        id( job.deploy.id )
-                        url( job.deploy.url )
-                        uniqueVersion( job.deploy.uniqueVersion )
-                        evenIfUnstable( job.deploy.evenIfUnstable )
-                    }
+            if (( isMavenJob ) && ( job.deploy.url ))
+            {
+                'hudson.maven.RedeployPublisher' {
+                    id( job.deploy.id )
+                    url( job.deploy.url )
+                    uniqueVersion( job.deploy.uniqueVersion )
+                    evenIfUnstable( job.deploy.evenIfUnstable )
                 }
+            }
 
-                if (( isMavenJob ) && ( job.artifactory.name ))
-                {
-                    'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
-                        details {
-                            artifactoryName( job.artifactory.name )
-                            repositoryKey( job.artifactory.repository )
-                            snapshotsRepositoryKey( job.artifactory.snapshotsRepository )
-                        }
-                        deployArtifacts( job.artifactory.deployArtifacts )
-                        username( job.artifactory.user )
-                        scrambledPassword( job.artifactory.scrambledPassword )
-                        includeEnvVars( job.artifactory.includeEnvVars )
-                        skipBuildInfoDeploy( job.artifactory.skipBuildInfoDeploy )
-                        evenIfUnstable( job.artifactory.evenIfUnstable )
-                        runChecks( job.artifactory.runChecks )
-                        violationRecipients( job.artifactory.violationRecipients )
+            if (( isMavenJob ) && ( job.artifactory.name ))
+            {
+                'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
+                    details {
+                        artifactoryName( job.artifactory.name )
+                        repositoryKey( job.artifactory.repository )
+                        snapshotsRepositoryKey( job.artifactory.snapshotsRepository )
                     }
+                    deployArtifacts( job.artifactory.deployArtifacts )
+                    username( job.artifactory.user )
+                    scrambledPassword( job.artifactory.scrambledPassword )
+                    includeEnvVars( job.artifactory.includeEnvVars )
+                    skipBuildInfoDeploy( job.artifactory.skipBuildInfoDeploy )
+                    evenIfUnstable( job.artifactory.evenIfUnstable )
+                    runChecks( job.artifactory.runChecks )
+                    violationRecipients( job.artifactory.violationRecipients )
                 }
+            }
 
-                if ( job.invoke.jobs )
-                {
-                    'hudson.plugins.parameterizedtrigger.BuildTrigger' {
-                        configs {
-                            'hudson.plugins.parameterizedtrigger.BuildTriggerConfig' {
+            if ( job.invoke.jobs )
+            {
+                'hudson.plugins.parameterizedtrigger.BuildTrigger' {
+                    configs {
+                        'hudson.plugins.parameterizedtrigger.BuildTriggerConfig' {
 
-                                final anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
-                                                     job.invoke.gitCommitParam     || job.invoke.params                  ||
-                                                     job.invoke.propertiesFileParams )
+                            final anyConfigs = ( job.invoke.currentBuildParams || job.invoke.subversionRevisionParam ||
+                                                 job.invoke.gitCommitParam     || job.invoke.params                  ||
+                                                 job.invoke.propertiesFileParams )
 
-                                if ( ! anyConfigs )
-                                {
-                                    configs( class: 'java.util.Collections$EmptyList' )
-                                }
-                                else
-                                {
-                                    configs {
-                                        if ( job.invoke.currentBuildParams      ){ 'hudson.plugins.parameterizedtrigger.CurrentBuildParameters'()}
-                                        if ( job.invoke.subversionRevisionParam ){ 'hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters'()}
-                                        if ( job.invoke.gitCommitParam          ){ 'hudson.plugins.git.GitRevisionBuildParameters'()}
+                            if ( ! anyConfigs )
+                            {
+                                configs( class: 'java.util.Collections$EmptyList' )
+                            }
+                            else
+                            {
+                                configs {
+                                    if ( job.invoke.currentBuildParams      ){ 'hudson.plugins.parameterizedtrigger.CurrentBuildParameters'()}
+                                    if ( job.invoke.subversionRevisionParam ){ 'hudson.plugins.parameterizedtrigger.SubversionRevisionBuildParameters'()}
+                                    if ( job.invoke.gitCommitParam          ){ 'hudson.plugins.git.GitRevisionBuildParameters'()}
 
-                                        if ( job.invoke.params )
-                                        {
-                                            'hudson.plugins.parameterizedtrigger.PredefinedBuildParameters' {
-                                                builder.properties( job.invoke.params.readLines()*.trim().join( '\n' ))
-                                            }
+                                    if ( job.invoke.params )
+                                    {
+                                        'hudson.plugins.parameterizedtrigger.PredefinedBuildParameters' {
+                                            builder.properties( job.invoke.params.readLines()*.trim().join( '\n' ))
                                         }
+                                    }
 
-                                        if ( job.invoke.propertiesFileParams )
-                                        {
-                                            'hudson.plugins.parameterizedtrigger.FileBuildParameters' {
-                                                propertiesFile( job.invoke.propertiesFileParams )
-                                            }
+                                    if ( job.invoke.propertiesFileParams )
+                                    {
+                                        'hudson.plugins.parameterizedtrigger.FileBuildParameters' {
+                                            propertiesFile( job.invoke.propertiesFileParams )
                                         }
                                     }
                                 }
-
-                                projects( job.invoke.jobs )
-                                condition( job.invoke.condition[ 0 ] )
-                                triggerWithNoParameters( job.invoke.triggerWithoutParameters )
                             }
+
+                            projects( job.invoke.jobs )
+                            condition( job.invoke.condition[ 0 ] )
+                            triggerWithNoParameters( job.invoke.triggerWithoutParameters )
                         }
                     }
                 }

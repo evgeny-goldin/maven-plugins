@@ -68,11 +68,9 @@ class DescriptionTableMarkup extends Markup
     @Requires({ title && valueClosure })
     void addRow ( String title, Closure valueClosure )
     {
-        builder.with {
-            tr {
-                td( valign: 'top', title )
-                td(){ valueClosure() }
-            }
+        builder.tr {
+            td( valign: 'top', title )
+            td(){ valueClosure() }
         }
     }
 
@@ -84,56 +82,54 @@ class DescriptionTableMarkup extends Markup
     @Requires({ job })
     void addMarkup ()
     {
-        builder.with {
-            table( border: '1', width: '100%', cellpadding:'3', cellspacing:'3' ) {
+        builder.table( border: '1', width: '100%', cellpadding:'3', cellspacing:'3' ) {
 
-                tr {
-                    td( width: '15%', valign: 'top', 'Job' )
-                    td( width: '85%' ){ addJobLink( job.id ) }
+            tr {
+                td( width: '15%', valign: 'top', 'Job' )
+                td( width: '85%' ){ addJobLink( job.id ) }
+            }
+
+            for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ ! it.bottom } )
+            {
+                addRow( row.key, row.value )
+            }
+
+            addRow( 'Display name', job.displayName )
+
+            if ( job.parent ){ addRow( 'Parent job', {
+                job.parentIsReal ? addJobLink( job.parent ) : add( job.parent )
+            })}
+
+            if ( job.childJobs ){ addRow( 'Child job' + general().s( job.childJobs.size()), {
+                job.childJobs.eachWithIndex {
+                    Job childJob, int index ->
+                    addJobLink( childJob.id )
+                    if ( index < ( job.childJobs.size() - 1 )) { add( ', ' ) }
                 }
+            })}
 
-                for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ ! it.bottom } )
-                {
-                    addRow( row.key, row.value )
-                }
+            addRow( 'Job type',        job.jobType.description )
+            addRow( 'Node',            { addNodeLink( job.node )})
+            addRow( 'JDK name',        job.jdkName, true )
+            addRow( 'Mail recipients', job.mail?.recipients )
+            addRow( 'Quiet period',    job.quietPeriod )
+            addRow( 'Retry count',     job.scmCheckoutRetryCount )
 
-                addRow( 'Display name', job.displayName )
+            if ( job.scmType == 'svn' )
+            {
+                addRow( 'Svn update policy', "Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]" )
+            }
 
-                if ( job.parent ){ addRow( 'Parent job', {
-                    job.parentIsReal ? addJobLink( job.parent ) : add( job.parent )
-                })}
+            if ( job.repositories())               { addRepositories  ()}
+            if ( job.triggers())                   { addTriggers      ()}
+            if ( job.jobType == Job.JobType.maven ){ addMavenRows     ()}
+            if ( job.jobType == Job.JobType.free  ){ addRow( 'Build steps', { addTasks( job.tasks ) })}
+            if ( job.invoke?.jobs                 ){ addInvokeJobs    ()}
+            if ( job.invokedBy                    ){ addInvokedByJobs ()}
 
-                if ( job.childJobs ){ addRow( 'Child job' + general().s( job.childJobs.size()), {
-                    job.childJobs.eachWithIndex {
-                        Job childJob, int index ->
-                        addJobLink( childJob.id )
-                        if ( index < ( job.childJobs.size() - 1 )) { add( ', ' ) }
-                    }
-                })}
-
-                addRow( 'Job type',        job.jobType.description )
-                addRow( 'Node',            { addNodeLink( job.node )})
-                addRow( 'JDK name',        job.jdkName, true )
-                addRow( 'Mail recipients', job.mail?.recipients )
-                addRow( 'Quiet period',    job.quietPeriod )
-                addRow( 'Retry count',     job.scmCheckoutRetryCount )
-
-                if ( job.scmType == 'svn' )
-                {
-                    addRow( 'Svn update policy', "Revert - [${ job.doRevert }], update - [${ job.useUpdate }], checkout - [${ ! job.useUpdate }]" )
-                }
-
-                if ( job.repositories())               { addRepositories  ()}
-                if ( job.triggers())                   { addTriggers      ()}
-                if ( job.jobType == Job.JobType.maven ){ addMavenRows     ()}
-                if ( job.jobType == Job.JobType.free  ){ addRow( 'Build steps', { addTasks( job.tasks ) })}
-                if ( job.invoke?.jobs                 ){ addInvokeJobs    ()}
-                if ( job.invokedBy                    ){ addInvokedByJobs ()}
-
-                for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ it.bottom } )
-                {
-                    addRow( row.key, row.value )
-                }
+            for ( row in ( Collection<DescriptionRow> ) job.descriptionTable.findAll{ it.bottom } )
+            {
+                addRow( row.key, row.value )
             }
         }
     }
@@ -219,22 +215,19 @@ class DescriptionTableMarkup extends Markup
     @Requires({ job.jobType == Job.JobType.maven })
     void addMavenRows()
     {
-        builder.with {
+        final repoPath = ( job.privateRepository ?            ".jenkins/jobs/${ job.id }/workspace/.repository" :
+                           job.privateRepositoryPerExecutor ? '.jenkins/maven-repositories/X'                   :
+                                                              job.localRepoPath ?: '.m2/repository' )
 
-            final repoPath = ( job.privateRepository ?            ".jenkins/jobs/${ job.id }/workspace/.repository" :
-                               job.privateRepositoryPerExecutor ? '.jenkins/maven-repositories/X'                   :
-                                                                  job.localRepoPath ?: '.m2/repository' )
+        if ( job.prebuildersTasks ){ addRow( 'Pre-build steps', { addTasks( job.prebuildersTasks ) })}
 
-            if ( job.prebuildersTasks ){ addRow( 'Pre-build steps', { addTasks( job.prebuildersTasks ) })}
+        addRow( 'Maven name',       job.mavenName,  true )
+        addRow( 'Maven goals',      job.mavenGoals, true )
+        addRow( 'Maven repository', repoPath,       true )
+        addRow( 'Maven options',    job.mavenOpts,  true )
 
-            addRow( 'Maven name',       job.mavenName,  true )
-            addRow( 'Maven goals',      job.mavenGoals, true )
-            addRow( 'Maven repository', repoPath,       true )
-            addRow( 'Maven options',    job.mavenOpts,  true )
-
-            if ( job.postbuildersTasks ){ addRow( 'Post-build steps', { addTasks( job.postbuildersTasks ) })}
-            if ( job.artifactory?.name ){ addArtifactory() }
-        }
+        if ( job.postbuildersTasks ){ addRow( 'Post-build steps', { addTasks( job.postbuildersTasks ) })}
+        if ( job.artifactory?.name ){ addArtifactory() }
     }
 
 
@@ -261,21 +254,19 @@ class DescriptionTableMarkup extends Markup
     {
         assert tasks
 
-        builder.with {
-            if ( tasks.size() == 1 )
-            {
-                add( "${ strong( tasks[ 0 ].descriptionTableTitle )} : " +
-                     "${ code  ( tasks[ 0 ].commandShortened )}" )
-            }
-            else
-            {
-                table {
-                    for ( task in tasks ) {
-                        tr {
-                            td{ add ( "- ${ strong( task.descriptionTableTitle )}" )}
-                            td{ add ( ' : ' )}
-                            td{ add ( "${ code(     task.commandShortened )}" )}
-                        }
+        if ( tasks.size() == 1 )
+        {
+            add( "${ strong( tasks[ 0 ].descriptionTableTitle )} : " +
+                 "${ code  ( tasks[ 0 ].commandShortened )}" )
+        }
+        else
+        {
+            builder.table {
+                for ( task in tasks ) {
+                    tr {
+                        td{ add ( "- ${ strong( task.descriptionTableTitle )}" )}
+                        td{ add ( ' : ' )}
+                        td{ add ( "${ code(     task.commandShortened )}" )}
                     }
                 }
             }
