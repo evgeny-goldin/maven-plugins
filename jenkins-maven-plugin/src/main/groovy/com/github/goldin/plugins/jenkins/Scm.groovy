@@ -3,6 +3,7 @@ package com.github.goldin.plugins.jenkins
 import com.github.goldin.plugins.jenkins.markup.Markup
 
 
+@SuppressWarnings([ 'AbstractClassWithoutAbstractMethod' ])
 abstract class Scm extends Markup
 {
     /**
@@ -74,6 +75,7 @@ class Svn extends Scm
 }
 
 
+@SuppressWarnings([ 'AbcComplexity' ])
 class Git extends Scm
 {
     @Override
