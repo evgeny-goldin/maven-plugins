@@ -29,8 +29,8 @@ class ConfigMarkup extends Markup
         this.isMavenJob = Job.JobType.maven.is( job.jobType )
 
         /**
-         * Task instances are created by Maven and need to have their
-         * {@link com.github.goldin.plugins.jenkins.Task#builder} set.
+         * Job's {@link com.github.goldin.plugins.jenkins.Task} instances are created by Maven
+         * and now need to have their {@link com.github.goldin.plugins.jenkins.Task#builder} set.
          */
 
         assert this.builder
@@ -253,9 +253,10 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
      */
     void addPublishers()
     {
-        add( job.publishers )
-
         builder.with {
+
+            publishers{ add( job.publishers ) }
+
             if (( ! isMavenJob ) && ( job.mail.recipients ))
             {
                 'hudson.tasks.Mailer' {
