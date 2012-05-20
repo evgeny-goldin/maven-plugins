@@ -4,6 +4,7 @@ import static com.github.goldin.plugins.common.GMojoUtils.*
 import groovy.xml.MarkupBuilder
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+import com.github.goldin.plugins.jenkins.NewLineIndentPrinter
 
 
 /**
@@ -11,11 +12,6 @@ import org.gcontracts.annotations.Requires
  */
 abstract class Markup
 {
-    /**
-     * XML markup indentation.
-     */
-    public static final String INDENT = ' ' * 4
-
     /**
      * Quotation HTML entity.
      */
@@ -25,21 +21,22 @@ abstract class Markup
     private final Writer writer
     final MarkupBuilder  builder
 
-    @Ensures({ this.writer && this.builder })
     Markup()
     {
-        this.writer          = new StringWriter ( 4 * 1024 )
-        this.builder         = new MarkupBuilder( new IndentPrinter( writer, INDENT ))
-        builder.doubleQuotes = true
+        /**
+         * When markup instance is created using default constructor it means no new {@link MarkupBuilder} is created
+         * so it needs to be set explicitly later.
+         */
     }
 
 
-    @Requires({ builder })
-    @Ensures({ this.builder })
-    Markup( MarkupBuilder builder )
+    @Requires({ indent && newLine })
+    @Ensures({ this.writer && this.builder })
+    Markup( String indent, String newLine )
     {
-        this.writer  = null
-        this.builder = builder
+        this.writer          = new StringWriter ( 4 * 1024 )
+        this.builder         = new MarkupBuilder( new NewLineIndentPrinter( writer, indent, newLine ))
+        builder.doubleQuotes = true
     }
 
 
@@ -84,8 +81,6 @@ abstract class Markup
     @Ensures({ result })
     final String getMarkup()
     {
-        assert this.writer, "This instance was created using another MarkupBuilder, there's no access to the writer"
-
         addMarkup()
         verify().notNullOrEmpty( this.writer.toString())
     }

@@ -18,8 +18,10 @@ class DescriptionTableMarkup extends Markup
 
 
     @Requires({ job })
-    DescriptionTableMarkup ( Job job )
+    DescriptionTableMarkup ( Job job, String indent, String newLine )
     {
+        super( indent, newLine )
+
         this.job = job
     }
 

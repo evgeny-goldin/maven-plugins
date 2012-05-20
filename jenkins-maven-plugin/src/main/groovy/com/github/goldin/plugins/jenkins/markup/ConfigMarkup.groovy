@@ -12,17 +12,33 @@ class ConfigMarkup extends Markup
 {
     private final Job     job
     private final String  timestamp
+    private final String  indent
+    private final String  newLine
     private final boolean isMavenJob
 
 
-    @Requires({ job && ( timestamp != null ) })
-    ConfigMarkup ( Job job, String timestamp )
+    @Requires({ job && ( timestamp != null ) && indent && newLine })
+    ConfigMarkup ( Job job, String timestamp, String indent, String newLine )
     {
-        super()
+        super( indent, newLine )
 
         this.job        = job
         this.timestamp  = timestamp
+        this.indent     = indent
+        this.newLine    = newLine
         this.isMavenJob = Job.JobType.maven.is( job.jobType )
+
+        /**
+         * Task instances are created by Maven and need to have their
+         * {@link com.github.goldin.plugins.jenkins.Task#builder} set.
+         */
+
+        assert this.builder
+        job.tasks.            each { it.builder = this.builder }
+        job.prebuildersTasks. each { it.builder = this.builder }
+        job.postbuildersTasks.each { it.builder = this.builder }
+        job.groovys.          each { it.builder = this.builder }
+        if ( job.groovy ) { job.groovy.builder  = this.builder }
     }
 
 
@@ -95,9 +111,9 @@ class ConfigMarkup extends Markup
 </center>
 ${ job.description }
 <p/>
-${ new DescriptionTableMarkup( job ).markup }
+${ new DescriptionTableMarkup( job, indent, newLine ).markup }
 ]]>
-${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is not positioned correctly due to String content injected
+ ${ indent }""" ) // Indentation correction: closing </description> tag is not positioned correctly due to String content injected
         }
     }
 
@@ -130,10 +146,14 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
     void addScm()
     {
         final scmBuilderClass = job.scmMarkupBuilderClass
-        /**
-         * {@link com.github.goldin.plugins.jenkins.Scm}
-         */
-        if  ( scmBuilderClass ){ scmBuilderClass.newInstance( builder, job ).addMarkup() }
+        if  ( scmBuilderClass )
+        {
+            final scm        = scmBuilderClass.newInstance()
+            scm.builder      = builder
+            scm.job          = job
+            scm.repositories = job.repositories()
+            scm.addMarkup()
+        }
         add( job.scm )
     }
 
@@ -195,8 +215,6 @@ ${ Markup.INDENT }""" ) // Indentation correction: closing </description> tag is
                     }
                 }
             }
-
-
         }
     }
 

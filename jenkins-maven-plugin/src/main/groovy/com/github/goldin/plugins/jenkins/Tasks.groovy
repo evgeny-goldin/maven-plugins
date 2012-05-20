@@ -63,8 +63,9 @@ abstract class Task extends Markup
      * Adds task's markup to the {@link #builder}.
      */
     @Override
-    void addMarkup ()
+    void addMarkup()
     {
+        assert builder
         validate()
         builder."${ markupClassName }" { addTaskMarkup() }
     }

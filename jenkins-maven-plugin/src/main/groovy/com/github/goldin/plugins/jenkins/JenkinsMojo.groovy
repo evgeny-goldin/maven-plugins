@@ -2,12 +2,12 @@ package com.github.goldin.plugins.jenkins
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
-import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
 
 
 /**
@@ -83,7 +83,10 @@ class JenkinsMojo extends BaseGroovyMojo
     File generateConfigFile( Job job )
     {
         final configFile   = new File( outputDirectory, "${ job.id }/config.xml" )
-        final configMarkup = new ConfigMarkup( job, ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )).markup
+        final indent       = ' ' * 4
+        final newLine      = (( 'windows' == endOfLine ) ? '\r\n' : '\n' )
+        final timestamp    = ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )
+        final configMarkup = new ConfigMarkup( job, timestamp, indent, newLine ).markup
 
         if ( job.process )
         {
@@ -93,13 +96,15 @@ class JenkinsMojo extends BaseGroovyMojo
             }
 
             eval( expression, null, null, 'config', configMarkup, 'node', rootNode, 'file', configFile )
-            final writer = new StringWriter( configMarkup.size())
-            new XmlNodePrinter( new PrintWriter( writer )).print( rootNode )
+            final writer               = new StringWriter( configMarkup.size())
+            final printer              = new XmlNodePrinter( new NewLineIndentPrinter( writer, indent, newLine ))
+            printer.preserveWhitespace = true
+            printer.print( rootNode )
             configMarkup = writer.toString()
         }
 
         file().mkdirs( file().delete( configFile ).parentFile )
-        configFile.write( configMarkup.trim().replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )), 'UTF-8' )
+        configFile.write( configMarkup.trim(), 'UTF-8' )
         verify().file( configFile )
     }
 

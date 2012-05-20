@@ -1,33 +1,21 @@
 package com.github.goldin.plugins.jenkins
 
 import com.github.goldin.plugins.jenkins.markup.Markup
-import groovy.xml.MarkupBuilder
-import org.gcontracts.annotations.Requires
 
 
 abstract class Scm extends Markup
 {
-    final Job              job
-    final List<Repository> repositories
+    /**
+     * Both fields are set by {@link com.github.goldin.plugins.jenkins.markup.ConfigMarkup#addScm}
+     */
 
-
-    @Requires({ builder && job })
-    Scm( MarkupBuilder builder, Job job )
-    {
-        super( builder )
-
-        this.job          = job
-        this.repositories = job.repositories()
-
-        assert this.builder && this.job && ( this.repositories || ( this.class == None ))
-    }
+    Job              job
+    List<Repository> repositories
 }
 
 
 class None extends Scm
 {
-    None( MarkupBuilder builder, Job job ){ super( builder, job )}
-
     @Override
     void addMarkup (){ builder.scm( class: 'hudson.scm.NullSCM' ){}}
 }
@@ -35,8 +23,6 @@ class None extends Scm
 
 class Cvs extends Scm
 {
-    Cvs( MarkupBuilder builder, Job job ){ super( builder, job )}
-
     @Override
     void addMarkup ()
     {
@@ -67,8 +53,6 @@ class Cvs extends Scm
 
 class Svn extends Scm
 {
-    Svn( MarkupBuilder builder, Job job ){ super( builder, job )}
-
     @Override
     void addMarkup ()
     {
@@ -92,8 +76,6 @@ class Svn extends Scm
 
 class Git extends Scm
 {
-    Git( MarkupBuilder builder, Job job ){ super( builder, job )}
-
     @Override
     void addMarkup ()
     {
@@ -163,8 +145,6 @@ class Git extends Scm
 @SuppressWarnings([ 'GroovyClassNamingConvention' ])
 class Hg extends Scm
 {
-    Hg( MarkupBuilder builder, Job job ){ super( builder, job )}
-
     @Override
     void addMarkup ()
     {
