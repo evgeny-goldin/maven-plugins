@@ -168,7 +168,7 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
                 for ( trigger in job.triggers())
                 {
                     "${ trigger.triggerClass }" {
-                        spec(( trigger.description ? "#${ trigger.description }\n" : '' ) + trigger.expression )
+                        spec(( trigger.description ? "# ${ trigger.description }\n" : '' ) + trigger.expression )
                     }
                 }
             }
