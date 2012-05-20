@@ -29,16 +29,18 @@ class ConfigMarkup extends Markup
         this.isMavenJob = Job.JobType.maven.is( job.jobType )
 
         /**
-         * Job's {@link com.github.goldin.plugins.jenkins.Task} instances are created by Maven
-         * and now need to have their {@link com.github.goldin.plugins.jenkins.Task#builder} set.
+         * Instances created by Maven that need to have their {@link com.github.goldin.plugins.jenkins.Task#builder} set.
          */
 
         assert this.builder
-        job.tasks.            each { it.builder = this.builder }
-        job.prebuildersTasks. each { it.builder = this.builder }
-        job.postbuildersTasks.each { it.builder = this.builder }
-        job.groovys.          each { it.builder = this.builder }
-        if ( job.groovy ) { job.groovy.builder  = this.builder }
+
+        job.tasks.            each { it.builder      = this.builder }
+        job.prebuildersTasks. each { it.builder      = this.builder }
+        job.postbuildersTasks.each { it.builder      = this.builder }
+        job.groovys.          each { it.builder      = this.builder }
+        job.parameters.       each { it.builder      = this.builder }
+        if ( job.parameter ) { job.parameter.builder = this.builder }
+        if ( job.groovy    ) { job.groovy.   builder = this.builder }
     }
 
 
@@ -138,10 +140,10 @@ ${ new DescriptionTableMarkup( job, indent, newLine ).markup }
             if ( job.parameters()) {
                 'hudson.model.ParametersDefinitionProperty' {
                     parameterDefinitions {
-                        job.parameters().findAll{ it.type != ParameterType.jira }*.addMarkup( builder )
+                        job.parameters().findAll{ it.type != ParameterType.jira }*.addMarkup()
                     }
                 }
-                job.parameters().findAll{ it.type == ParameterType.jira }*.addMarkup( builder )
+                job.parameters().findAll{ it.type == ParameterType.jira }*.addMarkup()
             }
             if ( job.gitHubUrl ) { 'com.coravy.hudson.plugins.github.GithubProjectProperty' { projectUrl( job.gitHubUrl ) }}
         }

@@ -43,6 +43,7 @@ abstract class Markup
     /**
      * Adds a markup to the {@link #builder}.
      */
+    // @Requires({ builder })
     abstract void addMarkup ()
 
 

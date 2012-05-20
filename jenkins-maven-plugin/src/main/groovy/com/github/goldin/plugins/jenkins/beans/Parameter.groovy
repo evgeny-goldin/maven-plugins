@@ -1,30 +1,31 @@
 package com.github.goldin.plugins.jenkins.beans
 
-import groovy.xml.MarkupBuilder
+import com.github.goldin.plugins.jenkins.markup.Markup
 import org.gcontracts.annotations.Requires
 
 
 enum  ParameterType { bool, choice, string, password, run, file, jira }
-class Parameter
+class Parameter extends Markup
 {
     String        name        = 'UNDEFINED'
     ParameterType type        = null
     String        value       = ''
     String        description = ''
 
-    void setType( String type ) { this.type = ParameterType.valueOf( ParameterType, type ) }
+    /**
+     * Invoked by Maven.
+     */
+    @Requires({ type })
+    void setType( String type ){ this.type = ParameterType.valueOf( ParameterType, type ) }
 
     @Override
-    int     hashCode ()           { "[$name][$type]".hashCode()  }
+    int hashCode ()            { "[$name][$type]".hashCode()  }
 
     @Override
-    boolean equals   ( Object o ) { ( o instanceof Parameter ) &&
-                                    ( this.name            == o.name            ) &&
-                                    ( this.type.toString() == o.type.toString() ) }
+    boolean equals( Object o ) { ( o instanceof Parameter ) && ( this.name == o.name ) && ( this.type == o.type ) }
 
-
-    @Requires({ builder })
-    void addMarkup ( MarkupBuilder builder )
+    @Override
+    void addMarkup ()
     {
         final nameDescription = { builder.name( name ); builder.description( description )}
 
