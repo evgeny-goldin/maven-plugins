@@ -42,7 +42,6 @@ class DescriptionTableMarkup extends Markup
 
     private void addJobLink ( String   jobId   ){ addLink( "${ job.jenkinsUrl }/job/${ jobId }",    jobId  )}
     private void addNodeLink( String   nodeId  ){ addLink( "${ job.jenkinsUrl }/label/${ nodeId }", nodeId )}
-    private void addBullet  ( Object[] objects ){ if ( objects.size() > 1 ){ add( '- ' ) }}
 
 
     /**
@@ -82,7 +81,7 @@ class DescriptionTableMarkup extends Markup
     @Requires({ job })
     void addMarkup ()
     {
-        builder.table( border: '1', width: '100%', cellpadding:'3', cellspacing:'3' ) {
+        builder.table( border: '1', width: '100%', cellpadding:'5', cellspacing:'2' ) {
 
             tr {
                 td( width: '15%', valign: 'top', 'Job' )
@@ -144,8 +143,8 @@ class DescriptionTableMarkup extends Markup
         addRow( "${ job.scmType.capitalize() } repositor${ ( job.repositories().size() == 1 ) ? 'y' : 'ies' }", {
             for ( repository in job.repositories())
             {
-                addBullet( job.repositories())
                 addLink( repository.remoteLink, repository.remote )
+                add( '<br/>' )
             }
         })
 
@@ -166,10 +165,10 @@ class DescriptionTableMarkup extends Markup
         addRow( 'Triggers', {
             for ( trigger in job.triggers())
             {
-                addBullet( job.triggers())
                 add( strong ( code( trigger.type )))
                 if ( trigger.expression  ){ add( " : ${ code( trigger.expression )}" ) }
-                if ( trigger.description ){ builder.em( "(${  trigger.description })" )}
+                if ( trigger.description ){ builder.em( " (${  trigger.description })" )}
+                add( '<br/>' )
             }
         })
     }
@@ -184,9 +183,9 @@ class DescriptionTableMarkup extends Markup
         addRow( 'Invokes', {
             for ( jobId in job.invoke.jobsSplit )
             {
-                addBullet( job.invoke.jobsSplit as String[] )
                 addJobLink( jobId )
-                add( "when this job ${ job.invoke.condition[ 1 ] }" )
+                add( " when this job ${ job.invoke.condition[ 1 ] }" )
+                add( '<br/>' )
             }
         })
     }
@@ -201,9 +200,9 @@ class DescriptionTableMarkup extends Markup
         addRow( 'Invoked by', {
             for ( invokedBy in job.invokedBy )
             {
-                addBullet( job.invokedBy )
                 addJobLink( invokedBy.id )
-                add( "when it ${ invokedBy.invoke.condition[ 1 ]}" )
+                add( " when it ${ invokedBy.invoke.condition[ 1 ]}" )
+                add( '<br/>' )
             }
         })
     }
