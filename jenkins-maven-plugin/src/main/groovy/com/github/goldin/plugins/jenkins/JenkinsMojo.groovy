@@ -61,14 +61,17 @@ class JenkinsMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
+        final t          = System.currentTimeMillis()
         final jobs       = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
-        final jobNamePad = jobs*.toString()*.size().max()
+        final jobNamePad = verify().notNullOrEmpty( jobs )*.toString()*.size().max()
 
         for ( job in jobs )
         {
             final configPath = ( job.isAbstract ? "abstract job" : generateConfigFile( job ).canonicalPath.replace( '\\', '/' ))
             log.info( "${ job.toString().padRight( jobNamePad ) }  ==>  ${ configPath }" )
         }
+
+        log.info( "[${ jobs.size()}] job${ general().s( jobs.size()) } generated in [${ System.currentTimeMillis() - t }] ms" )
     }
 
 
@@ -112,6 +115,8 @@ class JenkinsMojo extends BaseGroovyMojo
     private Collection<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
         Map<String, Job> allJobs = [:]
+        List<Job>        jobs    = jobs()
+        assert jobs, "No jobs configured. Use either <job> or <jobs> to define Jenkins jobs."
 
         /**
          * - Reading all jobs,
@@ -120,7 +125,7 @@ class JenkinsMojo extends BaseGroovyMojo
          * - For each repository - setting it's "local" part
          *   (most of the time it is omitted by user since it can be calculated from "remote" part)
          */
-        for ( job in jobs())
+        for ( job in jobs )
         {
             Job prevJob = allJobs.put( job.id, job )
             assert ( ! prevJob ), "[$job] is defined more than once"
@@ -143,7 +148,7 @@ class JenkinsMojo extends BaseGroovyMojo
             }
         }
 
-        for( job in jobs())
+        for( job in jobs )
         {
             /**
              * "Extending" each job with a <parent> jobs or with default values
@@ -180,7 +185,7 @@ class JenkinsMojo extends BaseGroovyMojo
             List<Job> childJobs = []
             List<Job> invokedBy = []
 
-            for ( otherJob in jobs().findAll{ it.id != job.id } )
+            for ( otherJob in jobs.findAll{ it.id != job.id } )
             {
                 if ( otherJob.parent == job.id )                       { childJobs << otherJob }
                 if ( otherJob.invoke?.jobsSplit?.any{ it == job.id } ) { invokedBy << otherJob }
