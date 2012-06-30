@@ -67,7 +67,7 @@ class JenkinsMojo extends BaseGroovyMojo
 
         for ( job in jobs )
         {
-            final configPath = ( job.isAbstract ? "abstract job" : generateConfigFile( job ).canonicalPath.replace( '\\', '/' ))
+            final configPath = ( job.isAbstract ? "abstract job" : generateConfigFile( job, jobs ).canonicalPath.replace( '\\', '/' ))
             log.info( "${ job.toString().padRight( jobNamePad ) }  ==>  ${ configPath }" )
         }
 
@@ -78,12 +78,13 @@ class JenkinsMojo extends BaseGroovyMojo
     /**
      * Generates config file for the job specified.
      *
-     * @param job job definition to generate config file for
-     * @return config file generated
+     * @param job  job definition to generate config file for
+     * @param jobs all jobs
+     * @return     config file generated
      */
-    @Requires({ outputDirectory && job && ( ! job.isAbstract ) })
+    @Requires({ outputDirectory && job && ( ! job.isAbstract ) && jobs })
     @Ensures({ result.file })
-    File generateConfigFile( Job job )
+    File generateConfigFile( Job job, List<Job> jobs )
     {
         final configFile   = new File( outputDirectory, "${ job.id }/config.xml" )
         final indent       = ' ' * 2
@@ -91,9 +92,9 @@ class JenkinsMojo extends BaseGroovyMojo
         final timestamp    = ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )
         final configMarkup = new ConfigMarkup( job, timestamp, indent, newLine ).markup
 
-        if ( job.process )
+        if ( job.processes())
         {
-            configMarkup = process( configMarkup, configFile, job, indent, newLine )
+            configMarkup = process( configMarkup, configFile, job, jobs, indent, newLine )
         }
 
         file().mkdirs( file().delete( configFile ).parentFile )
@@ -112,7 +113,7 @@ class JenkinsMojo extends BaseGroovyMojo
     * Returns a mapping of "job ID" => job itself.
     */
     @Requires({ jenkinsUrl && generationPom && svnRepositoryLocalBase })
-    private Collection<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
+    private List<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
         Map<String, Job> allJobs = [:]
         List<Job>        jobs    = jobs()
@@ -195,7 +196,7 @@ class JenkinsMojo extends BaseGroovyMojo
             job.invokedBy = invokedBy as Job[]
         }
 
-        allJobs.values()*.validate()
+        allJobs.values().toList()*.validate()
     }
 
 
@@ -245,31 +246,37 @@ class JenkinsMojo extends BaseGroovyMojo
 
 
     /**
-     * Invokes Groovy specified with job's {@code <process>}.
+     * Invokes Groovy specified with job's {@code <process>} or {@code <processes>}.
      *
      * @param configMarkup original config markup
      * @param configFile   config file data will be written to
      * @param job          original job
+     * @param jobs         all jobs
      * @param indent       markup indent
      * @param newLine      markup new line
-     * @return            new config markup
+     * @return             new config markup
      */
-    @Requires({ configMarkup && configFile && job && indent && newLine })
+    @Requires({ configMarkup && configFile && job && job.processes() && jobs && indent && newLine })
     @Ensures({ result })
-    private String process( String configMarkup, File configFile, Job job, String indent, String newLine )
+    private String process( String configMarkup, File configFile, Job job, List<Job> jobs, String indent, String newLine )
     {
-        assert job.process
-
-        final rootNode    = new XmlParser().parseText( configMarkup )
-        String expression = job.process.trim().with {
-            endsWith( '.groovy' ) ? new File(( String ) delegate ).getText( 'UTF-8' ) : delegate
-        }
+        List<String> expressions = (( List<String> ) job.processes().collect {
+            String expression ->
+            expression.trim().with { endsWith( '.groovy' ) ? new File(( String ) delegate ).getText( 'UTF-8' ) : delegate }
+        })*.trim()
 
         /**
          * Updating rootNode structure with custom Groovy expression.
          */
-        assert configMarkup && rootNode && configFile
-        eval( expression, null, null, 'config', configMarkup, 'node', rootNode, 'file', configFile )
+        final rootNode = verify().notNull( new XmlParser().parseText( configMarkup ))
+        for ( expression in expressions )
+        {
+            eval( expression, null, null, 'config', configMarkup,
+                                          'node',   rootNode,
+                                          'file',   configFile,
+                                          'job',    job,
+                                          'jobs',   jobs )
+        }
 
         final writer               = new StringWriter  ( configMarkup.size())
         final printer              = new XmlNodePrinter( new NewLineIndentPrinter( writer, indent, newLine ))

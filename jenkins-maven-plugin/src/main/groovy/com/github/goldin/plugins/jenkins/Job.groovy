@@ -204,9 +204,11 @@ class Job
     String               postbuilders
 
     /**
-     * Groovy extension point
+     * Groovy extension points
      */
     String               process
+    String[]             processes
+    List<String>         processes() { general().list( processes, process ) }
 
     /**
      * Set by {@link JenkinsMojo#configureJobs}
@@ -346,10 +348,15 @@ class Job
         set( 'invoke',           parentJob, override, new Invoke())
         set( 'descriptionTable', parentJob, override, new DescriptionRow[ 0 ])
 
-        setMany( split( '|authToken|scm|buildWrappers|properties|publishers|process|quietPeriod|scmCheckoutRetryCount|gitHubUrl' +
+        setMany( split( '|authToken|scm|buildWrappers|properties|publishers|quietPeriod|scmCheckoutRetryCount|gitHubUrl' +
                         '|useUpdate|doRevert|blockBuildWhenDownstreamBuilding|blockBuildWhenUpstreamBuilding|appendTasks|daysToKeep' +
                         '|numToKeep|artifactDaysToKeep|artifactNumToKeep', '\\|' ),
                  parentJob, override )
+
+        if ((( ! processes())   || ( override )) && parentJob.processes())
+        {
+            processes = parentJob.processes() as String[]
+        }
 
         if ((( ! triggers())   || ( override )) && parentJob.triggers())
         {
@@ -361,10 +368,7 @@ class Job
             parameters = parentJob.parameters() as Parameter[]
         }
         else if ( parentJob.parameters())
-        {   /**
-             * Set gives a lower priority to parentJob parameters - parameters having the
-             * same name and type *are not taken*, see {@link Parameter#equals(Object)}
-             */
+        {
             parameters = joinParameters( parentJob.parameters(), parameters()) as Parameter[]
         }
 
@@ -488,7 +492,6 @@ class Job
          assert ( properties            != null ), notConfigured( '"properties" is null' )
          assert ( publishers            != null ), notConfigured( '"publishers" is null' )
          assert ( buildWrappers         != null ), notConfigured( '"buildWrappers" is null' )
-         assert ( process               != null ), notConfigured( '"process" is null' )
          assert ( useUpdate             != null ), notConfigured( '"useUpdate" is null' )
          assert ( doRevert              != null ), notConfigured( '"doRevert" is null' )
          assert ( daysToKeep            != null ), notConfigured( '"daysToKeep" is null' )
