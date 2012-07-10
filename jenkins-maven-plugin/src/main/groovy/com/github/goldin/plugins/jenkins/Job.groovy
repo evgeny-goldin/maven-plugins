@@ -27,8 +27,8 @@ class Job
     /**
      * Error messages to display when jobs is not properly configured
      */
-    private static String notConfigured( String errorMessage ){ "[${ this }] is not configured correctly: $errorMessage" }
-    private static String misConfigured( String errorMessage ){ "[${ this }] is mis-configured: $errorMessage" }
+    private String notConfigured( String errorMessage ){ "[${ this }] is not configured correctly: $errorMessage" }
+    private String misConfigured( String errorMessage ){ "[${ this }] is mis-configured: $errorMessage" }
 
     /**
      * Default Maven goals used in Maven projects and Maven tasks in free-style projects.
