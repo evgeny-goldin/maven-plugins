@@ -1,6 +1,4 @@
-* Maven plugins.
-
-* [Documentation](http://evgeny-goldin.com/wiki/Maven-plugins)
+* Maven plugins, [documentation](http://evgeny-goldin.com/wiki/Maven-plugins)
 
 * <a href="http://evgeny-goldin.org/teamcity/viewType.html?buildTypeId=bt4&tab=buildTypeStatusDiv&guest=1"><img src="http://evgeny-goldin.org/teamcity/app/rest/builds/buildType:(id:bt4)/statusIcon"/></a>
 
