@@ -335,9 +335,9 @@
             <build>
                 <plugins>
 
-                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-                    <!-- Copying "license.txt" and "README.txt" files to ${project.build.outputDirectory} -->
-                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Copying "license.txt" and "README.markdown" files to ${project.build.outputDirectory} -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
                     <plugin>
                         <groupId>com.github.goldin</groupId>
@@ -359,7 +359,7 @@
                                         </resource>
                                         <resource>
                                             <targetPath>${project.build.outputDirectory}</targetPath>
-                                            <file>${project.basedir}/README.txt</file>
+                                            <file>${project.basedir}/README.markdown</file>
                                             <failIfNotFound>false</failIfNotFound>
                                         </resource>
                                     </resources>
