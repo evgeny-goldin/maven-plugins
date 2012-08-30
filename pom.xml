@@ -111,6 +111,11 @@
     </dependencies>
 
 
+    <prerequisites>
+        <maven>3.0</maven>
+    </prerequisites>
+
+
     <build>
         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
