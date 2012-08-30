@@ -27,8 +27,8 @@ class Job
     /**
      * Error messages to display when jobs is not properly configured
      */
-    private String notConfigured( String errorMessage ){ "[${ this }] is not configured correctly: $errorMessage" }
-    private String misConfigured( String errorMessage ){ "[${ this }] is mis-configured: $errorMessage" }
+    private String notConfigured( String errorMessage ){ "$this is not configured correctly: $errorMessage" }
+    private String misConfigured( String errorMessage ){ "$this is mis-configured: $errorMessage" }
 
     /**
      * Default Maven goals used in Maven projects and Maven tasks in free-style projects.
@@ -246,7 +246,7 @@ class Job
 
 
     @Override
-    String toString () { "Job \"${ originalId }\"" }
+    String toString () { "[Job \"${ originalId }\"]" }
 
 
     /**
@@ -299,7 +299,7 @@ class Job
             this[ propertyName ] = parentJob[ propertyName ] ?: defaultValue
         }
 
-        assert ( this[ propertyName ] != null ), "[$this] has null [$propertyName]"
+        assert ( this[ propertyName ] != null ), "$this has null [$propertyName]"
 
         if ( verifyClosure ) { verifyClosure( this[ propertyName ] ) }
     }
@@ -324,7 +324,7 @@ class Job
                                ( appendTasks ) ? ( parentTasks.toList() + ourTasks.toList()) as Task[] :
                                                  ourTasks ?: parentTasks
 
-        assert ( this[ propertyName ] != null ), "[$this] has null [$propertyName]"
+        assert ( this[ propertyName ] != null ), "$this has null [$propertyName]"
     }
 
 
@@ -340,9 +340,7 @@ class Job
     void extend ( Job parentJob, boolean override = false )
     {
         set( 'description',      parentJob, override, '&nbsp;',      { String  s -> assert s } )
-        set( 'scmType',          parentJob, override, 'svn',         { String  s -> assert s } )
         set( 'jobType',          parentJob, override, JobType.maven, { JobType t -> assert t } )
-        set( 'node',             parentJob, override, 'master',      { String  s -> assert s } )
         set( 'jdkName',          parentJob, override, '(Default)',   { String  s -> assert s } )
         set( 'mail',             parentJob, override, new Mail())
         set( 'invoke',           parentJob, override, new Invoke())
@@ -353,7 +351,14 @@ class Job
                         '|numToKeep|artifactDaysToKeep|artifactNumToKeep', '\\|' ),
                  parentJob, override )
 
-        if ((( ! processes())   || ( override )) && parentJob.processes())
+        //noinspection GroovyConditionalCanBeElvis
+        scmType = ((( ! scmType ) || override ) &&  parentJob.scmType ) ? parentJob.scmType :
+                  scmType                                               ? scmType :
+                  ( repositories().empty && isAbstract )                ? null : // Parent job without repos can't make a proper discovery
+                                                                          discoverScmType( 'svn' )
+        assert ( scmType || isAbstract )
+
+        if ((( ! processes())  || ( override )) && parentJob.processes())
         {
             processes = parentJob.processes() as String[]
         }
@@ -402,6 +407,27 @@ class Job
                             '|prebuilders|postbuilders|incrementalBuild', '\\|' ),
                      parentJob, override )
 
+        }
+    }
+
+
+    /**
+     * Attempts to discover {@link #scmType} value given remote repository URL.
+     *
+     * @param defaultScmType default type to return if unable to make the discovery
+     * @return {@link #scmType} value
+     */
+    private String discoverScmType( String defaultScmType )
+    {
+        assert defaultScmType
+
+        if ( repositories().empty ) { return isAbstract ? null : defaultScmType }
+
+        final  remote = repositories().first().remote
+        assert remote, "$this - repository <remote> needs to be specified"
+
+        remote.with {
+            ( startsWith( 'git:' ) || startsWith( 'git@' ) || contains( 'github.com' )) ? 'git' : defaultScmType
         }
     }
 
@@ -484,7 +510,6 @@ class Job
          assert description,                       notConfigured( 'missing <description>' )
          assert jobType,                           notConfigured( 'missing <jobType>' )
          assert scmType,                           notConfigured( 'missing <scmType>' )
-         assert node,                              notConfigured( 'missing <node>' )
          assert jdkName,                           notConfigured( 'missing <jdkName>' )
 
          assert ( scm                   != null ), notConfigured( '"scm" is null' )
@@ -564,16 +589,16 @@ class Job
              if ( deploy?.url || artifactory?.name )
              {
                  assert ( ! archivingDisabled ), \
-                        "[${ this }] has archiving disabled - artifacts deploy to Maven or Artifactory repository can not be used"
+                        "$this has archiving disabled - artifacts deploy to Maven or Artifactory repository can not be used"
              }
 
              assert ( ! ( privateRepository && privateRepositoryPerExecutor )), \
-                    "[${ this }] - both <privateRepository> and <privateRepositoryPerExecutor> can't be set to \"true\""
+                    "$this - both <privateRepository> and <privateRepositoryPerExecutor> can't be set to \"true\""
 
              if ( privateRepository || privateRepositoryPerExecutor )
              {
                 assert ( ! ( localRepoBase || localRepo || localRepoPath )), \
-                        "[${ this }] has <privateRepository> or <privateRepositoryPerExecutor> specified, " +
+                        "$this has <privateRepository> or <privateRepositoryPerExecutor> specified, " +
                         "no <localRepoBase>, <localRepo>, or <localRepoPath> should be defined"
              }
          }
@@ -594,12 +619,12 @@ class Job
      {
          if ( gitHubUrl )
          {
-            assert repositories(), "[${ this }]: Missing <repository> or <repositories>"
+            assert repositories(), "$this: Missing <repository> or <repositories>"
          }
 
          if ( repositories())
          {
-            assert scmType, "[${ this }]: Missing <scmType>"
+            assert scmType, "$this: Missing <scmType>"
          }
 
          for ( repo in repositories().remote )
@@ -616,13 +641,13 @@ class Job
                       * Repository should only equal to itself once
                       */
 
-                     throw new MojoExecutionException( "[${ this }]: Repo [$repo] is duplicated" )
+                     throw new MojoExecutionException( "$this: Repo [$repo] is duplicated" )
                  }
 
                  if (( ! ( repo == otherRepo )) && ( otherRepo.toLowerCase().contains( repo.toLowerCase() + '/' )))
                  {
                      throw new MojoExecutionException(
-                         "[${ this }]: Repo [$repo] is duplicated in [$otherRepo] - you should remove [$otherRepo]" )
+                         "$this: Repo [$repo] is duplicated in [$otherRepo] - you should remove [$otherRepo]" )
                  }
              }
          }

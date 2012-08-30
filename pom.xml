@@ -54,6 +54,7 @@
         <gcommons-version>0.5.4</gcommons-version>
         <groovy-version>1.8.6</groovy-version>
         <gmaven-version>1.4</gmaven-version>
+        <!-- http://repo.jfrog.org/artifactory/repo/org/jfrog/maven/annomojo/maven-plugin-anno/ -->
         <annomojo-version>1.4.1</annomojo-version>
         <spring-version>3.1.1.RELEASE</spring-version>
         <spring-batch-version>2.1.8.RELEASE</spring-batch-version>

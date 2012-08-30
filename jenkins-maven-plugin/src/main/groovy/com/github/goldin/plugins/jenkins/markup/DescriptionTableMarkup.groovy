@@ -108,7 +108,7 @@ class DescriptionTableMarkup extends Markup
             })}
 
             addRow( 'Job type',        job.jobType.description )
-            addRow( 'Node',            { addNodeLink( job.node )})
+            addRow( 'Node',            { job.node ? addNodeLink( job.node ) : add( 'Undefined, can roam' ) })
             addRow( 'JDK name',        job.jdkName, true )
             addRow( 'Mail recipients', job.mail?.recipients )
             addRow( 'Quiet period',    job.quietPeriod )
