@@ -246,7 +246,7 @@ class Job
 
 
     @Override
-    String toString () { "[Job \"${ originalId }\"]" }
+    String toString () { "Job \"${ originalId }\"" }
 
 
     /**
