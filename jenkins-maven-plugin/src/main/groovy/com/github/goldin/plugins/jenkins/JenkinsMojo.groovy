@@ -206,7 +206,7 @@ class JenkinsMojo extends BaseGroovyMojo
     /**
      * Composes one job from all "parent jobs" specified, separated with comma
      *
-     * @param allJobs    mapping of all existing jobs: job id => job instance
+     * @param jobsMap    mapping of all existing jobs: job id => job instance
      * @param parentJobs parent jobs to compose the result job from, separated with comma.
      *
      *                 Note: later jobs in the list are of higher priority, they override
@@ -215,9 +215,9 @@ class JenkinsMojo extends BaseGroovyMojo
      *                                           set by "nightly" one
      * @return composed job
      */
-    @Requires({ allJobs && parentJobs })
+    @Requires({ jobsMap && parentJobs })
     @Ensures({ result })
-    private Job composeJob( Map<String, Job> allJobs, String parentJobs )
+    private Job composeJob( Map<String, Job> jobsMap, String parentJobs )
     {
         Job resultJob = null
 
@@ -229,7 +229,7 @@ class JenkinsMojo extends BaseGroovyMojo
             resultJob = new Job( id: "Composition of jobs [$parentJobs]" )
             for ( parentJobId in split( parentJobs ))
             {
-                Job    parentJob = allJobs[ parentJobId ]
+                Job    parentJob = jobsMap[ parentJobId ]
                 assert parentJob, "Parent job [$parentJobId] is undefined"
 
                 resultJob.extend( parentJob, true )
@@ -240,7 +240,7 @@ class JenkinsMojo extends BaseGroovyMojo
              * No multiple inheritance
              */
 
-            resultJob = allJobs[ parentJobs ]
+            resultJob = jobsMap[ parentJobs ]
             assert resultJob, "Parent job [$parentJobs] is undefined"
         }
 

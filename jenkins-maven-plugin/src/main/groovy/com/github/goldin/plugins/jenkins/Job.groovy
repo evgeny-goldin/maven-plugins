@@ -44,12 +44,12 @@ class Job
         free  ( 'Free-Style' ),
         maven ( 'Maven'      )
 
-        final String description
+        final String typeDescription
 
-        @Requires({ description })
-        JobType ( String description )
+        @Requires({ typeDescription })
+        JobType ( String typeDescription )
         {
-            this.description = description
+            this.typeDescription = typeDescription
         }
     }
 
