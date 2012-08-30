@@ -10,19 +10,21 @@ import org.gcontracts.annotations.Requires
  */
 class ConfigMarkup extends Markup
 {
-    private final Job     job
-    private final String  timestamp
-    private final String  indent
-    private final String  newLine
-    private final boolean isMavenJob
+    private final Job              job
+    private final Map<String, Job> jobs
+    private final String           timestamp
+    private final String           indent
+    private final String           newLine
+    private final boolean          isMavenJob
 
 
-    @Requires({ job && ( timestamp != null ) && indent && newLine })
-    ConfigMarkup ( Job job, String timestamp, String indent, String newLine )
+    @Requires({ job && jobs && ( timestamp != null ) && indent && newLine })
+    ConfigMarkup ( Job job, Map<String, Job> jobs, String timestamp, String indent, String newLine )
     {
         super( indent, newLine )
 
         this.job        = job
+        this.jobs       = jobs
         this.timestamp  = timestamp
         this.indent     = indent
         this.newLine    = newLine
@@ -123,7 +125,7 @@ class ConfigMarkup extends Markup
 </center>
 ${ job.description }
 <p/>
-${ new DescriptionTableMarkup( job, indent, newLine ).markup }
+${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
 ]]>
  ${ indent }""" ) // Indentation correction: closing </description> tag is not positioned correctly due to String content injected
         }

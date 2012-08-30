@@ -215,7 +215,6 @@ class Job
      */
     String               jenkinsUrl
     String               generationPom
-    Boolean              parentIsReal // Whether parent job is a real one or an abstract one
     Job[]                childJobs
     Job[]                invokedBy
 
@@ -423,10 +422,7 @@ class Job
 
         if ( repositories().empty ) { return isAbstract ? null : defaultScmType }
 
-        final  remote = repositories().first().remote
-        assert remote, "$this - repository <remote> needs to be specified"
-
-        remote.with {
+        verify().notNullOrEmpty( repositories().first().remote ).with {
             ( startsWith( 'git:' ) || startsWith( 'git@' ) || contains( 'github.com' )) ? 'git' : defaultScmType
         }
     }

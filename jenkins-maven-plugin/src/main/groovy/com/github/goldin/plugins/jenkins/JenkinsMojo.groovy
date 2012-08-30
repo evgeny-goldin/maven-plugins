@@ -62,16 +62,17 @@ class JenkinsMojo extends BaseGroovyMojo
     void doExecute ()
     {
         final t          = System.currentTimeMillis()
-        final jobs       = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
-        final jobNamePad = verify().notNullOrEmpty( jobs )*.toString()*.size().max()
+        final jobsMap    = configureJobs( jenkinsUrl(), generationPom(), svnRepositoryLocalBase )
+        final jobNamePad = jobsMap.values()*.toString()*.size().max()
 
-        for ( job in jobs )
+        for ( job in jobsMap.values())
         {
-            final configPath = ( job.isAbstract ? "abstract job" : generateConfigFile( job, jobs ).canonicalPath.replace( '\\', '/' ))
+            final configPath = ( job.isAbstract ? "abstract job" :
+                                                  generateConfigFile( job, jobsMap ).canonicalPath.replace( '\\', '/' ))
             log.info( "${ job.toString().padRight( jobNamePad ) }  ==>  ${ configPath }" )
         }
 
-        log.info( "[${ jobs.size()}] job${ general().s( jobs.size()) } generated in [${ System.currentTimeMillis() - t }] ms" )
+        log.info( "[${ jobsMap.size()}] job${ general().s( jobsMap.size()) } generated in [${ System.currentTimeMillis() - t }] ms" )
     }
 
 
@@ -84,13 +85,13 @@ class JenkinsMojo extends BaseGroovyMojo
      */
     @Requires({ outputDirectory && job && ( ! job.isAbstract ) && jobs })
     @Ensures({ result.file })
-    File generateConfigFile( Job job, List<Job> jobs )
+    File generateConfigFile( Job job, Map<String, Job> jobs )
     {
         final configFile   = new File( outputDirectory, "${ job.id }/config.xml" )
-        final indent       = ' ' * 2
+        final indent       = '  '
         final newLine      = (( 'windows' == endOfLine ) ? '\r\n' : '\n' )
         final timestamp    = ( timestamp ? ' on ' + new Date().format( timestampFormat ) : '' )
-        final configMarkup = new ConfigMarkup( job, timestamp, indent, newLine ).markup
+        final configMarkup = new ConfigMarkup( job, jobs, timestamp, indent, newLine ).markup
 
         if ( job.processes())
         {
@@ -112,32 +113,37 @@ class JenkinsMojo extends BaseGroovyMojo
     *
     * Returns a mapping of "job ID" => job itself.
     */
-    @Requires({ jenkinsUrl && generationPom && svnRepositoryLocalBase })
-    private List<Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
+    @Ensures({ result })
+    private Map<String, Job> configureJobs ( String jenkinsUrl, String generationPom, String svnRepositoryLocalBase )
     {
-        Map<String, Job> allJobs = [:]
-        List<Job>        jobs    = jobs()
-        assert jobs, "No jobs configured. Use either <job> or <jobs> to define Jenkins jobs."
+        assert jenkinsUrl && generationPom && svnRepositoryLocalBase
+
+        final List<Job>        jobsList = jobs()
+        final Map<String, Job> jobsMap  = [:]
+        assert jobsList, "No jobs configured. Use either <job> or <jobs> to define Jenkins jobs."
 
         /**
          * - Reading all jobs,
-         * - Building allJobs[] map
+         * - Building jobsMap
          * - Updating job's "Jenkins URL" and "generation POM" properties
          * - For each repository - setting it's "local" part
          *   (most of the time it is omitted by user since it can be calculated from "remote" part)
          */
-        for ( job in jobs )
+
+        for ( job in jobsList )
         {
-            Job prevJob = allJobs.put( job.id, job )
-            assert ( ! prevJob ), "[$job] is defined more than once"
+            // noinspection GroovyMapPutCanBeKeyedAccess
+            Job prevJob = jobsMap.put( job.id, job )
+            assert ( ! prevJob ), "$job is defined more than once"
 
             job.jenkinsUrl    = jenkinsUrl
             job.generationPom = generationPom
 
             for ( repo in job.repositories())
             {
-                repo.remote = verify().notNullOrEmpty( repo.remote ).replaceAll( '/$', '' ) // Trimming trailing '/'
-                assert  ( ! ( verify().notNullOrEmpty( repo.remote )).endsWith( '/' ))
+                assert repo.remote, "$job - every <repository> needs to have <remote> specified"
+                repo.remote = repo.remote.replaceAll( '/$', '' ) // Trimming trailing '/'
+                assert ( ! repo.remote.endsWith( '/' ))
 
                 if (( ! repo.local ) && ( repo.svn ))
                 {
@@ -149,18 +155,13 @@ class JenkinsMojo extends BaseGroovyMojo
             }
         }
 
-        for( job in jobs )
+        for( job in jobsList )
         {
             /**
              * "Extending" each job with a <parent> jobs or with default values
              */
 
-            job.extend( job.parent ? composeJob( allJobs, job.parent ) : new Job())
-
-            /**
-             * Whether job's parent is a real or an abstract one
-             */
-            job.parentIsReal = ( job.parent && ( ! allJobs[ job.parent ].isAbstract ))
+            job.extend( job.parent ? composeJob( jobsMap, job.parent ) : new Job())
 
             if ( job.mavenGoals && ( job.jobType == Job.JobType.maven ))
             {   /**
@@ -175,8 +176,8 @@ class JenkinsMojo extends BaseGroovyMojo
 
             for ( invokedJobId in job.invoke?.jobsSplit )
             {
-                assert allJobs[ invokedJobId ], "[$job] invokes job [$invokedJobId] but it's not defined. " +
-                                                "Defined jobs: ${ allJobs.keySet() }"
+                assert jobsMap[ invokedJobId ], "[$job] invokes job [$invokedJobId] but it's not defined. " +
+                                                "Defined jobs: ${ jobsMap.keySet() }"
             }
 
            /**
@@ -186,7 +187,7 @@ class JenkinsMojo extends BaseGroovyMojo
             List<Job> childJobs = []
             List<Job> invokedBy = []
 
-            for ( otherJob in jobs.findAll{ it.id != job.id } )
+            for ( otherJob in jobsList.findAll{ it.id != job.id } )
             {
                 if ( otherJob.parent == job.id )                       { childJobs << otherJob }
                 if ( otherJob.invoke?.jobsSplit?.any{ it == job.id } ) { invokedBy << otherJob }
@@ -196,7 +197,9 @@ class JenkinsMojo extends BaseGroovyMojo
             job.invokedBy = invokedBy as Job[]
         }
 
-        allJobs.values().toList()*.validate()
+        assert jobsMap
+        jobsMap.values().each { it.validate() }
+        jobsMap
     }
 
 
@@ -258,7 +261,7 @@ class JenkinsMojo extends BaseGroovyMojo
      */
     @Requires({ configMarkup && configFile && job && job.processes() && jobs && indent && newLine })
     @Ensures({ result })
-    private String process( String configMarkup, File configFile, Job job, List<Job> jobs, String indent, String newLine )
+    private String process( String configMarkup, File configFile, Job job, Map<String, Job> jobs, String indent, String newLine )
     {
         List<String> expressions = (( List<String> ) job.processes().collect {
             String expression ->

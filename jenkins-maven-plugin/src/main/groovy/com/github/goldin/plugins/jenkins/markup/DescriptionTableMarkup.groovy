@@ -14,15 +14,17 @@ import com.github.goldin.plugins.jenkins.Task
  */
 class DescriptionTableMarkup extends Markup
 {
-    private final Job job
+    private final Job              job
+    private final Map<String, Job> jobs
 
 
-    @Requires({ job })
-    DescriptionTableMarkup ( Job job, String indent, String newLine )
+    @Requires({ job && jobs })
+    DescriptionTableMarkup ( Job job, Map<String, Job> jobs, String indent, String newLine )
     {
         super( indent, newLine )
 
-        this.job = job
+        this.job  = job
+        this.jobs = jobs
     }
 
 
@@ -95,8 +97,17 @@ class DescriptionTableMarkup extends Markup
 
             addRow( 'Display name', job.displayName )
 
-            if ( job.parent ){ addRow( 'Parent job', {
-                job.parentIsReal ? addJobLink( job.parent ) : add( job.parent )
+            if ( job.parent )
+            {
+                final multipleParents = job.parent.contains( ',' )
+
+                addRow( "Parent job${ multipleParents ? 's' : '' }", {
+                    for ( parentJobId in split( job.parent ))
+                    {
+                        if ( multipleParents ) { add ( '- ' ) }
+                        jobs[ parentJobId ].isAbstract ? add( parentJobId ) : addJobLink( parentJobId )
+                        if ( multipleParents ) { add ( '<br/>\n' ) }
+                    }
             })}
 
             if ( job.childJobs ){ addRow( 'Child job' + general().s( job.childJobs.size()), {
