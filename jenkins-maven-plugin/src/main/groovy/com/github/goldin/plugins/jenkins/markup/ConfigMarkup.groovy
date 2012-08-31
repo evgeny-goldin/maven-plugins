@@ -275,17 +275,17 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
                 }
             }
 
-            if (( isMavenJob ) && ( job.deploy.url ))
+            if ( isMavenJob && job.deploy )
             {
                 'hudson.maven.RedeployPublisher' {
-                    id( job.deploy.id )
-                    url( job.deploy.url )
-                    uniqueVersion( job.deploy.uniqueVersion )
+                    if ( job.deploy.id  ) { id ( job.deploy.id  )}
+                    if ( job.deploy.url ) { url( job.deploy.url )}
+                    uniqueVersion ( job.deploy.uniqueVersion  )
                     evenIfUnstable( job.deploy.evenIfUnstable )
                 }
             }
 
-            if (( isMavenJob ) && ( job.artifactory.name ))
+            if ( isMavenJob && job.artifactory.name )
             {
                 'org.jfrog.hudson.ArtifactoryRedeployPublisher' {
                     details {

@@ -6,7 +6,7 @@ package com.github.goldin.plugins.jenkins.beans
  */
 class Artifactory
 {
-    String  name
+    String  name                = ''
     String  repository          = 'libs-releases-local'  /* Repository to deploy release artifacts to   */
     String  snapshotsRepository = 'libs-snapshots-local' /* Repository to deploy snapshots artifacts to */
 
