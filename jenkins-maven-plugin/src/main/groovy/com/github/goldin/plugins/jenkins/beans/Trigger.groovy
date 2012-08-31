@@ -1,7 +1,8 @@
 package com.github.goldin.plugins.jenkins.beans
 
-import com.github.goldin.plugins.jenkins.beans.gerrit.Project
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import com.github.goldin.plugins.jenkins.beans.gerrit.Project
 
 
 /**

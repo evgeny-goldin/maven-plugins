@@ -21,6 +21,7 @@ enum GerritType
 }
 
 
+@SuppressWarnings([ 'AbstractClassWithoutAbstractMethod' ])
 abstract class TypePattern
 {
     GerritType type    = GerritType.plain
