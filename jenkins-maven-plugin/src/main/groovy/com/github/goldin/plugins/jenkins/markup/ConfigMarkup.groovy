@@ -2,6 +2,8 @@ package com.github.goldin.plugins.jenkins.markup
 
 import com.github.goldin.plugins.jenkins.Job
 import com.github.goldin.plugins.jenkins.beans.ParameterType
+import com.github.goldin.plugins.jenkins.beans.Trigger
+import com.github.goldin.plugins.jenkins.beans.gerrit.TypePattern
 import org.gcontracts.annotations.Requires
 
 
@@ -160,10 +162,12 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
         final scmBuilderClass = job.scmMarkupBuilderClass
         if  ( scmBuilderClass )
         {
-            final scm        = scmBuilderClass.newInstance()
-            scm.builder      = builder
-            scm.job          = job
-            scm.repositories = job.repositories()
+            final scm         = scmBuilderClass.newInstance()
+            scm.builder       = builder
+            scm.job           = job
+            scm.repositories  = job.repositories()
+            scm.gerritTrigger = job.triggers().any { Trigger.GERRIT_TYPE == it.type }
+
             scm.addMarkup()
         }
         addExtensionPoint( job.scm )
@@ -179,7 +183,13 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
             for ( trigger in job.triggers())
             {
                 "${ trigger.triggerClass }" {
-                    spec(( trigger.description ? "# ${ trigger.description }\n" : '' ) + trigger.expression )
+                    if ( Trigger.GERRIT_TYPE == trigger.type )
+                    {
+                        addGerritTrigger( trigger )
+                    }
+                    else {
+                        spec(( trigger.description ? "# ${ trigger.description }\n" : '' ) + trigger.expression )
+                    }
                 }
             }
         }
@@ -187,7 +197,79 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
 
 
     /**
-     * Adds {@code <triggers>} section to the {@link #builder}.
+     * Adds Gerrit trigger section to the {@link #builder}.
+     */
+    void addGerritTrigger( Trigger trigger )
+    {
+        assert trigger.type == Trigger.GERRIT_TYPE
+        assert ( ! trigger.description ), "$job - Gerrit triggers are not using <description>, use <project> or <projects> instead"
+        assert ( ! trigger.expression  ), "$job - Gerrit triggers are not using <expression>, use <project> or <projects> instead"
+        assert trigger.projects(),        "$job - Gerrit triggers should have <project> or <projects> defined"
+
+        final packagePrefix  = 'com.sonyericsson.hudson.plugins.gerrit.trigger.hudsontrigger.data'
+        final addTypePattern = { TypePattern tp               -> assert tp; builder.compareType( tp.type ); builder.pattern ( tp.pattern )}
+        final addStringValue = { String value, String tagName -> assert tagName; if ( value ){ builder."$tagName"( value ) }}
+
+        builder.with {
+            spec()
+
+            gerritProjects {
+                for ( project in trigger.projects())
+                {
+                    "${ packagePrefix }.GerritProject" {
+                        addTypePattern( project )
+
+                        if ( project.branches())
+                        {
+                            branches {
+                                for ( branch in project.branches())
+                                {
+                                    "${ packagePrefix }.Branch" { addTypePattern( branch )}
+                                }
+                            }
+                        }
+
+                        if ( project.filePaths())
+                        {
+                            filePaths {
+                                for( filePath in project.filePaths())
+                                {
+                                    "${ packagePrefix }.FilePath" { addTypePattern( filePath )}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            addStringValue( trigger.verifyStarted,        'gerritBuildStartedVerifiedValue'      )
+            addStringValue( trigger.codeReviewStarted,    'gerritBuildStartedCodeReviewValue'    )
+
+            addStringValue( trigger.verifySuccessful,     'gerritBuildSuccessfulVerifiedValue'   )
+            addStringValue( trigger.codeReviewSuccessful, 'gerritBuildSuccessfulCodeReviewValue' )
+
+            addStringValue( trigger.verifyFailed,         'gerritBuildFailedVerifiedValue'       )
+            addStringValue( trigger.codeReviewFailed,     'gerritBuildFailedCodeReviewValue'     )
+
+            addStringValue( trigger.verifyUnstable,       'gerritBuildUnstableVerifiedValue'     )
+            addStringValue( trigger.codeReviewUnstable,   'gerritBuildUnstableCodeReviewValue'   )
+
+            silentMode               ( trigger.silentMode              )
+            escapeQuotes             ( trigger.escapeQuotes            )
+
+            buildStartMessage        ( trigger.buildStartMessage       )
+            buildFailureMessage      ( trigger.buildFailureMessage     )
+            buildSuccessfulMessage   ( trigger.buildSuccessfulMessage  )
+            buildUnstableMessage     ( trigger.buildUnstableMessage    )
+            buildUnsuccessfulFilepath( trigger.unsuccessfulMessageFile )
+
+            customUrl                ( trigger.urlToPost               )
+        }
+    }
+
+
+    /**
+     * Adds Maven section to the {@link #builder}.
      */
     void addMaven()
     {

@@ -12,6 +12,7 @@ abstract class Scm extends Markup
 
     Job              job
     List<Repository> repositories
+    boolean          gerritTrigger
 }
 
 
@@ -116,7 +117,18 @@ class Git extends Scm
             wipeOutWorkspace( gitRepository.gitWipeOutWorkspace )
             pruneBranches( gitRepository.gitPruneBranches )
             remotePoll( gitRepository.gitRemotePolling )
-            buildChooser( class: 'hudson.plugins.git.util.DefaultBuildChooser' )
+
+            if ( gerritTrigger )
+            {
+                buildChooser( class: 'com.sonyericsson.hudson.plugins.gerrit.trigger.hudsontrigger.GerritTriggerBuildChooser' ) {
+                    separator( '#' )
+                }
+            }
+            else
+            {
+                buildChooser( class: 'hudson.plugins.git.util.DefaultBuildChooser' )
+            }
+
             gitTool( 'Default' )
 
             if ( gitRepository.gitRepoBrowserClass && gitRepository.repoBrowserUrl )
