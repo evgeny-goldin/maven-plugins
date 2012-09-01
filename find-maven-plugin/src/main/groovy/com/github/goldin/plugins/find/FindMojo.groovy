@@ -6,10 +6,12 @@ import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 /**
  * MOJO that finds the file specified and sets the corresponding property
  */
+@MojoThreadSafe
 @MojoGoal( 'find' )
 @MojoPhase( 'validate' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

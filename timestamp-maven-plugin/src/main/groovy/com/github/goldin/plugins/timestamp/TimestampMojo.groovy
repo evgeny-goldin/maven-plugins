@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.timestamp
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
@@ -10,6 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 /**
  * Timestamp properties creation MOJO
  */
+@MojoThreadSafe
 @MojoGoal( 'timestamp' )
 @MojoPhase( 'validate' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

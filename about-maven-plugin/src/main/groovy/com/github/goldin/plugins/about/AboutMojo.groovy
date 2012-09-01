@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.about
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.plugins.common.BaseGroovyMojo
@@ -18,6 +20,7 @@ import java.text.SimpleDateFormat
 /**
  * Updates files specified with "about" build metadata
  */
+@MojoThreadSafe
 @MojoGoal( 'create-about' )
 @MojoPhase( 'package' )
 @MojoRequiresDependencyResolution( 'test' )

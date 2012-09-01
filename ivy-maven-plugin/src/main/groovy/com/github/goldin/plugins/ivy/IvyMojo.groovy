@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.ivy
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.ivy.Ivy
@@ -18,6 +20,7 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
  * Plugin that delegates artifacts resolving to Ivy, adds dependencies resolved to the Maven scope or
  * copies them to local directory.
  */
+@MojoThreadSafe
 @MojoGoal ( 'ivy' )
 @MojoPhase ( 'initialize' )
 @MojoRequiresDependencyResolution( 'test' )

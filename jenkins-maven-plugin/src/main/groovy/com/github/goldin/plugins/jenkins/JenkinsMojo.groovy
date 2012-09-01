@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.jenkins
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
@@ -13,6 +15,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
+@MojoThreadSafe
 @MojoGoal ( 'generate' )
 @MojoPhase ( 'compile' )
 @SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )

@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.mail
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import javax.mail.internet.InternetAddress
@@ -16,6 +18,7 @@ import javax.mail.Message.RecipientType
 /**
  * MOJO that sends mails with attachments
  */
+@MojoThreadSafe
 @MojoGoal( 'send' )
 @MojoPhase( 'install' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

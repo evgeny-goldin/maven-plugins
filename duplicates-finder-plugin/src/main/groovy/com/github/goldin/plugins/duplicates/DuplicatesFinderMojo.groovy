@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.duplicates
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
@@ -16,6 +18,7 @@ import java.util.zip.ZipFile
 /**
  * A plugin that finds duplicate classes in the scope(s) specified
  */
+@MojoThreadSafe
 @MojoGoal ( 'find-duplicates' )
 @MojoPhase ( 'process-resources' )
 @MojoRequiresDependencyResolution ( 'test' )

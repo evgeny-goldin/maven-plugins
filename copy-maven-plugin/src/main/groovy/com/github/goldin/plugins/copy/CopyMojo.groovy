@@ -18,6 +18,7 @@ import org.jfrog.maven.annomojo.annotations.*
 /**
  * MOJO copying resources specified.
  */
+@MojoThreadSafe
 @MojoGoal( 'copy' )
 @MojoPhase( 'package' )
 @MojoRequiresDependencyResolution( 'test' )

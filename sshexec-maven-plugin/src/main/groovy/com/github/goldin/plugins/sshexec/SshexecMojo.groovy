@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.sshexec
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.jcraft.jsch.JSch
@@ -14,6 +16,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
  * See
  * http://ant.apache.org/manual/Tasks/sshexec.html
  */
+@MojoThreadSafe
 @MojoGoal( 'sshexec' )
 @MojoPhase( 'install' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.properties
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
@@ -10,6 +12,10 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 
 
+/**
+ * Creates Maven properties by evaluating a Groovy expression.
+ */
+@MojoThreadSafe
 @MojoGoal( 'set-properties' )
 @MojoPhase( 'validate' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

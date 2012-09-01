@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.newassert
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.jfrog.maven.annomojo.annotations.MojoGoal
@@ -10,6 +12,7 @@ import org.jfrog.maven.annomojo.annotations.MojoPhase
 /**
  * Asserts invoker
  */
+@MojoThreadSafe
 @MojoGoal  ( 'assert' )
 @MojoPhase ( 'install' )
 @SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )

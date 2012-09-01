@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.springbatch
 
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.plugin.MojoFailureException
@@ -14,6 +16,7 @@ import org.springframework.core.io.ClassPathResource
 /**
  * Spring Batch invoker
  */
+@MojoThreadSafe
 @MojoGoal  ( 'run' )
 @MojoPhase ( 'install' )
 @SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )
