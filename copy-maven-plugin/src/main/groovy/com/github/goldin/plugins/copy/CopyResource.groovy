@@ -134,7 +134,7 @@ final class CopyResource extends Resource implements Cloneable
     boolean move                  = false
 
     boolean stop                  = false // For troubleshooting only: halt build execution after resource is processed
-    String  shouldFailWith        = ''    // For troubleshooting only: resource processing should fail with exception specified
+    String  failsWith             = ''    // For troubleshooting only: resource processing should fail with exception specified
 
     int     compressionLevel = 9     // Zip compression level
     int     retries          = 5     // Number of retries for FTP download

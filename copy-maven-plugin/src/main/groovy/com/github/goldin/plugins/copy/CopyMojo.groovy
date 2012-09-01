@@ -151,23 +151,23 @@ class CopyMojo extends BaseGroovyMojo
                 catch( Throwable e )
                 {
                     failed              = true
-                    String errorMessage = "Processing <resource> [$resource] ${ shouldFailWith ? 'expectedly ' : '' }failed with [${ e.class.name }]"
+                    String errorMessage = "Processing <resource> [$resource] ${ failsWith ? 'expectedly ' : '' }failed with [${ e.class.name }]"
 
-                    if ( shouldFailWith )
+                    if ( failsWith )
                     {
-                        assert e.class.name.endsWith( shouldFailWith )
+                        assert e.class.name.endsWith( failsWith )
                     }
                     else if ( general().choose( failOnError, this.failOnError ))
                     {
                         throw new MojoExecutionException( errorMessage, e )
                     }
 
-                    ( shouldFailWith ? log.&info : log.&warn )( errorMessage )
+                    ( failsWith ? log.&info : log.&warn )( errorMessage )
                 }
 
-                if ( shouldFailWith && ( ! failed ))
+                if ( failsWith && ( ! failed ))
                 {
-                    throw new MojoExecutionException( "Resource [$resource] should have failed with [$shouldFailWith]" )
+                    throw new MojoExecutionException( "Resource [$resource] should have failed with [$failsWith] but it didn't" )
                 }
 
                 if ( stop )
@@ -491,12 +491,12 @@ class CopyMojo extends BaseGroovyMojo
 
             for ( path in resource.targetPaths())
             {
-                File targetPath = new File( verify().notNullOrEmpty( path ))
-
                 if ( resource.mkdir )
                 {
-                    filesToProcess << mkdir( targetPath, verbose )
+                    filesToProcess << mkdir( path, verbose )
                 }
+
+                File targetPath = new File( verify().notNullOrEmpty( path ))
 
                 if ( resource.pack )
                 {
@@ -742,24 +742,27 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Creates the directory specified.
      *
-     * @param targetPath directory to create
-     * @param verbose    verbose logging
+     * @param path    path to directory to create
+     * @param verbose verbose logging
      *
      * @return target path created
      */
-    private File mkdir( File    targetPath,
-                        boolean verbose )
+    private File mkdir( String path, boolean verbose )
     {
-        if ( targetPath.directory )
+        assert ( path && ! ( net().isNet( path ))), "<mkdir> doesn't work with remote path [$path]"
+
+        final directory = new File( path )
+
+        if ( directory.directory )
         {
-            if ( verbose ){ log.info( "Directory [$targetPath.canonicalPath] already exists" )}
-            return targetPath
+            if ( verbose ){ log.info( "Directory [$directory.canonicalPath] already exists" )}
+            return directory
         }
 
-        file().mkdirs( targetPath )
-        if ( verbose ){ log.info( "Directory [$targetPath.canonicalPath] created" )}
+        file().mkdirs( directory )
+        if ( verbose ){ log.info( "Directory [$directory.canonicalPath] created" )}
 
-        verify().directory( targetPath )
+        verify().directory( directory )
     }
 
 
