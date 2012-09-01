@@ -1,8 +1,8 @@
 package com.github.goldin.plugins.jenkins
 
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
 import org.gcontracts.annotations.Ensures

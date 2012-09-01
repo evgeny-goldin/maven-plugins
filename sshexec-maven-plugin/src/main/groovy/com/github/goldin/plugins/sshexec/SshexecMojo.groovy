@@ -1,8 +1,8 @@
 package com.github.goldin.plugins.sshexec
 
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal

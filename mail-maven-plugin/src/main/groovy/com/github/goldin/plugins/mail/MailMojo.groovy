@@ -1,8 +1,8 @@
 package com.github.goldin.plugins.mail
 
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart

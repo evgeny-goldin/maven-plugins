@@ -8,6 +8,7 @@ import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
+
 /**
  * MOJO that finds the file specified and sets the corresponding property
  */
