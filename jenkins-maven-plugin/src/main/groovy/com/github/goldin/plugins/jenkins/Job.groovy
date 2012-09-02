@@ -422,7 +422,7 @@ class Job
         if ( repositories().empty ) { return isAbstract ? null : defaultScmType }
 
         verify().notNullOrEmpty( repositories().first().remote ).with {
-            ( startsWith( 'git:' ) || startsWith( 'git@' ) || contains( 'github.com' )) ? 'git' : defaultScmType
+            ( contains( 'git:' ) || contains( 'git@' ) || contains( 'github.com' )) ? 'git' : defaultScmType
         }
     }
 
