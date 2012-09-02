@@ -38,6 +38,9 @@ class AboutMojo extends BaseGroovyMojo
     @MojoParameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
     public String  fileName
 
+    @MojoParameter ( defaultValue = '2.5.1' )
+    public String  mavenDependencyPluginVersion
+
     @MojoParameter
     public String  mavenCommandLine
 
@@ -150,7 +153,7 @@ class AboutMojo extends BaseGroovyMojo
         }
 
         String coordinates = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
-        String plugin      = 'maven-dependency-plugin:2.5.1:tree'
+        String plugin      = "maven-dependency-plugin:$mavenDependencyPluginVersion:tree"
         String mvnHome     = env[ 'M2_HOME' ]
 
         assert mvnHome, "'M2_HOME' environment variable is not defined"
