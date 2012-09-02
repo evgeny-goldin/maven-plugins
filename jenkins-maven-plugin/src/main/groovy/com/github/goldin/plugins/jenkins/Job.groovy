@@ -170,12 +170,12 @@ class Job
     List<Repository>     repositories() { general().list( repositories, repository ) }
 
 
-    String                            scmType
-    Map<String, Class<? extends Scm>> scmClasses = [ 'none' : None,
-                                                     'cvs'  : Cvs,
-                                                     'svn'  : Svn,
-                                                     'git'  : Git,
-                                                     'hg'   : Hg ]
+    String                                  scmType
+    final Map<String, Class<? extends Scm>> scmClasses = [ 'none' : None,
+                                                           'cvs'  : Cvs,
+                                                           'svn'  : Svn,
+                                                           'git'  : Git,
+                                                           'hg'   : Hg ].asImmutable()
     Class<? extends Scm> getScmClass()
     {
         if ( repositories() || ( 'none' == scmType ))
