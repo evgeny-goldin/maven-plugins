@@ -250,7 +250,7 @@ class CopyMojo extends BaseGroovyMojo
 
         final isDownload      = net().isNet( resource.directory )
         final isUpload        = net().isNet( resource.targetPaths())
-        File  sourceDirectory = resource.mkdir ? null : new File( resource.directory )
+        File  sourceDirectory = new File( resource.directory )
         final tempDirectory   = null
 
         try
@@ -522,7 +522,7 @@ class CopyMojo extends BaseGroovyMojo
                 }
                 else if ( sourceDirectory /* null when mkdir is performed */ )
                 {
-                    def files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+                    final files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
                     for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
                     {
                         GCommons.file().mkdirs( targetPath )
