@@ -159,7 +159,7 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
      */
     void addScm()
     {
-        final scmBuilderClass = job.scmMarkupBuilderClass
+        final scmBuilderClass = job.scmClass
         if  ( scmBuilderClass )
         {
             final scm         = scmBuilderClass.newInstance()
@@ -170,6 +170,7 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
 
             scm.addMarkup()
         }
+
         addExtensionPoint( job.scm )
     }
 

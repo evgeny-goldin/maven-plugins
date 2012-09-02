@@ -170,19 +170,19 @@ class Job
     List<Repository>     repositories() { general().list( repositories, repository ) }
 
 
-    String               scmType
-    Class<? extends Scm> getScmMarkupBuilderClass()
+    String                            scmType
+    Map<String, Class<? extends Scm>> scmClasses = [ 'none' : None,
+                                                     'cvs'  : Cvs,
+                                                     'svn'  : Svn,
+                                                     'git'  : Git,
+                                                     'hg'   : Hg ]
+    Class<? extends Scm> getScmClass()
     {
         if ( repositories() || ( 'none' == scmType ))
         {
             assert scmType
-            Class<? extends Scm> scmClass = ( scmType == 'none' ? None :
-                                              scmType == 'cvs'  ? Cvs  :
-                                              scmType == 'svn'  ? Svn  :
-                                              scmType == 'git'  ? Git  :
-                                              scmType == 'hg'   ? Hg   :
-                                                                  null )
-            assert scmClass, "Unknown <scmType>${ scmType }</scmType>"
+            Class<? extends Scm> scmClass = scmClasses[ scmType ]
+            assert scmClass, "Unknown <scmType>$scmType</scmType>, known types are ${ scmClasses.keySet()}"
             scmClass
         }
         else
@@ -421,9 +421,8 @@ class Job
 
         if ( repositories().empty ) { return isAbstract ? null : defaultScmType }
 
-        verify().notNullOrEmpty( repositories().first().remote ).with {
-            ( contains( 'git:' ) || contains( 'git@' ) || contains( 'github.com' )) ? 'git' : defaultScmType
-        }
+        assert repositories().first().remote
+        scmClasses.keySet().find{ repositories().first().remote.contains( it ) } ?: defaultScmType
     }
 
 

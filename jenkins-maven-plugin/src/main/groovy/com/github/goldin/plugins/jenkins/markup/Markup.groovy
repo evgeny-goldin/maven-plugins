@@ -19,7 +19,8 @@ abstract class Markup
 
 
     private final Writer writer
-    final MarkupBuilder  builder
+    MarkupBuilder        builder
+
 
     Markup()
     {

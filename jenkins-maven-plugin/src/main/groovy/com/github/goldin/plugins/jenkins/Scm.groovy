@@ -86,9 +86,9 @@ class Git extends Scm
             userRemoteConfigs {
                 for ( repository in repositories ) {
                     'hudson.plugins.git.UserRemoteConfig' {
-                        name( repository.gitName )
-                        refspec( repository.gitRefspec )
-                        url( repository.remote )
+                        name   ( repository.gitName )
+                        refspec( gerritTrigger ? '$GERRIT_REFSPEC' : repository.gitRefspec )
+                        url    ( repository.remote )
                     }
                 }
             }
@@ -96,7 +96,7 @@ class Git extends Scm
             branches {
                 for ( repository in repositories ) {
                     'hudson.plugins.git.BranchSpec' {
-                        name( repository.gitBranch )
+                        name( gerritTrigger ? '$GERRIT_BRANCH' : repository.gitBranch )
                     }
                 }
             }
