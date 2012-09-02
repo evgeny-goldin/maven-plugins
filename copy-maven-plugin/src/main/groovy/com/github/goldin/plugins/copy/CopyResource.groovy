@@ -25,7 +25,6 @@ final class CopyResource extends Resource implements Cloneable
      *
      * @return copy of this resource for copying files from {@code targetPath} to {@code directory}
      */
-    @Requires({ targetPathFile && directoryFile })
     CopyResource makeCopy ( CopyMojo     mojo,
                             File         targetPathFile,
                             File         directoryFile,
@@ -33,6 +32,7 @@ final class CopyResource extends Resource implements Cloneable
                             List<String> excludePatterns,
                             boolean      copyNameUpdates = false )
     {
+        assert targetPathFile && directoryFile
         CopyResource newResource = new CopyResource()
 
         newResource.with { general().with {
