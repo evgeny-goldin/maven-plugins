@@ -21,6 +21,7 @@ final class CopyResource extends Resource implements Cloneable
      * @param directoryFile   directory to copy the files from
      * @param includePatterns include patterns
      * @param excludePatterns exclude patterns
+     * @param copyNameUpdates whether name updating resource properties ({@link #destFileName}, {@link #destFilePrefix}, etc) should also be copied
      *
      * @return copy of this resource for copying files from {@code targetPath} to {@code directory}
      */
@@ -29,7 +30,8 @@ final class CopyResource extends Resource implements Cloneable
                             File         targetPathFile,
                             File         directoryFile,
                             List<String> includePatterns,
-                            List<String> excludePatterns )
+                            List<String> excludePatterns,
+                            boolean      copyNameUpdates = false )
     {
         CopyResource newResource = new CopyResource()
 
@@ -45,10 +47,15 @@ final class CopyResource extends Resource implements Cloneable
             filtering             = this.filtering
             filter                = this.filter
             encoding              = this.encoding
-            destFileName          = this.destFileName
-            destFilePrefix        = this.destFilePrefix
-            destFileSuffix        = this.destFileSuffix
-            destFileExtension     = this.destFileExtension
+
+            if ( copyNameUpdates )
+            {
+                destFileName      = this.destFileName
+                destFilePrefix    = this.destFilePrefix
+                destFileSuffix    = this.destFileSuffix
+                destFileExtension = this.destFileExtension
+            }
+
             defaultExcludes       = choose( this.defaultExcludes,      mojo.defaultExcludes())
             failIfNotFound        = choose( this.failIfNotFound,       mojo.failIfNotFound )
             filterWithDollarOnly  = choose( this.filterWithDollarOnly, mojo.filterWithDollarOnly )

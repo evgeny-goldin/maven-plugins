@@ -155,7 +155,12 @@ class CopyMojo extends BaseGroovyMojo
 
                     if ( failsWith )
                     {
-                        assert e.class.name.endsWith( failsWith )
+                        if ( ! e.class.name.endsWith( failsWith ))
+                        {
+                            throw new MojoExecutionException(
+                                "Resource [$resource] should have failed with [$failsWith], failed with [$e] instead",
+                                e )
+                        }
                     }
                     else if ( general().choose( failOnError, this.failOnError ))
                     {
@@ -250,7 +255,7 @@ class CopyMojo extends BaseGroovyMojo
 
         final isDownload      = net().isNet( resource.directory )
         final isUpload        = net().isNet( resource.targetPaths())
-        File  sourceDirectory = new File( resource.directory )
+        File  sourceDirectory = ( resource.directory ? new File( resource.directory ) : null ) // null for <mkdir> operation
         final tempDirectory   = null
 
         try
@@ -291,7 +296,7 @@ class CopyMojo extends BaseGroovyMojo
 
                             tempDirectory = file().tempDirectory()
 
-                            processFilesResource( resource.makeCopy( this, tempDirectory, sourceDirectory, includes, excludes ),
+                            processFilesResource( resource.makeCopy( this, tempDirectory, sourceDirectory, includes, excludes, true ),
                                                   verbose, failIfNotFound )
 
                             sourceDirectory = tempDirectory  // Files are now uploaded from the temp directory.
