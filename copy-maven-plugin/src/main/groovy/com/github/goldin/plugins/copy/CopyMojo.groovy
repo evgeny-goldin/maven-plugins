@@ -195,13 +195,14 @@ class CopyMojo extends BaseGroovyMojo
         resource.with {
             if ( runIf( runIf ))
             {
-                Closure d = { // Evaluates <description>
+                final descriptionEval  = {
+                    assert description
                     description.trim().with{ ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
                 }
 
                 if ( description )
                 {
-                    log.info( "==> Processing <resource> [${ d() }]" )
+                    log.info( "==> Processing <resource> [${ descriptionEval() }]" )
                 }
 
                 boolean processed = false
@@ -221,14 +222,14 @@ class CopyMojo extends BaseGroovyMojo
                     processed = true
                 }
 
-                assert processed, "Don't know how to process <resource> [$resource] - is it configured properly?"
+                assert processed, "Don't know how to process <resource> [$resource] - is it configured correctly?"
 
                 endTime = (( endTime   > 0 ) ? endTime : System.currentTimeMillis())
                 assert     ( startTime > 0 ) && ( endTime >= startTime )
 
                 if ( description )
                 {
-                    log.info( "==> Processing <resource> [${ d() }] - done, [${ endTime - startTime }] ms" )
+                    log.info( "==> Processing <resource> [${ descriptionEval() }] - done, [${ endTime - startTime }] ms" )
                 }
             }
         }
@@ -249,9 +250,9 @@ class CopyMojo extends BaseGroovyMojo
 
         final isDownload      = net().isNet( resource.directory )
         final isUpload        = net().isNet( resource.targetPaths())
-        final sourceDirectory = ( isDownload         ? file().tempDirectory()         : // Temp dir to download the files to
-                                 resource.directory ? new File( resource.directory ) : // Directory to cleanup, upload or copy
-                                                      null )                           // mkdir, no source directory
+        File  sourceDirectory = resource.mkdir ? null : new File( resource.directory )
+        final tempDirectory   = null
+
         try
         {
             def( List<String> includes, List<String> excludes ) = [ resource.includes, resource.excludes ].collect {
@@ -263,19 +264,18 @@ class CopyMojo extends BaseGroovyMojo
             {
                 if ( isDownload )
                 {
-                    assert ( ! sourceDirectory.list()), \
-                           "Temporal directory [$sourceDirectory.canonicalPath] for downloading files is not empty?"
+                    tempDirectory = file().tempDirectory()
+                    NetworkUtils.download( resource, resource.directory, tempDirectory, verbose, groovyConfig )
 
-                    NetworkUtils.download( resource, resource.directory, sourceDirectory, verbose, groovyConfig )
-
-                    assert ( sourceDirectory.list() || ( ! failIfNotFound )), \
+                    assert ( tempDirectory.list() || ( ! failIfNotFound )), \
                            "No files were downloaded from [$resource.directory] " +
                            "and include/exclude patterns ${ resource.includes ?: [] }/${ resource.excludes ?: [] }"
+
+                    sourceDirectory = tempDirectory
                 }
                 else
-                {   /**
-                     * Default excludes are not active for downloaded files: all of them are included, none is excluded
-                     */
+                {
+                    // Adding defaultExcludes to excludes if not disabled with "false" value
                     if  (( resource.defaultExcludes != 'false' ) && ( defaultExcludes() != 'false' ))
                     {
                         excludes = ( excludes ?: [] ) + split( resource.defaultExcludes ?: defaultExcludes())
@@ -283,6 +283,22 @@ class CopyMojo extends BaseGroovyMojo
 
                     if ( isUpload )
                     {
+                        if ( resource.needsProcessingBeforeUpload())
+                        {
+                            assert ( ! resource.with { clean || mkdir || pack || unpack }), \
+                                   "[$resource] - no <clean>, <mkdir>, <pack> or <unpack> operation allowed when uploading files to ${resource.targetPaths()}, " +
+                                   "use a separate <resource> for that"
+
+                            tempDirectory = file().tempDirectory()
+
+                            processFilesResource( resource.makeCopy( this, tempDirectory, sourceDirectory, includes, excludes ),
+                                                  verbose, failIfNotFound )
+
+                            sourceDirectory = tempDirectory  // Files are now uploaded from the temp directory.
+                            includes        = null           // All files are includes and none is excluded.
+                            excludes        = null           //
+                        }
+
                         NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, verbose, failIfNotFound )
                         return
                     }
@@ -293,8 +309,8 @@ class CopyMojo extends BaseGroovyMojo
         }
         finally
         {
-            /* Sometimes fails with "IllegalArgumentException: wrong number of arguments" */
-            if ( isDownload ){ file().delete([ sourceDirectory ] as File[] )}
+            /* If arguments not specified explicitly as array may fail with "IllegalArgumentException: wrong number of arguments" */
+            if ( tempDirectory ){ file().delete([ tempDirectory ] as File[] )}
         }
     }
 
@@ -842,8 +858,10 @@ class CopyMojo extends BaseGroovyMojo
                                               ( o instanceof Collection ) ? (( Collection<File> ) o ) :
                                                                             null )
             assert ( filesIncluded != null ), \
-                   "Executing Groovy expression [$expression] produced [$o] of type [${ o.class.name }]. " +
-                   'It should be an instance of File or Collection<File>.'
+                   "<filter> expression [$expression] returned [$o] of type [${ o.getClass().name }] - should be File or Collection<File>"
+
+            filesIncluded.each { assert ( it instanceof File ), \
+                                 "<filter> expression [$expression] returned [$it] of type [${ it.getClass().name }] - should be File" }
 
             if ( verbose )
             {

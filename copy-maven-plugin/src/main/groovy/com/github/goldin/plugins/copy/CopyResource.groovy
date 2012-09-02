@@ -45,6 +45,10 @@ final class CopyResource extends Resource implements Cloneable
             filtering             = this.filtering
             filter                = this.filter
             encoding              = this.encoding
+            destFileName          = this.destFileName
+            destFilePrefix        = this.destFilePrefix
+            destFileSuffix        = this.destFileSuffix
+            destFileExtension     = this.destFileExtension
             defaultExcludes       = choose( this.defaultExcludes,      mojo.defaultExcludes())
             failIfNotFound        = choose( this.failIfNotFound,       mojo.failIfNotFound )
             filterWithDollarOnly  = choose( this.filterWithDollarOnly, mojo.filterWithDollarOnly )
@@ -82,14 +86,14 @@ final class CopyResource extends Resource implements Cloneable
     }
 
 
-    Replace[] replaces
-    Replace   replace
+    Replace[]     replaces
+    Replace       replace
     List<Replace> replaces () { general().list( this.replaces, this.replace ) }
 
     CopyManifest manifest
 
-    CopyDependency[] dependencies
-    CopyDependency   dependency
+    CopyDependency[]     dependencies
+    CopyDependency       dependency
     List<CopyDependency> dependencies () { general().list( this.dependencies, this.dependency ) }
 
     String[] zipEntries
@@ -205,7 +209,7 @@ final class CopyResource extends Resource implements Cloneable
 
 
     /**
-     * Retrieves {@code <dependenciesAtM2>} value.
+     * Determines whether dependencies are retrieved from .m2 directory rather than copying them to temp directory first.
      *
      * If it is defined - the corresponding value is returned.
      * If this resource specifies a single dependency - true is returned.
@@ -224,11 +228,25 @@ final class CopyResource extends Resource implements Cloneable
     }
 
 
+    /**
+     * Determines if current resource requires a local processing before being uploaded to remote directory.
+     *
+     * @return true, if current resource requires a local processing before being uploaded,
+     *         false otherwise
+     */
+    boolean needsProcessingBeforeUpload()
+    {
+        filter       || filtering      || process        || deploy       ||
+        replaces()   || manifest       || attachArtifact || stripVersion ||
+        destFileName || destFilePrefix || destFileSuffix || destFileExtension
+    }
+
+
     @Override
     String toString ()
-    {   /**
-         * Do not use any GCommons calls here ! It fails when Maven 2 build runs with "-X" flag.
-         */
-        "Target path(s) [${ targetPaths ?: targetPath ?: '' }], directory [${ directory ?: '' }], dependencies [${ dependencies ?: dependency ?: '' }]"
+    {
+        "Target path${ targetPaths().size() == 1 ? '' : 's' } ${ targetPaths() }, " +
+        "directory [${ directory ?: '' }], " +
+        "dependencies ${ dependencies() }"
     }
 }

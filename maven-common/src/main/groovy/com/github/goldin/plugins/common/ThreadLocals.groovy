@@ -26,7 +26,7 @@ class ThreadLocals
      */
     static <T> T set ( T ... objects )
     {
-        for ( T t in objects ) { TL.get()[ t.class ] = t }
+        for ( T t in objects ) { TL.get()[ t.getClass() ] = t }
         objects[ 0 ]
     }
 
