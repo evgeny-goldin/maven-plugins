@@ -52,7 +52,7 @@
         <java-version>1.6</java-version>
         <previous-plugins-version>0.2.5-about-fix</previous-plugins-version>
         <gcommons-version>0.6-SNAPSHOT</gcommons-version>
-        <groovy-version>1.8.6</groovy-version>
+        <groovy-version>1.8.8</groovy-version>
         <gmaven-version>1.4</gmaven-version>
         <!-- http://repo.jfrog.org/artifactory/repo/org/jfrog/maven/annomojo/maven-plugin-anno/ -->
         <annomojo-version>1.4.1</annomojo-version>
