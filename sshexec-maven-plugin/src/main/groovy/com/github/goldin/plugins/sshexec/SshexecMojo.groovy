@@ -96,7 +96,7 @@ class SshexecMojo extends BaseGroovyMojo
         }
         else
         {
-            assert password, "SSH password need to be specified in <location>: scp://<user>:<password>@<host>:<path>"
+            assert password, 'SSH password need to be specified in <location>: scp://<user>:<password>@<host>:<path>'
             arguments += [ password : password ]
         }
 
