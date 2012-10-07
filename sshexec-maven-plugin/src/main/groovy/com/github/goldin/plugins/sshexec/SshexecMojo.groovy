@@ -1,13 +1,11 @@
 package com.github.goldin.plugins.sshexec
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import com.jcraft.jsch.JSch
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 
 /**
@@ -86,40 +84,23 @@ class SshexecMojo extends BaseGroovyMojo
                   ( keyfile ? "key based authentication with [$keyfile.canonicalPath] private key" :
                               'password based authentication' ))
 
-        /**
-         * http://evgeny-goldin.org/youtrack/issue/pl-334:
-         * Multiple executions - if one is "<verbose>true</verbose>" all following are verbose as well
-         *
-         * JSch keeps its logger in a static variable: {@link JSch#logger}
-         */
-        JSch.logger = JSch.DEVNULL
-
+        final arguments = [ command     : command,
+                            host        : host,
+                            username    : username,
+                            verbose     : verbose,
+                            trust       : true,
+                            failonerror : true ]
         if ( keyfile )
-        {   /**
-             * Key based authentication
-             */
-            new AntBuilder().sshexec( command     : command,
-                                      host        : host,
-                                      username    : username,
-                                      keyfile     : keyfile.canonicalPath,
-                                      passphrase  : passphrase,
-                                      verbose     : verbose,
-                                      trust       : true,
-                                      failonerror : true )
+        {
+            arguments += [ keyfile : keyfile.canonicalPath ] + ( passphrase ? [ passphrase  : passphrase ] : [:] )
         }
         else
-        {   /**
-             * Password based authentication
-             */
-            new AntBuilder().sshexec( command     : command,
-                                      host        : host,
-                                      username    : username,
-                                      password    : password,
-                                      verbose     : verbose,
-                                      trust       : true,
-                                      failonerror : true )
+        {
+            assert password, "SSH password need to be specified in <location>: scp://<user>:<password>@<host>:<path>"
+            arguments += [ password : password ]
         }
 
+        new AntBuilder().sshexec( arguments )
         log.info( "==> Sshexec [$command] run on [$host:$directory] ([${ System.currentTimeMillis() - t }] ms)" )
     }
 }

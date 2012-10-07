@@ -56,12 +56,12 @@
         <gmaven-version>1.4</gmaven-version>
         <!-- http://repo.jfrog.org/artifactory/repo/org/jfrog/maven/annomojo/maven-plugin-anno/ -->
         <annomojo-version>1.4.1</annomojo-version>
-        <spring-version>3.1.1.RELEASE</spring-version>
+        <spring-version>3.1.2.RELEASE</spring-version>
         <spring-batch-version>2.1.8.RELEASE</spring-batch-version>
         <junit-version>4.10</junit-version>
         <ant-version>1.8.4</ant-version>
-        <gcontracts-version>1.2.5</gcontracts-version>
-        <aether-version>1.13.1</aether-version>
+        <gcontracts-version>1.2.9</gcontracts-version>
+        <aether-version>0.9.0.M1</aether-version>
     </properties>
 
 
