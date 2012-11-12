@@ -124,7 +124,7 @@ class IvyHelper
      * @throws RuntimeException if artifacts resolution fails and {@link #failOnError} is {@code true}.
      */
     @Requires({ ivyFile })
-    @Ensures({ result.every{ it.file.file } })
+    @Ensures({ result })
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
     List<Artifact> resolve ( URL ivyFile, boolean reportErrors = true )
     {
@@ -174,9 +174,9 @@ class IvyHelper
              * See http://db.tt/9Cf1X4bH for debug view of the object received.
              */
             Map<String, String> attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
-            String groupId    = verify().notNullOrEmpty( attributes[ 'organisation' ])
-            String artifactId = verify().notNullOrEmpty( attributes[ 'module'       ])
-            String version    = verify().notNullOrEmpty( attributes[ 'revision'     ])
+            String groupId    = verify().notNullOrEmpty(( String ) attributes[ 'organisation' ])
+            String artifactId = verify().notNullOrEmpty(( String ) attributes[ 'module'       ])
+            String version    = verify().notNullOrEmpty(( String ) attributes[ 'revision'     ])
 
             if ( artifactReport.artifactOrigin?.artifact?.name && artifactReport.localFile )
             {
@@ -203,6 +203,7 @@ class IvyHelper
                       ( artifacts ? ':' + artifactsToString( artifacts ) : '' ))
         }
 
+        assert artifacts.every{ it.file.file }
         artifacts
     }
 

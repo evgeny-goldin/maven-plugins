@@ -163,7 +163,7 @@ class IvyMojo extends BaseGroovyMojo
      * @return             artifacts resolved or empty list if {@link #failOnError} is "false".
      */
     @Requires({ ( ivyFile || dependencies ) && helper })
-    @Ensures({ result.every{ it.file.file } })
+    @Ensures({ result })
     List<Artifact> resolveArtifacts ( URL ivyFile, ArtifactItem[] dependencies, IvyHelper helper )
     {
         List<Artifact> ivyArtifacts   = ( ivyFile      ? helper.resolve( ivyFile )                         : [] )

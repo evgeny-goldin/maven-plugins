@@ -889,7 +889,7 @@ class CopyMojo extends BaseGroovyMojo
      * @param verbose           whether logging should be verbose
      * @param isClean           whether files processed are of <clean> operation
      */
-    @Requires({ ! (( files == null ) || files.any{ it == null } ) })
+    @Requires({ ! ( files == null ) })
     private void process( List<File> files, String processExpression, boolean isClean, long time )
     {
         assert ( time >= 0 )
