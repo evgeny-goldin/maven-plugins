@@ -311,9 +311,9 @@ class Job
      * @param parentJob     job to copy tasks from if current job has tasks undefined
      * @param override      whether current job tasks should be overridden in any case
      */
-    private void setTasks( String  propertyName,
-                           Job     parentJob,
-                           boolean override )
+    private void setJobTasks ( String  propertyName,
+                               Job     parentJob,
+                               boolean override )
     {
         assert ( propertyName && parentJob )
 
@@ -388,7 +388,7 @@ class Job
 
         if ( jobType == JobType.free )
         {
-            setTasks( 'tasks', parentJob, override )
+            setJobTasks( 'tasks', parentJob, override )
         }
 
         if ( jobType == JobType.maven )
@@ -397,8 +397,8 @@ class Job
             set( 'mavenGoals',             parentJob, override, DEFAULT_MAVEN_GOALS, { String s         -> assert s } )
             set( 'runPostStepsIfResult',   parentJob, override, PostStepResult.all,  { PostStepResult r -> assert r } )
             set( 'artifactory',            parentJob, override, new Artifactory())
-            setTasks( 'prebuildersTasks',  parentJob, override )
-            setTasks( 'postbuildersTasks', parentJob, override )
+            setJobTasks( 'prebuildersTasks',  parentJob, override )
+            setJobTasks( 'postbuildersTasks', parentJob, override )
 
             setMany( split( '|mavenName|mavenOpts|reporters|localRepoBase|localRepo|buildOnSNAPSHOT' +
                             '|privateRepository|privateRepositoryPerExecutor|archivingDisabled' +

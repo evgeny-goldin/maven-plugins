@@ -38,7 +38,8 @@ class AboutMojo extends BaseGroovyMojo
     @MojoParameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
     public String  fileName
 
-    @MojoParameter ( defaultValue = '2.5.1' )
+    // http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-dependency-plugin%22
+    @MojoParameter ( defaultValue = '2.6' )
     public String  mavenDependencyPluginVersion
 
     @MojoParameter
@@ -308,7 +309,7 @@ class AboutMojo extends BaseGroovyMojo
 
 
     @Requires({ title && content })
-    @Ensures({ result })
+    @Ensures({ result != null })
     String section ( boolean condition, String title, Closure content )
     {
         ( condition ?

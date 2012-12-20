@@ -25,7 +25,8 @@
         <dependency>
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
-            <version>2.2.0</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ivy%22%20AND%20a%3A%22ivy%22 -->
+            <version>2.3.0-rc2</version>
         </dependency>
 
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -36,7 +37,7 @@
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>2.3.2</version>
+            <version>3.0</version>
             <exclusions>
                 &lt;!&ndash; Outdated Maven dependencies &ndash;&gt;
                 <exclusion>

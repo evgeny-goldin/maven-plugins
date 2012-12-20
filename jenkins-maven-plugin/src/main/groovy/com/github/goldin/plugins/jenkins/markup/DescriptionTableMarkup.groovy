@@ -34,7 +34,6 @@ class DescriptionTableMarkup extends Markup
      * @param title link title
      */
     @Requires({ link && title })
-    @Ensures({ result })
     private void addLink ( String link, String title ){ builder.a( href: link ){ add( strong( title )) }}
 
 

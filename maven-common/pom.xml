@@ -110,6 +110,7 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>file-management</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.shared%22%20AND%20a%3A%22file-management%22 -->
             <version>1.2.1</version>
             <scope>compile</scope>
             <exclusions>
@@ -129,6 +130,7 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-filtering</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.shared%22%20AND%20a%3A%22maven-filtering%22 -->
             <version>1.1</version>
             <scope>compile</scope>
             <exclusions>
@@ -158,6 +160,7 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-common-artifact-filters</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.shared%22%20AND%20a%3A%22maven-common-artifact-filters%22 -->
             <version>1.4</version>
             <scope>compile</scope>
             <exclusions>
@@ -197,12 +200,14 @@
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus</artifactId>
             <type>pom</type>
-            <version>3.2</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus%22 -->
+            <version>3.3.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-containers</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus-containers%22 -->
             <version>1.5.5</version>
             <type>pom</type>
         </dependency>
@@ -210,20 +215,23 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-interpolation</artifactId>
-            <version>1.15</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus-interpolation%22 -->
+            <version>1.16</version>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.8</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus-utils%22 -->
+            <version>3.0.10</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-digest</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus-digest%22 -->
             <version>1.1</version>
             <scope>compile</scope>
             <exclusions>
@@ -240,9 +248,16 @@
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
+            <artifactId>groovy</artifactId>
             <version>${groovy-version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-test</artifactId>
+            <version>${groovy-version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -251,6 +266,11 @@
             <version>${gmaven-version}</version>
             <scope>compile</scope>
             <exclusions>
+                <!-- Outdated Groovy versions -->
+                <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.codehaus.groovy</groupId>
                     <artifactId>groovy-all</artifactId>
@@ -300,7 +320,8 @@
         <dependency>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>versions-maven-plugin</artifactId>
-            <version>1.3.1</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.mojo%22%20AND%20a%3A%22versions-maven-plugin%22 -->
+            <version>2.0</version>
             <exclusions>
                 <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                 <exclusion>
@@ -343,11 +364,13 @@
             <groupId>org.gcontracts</groupId>
             <artifactId>gcontracts-core</artifactId>
             <version>${gcontracts-version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22log4j%22%20AND%20a%3A%22log4j%22 -->
             <version>1.2.17</version>
         </dependency>
 
@@ -378,6 +401,7 @@
         <dependency>
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-guice</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-guice%22 -->
             <version>3.1.2</version>
             <exclusions>
                 <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
@@ -396,7 +420,8 @@
         <dependency>
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-inject-bean</artifactId>
-            <version>2.3.1</version>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22 -->
+            <version>2.3.2</version>
             <exclusions>
                 <!-- Duplicate of "org.sonatype.sisu:sisu-guice:jar:3.1.1" -->
                 <exclusion>
@@ -427,6 +452,7 @@
         <dependency>
             <groupId>org.vngx</groupId>
             <artifactId>vngx-jsch</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.vngx%22%20AND%20a%3A%22vngx-jsch%22 -->
             <version>0.10</version>
             <scope>compile</scope>
             <exclusions>
@@ -439,11 +465,13 @@
         <dependency>
             <groupId>com.github.goldin</groupId>
             <artifactId>ant-vngx-jsch</artifactId>
+            <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/ant-vngx-jsch/ -->
             <version>1.8.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jzlib</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.jcraft%22%20AND%20a%3A%22jzlib%22 -->
             <version>1.1.1</version>
             <scope>runtime</scope>
         </dependency>
