@@ -72,7 +72,7 @@ class Svn extends Scm
 }
 
 
-@SuppressWarnings([ 'AbcComplexity' ])
+@SuppressWarnings([ 'AbcMetric' ])
 class Git extends Scm
 {
     @Override

@@ -16,6 +16,7 @@ import org.apache.maven.plugin.logging.Log
  * Various network related util methods
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
+@SuppressWarnings([ 'AbcMetric' ])
 class NetworkUtils
 {
     static Log getLog () { ThreadLocals.get( Log ) }
@@ -194,7 +195,7 @@ class NetworkUtils
             if ( excludes.any{ it.contains( remoteDirectory ) }) { excludes = excludes.collect( c ) }
         }
 
-        while  ( true )
+        while ( true )
         {
             log.info( """
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -296,9 +297,9 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                     if ( deleteListFile ) { file().delete( listFile ) }
                 }
 
-                long totalTimeMs  = ( System.currentTimeMillis() - t )
+                long totalTimeMs = ( System.currentTimeMillis() - t )
                 log.info( "Attempt [$retryCount]: done, " +
-                          "[${ totalTimeMs.intdiv( constants().MILLIS_IN_SECOND ) }] sec "+
+                          "[${ totalTimeMs.intdiv( constants().MILLIS_IN_SECOND ) }] sec " +
                           "(${ totalTimeMs.intdiv( constants().MILLIS_IN_MINUTE ) } min)" )
                 return
             }

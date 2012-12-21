@@ -17,6 +17,10 @@ ruleset {
         UnnecessarySubstring        ( enabled : false )
         FactoryMethodName           ( enabled : false )
         GetterMethodCouldBeProperty ( enabled : false )
+        SpaceBeforeOpeningBrace     ( enabled : false )
+        SpaceAfterOpeningBrace      ( enabled : false )
+        SpaceBeforeClosingBrace     ( enabled : false )
+        SpaceAfterClosingBrace      ( enabled : false )
 
         VariableName                ( finalRegex : /[a-zA-Z0-9_]+/ )
         LineLength                  ( length     : 160   )

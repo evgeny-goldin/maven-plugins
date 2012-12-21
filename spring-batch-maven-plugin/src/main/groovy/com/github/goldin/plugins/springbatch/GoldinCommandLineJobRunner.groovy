@@ -155,7 +155,7 @@ import org.springframework.batch.core.launch.support.JvmSystemExiter
  * @author Lucas Ward
  * @since 1.0
  */
-@SuppressWarnings( 'StatelessClass' )
+@SuppressWarnings([ 'StatelessClass', 'AbcMetric' ])
 class GoldinCommandLineJobRunner
 {
     private static final Log LOGGER = LogFactory.getLog( GoldinCommandLineJobRunner )
@@ -527,7 +527,7 @@ class GoldinCommandLineJobRunner
             String line = ' '
             while (StringUtils.hasLength(line)) {
                 if (!line.startsWith('#') && StringUtils.hasText(line)) {
-                    LOGGER.debug('Stdin arg: '+line)
+                    LOGGER.debug('Stdin arg: ' + line)
                     newargs.add(line)
                 }
                 line = reader.readLine()

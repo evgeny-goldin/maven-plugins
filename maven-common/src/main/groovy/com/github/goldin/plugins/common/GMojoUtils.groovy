@@ -27,7 +27,7 @@ import org.apache.maven.model.Dependency
 /**
  * Various Mojo helper methods
  */
-@SuppressWarnings([ 'MethodCount' ])
+@SuppressWarnings([ 'MethodCount', 'AbcMetric' ])
 class GMojoUtils
 {
     /**
@@ -58,7 +58,7 @@ class GMojoUtils
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
           */
-         String.metaClass.trimMultiline ={->
+         String.metaClass.trimMultiline = { ->
              (( String ) delegate ).readLines()*.trim().join( constants().CRLF )
          }
 
@@ -66,7 +66,7 @@ class GMojoUtils
          /**
           * Deletes empty lines from the String
           */
-         String.metaClass.deleteEmptyLines ={->
+         String.metaClass.deleteEmptyLines = { ->
              (( String ) delegate ).readLines().findAll{ it.trim() }.join( constants().CRLF )
          }
 
@@ -77,7 +77,7 @@ class GMojoUtils
           *
           * We're putting {..} in POMs where we would like to have un-interpolated ${..}
           */
-         String.metaClass.addDollar = {->
+         String.metaClass.addDollar = { ->
              // Adding a '$' before {..} where there was no '$' previously
              delegate.replaceAll( /(?<!\$)(?=\{.+?\})/, '\\$' )
          }

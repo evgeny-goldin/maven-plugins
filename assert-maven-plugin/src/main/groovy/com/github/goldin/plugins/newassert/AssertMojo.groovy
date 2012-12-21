@@ -176,6 +176,7 @@ class AssertMojo extends BaseGroovyMojo
     }
 
 
+    @SuppressWarnings([ 'SpaceAroundOperator' ])
     private verifyEqual( String lines, boolean verifyChecksum )
     {
         verifyEachLine( lines ) {
