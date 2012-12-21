@@ -326,8 +326,7 @@
                                 final mavenVersion = props.getProperty( 'version', 'Unknown' ).trim()
                                 println """
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  -=-=-= Building [${project.groupId}:${project.artifactId}:${project.version}] =-=-=-
-
+ Module - [${project.groupId}:${project.artifactId}:${project.version}]
  Java   - [${java.version}][${java.home}][${java.vendor}]
  Maven  - [$mavenVersion]
  Groovy - [$GroovySystem.version]

@@ -255,10 +255,21 @@
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-ant</artifactId>
+            <version>${groovy-version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-test</artifactId>
             <version>${groovy-version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~ -->
+        <!-- org.codehaus.gmaven -->
+        <!-- ~~~~~~~~~~~~~~~~~~~ -->
 
         <dependency>
             <groupId>org.codehaus.gmaven</groupId>
