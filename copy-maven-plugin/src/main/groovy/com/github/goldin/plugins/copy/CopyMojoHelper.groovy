@@ -142,7 +142,7 @@ final class CopyMojoHelper
             Log log = ThreadLocals.get( Log )
 
             log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifact${ general().s( dependencies.size())} found" )
-            if ( log.isDebugEnabled()) { log.debug( "Artifacts found: $dependencies" ) }
+            if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
 
             assert ( dependencies || ( ! failIfNotFound ) || ( dependency.optional )), "No dependencies resolved with [$dependency]"
             assert dependencies.every { it.artifact?.file?.file || ( ! failIfNotFound ) || it.optional }
@@ -273,7 +273,7 @@ final class CopyMojoHelper
      * @return filters defined by "filtering" dependency
      */
     @Requires({ dependency && ( ! dependency.single ) })
-    @Ensures ({ result })
+    @Ensures ({ result != null })
     private List<ArtifactsFilter> composeFilters ( CopyDependency dependency )
     {
         assert dependency && ( ! dependency.single )
