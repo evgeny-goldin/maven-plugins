@@ -97,8 +97,8 @@ class IvyHelper
 
             if ( artifacts.size() != 1 )
             {
-                warnOrFail( artifacts ?
-                    "Multiple artifacts resolved for [$gavc] - ${ artifacts }, specify <classifier> so that only one artifact is resolved" :
+                failOrWarn( artifacts ?
+                    "Multiple artifacts resolved for [$gavc] - ${ artifacts }, consider adding <classifier> such as <classifier>${ artifacts*.classifier.find{ it }}</classifier>" :
                     "Failed to resolve [$gavc] artifact" )
             }
 
@@ -150,19 +150,19 @@ class IvyHelper
 
         if ( report.unresolvedDependencies && reportErrors )
         {
-            warnOrFail( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
+            failOrWarn( "Failed to resolve [$ivyFile] dependencies: ${ report.unresolvedDependencies }" )
         }
 
         if ( report.allProblemMessages && reportErrors )
         {
-            warnOrFail( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
+            failOrWarn( "Errors found when resolving [$ivyFile] dependencies: ${ report.allProblemMessages }" )
         }
 
         final artifactsReports = report.allArtifactsReports
 
         if ( ! artifactsReports )
         {
-            if ( reportErrors ) { warnOrFail( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved" ) }
+            if ( reportErrors ) { failOrWarn( "Failed to resolve [$ivyFile] dependencies: no artifacts resolved" ) }
             return []
         }
 
@@ -190,7 +190,7 @@ class IvyHelper
             {
                 if ( reportErrors )
                 {
-                    warnOrFail( "Failed to resolve [$ivyFile] dependencies: partially resolved artifactReport" )
+                    failOrWarn( "Failed to resolve [$ivyFile] dependencies: partially resolved artifactReport" )
                 }
                 null // Partially resolved artifactReport can't be converted to Maven Artifact
             }
@@ -241,7 +241,7 @@ class IvyHelper
      * @param errorMessage error message to log or throw
      */
     @Requires({ errorMessage })
-    void warnOrFail ( String errorMessage )
+    void failOrWarn ( String errorMessage )
     {
         errorMessage += ( offline ? ' (system is in offline mode).' : '.' )
         if ( failOnError ) { throw new RuntimeException( errorMessage )}
