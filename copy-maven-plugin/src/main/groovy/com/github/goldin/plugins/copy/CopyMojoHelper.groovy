@@ -272,8 +272,8 @@ final class CopyMojoHelper
      * @param useScopeTransitivityFilters whether scope and transitivity filters should be added
      * @return filters defined by "filtering" dependency
      */
-    @Requires({ dependency && ( ! dependency.single ) && false }) // Checking GContracts
-    @Ensures({  result     && false })                            // Checking GContracts
+    @Requires({ dependency && ( ! dependency.single ) })
+    @Ensures ({ result })
     private List<ArtifactsFilter> composeFilters ( CopyDependency dependency )
     {
         assert dependency && ( ! dependency.single )
