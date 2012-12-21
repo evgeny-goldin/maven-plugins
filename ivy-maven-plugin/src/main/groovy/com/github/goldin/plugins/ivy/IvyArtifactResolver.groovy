@@ -68,7 +68,7 @@ class IvyArtifactResolver implements ArtifactResolver {
 
     @Override
     @Requires({ session && ( requests != null ) })
-    @Ensures({ result })
+    @Ensures({ result != null })
     List<ArtifactResult> resolveArtifacts ( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
     {
         requests.collect { ArtifactRequest request -> resolveArtifact( session, request )}
