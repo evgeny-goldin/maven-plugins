@@ -44,6 +44,11 @@
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
+                    <!-- Duplicate of "org.ow2.asm:asm:jar:4.0" -->
+                    <groupId>asm</groupId>
+                    <artifactId>asm</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>plexus</groupId>
                     <artifactId>plexus-utils</artifactId>
                 </exclusion>

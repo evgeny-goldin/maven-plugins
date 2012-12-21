@@ -323,6 +323,11 @@
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.mojo%22%20AND%20a%3A%22versions-maven-plugin%22 -->
             <version>2.0</version>
             <exclusions>
+                <!-- Duplicate of "org.codehaus.plexus:plexus-utils:jar:3.0.10" -->
+                <exclusion>
+                    <groupId>plexus</groupId>
+                    <artifactId>plexus-utils</artifactId>
+                </exclusion>
                 <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
                 <exclusion>
                     <groupId>org.apache.maven</groupId>

@@ -124,7 +124,7 @@ class IvyHelper
      * @throws RuntimeException if artifacts resolution fails and {@link #failOnError} is {@code true}.
      */
     @Requires({ ivyFile })
-    @Ensures({ result })
+    @Ensures({ result != null })
     @SuppressWarnings( 'GroovySetterCallCanBePropertyAccess' )
     List<Artifact> resolve ( URL ivyFile, boolean reportErrors = true )
     {
