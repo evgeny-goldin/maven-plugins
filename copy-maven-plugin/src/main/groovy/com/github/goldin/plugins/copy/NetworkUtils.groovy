@@ -6,9 +6,7 @@ import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.github.goldin.plugins.common.CustomAntBuilder
-import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugin.logging.Log
 import org.gcontracts.annotations.Requires
 
 
@@ -20,9 +18,6 @@ import org.gcontracts.annotations.Requires
 @SuppressWarnings([ 'AbcMetric' ])
 class NetworkUtils
 {
-    static Log getLog () { ThreadLocals.get( Log ) }
-
-
     /**
      * Downloads files required using remote location specified.
      *
@@ -32,6 +27,7 @@ class NetworkUtils
      * @param verbose         verbose logging
      * @param groovyConfig    current Groovy configuration
      */
+    @SuppressWarnings([ 'GroovyIfStatementWithTooManyBranches' ])
     static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
     {
         verify().notNull( resource )
@@ -167,7 +163,7 @@ class NetworkUtils
         List<String>        includes = new ArrayList<String>( resource.includes )
         List<String>        excludes = new ArrayList<String>( resource.excludes )
         Map<String, String> ftpData  = net().parseNetworkPath( remotePath )
-        String  remotePathLog        = "${ ftpData[ 'protocol' ] }://${ ftpData[ 'username' ] }@${ ftpData[ 'host' ] }${ ftpData[ 'directory' ] }"
+        String  remotePathLog        = "${ ftpData.protocol }://${ ftpData.username }@${ ftpData.host }${ ftpData.directory }"
         boolean isList               = ( resource.curl || resource.wget )
         def     commandParts         = split(( resource.curl ?: resource.wget ), '\\|' ) // "wget|ftp-list.txt|true|false"
         def     command              = ( isList ? commandParts[ 0 ] : null )
@@ -185,12 +181,12 @@ class NetworkUtils
 
         if ( listFile ) { file().mkdirs( listFile.parentFile ) }
 
-        if ( ftpData[ 'directory' ] != '/' )
+        if ( ftpData.directory != '/' )
         {   /**
              * If any of include or exclude patterns contain remote directory, it needs to be removed:
              * http://evgeny-goldin.org/youtrack/issue/pl-265
              */
-            String remoteDirectory = ftpData[ 'directory' ].replaceAll( /^\/*/, '' )                    // Without leading slashes
+            String remoteDirectory = ftpData.directory.replaceAll( /^\/*/, '' )                    // Without leading slashes
             def c = { it.replace( remoteDirectory, '' ).replace( '\\', '/' ).replaceAll( /^\/*/, '' )}  // Remove remote directory
             if ( includes.any{ it.contains( remoteDirectory ) }) { includes = includes.collect( c ) }
             if ( excludes.any{ it.contains( remoteDirectory ) }) { excludes = excludes.collect( c ) }
@@ -226,7 +222,7 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                 {
                     for ( file in net().listFiles( remotePath, includes, excludes, 1 ))
                     {
-                        listFile.append( FTP.listSingleFile( ftpData[ 'host' ], file.path, file.size ) + '\n' )
+                        listFile.append( FTP.listSingleFile( ftpData.host, file.path, file.size ) + '\n' )
                     }
                 }
                 else
@@ -235,10 +231,10 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                                                 listing         : listFile,
                                                 listingAppend   : true,  // Custom property: to append a data to a listing file instead of overwriting it
                                                 listingFullPath : true,  // Custom property: to list full FTP path of each file instead of default "raw listing"
-                                                server          : ftpData[ 'host' ],
-                                                userid          : ftpData[ 'username' ],
-                                                password        : ftpData[ 'password' ],
-                                                remotedir       : ftpData[ 'directory' ],
+                                                server          : ftpData.host,
+                                                userid          : ftpData.username,
+                                                password        : ftpData.password,
+                                                remotedir       : ftpData.directory,
                                                 verbose         : verbose,
                                                 retriesAllowed  : resource.retries,
                                                 passive         : true,
@@ -390,17 +386,17 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                             boolean verbose )
     {
         def data = net().parseNetworkPath( remotePath )
-        assert 'ftp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
+        assert 'ftp' == data.protocol
+        verify().notNullOrEmpty( data.username, data.password, data.host, data.directory )
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
          */
         new AntBuilder().ftp( action    : 'put',
-                              server    : data[ 'host' ],
-                              userid    : data[ 'username' ],
-                              password  : data[ 'password' ],
-                              remotedir : data[ 'directory' ],
+                              server    : data.host,
+                              userid    : data.username,
+                              password  : data.password,
+                              remotedir : data.directory,
                               verbose   : verbose,
                               passive   : true,
                               binary    : true )
@@ -414,46 +410,36 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                               String  remotePath,
                               boolean verbose )
     {
-        final data = net().parseNetworkPath( remotePath )
-        assert 'scp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
-
-        scp( "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
-             localDirectory.canonicalPath,
-             data[ 'password' ],
-             verbose )
+        scp( localDirectory, remotePath, verbose, true )
     }
 
 
-   /**
-    * Uploads file provided to scp location specified
-    */
     static void scpUpload ( File    file,
                             String  remotePath,
                             boolean verbose )
     {
-        final data = net().parseNetworkPath( remotePath )
-        assert 'scp' == data[ 'protocol' ]
-        verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
-
-        scp( file.canonicalPath,
-             "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
-             data[ 'password' ],
-             verbose )
+        scp( file, remotePath, verbose, false )
     }
 
 
     @SuppressWarnings([ 'GroovyStaticMethodNamingConvention' ])
-    @Requires({ from && to && password })
-    private static void scp( String from, String to, String password, boolean verbose )
+    @Requires({ file.exists() && remotePath })
+    private static void scp ( File    file,
+                              String  remotePath,
+                              boolean verbose,
+                              boolean isDownload )
     {
-        /**
-         * "password" can be a private key
-         * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
-         */
-        new AntBuilder().scp([ file     : from,
-                               todir    : to,
+        final data = net().parseNetworkPath( remotePath )
+        assert 'scp' == data.protocol
+
+        verify().notNullOrEmpty( data.username, data.password, data.host, data.directory )
+
+        final localDestination  = file.canonicalPath
+        final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
+
+        new AntBuilder().scp([ file     : isDownload ? remoteDestination : localDestination,
+                               todir    : isDownload ? localDestination  : remoteDestination,
                                verbose  : verbose,
-                               trust    : true ] + [ ( new File( password ).file ? 'keyfile' : 'password' ) : password ])
+                               trust    : true ] + sshAuthArguments( data.password ))
     }
 }

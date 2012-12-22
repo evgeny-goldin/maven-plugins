@@ -22,6 +22,8 @@ import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
 import com.github.goldin.gcommons.beans.*
 import org.apache.maven.model.Dependency
+import org.gcontracts.annotations.Ensures
+import org.gcontracts.annotations.Requires
 
 
 /**
@@ -660,6 +662,29 @@ class GMojoUtils
         s.replace( '<', '&lt;'   ).
           replace( '>', '&gt;'   ).
           replace( '"', '&quot;' )
+    }
+
+
+    @Requires({ password })
+    @Ensures ({ result })
+    static Map<String, String> sshAuthArguments( String password )
+    {
+        if ( new File( password ).file )
+        {
+            return [ keyfile : password ]
+        }
+
+        if ( password.contains( '___' ) && ( ! password.with { startsWith( '___' ) || endsWith( '___' ) } ))
+        {
+            def ( String keyfile, String passphrase ) = password.findAll( /^(.+?)___(.+?)$/ ){ it[ 1, 2 ] }[ 0 ]
+
+            if ( new File( keyfile ).file )
+            {
+                return [ keyfile : keyfile, passphrase : passphrase ]
+            }
+        }
+
+        [ password : password ]
     }
 
 

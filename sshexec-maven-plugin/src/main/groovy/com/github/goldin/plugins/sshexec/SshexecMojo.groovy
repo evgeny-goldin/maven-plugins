@@ -57,7 +57,7 @@ class SshexecMojo extends BaseGroovyMojo
     {
         List<String> commands = general().list( this.commands, this.command )*.split( commandDelimitersRegex ).flatten()*.trim().grep().
                                 collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
-                                flatten().grep()
+                                flatten()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).flatten().grep()
     }
@@ -74,22 +74,17 @@ class SshexecMojo extends BaseGroovyMojo
 
         verify().notNullOrEmpty( username, password, host, directory )
 
-        final t         = System.currentTimeMillis()
-        final command   = [ "cd $directory", *commands() ].join( commandsShellSeparator )
-        final isKeyfile = new File( password ).file
+        final t = System.currentTimeMillis()
+        final Map<String, String> arguments = [
+            command     : [ "cd $directory", *commands() ].join( commandsShellSeparator ),
+            host        : host,
+            username    : username,
+            verbose     : verbose,
+            trust       : true,
+            failonerror : true ] + sshAuthArguments( password )
 
-        log.info( "==> Running sshexec [$command] on [$host:$directory], " +
-                  ( isKeyfile ? "key based authentication using [$password]" :
-                                'password based authentication' ))
-
-        final arguments = [ command     : command,
-                            host        : host,
-                            username    : username,
-                            verbose     : verbose,
-                            trust       : true,
-                            failonerror : true ] + [ ( isKeyfile ? 'keyfile' : 'password' ) : password ]
-
+        log.info( "==> Running sshexec [$command] on [$host:$directory]" )
         new AntBuilder().sshexec( arguments )
-        log.info( "==> Sshexec [$command] run on [$host:$directory] ([${ System.currentTimeMillis() - t }] ms)" )
+        log.info( "==> Sshexec [$command] run on [$host:$directory] (${ System.currentTimeMillis() - t } ms)" )
     }
 }
