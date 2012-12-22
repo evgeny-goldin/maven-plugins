@@ -33,34 +33,34 @@ final class CopyResource extends Resource implements Cloneable
                             boolean      copyNameUpdates = false )
     {
         assert targetPathFile && directoryFile
-        CopyResource newResource = new CopyResource()
 
-        newResource.with { general().with {
-            startTime             = this.startTime
-            targetPath            = targetPathFile.canonicalPath
-            directory             = directoryFile.canonicalPath
-            includes              = includePatterns
-            excludes              = excludePatterns
-            preservePath          = true
-            skipIdentical         = false
-            replaces              = this.replaces() as Replace[]
-            filtering             = this.filtering
-            filter                = this.filter
-            encoding              = this.encoding
+        final oldResource = this
+        final newResource = new CopyResource()
 
-            if ( copyNameUpdates )
-            {
-                destFileName      = this.destFileName
-                destFilePrefix    = this.destFilePrefix
-                destFileSuffix    = this.destFileSuffix
-                destFileExtension = this.destFileExtension
-            }
+        newResource.startTime             = oldResource.startTime
+        newResource.targetPath            = targetPathFile.canonicalPath
+        newResource.directory             = directoryFile.canonicalPath
+        newResource.includes              = includePatterns
+        newResource.excludes              = excludePatterns
+        newResource.preservePath          = true
+        newResource.skipIdentical         = false
+        newResource.replaces              = oldResource.replaces() as Replace[]
+        newResource.setFiltering( oldResource.filtering ) // Otherwise, it gets set to "true"
+        newResource.filter                = oldResource.filter
+        newResource.encoding              = oldResource.encoding
 
-            defaultExcludes       = choose( this.defaultExcludes,      mojo.defaultExcludes())
-            failIfNotFound        = choose( this.failIfNotFound,       mojo.failIfNotFound )
-            filterWithDollarOnly  = choose( this.filterWithDollarOnly, mojo.filterWithDollarOnly )
-            nonFilteredExtensions = this.nonFilteredExtensions ?:      mojo.nonFilteredExtensions
-        }}
+        if ( copyNameUpdates )
+        {
+            newResource.destFileName      = oldResource.destFileName
+            newResource.destFilePrefix    = oldResource.destFilePrefix
+            newResource.destFileSuffix    = oldResource.destFileSuffix
+            newResource.destFileExtension = oldResource.destFileExtension
+        }
+
+        newResource.defaultExcludes       = general().choose( oldResource.defaultExcludes,      mojo.defaultExcludes())
+        newResource.failIfNotFound        = general().choose( oldResource.failIfNotFound,       mojo.failIfNotFound )
+        newResource.filterWithDollarOnly  = general().choose( oldResource.filterWithDollarOnly, mojo.filterWithDollarOnly )
+        newResource.nonFilteredExtensions = oldResource.nonFilteredExtensions ?:      mojo.nonFilteredExtensions
 
         newResource
     }
