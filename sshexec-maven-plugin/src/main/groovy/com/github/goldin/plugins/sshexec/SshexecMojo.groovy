@@ -45,13 +45,6 @@ class SshexecMojo extends BaseGroovyMojo
     @MojoParameter( required = false )
     public String[] commands
 
-    @MojoParameter( required = false )
-    public File   keyfile
-
-    @MojoParameter( required = false )
-    public String passphrase = ''
-
-
     /**
      * Retrieves all execution commands
      * @return all execution commands
@@ -73,32 +66,26 @@ class SshexecMojo extends BaseGroovyMojo
     {
         Map<String, String> data      = net().parseNetworkPath( location )
         String              username  = data[ 'username' ]
-        String              password  = data[ 'password' ]
+        String              password  = data[ 'password' ] // Can be a private key
         String              host      = data[ 'host' ]
         String              directory = data[ 'directory' ]
 
-        long   t        = System.currentTimeMillis()
-        String command  = [ "cd $directory", *commands() ].join( commandsShellSeparator )
+        verify().notNullOrEmpty( username, password, host, directory )
+
+        final t         = System.currentTimeMillis()
+        final command   = [ "cd $directory", *commands() ].join( commandsShellSeparator )
+        final isKeyfile = new File( password ).file
 
         log.info( "==> Running sshexec [$command] on [$host:$directory], " +
-                  ( keyfile ? "key based authentication with [$keyfile.canonicalPath] private key" :
-                              'password based authentication' ))
+                  ( isKeyfile ? "key based authentication using [$password]" :
+                                'password based authentication' ))
 
         final arguments = [ command     : command,
                             host        : host,
                             username    : username,
                             verbose     : verbose,
                             trust       : true,
-                            failonerror : true ]
-        if ( keyfile )
-        {
-            arguments += [ keyfile : keyfile.canonicalPath ] + ( passphrase ? [ passphrase  : passphrase ] : [:] )
-        }
-        else
-        {
-            assert password, 'SSH password need to be specified in <location>: scp://<user>:<password>@<host>:<path>'
-            arguments += [ password : password ]
-        }
+                            failonerror : true ] + [ ( isKeyfile ? 'keyfile' : 'password' ) : password ]
 
         new AntBuilder().sshexec( arguments )
         log.info( "==> Sshexec [$command] run on [$host:$directory] ([${ System.currentTimeMillis() - t }] ms)" )

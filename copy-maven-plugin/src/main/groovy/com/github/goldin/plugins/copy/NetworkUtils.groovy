@@ -9,6 +9,7 @@ import com.github.goldin.plugins.common.CustomAntBuilder
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
+import org.gcontracts.annotations.Requires
 
 
 /**
@@ -413,18 +414,14 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                               String  remotePath,
                               boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        final data = net().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
         verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
-        /**
-         * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
-         */
-        new AntBuilder().scp( file     : "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
-                              todir    : localDirectory.canonicalPath,
-                              password : data[ 'password' ],
-                              verbose  : verbose,
-                              trust    : true )
+        scp( "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
+             localDirectory.canonicalPath,
+             data[ 'password' ],
+             verbose )
     }
 
 
@@ -435,17 +432,28 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
                             String  remotePath,
                             boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        final data = net().parseNetworkPath( remotePath )
         assert 'scp' == data[ 'protocol' ]
         verify().notNullOrEmpty( data[ 'username' ], data[ 'password' ], data[ 'host' ], data[ 'directory' ])
 
+        scp( file.canonicalPath,
+             "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
+             data[ 'password' ],
+             verbose )
+    }
+
+
+    @SuppressWarnings([ 'GroovyStaticMethodNamingConvention' ])
+    @Requires({ from && to && password })
+    private static void scp( String from, String to, String password, boolean verbose )
+    {
         /**
+         * "password" can be a private key
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
          */
-        new AntBuilder().scp( file     : file.path,
-                              todir    : "${ data[ 'username' ] }@${ data[ 'host' ] }:${ data[ 'directory' ] }",
-                              password : data[ 'password' ],
-                              verbose  : verbose,
-                              trust    : true )
+        new AntBuilder().scp([ file     : from,
+                               todir    : to,
+                               verbose  : verbose,
+                               trust    : true ] + [ ( new File( password ).file ? 'keyfile' : 'password' ) : password ])
     }
 }
