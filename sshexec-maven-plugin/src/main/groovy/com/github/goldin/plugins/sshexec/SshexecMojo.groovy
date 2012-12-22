@@ -45,6 +45,9 @@ class SshexecMojo extends BaseGroovyMojo
     @MojoParameter( required = false )
     public String[] commands
 
+    @MojoParameter( required = false )
+    public String commandDelimitersRegex = '\n|,|;'
+
     /**
      * Retrieves all execution commands
      * @return all execution commands
@@ -52,10 +55,9 @@ class SshexecMojo extends BaseGroovyMojo
     @SuppressWarnings( 'UseCollectMany' )
     private String[] commands ()
     {
-        List<String> commands = general().list( this.commands, this.command )
-        commands              = commands*.split( /,|;/ ).flatten()*.trim().grep().
+        List<String> commands = general().list( this.commands, this.command )*.split( commandDelimitersRegex ).flatten()*.trim().grep().
                                 collect { String command -> [( echoCommands ? "echo Running [${ command.replace( '`', '\\`' ) }]:" : '' ), command ] }.
-                                flatten()
+                                flatten().grep()
 
         ([ echoPwd ? 'echo Current directory is [`pwd`]' : '' ] + commands ).flatten().grep()
     }
