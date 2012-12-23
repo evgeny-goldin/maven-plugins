@@ -432,14 +432,20 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
         final data = net().parseNetworkPath( remotePath )
         assert 'scp' == data.protocol
 
-        verify().notNullOrEmpty( data.username, data.password, data.host, data.directory )
+        /**
+         * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
+         */
 
         final localDestination  = file.canonicalPath
         final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
+        final Map<String, String> arguments = [
+            file     : isDownload ? remoteDestination : localDestination,
+            todir    : isDownload ? localDestination  : remoteDestination,
+            verbose  : verbose,
+            trust    : true ] +
+            sshAuthArguments( data.password ) +
+            ( data.port ? [ port : data.port ] : [:] )
 
-        new AntBuilder().scp([ file     : isDownload ? remoteDestination : localDestination,
-                               todir    : isDownload ? localDestination  : remoteDestination,
-                               verbose  : verbose,
-                               trust    : true ] + sshAuthArguments( data.password ))
+        new AntBuilder().scp( arguments )
     }
 }

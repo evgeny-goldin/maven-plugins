@@ -66,25 +66,25 @@ class SshexecMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        Map<String, String> data      = net().parseNetworkPath( location )
-        String              username  = data[ 'username' ]
-        String              password  = data[ 'password' ] // Can be a private key
-        String              host      = data[ 'host' ]
-        String              directory = data[ 'directory' ]
+        final data = net().parseNetworkPath( location )
+        assert 'scp' == data.protocol
 
-        verify().notNullOrEmpty( username, password, host, directory )
+        /**
+         * http://evgeny-goldin.org/javadoc/ant/Tasks/sshexec.html
+         */
 
-        final t = System.currentTimeMillis()
         final Map<String, String> arguments = [
-            command     : [ "cd $directory", *commands() ].join( commandsShellSeparator ),
-            host        : host,
-            username    : username,
+            command     : [ "cd $data.directory", *commands() ].join( commandsShellSeparator ),
+            host        : data.host,
+            username    : data.username,
             verbose     : verbose,
             trust       : true,
-            failonerror : true ] + sshAuthArguments( password )
+            failonerror : true ] + sshAuthArguments( data.password ) +
+                                   ( data.port ? [ port : data.port ] : [:] )
 
-        log.info( "==> Running sshexec [$command] on [$host:$directory]" )
+        final t = System.currentTimeMillis()
+        log.info( "==> Running sshexec [$command] on [${ data.host }:${ data.directory }]" )
         new AntBuilder().sshexec( arguments )
-        log.info( "==> Sshexec [$command] run on [$host:$directory] (${ System.currentTimeMillis() - t } ms)" )
+        log.info( "==> Sshexec [$command] run on [${ data.host }:${ data.directory }] (${ System.currentTimeMillis() - t } ms)" )
     }
 }

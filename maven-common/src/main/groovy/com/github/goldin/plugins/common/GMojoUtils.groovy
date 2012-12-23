@@ -664,19 +664,25 @@ class GMojoUtils
           replace( '"', '&quot;' )
     }
 
-
-    @Requires({ password })
+    /**
+     * Retrieves a {@code Map} of arguments to be used for ssh-based authentication.
+     *
+     * @param authData data to use for authentication,
+     *        can be either a password, a keyfile path, or a combination of "keyfile___passphrase".
+     * @return {@code Map} of arguments to be used for ssh-based authentication
+     */
+    @Requires({ authData })
     @Ensures ({ result })
-    static Map<String, String> sshAuthArguments( String password )
+    static Map<String, String> sshAuthArguments( String authData )
     {
-        if ( new File( password ).file )
+        if ( new File( authData ).file )
         {
-            return [ keyfile : password ]
+            return [ keyfile : authData ]
         }
 
-        if ( password.contains( '___' ) && ( ! password.with { startsWith( '___' ) || endsWith( '___' ) } ))
+        if ( authData.contains( '___' ) && ( ! authData.with { startsWith( '___' ) || endsWith( '___' ) } ))
         {
-            def ( String keyfile, String passphrase ) = password.findAll( /^(.+?)___(.+?)$/ ){ it[ 1, 2 ] }[ 0 ]
+            def ( String keyfile, String passphrase ) = authData.findAll( /^(.+?)___(.+?)$/ ){ it[ 1, 2 ] }[ 0 ]
 
             if ( new File( keyfile ).file )
             {
@@ -684,7 +690,7 @@ class GMojoUtils
             }
         }
 
-        [ password : password ]
+        [ password : authData ]
     }
 
 
