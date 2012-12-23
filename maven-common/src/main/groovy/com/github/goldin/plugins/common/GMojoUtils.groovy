@@ -664,6 +664,7 @@ class GMojoUtils
           replace( '"', '&quot;' )
     }
 
+
     /**
      * Retrieves a {@code Map} of arguments to be used for ssh-based authentication.
      *

@@ -14,6 +14,34 @@ class NetworkUtils
     private NetworkUtils () {}
 
 
+    @Requires({ remoteHost && commands })
+    static void sshexec( String remoteHost, List<String> commands, boolean verbose )
+    {
+        final data    = net().parseNetworkPath( remoteHost )
+        final command = [ "cd $data.directory", *commands ].join( '; ' )
+        assert 'scp' == data.protocol
+
+        /**
+         * http://evgeny-goldin.org/javadoc/ant/Tasks/sshexec.html
+         */
+
+        final Map<String, String> arguments = [
+            command     : command,
+            host        : data.host,
+            username    : data.username,
+            verbose     : verbose,
+            trust       : true,
+            failonerror : true ] +
+        sshAuthArguments( data.password ) +
+        ( data.port ? [ port : data.port ] : [:] )
+
+        final t = System.currentTimeMillis()
+        log.info( "==> Running sshexec [$command] in [${ data.host }:${ data.directory }]" )
+        new AntBuilder().sshexec( arguments )
+        log.info( "==> Sshexec [$command] run in [${ data.host }:${ data.directory }] (${ System.currentTimeMillis() - t } ms)" )
+    }
+
+
     /**
     * Downloads file from URL to directory specified.
     *
