@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import com.github.goldin.plugins.common.NetworkUtils
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
@@ -270,7 +271,7 @@ class CopyMojo extends BaseGroovyMojo
                 if ( isDownload )
                 {
                     tempDirectory = file().tempDirectory()
-                    NetworkUtils.download( resource, resource.directory, tempDirectory, verbose, groovyConfig )
+                    DownloadHelper.download( resource, resource.directory, tempDirectory, verbose, groovyConfig )
 
                     assert ( tempDirectory.list() || ( ! failIfNotFound )), \
                            "No files were downloaded from [$resource.directory] " +
@@ -304,7 +305,7 @@ class CopyMojo extends BaseGroovyMojo
                             excludes        = null           //
                         }
 
-                        NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, verbose, failIfNotFound )
+                        NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, resource.preservePath, verbose, failIfNotFound )
                         return
                     }
                 }

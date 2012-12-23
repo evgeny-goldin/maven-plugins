@@ -1,23 +1,26 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.org.apache.tools.ant.taskdefs.optional.net.FTP
 import com.github.goldin.plugins.common.CustomAntBuilder
+import com.github.goldin.plugins.common.NetworkUtils
 import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Requires
 
 
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Various network related util methods
+ * Various network related util methods for the plugin.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 @SuppressWarnings([ 'AbcMetric' ])
-class NetworkUtils
+class DownloadHelper
 {
+    private DownloadHelper () {}
+
+
     /**
      * Downloads files required using remote location specified.
      *
@@ -28,125 +31,27 @@ class NetworkUtils
      * @param groovyConfig    current Groovy configuration
      */
     @SuppressWarnings([ 'GroovyIfStatementWithTooManyBranches' ])
+    @Requires({ resource && remotePath && targetDirectory.directory })
     static download ( CopyResource resource, String remotePath, File targetDirectory, boolean verbose, GroovyConfig groovyConfig )
     {
-        verify().notNull( resource )
-        verify().notNullOrEmpty( remotePath )
         assert net().isNet( remotePath )
-        verify().directory( targetDirectory )
 
         if ( net().isHttp( remotePath ))
         {
-            httpDownload( targetDirectory, remotePath, verbose )
+            NetworkUtils.httpDownload( targetDirectory, remotePath, verbose )
+        }
+        else if ( net().isScp( remotePath ))
+        {
+            NetworkUtils.scpDownload( targetDirectory, remotePath, verbose )
         }
         else if ( net().isFtp( remotePath ))
         {
             ftpDownload( targetDirectory, remotePath, resource, groovyConfig, verbose )
         }
-        else if ( net().isScp( remotePath ))
-        {
-            scpDownload( targetDirectory, remotePath, verbose )
-        }
         else
         {
             throw new MojoExecutionException( "Unrecognized download remote path [$remotePath]" )
         }
-    }
-
-
-    /**
-     * Uploads files to remote paths specified.
-     *
-     * @param remotePaths    remote paths to upload files to
-     * @param directory      files directory
-     * @param includes       include patterns
-     * @param excludes       exclude patterns
-     * @param verbose        verbose logging
-     * @param failIfNotFound whether execution should fail if not files were found
-     */
-    static void upload ( String[]     remotePaths,
-                         File         directory,
-                         List<String> includes,
-                         List<String> excludes,
-                         boolean      verbose,
-                         boolean      failIfNotFound )
-    {
-        assert remotePaths
-        verify().notNullOrEmpty( *remotePaths )
-        verify().directory( directory )
-
-        for ( remotePath in remotePaths )
-        {
-            assert net().isNet( remotePath )
-
-            if ( net().isHttp( remotePath ))
-            {
-                throw new MojoExecutionException( 'HTTP upload is not implemented yet, see http://evgeny-goldin.org/youtrack/issue/pl-312' )
-            }
-
-            for ( file in GCommons.file().files( directory, includes, excludes, true, false, failIfNotFound ))
-            {
-                if ( net().isScp( remotePath ))
-                {
-                    scpUpload( file, remotePath, verbose )
-                }
-                else if ( net().isFtp( remotePath ))
-                {
-                    ftpUpload( file, remotePath, verbose )
-                }
-                else
-                {
-                    throw new MojoExecutionException( "Unsupported remote path [$remotePath]" )
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Downloads file from URL to directory specified.
-     *
-     * @param parentDirectory directory to store the file downloaded
-     * @param httpUrl             URL to download the file
-     * @return reference to file downloaded, stored in the directory specified
-     *
-     * @throws RuntimeException if fails to download the file
-     */
-    static File httpDownload ( File    parentDirectory,
-                               String  httpUrl,
-                               boolean verbose )
-    {
-        file().mkdirs( parentDirectory )
-        assert net().isHttp( httpUrl )
-
-        String fileName  = httpUrl.substring( httpUrl.lastIndexOf( '/' ) + 1 )
-        File   localFile = new File( parentDirectory, fileName )
-
-        log.info( "Downloading [$httpUrl] to [$localFile.canonicalPath]" )
-
-        localFile.withOutputStream { OutputStream os ->  httpUrl.toURL().eachByte( 10240 ) { byte[] buffer, int bytes -> os.write( buffer, 0, bytes ) }}
-
-        verify().file( localFile )
-        if ( verbose ) { log.info( "[$httpUrl] downloaded to [$localFile.canonicalPath]" )}
-        localFile
-    }
-
-
-    /**
-    * Executes "sshexec" using the command provided on the server specified
-    */
-    static void sshexec ( String  command,
-                          String  username,
-                          String  password,
-                          String  host,
-                          String  directory )
-    {
-        new AntBuilder().sshexec( command     : "cd ${ directory } ${ command }",
-                                  host        : host,
-                                  username    : username,
-                                  password    : password,
-                                  trust       : true,
-                                  failonerror : true )
     }
 
 
@@ -378,74 +283,5 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
         }
 
         throw new MojoExecutionException( "Failed to download non-empty file after [$maxAttempts] attempts" )
-    }
-
-
-    static void ftpUpload ( File    file,
-                            String  remotePath,
-                            boolean verbose )
-    {
-        def data = net().parseNetworkPath( remotePath )
-        assert 'ftp' == data.protocol
-        verify().notNullOrEmpty( data.username, data.password, data.host, data.directory )
-
-        /**
-         * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
-         */
-        new AntBuilder().ftp( action    : 'put',
-                              server    : data.host,
-                              userid    : data.username,
-                              password  : data.password,
-                              remotedir : data.directory,
-                              verbose   : verbose,
-                              passive   : true,
-                              binary    : true )
-        {
-            fileset( file : file.canonicalPath )
-        }
-    }
-
-
-    static void scpDownload ( File    localDirectory,
-                              String  remotePath,
-                              boolean verbose )
-    {
-        scp( localDirectory, remotePath, verbose, true )
-    }
-
-
-    static void scpUpload ( File    file,
-                            String  remotePath,
-                            boolean verbose )
-    {
-        scp( file, remotePath, verbose, false )
-    }
-
-
-    @SuppressWarnings([ 'GroovyStaticMethodNamingConvention' ])
-    @Requires({ file.exists() && remotePath })
-    private static void scp ( File    file,
-                              String  remotePath,
-                              boolean verbose,
-                              boolean isDownload )
-    {
-        final data = net().parseNetworkPath( remotePath )
-        assert 'scp' == data.protocol
-
-        /**
-         * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
-         */
-
-        final localDestination  = file.canonicalPath
-        final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
-        final Map<String, String> arguments = [
-            file     : isDownload ? remoteDestination : localDestination,
-            todir    : isDownload ? localDestination  : remoteDestination,
-            verbose  : verbose,
-            trust    : true ] +
-            sshAuthArguments( data.password ) +
-            ( data.port ? [ port : data.port ] : [:] )
-
-        new AntBuilder().scp( arguments )
     }
 }
