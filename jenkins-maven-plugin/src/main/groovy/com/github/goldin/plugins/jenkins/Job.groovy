@@ -155,19 +155,19 @@ class Job
 
     Groovy[]             groovys
     Groovy               groovy
-    List<Groovy>         groovys(){ general().list( groovys, groovy )}
+    List<Groovy>         groovys(){ generalBean().list( groovys, groovy )}
 
     Trigger[]            triggers
     Trigger              trigger
-    List<Trigger>        triggers() { general().list( triggers, trigger ) }
+    List<Trigger>        triggers() { generalBean().list( triggers, trigger ) }
 
     Parameter[]          parameters
     Parameter            parameter
-    List<Parameter>      parameters() { general().list( parameters, parameter ) }
+    List<Parameter>      parameters() { generalBean().list( parameters, parameter ) }
 
     Repository[]         repositories
     Repository           repository
-    List<Repository>     repositories() { general().list( repositories, repository ) }
+    List<Repository>     repositories() { generalBean().list( repositories, repository ) }
 
 
     String                                  scmType
@@ -208,7 +208,7 @@ class Job
      */
     String               process
     String[]             processes
-    List<String>         processes() { general().list( processes, process ) }
+    List<String>         processes() { generalBean().list( processes, process ) }
 
     /**
      * Set by {@link JenkinsMojo#configureJobs}
@@ -461,7 +461,7 @@ class Job
         /**
          * {..} => ${..}
          */
-        mavenGoals = verify().notNullOrEmpty( mavenGoals ).addDollar()
+        mavenGoals = verifyBean().notNullOrEmpty( mavenGoals ).addDollar()
 
         if ( privateRepository || privateRepositoryPerExecutor )
         {
@@ -475,7 +475,7 @@ class Job
              * or replacing it with updated value, if already exists
              */
 
-            localRepoPath = (( localRepoBase ?: "${ constants().USER_HOME }/.m2/repository" ) +
+            localRepoPath = (( localRepoBase ?: "${ constantsBean().USER_HOME }/.m2/repository" ) +
                               '/' +
                              ( localRepo     ?: '.' )).
                             replace( '\\', '/' )

@@ -141,7 +141,7 @@ final class CopyMojoHelper
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifact${ general().s( dependencies.size())} found" )
+            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifact${ generalBean().s( dependencies.size())} found" )
             if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
 
             assert ( dependencies || ( ! failIfNotFound ) || ( dependency.optional )), "No dependencies resolved with [$dependency]"
@@ -316,13 +316,13 @@ final class CopyMojoHelper
     File prepareManifest( CopyManifest manifest )
     {
         final m       = new Manifest()
-        final tempDir = file().tempDirectory()
+        final tempDir = fileBean().tempDirectory()
         final f       = new File( tempDir, manifest.location )
 
         m.mainAttributes[ Attributes.Name.MANIFEST_VERSION ] = '1.0'
         manifest.entries.each{ String key, String value -> m.mainAttributes.putValue( key, value ) }
 
-        file().mkdirs( f.parentFile )
+        fileBean().mkdirs( f.parentFile )
         f.withOutputStream { m.write( it )}
 
         tempDir
@@ -373,7 +373,7 @@ final class CopyMojoHelper
         final description  = "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
         final request      = new DeployRequest()
         request.repository = new RemoteRepository( url: url, type: 'default' )
-        request.artifacts  = [ toAetherArtifact( toMavenArtifact( groupId, artifactId, version, '', file().extension( f ), classifier, false, f )) ]
+        request.artifacts  = [ toAetherArtifact( toMavenArtifact( groupId, artifactId, version, '', fileBean().extension( f ), classifier, false, f )) ]
 
         try
         {

@@ -86,7 +86,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
                                    updateMap( map, violatingArtifacts, className )
                                    map }
 
-        log.info( "[${ f2A.size() }] artifact${ general().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
+        log.info( "[${ f2A.size() }] artifact${ generalBean().s( f2A.size())} analyzed in [${ System.currentTimeMillis() - time }] ms" )
         if ( violations ) { reportViolations( violations ) }
         else              { log.info( 'No duplicate libraries found' ) }
     }
@@ -109,7 +109,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
 
         try
         {
-            CLASSES_CACHE[ file ] = verify().notNull( zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
+            CLASSES_CACHE[ file ] = verifyBean().notNull( zip.entries().findAll{ ZipEntry entry -> entry.name.endsWith( '.class' ) }.
                                                                     collect{ ZipEntry entry -> entry.name.replace( '/', '.' ).
                                                                                                replaceAll( /\.class$/, '' ) } )
         }
@@ -131,7 +131,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
                                 [ "-=-= $artifacts =-=-" ] + ( verbose ? classes.sort().collect { " --- [$it]" } : [] ) }.
                        flatten().
                        grep().
-                       join( constants().CRLF )
+                       join( constantsBean().CRLF )
 
         if ( fail ) { throw new MojoFailureException( message )}
         else        { log.error( message )}

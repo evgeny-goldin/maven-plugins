@@ -55,13 +55,13 @@ class GMojoUtils
      */
      static mopInit ()
      {
-         file() // Triggers GCommons MOP replacements
+         fileBean() // Triggers GCommons MOP replacements
 
          /**
           * Trims multi-lines String: each line in the String specified is trim()-ed
           */
          String.metaClass.trimMultiline = { ->
-             (( String ) delegate ).readLines()*.trim().join( constants().CRLF )
+             (( String ) delegate ).readLines()*.trim().join( constantsBean().CRLF )
          }
 
 
@@ -69,7 +69,7 @@ class GMojoUtils
           * Deletes empty lines from the String
           */
          String.metaClass.deleteEmptyLines = { ->
-             (( String ) delegate ).readLines().findAll{ it.trim() }.join( constants().CRLF )
+             (( String ) delegate ).readLines().findAll{ it.trim() }.join( constantsBean().CRLF )
          }
 
 
@@ -105,7 +105,7 @@ class GMojoUtils
         URL    templateURL = GMojoUtils.getResource( templatePath )
         assert templateURL, "[${ templatePath }] could not be loaded from the classpath"
 
-        verify().notNull( new SimpleTemplateEngine( loader ).createTemplate( templateURL ))
+        verifyBean().notNull( new SimpleTemplateEngine( loader ).createTemplate( templateURL ))
     }
 
 
@@ -122,7 +122,7 @@ class GMojoUtils
         if ( endOfLine        ) { content = content.replaceAll( /\r?\n/, (( 'windows' == endOfLine ) ? '\r\n' : '\n' )) }
         if ( deleteEmptyLines ) { content = content.deleteEmptyLines() }
 
-        verify().notNullOrEmpty( content )
+        verifyBean().notNullOrEmpty( content )
     }
 
 
@@ -148,7 +148,7 @@ class GMojoUtils
      */
     static String mavenVersion()
     {
-        verify().notNullOrEmpty(
+        verifyBean().notNullOrEmpty(
             properties( 'META-INF/maven/org.apache.maven/maven-core/pom.properties', Maven.classLoader ).
             getProperty( 'version', 'Unknown' ).trim())
     }
@@ -202,9 +202,9 @@ class GMojoUtils
                                     startTime    : session.startTime,
                                     ant          : new AntBuilder(),
                                     *:( project.properties + session.userProperties + session.executionProperties )]
-        groovy().eval( expression,
+        groovyBean().eval( expression,
                        resultType,
-                       groovy().binding( bindingMap, bindingObjects ),
+                       groovyBean().binding( bindingMap, bindingObjects ),
                        config )
     }
 
@@ -218,7 +218,7 @@ class GMojoUtils
      * @param c Collection to convert
      * @return String to use for log messages
      */
-    static String stars ( Collection c ) { "* [${ c.join( "]${ constants().CRLF }* [") }]" }
+    static String stars ( Collection c ) { "* [${ c.join( "]${ constantsBean().CRLF }* [") }]" }
 
 
     /**
@@ -305,7 +305,7 @@ class GMojoUtils
                            final boolean         move,
                            final boolean         filterWithDollarOnly )
     {
-        assert sourceFile.file && destinationFile && ( ! net().isNet( destinationFile.path ))
+        assert sourceFile.file && destinationFile && ( ! netBean().isNet( destinationFile.path ))
         assert ( replaces != null ) && encoding
 
         File             fromFile           = sourceFile
@@ -319,20 +319,20 @@ class GMojoUtils
         /**
          * Deleting destination file if possible
          */
-        if ( ! ( skipIdentical || samePath())) { file().mkdirs( file().delete( destinationFile ).parentFile )}
+        if ( ! ( skipIdentical || samePath())) { fileBean().mkdirs( fileBean().delete( destinationFile ).parentFile )}
 
         try
         {
             if ( filtering && (( ! filterWithDollarOnly ) || fromFile.getText( encoding ).contains( '${' )))
             {
-                List<MavenFileFilter> wrappers   =
+                List<MavenFileFilter> wrappers =
                     fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
                                                          ThreadLocals.get( MavenSession ), new MavenResourcesExecution())
                 if ( filterWithDollarOnly )
                 {   // noinspection GroovyUnresolvedAccess
                     wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
                 }
-                else if ( file().extension( fromFile ).toLowerCase() == 'bat' )
+                else if ( fileBean().extension( fromFile ).toLowerCase() == 'bat' )
                 {
                     log.warn( "[$fromFile] - filtering *.bat files without <filterWithDollarOnly> may not work correctly due to '@' character, " +
                               'see http://evgeny-goldin.org/youtrack/issue/pl-233.' )
@@ -341,18 +341,18 @@ class GMojoUtils
                 File tempFile = null
                 if ( samePath())
                 {
-                    tempFile = file().tempFile()
-                    file().copy( fromFile, tempFile.parentFile, tempFile.name )
+                    tempFile = fileBean().tempFile()
+                    fileBean().copy( fromFile, tempFile.parentFile, tempFile.name )
                     if ( verbose ) { log.info( "[$fromFile] copied to [$tempFile] (to filter it into itself)" ) }
 
                     fromFile = tempFile
                 }
 
                 assert ! samePath()
-                file().mkdirs( destinationFile.parentFile )
+                fileBean().mkdirs( destinationFile.parentFile )
                 fileFilter.copyFile( fromFile, destinationFile, true, wrappers, encoding, true )
                 assert destinationFile.setLastModified( System.currentTimeMillis())
-                file().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
+                fileBean().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
 
                 if ( verbose ) { log.info( "[$fromFile] filtered to [$destinationFile]" ) }
 
@@ -369,7 +369,7 @@ class GMojoUtils
                 destinationFile.write(( String ) replaces.inject( fromFile.getText( encoding )){ String s, Replace r -> r.replace( s, fromFile ) },
                                       encoding )
                 if ( verbose ) { log.info( "[$fromFile] content written to [$destinationFile], " +
-                                           "[${ replaces.size()}] replace${ general().s( replaces.size()) } made" )}
+                                           "[${ replaces.size()}] replace${ generalBean().s( replaces.size()) } made" )}
                 operationPerformed = true
             }
 
@@ -399,7 +399,7 @@ class GMojoUtils
 
                 if ( ! operationPerformed )
                 {
-                    file().copy( fromFile, destinationFile.parentFile, destinationFile.name )
+                    fileBean().copy( fromFile, destinationFile.parentFile, destinationFile.name )
                     if ( verbose ) { log.info( "[$fromFile] ${ move ? 'moved' : 'copied' } to [$destinationFile]" )}
                 }
             }
@@ -408,8 +408,8 @@ class GMojoUtils
              * If it's a "move" operation and file content was filtered/replaced or renameTo() call
              * doesn't succeed - source file is deleted
              */
-            if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { file().delete( sourceFile ) }
-            ( operationSkipped ? null : verify().file( destinationFile ))
+            if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { fileBean().delete( sourceFile ) }
+            ( operationSkipped ? null : verifyBean().file( destinationFile ))
         }
         catch ( e )
         {
@@ -472,7 +472,7 @@ class GMojoUtils
 
         final a = new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ),
                                        scope ?: 'compile', type, classifier, new DefaultArtifactHandler(), optional )
-        if ( file ) { a.file = verify().file( file ) }
+        if ( file ) { a.file = verifyBean().file( file ) }
         a
     }
 
@@ -570,7 +570,7 @@ class GMojoUtils
 
         artifacts.each {
             Artifact a ->
-            File destination = file().copy( a.file, directory )
+            File destination = fileBean().copy( a.file, directory )
 
             if ( verbose )
             {
@@ -590,7 +590,7 @@ class GMojoUtils
      */
     static String canonicalPath ( String s )
     {
-        ( s && ( ! net().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
+        ( s && ( ! netBean().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
     }
 
 
@@ -696,17 +696,15 @@ class GMojoUtils
 
 
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static ConstantsBean constants (){ GCommons.constants ()}
+    static ConstantsBean constantsBean (){ GCommons.constants ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static GeneralBean   general   (){ GCommons.general   ()}
+    static GeneralBean  generalBean (){ GCommons.general ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static FileBean      file      (){ GCommons.file      ()}
+    static FileBean    fileBean (){ GCommons.file ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static NetBean       net       (){ GCommons.net       ()}
+    static NetBean     netBean (){ GCommons.net ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static IOBean        io        (){ GCommons.io        ()}
+    static VerifyBean  verifyBean (){ GCommons.verify ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static VerifyBean    verify    (){ GCommons.verify    ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static GroovyBean    groovy    (){ GCommons.groovy    ()}
+    static GroovyBean  groovyBean (){ GCommons.groovy ()}
 }

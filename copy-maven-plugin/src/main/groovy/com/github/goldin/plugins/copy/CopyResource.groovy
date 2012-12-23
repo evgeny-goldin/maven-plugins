@@ -57,9 +57,9 @@ final class CopyResource extends Resource implements Cloneable
             newResource.destFileExtension = oldResource.destFileExtension
         }
 
-        newResource.defaultExcludes       = general().choose( oldResource.defaultExcludes,      mojo.defaultExcludes())
-        newResource.failIfNotFound        = general().choose( oldResource.failIfNotFound,       mojo.failIfNotFound )
-        newResource.filterWithDollarOnly  = general().choose( oldResource.filterWithDollarOnly, mojo.filterWithDollarOnly )
+        newResource.defaultExcludes       = generalBean().choose( oldResource.defaultExcludes,      mojo.defaultExcludes())
+        newResource.failIfNotFound        = generalBean().choose( oldResource.failIfNotFound,       mojo.failIfNotFound )
+        newResource.filterWithDollarOnly  = generalBean().choose( oldResource.filterWithDollarOnly, mojo.filterWithDollarOnly )
         newResource.nonFilteredExtensions = oldResource.nonFilteredExtensions ?:      mojo.nonFilteredExtensions
 
         newResource
@@ -75,13 +75,13 @@ final class CopyResource extends Resource implements Cloneable
     {
         if ( targetPathsResolved != null ) { return targetPathsResolved }
 
-        List<String> paths = split( general().list( targetPaths, targetPath ).join( ',' ))
+        List<String> paths = split( generalBean().list( targetPaths, targetPath ).join( ',' ))
         assert     ( paths || clean ), \
                      '<targetPath>/<targetPaths> need to be defined for resources that do not perform <clean> operation'
 
         if ( paths && ( targetRoots || targetRoot ))
         {
-            List<String> targetRootsSplit = split( general().list( targetRoots, targetRoot ).join( ',' ))
+            List<String> targetRootsSplit = split( generalBean().list( targetRoots, targetRoot ).join( ',' ))
             if ( targetRootsSplit )
             {
                 paths = [ targetRootsSplit, paths ].combinations().collect { it[ 0 ] + '/' + it[ 1 ] }
@@ -95,21 +95,21 @@ final class CopyResource extends Resource implements Cloneable
 
     Replace[]     replaces
     Replace       replace
-    List<Replace> replaces () { general().list( this.replaces, this.replace ) }
+    List<Replace> replaces () { generalBean().list( this.replaces, this.replace ) }
 
     CopyManifest manifest
 
     CopyDependency[]     dependencies
     CopyDependency       dependency
-    List<CopyDependency> dependencies () { general().list( this.dependencies, this.dependency ) }
+    List<CopyDependency> dependencies () { generalBean().list( this.dependencies, this.dependency ) }
 
     String[] zipEntries
     String   zipEntry
     String[] zipEntriesExclude
     String   zipEntryExclude
 
-    List<String> zipEntries ()        { split( general().list( this.zipEntries,        this.zipEntry        ).join( ', ' )) }
-    List<String> zipEntriesExclude () { split( general().list( this.zipEntriesExclude, this.zipEntryExclude ).join( ', ' )) }
+    List<String> zipEntries ()        { split( generalBean().list( this.zipEntries,        this.zipEntry        ).join( ', ' )) }
+    List<String> zipEntriesExclude () { split( generalBean().list( this.zipEntriesExclude, this.zipEntryExclude ).join( ', ' )) }
 
 
     /**

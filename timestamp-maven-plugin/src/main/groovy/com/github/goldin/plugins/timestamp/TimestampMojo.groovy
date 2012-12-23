@@ -26,7 +26,7 @@ class TimestampMojo extends BaseGroovyMojo
 
     @MojoParameter ( required = false )
     public  Timestamp timestamp
-    private List<Timestamp> timestamps() { general().list( this.timestamps, this.timestamp ) }
+    private List<Timestamp> timestamps() { generalBean().list( this.timestamps, this.timestamp ) }
 
 
     void doExecute()

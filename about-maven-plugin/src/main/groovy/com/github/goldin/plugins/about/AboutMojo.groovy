@@ -112,7 +112,7 @@ class AboutMojo extends BaseGroovyMojo
 
         if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath]" ) }
 
-        String result =  general().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
+        String result = generalBean().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
 
         if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" ) }
 
@@ -481,12 +481,12 @@ class AboutMojo extends BaseGroovyMojo
     @Ensures({ result == aboutFile })
     File writeAboutFile( File aboutFile )
     {
-        file().delete( aboutFile )
+        fileBean().delete( aboutFile )
 
         long t = System.currentTimeMillis()
 
         log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
-        file().mkdirs( aboutFile.parentFile )
+        fileBean().mkdirs( aboutFile.parentFile )
         aboutFile.write( allContent())
         log.info( "Generated  \"about\" in [$aboutFile.canonicalPath] (${ System.currentTimeMillis() - t } ms)" )
 
@@ -509,7 +509,7 @@ class AboutMojo extends BaseGroovyMojo
                 }
 
                 def split = { String s -> s ? split( s ) : null }
-                def files = file().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
+                def files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
                 if ( files )
                 {
@@ -523,11 +523,11 @@ class AboutMojo extends BaseGroovyMojo
                         def aboutPath = "$f.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
 
                         log.info( "Adding \"about\" to [$aboutPath]" )
-                        file().pack( aboutFile.parentFile, f, [ aboutFile.name ], null, false, true, true, null, null, prefix )
+                        fileBean().pack( aboutFile.parentFile, f, [ aboutFile.name ], null, false, true, true, null, null, prefix )
                         log.info( "Added  \"about\" to [$aboutPath]" )
                     }
 
-                    file().delete( aboutFile )
+                    fileBean().delete( aboutFile )
                 }
                 else
                 {

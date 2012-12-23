@@ -1,7 +1,7 @@
 package com.github.goldin.plugins.ivy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.gcommons.GCommons
+
 import org.apache.ivy.Ivy
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor
 import org.apache.ivy.core.module.descriptor.DefaultIncludeRule
@@ -109,7 +109,7 @@ class IvyHelper
         }
         finally
         {
-            GCommons.file().delete( ivyfile )
+            fileBean().delete( ivyfile )
         }
     }
 
@@ -174,16 +174,16 @@ class IvyHelper
              * See http://db.tt/9Cf1X4bH for debug view of the object received.
              */
             Map<String, String> attributes = (( MDArtifact ) artifactReport.artifact ).md.metadataArtifact.id.moduleRevisionId.attributes
-            String groupId    = verify().notNullOrEmpty(( String ) attributes[ 'organisation' ])
-            String artifactId = verify().notNullOrEmpty(( String ) attributes[ 'module'       ])
-            String version    = verify().notNullOrEmpty(( String ) attributes[ 'revision'     ])
+            String groupId    = verifyBean().notNullOrEmpty( attributes.organisation )
+            String artifactId = verifyBean().notNullOrEmpty( attributes.module )
+            String version    = verifyBean().notNullOrEmpty( attributes.revision )
 
             if ( artifactReport.artifactOrigin?.artifact?.name && artifactReport.localFile )
             {
                 // artifact name ("core/annotations" - http://goo.gl/se95h) plays as a classifier
                 String classifier = artifactReport.artifactOrigin.artifact.name
-                File   f          = verify().file( artifactReport.localFile )
-                String type       = file().extension( f )
+                File   f          = verifyBean().file( artifactReport.localFile )
+                String type       = fileBean().extension( f )
                 toMavenArtifact( IVY_PREFIX + groupId, artifactId, version, '', type, classifier, false, f )
             }
             else
@@ -218,7 +218,7 @@ class IvyHelper
     @Ensures({ result })
     String artifactsNumber( List<Artifact> l )
     {
-        "[${ l.size()}] artifact${ general().s( l.size())}"
+        "[${ l.size()}] artifact${ generalBean().s( l.size())}"
     }
 
 

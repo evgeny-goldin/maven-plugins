@@ -13,7 +13,7 @@ enum GerritType
 
     GerritType( String typeTitle )
     {
-        this.typeTitle = verify().notNullOrEmpty( typeTitle )
+        this.typeTitle = verifyBean().notNullOrEmpty( typeTitle )
     }
 
     @Override
@@ -33,11 +33,11 @@ class Project extends TypePattern
 {
     Branch         branch
     Branch[]       branches
-    List<Branch>   branches(){ general().list( branches, branch )}
+    List<Branch>   branches(){ generalBean().list( branches, branch )}
 
     FilePath       filePath
     FilePath[]     filePaths
-    List<FilePath> filePaths(){ general().list( filePaths, filePath )}
+    List<FilePath> filePaths(){ generalBean().list( filePaths, filePath )}
 }
 
 

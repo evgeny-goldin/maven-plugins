@@ -84,6 +84,6 @@ abstract class Markup
     final String getMarkup()
     {
         addMarkup()
-        verify().notNullOrEmpty( this.writer.toString())
+        verifyBean().notNullOrEmpty( this.writer.toString())
     }
 }

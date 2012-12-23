@@ -2,7 +2,6 @@ package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.NetworkUtils
-import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.Replace
@@ -65,7 +64,7 @@ class CopyMojo extends BaseGroovyMojo
     {
         this.defaultExcludes ?:
         (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
-           file().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
+           fileBean().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
     }
 
     @MojoParameter ( required = false )
@@ -95,7 +94,7 @@ class CopyMojo extends BaseGroovyMojo
     @MojoParameter ( required = false )
     public  CopyResource resource
 
-    private List<CopyResource> resources () { general().list( this.resources, this.resource ) }
+    private List<CopyResource> resources () { generalBean().list( this.resources, this.resource ) }
 
     @MojoParameter ( required = false )
     public GroovyConfig groovyConfig
@@ -163,7 +162,7 @@ class CopyMojo extends BaseGroovyMojo
                                 e )
                         }
                     }
-                    else if ( general().choose( failOnError, this.failOnError ))
+                    else if ( generalBean().choose( failOnError, this.failOnError ))
                     {
                         throw new MojoExecutionException( errorMessage, e )
                     }
@@ -195,8 +194,8 @@ class CopyMojo extends BaseGroovyMojo
     @Requires({ resource })
     private void processResource( CopyResource resource )
     {
-        final isVerbose        = general().choose( resource.verbose,        this.verbose        )
-        final isFailIfNotFound = general().choose( resource.failIfNotFound, this.failIfNotFound )
+        final isVerbose        = generalBean().choose( resource.verbose,        this.verbose        )
+        final isFailIfNotFound = generalBean().choose( resource.failIfNotFound, this.failIfNotFound )
 
         resource.with {
             if ( runIf( runIf ))
@@ -254,8 +253,8 @@ class CopyMojo extends BaseGroovyMojo
     {
         assert ( resource.mkdir || resource.directory )
 
-        final isDownload      = net().isNet( resource.directory )
-        final isUpload        = net().isNet( resource.targetPaths())
+        final isDownload      = netBean().isNet( resource.directory )
+        final isUpload        = netBean().isNet( resource.targetPaths())
         File  sourceDirectory = ( resource.directory ? new File( resource.directory ) : null ) // null for <mkdir> operation
         final tempDirectory   = null
 
@@ -270,7 +269,7 @@ class CopyMojo extends BaseGroovyMojo
             {
                 if ( isDownload )
                 {
-                    tempDirectory = file().tempDirectory()
+                    tempDirectory = fileBean().tempDirectory()
                     DownloadHelper.download( resource, resource.directory, tempDirectory, verbose, groovyConfig )
 
                     assert ( tempDirectory.list() || ( ! failIfNotFound )), \
@@ -295,7 +294,7 @@ class CopyMojo extends BaseGroovyMojo
                                    "[$resource] - no <clean>, <mkdir>, <pack> or <unpack> operation allowed when uploading files to ${resource.targetPaths()}, " +
                                    "use a separate <resource> for that"
 
-                            tempDirectory = file().tempDirectory()
+                            tempDirectory = fileBean().tempDirectory()
 
                             processFilesResource( resource.makeCopy( this, tempDirectory, sourceDirectory, includes, excludes, true ),
                                                   verbose, failIfNotFound )
@@ -316,7 +315,7 @@ class CopyMojo extends BaseGroovyMojo
         finally
         {
             /* If arguments not specified explicitly as array may fail with "IllegalArgumentException: wrong number of arguments" */
-            if ( tempDirectory ){ file().delete([ tempDirectory ] as File[] )}
+            if ( tempDirectory ){ fileBean().delete([ tempDirectory ] as File[] )}
         }
     }
 
@@ -331,10 +330,10 @@ class CopyMojo extends BaseGroovyMojo
     @Requires({ resource })
     private void processDependenciesResource ( final CopyResource resource, final boolean verbose, final boolean failIfNotFound )
     {
-        List<CopyDependency> resourceDependencies = verify().notNullOrEmpty( resource.dependencies())
+        List<CopyDependency> resourceDependencies = verifyBean().notNullOrEmpty( resource.dependencies())
         final                dependenciesAtM2     = resource.dependenciesAtM2()
-        final                isSkipIdentical      = general().choose( resource.skipIdentical, this.skipIdentical )
-        final                isStripVersion       = general().choose( resource.stripVersion,  this.stripVersion  )
+        final                isSkipIdentical      = generalBean().choose( resource.skipIdentical, this.skipIdentical )
+        final                isStripVersion       = generalBean().choose( resource.stripVersion,  this.stripVersion  )
 
         if ( dependenciesAtM2 )
         {
@@ -350,7 +349,7 @@ class CopyMojo extends BaseGroovyMojo
                  * File may be resolved from other module "target" (that is built in the same reactor),
                  * not necessarily from ".m2"
                  */
-                File f = verify().file( d.artifact.file ).canonicalFile
+                File f = verifyBean().file( d.artifact.file ).canonicalFile
 
                 (( CopyResource ) resource.clone()).with {
 
@@ -368,7 +367,7 @@ class CopyMojo extends BaseGroovyMojo
                         {
                             final version    = d.version.substring( 0, d.version.lastIndexOf( '-SNAPSHOT' ))
                             final classifier = d.classifier.with          { delegate ? "-$delegate" : '' }
-                            final extension  = file().extension( f ).with { delegate ? ".$delegate" : '' }
+                            final extension  = fileBean().extension( f ).with { delegate ? ".$delegate" : '' }
                             destFileName     = destFileName.replaceAll( /-\Q$version\E.+?\Q$classifier$extension\E$/,
                                                                         "$classifier$extension" )
                         }
@@ -385,14 +384,14 @@ class CopyMojo extends BaseGroovyMojo
             if ( resolved ) { return }
         }
 
-        final tempDirectory = file().tempDirectory()
+        final tempDirectory = fileBean().tempDirectory()
 
         try
         {
             if ( ! dependenciesAtM2 )
             {
                 resolve( resourceDependencies, verbose, failIfNotFound, isStripVersion ).each {
-                    CopyDependency d -> file().copy( d.artifact.file, tempDirectory, d.destFileName )
+                    CopyDependency d -> fileBean().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
 
@@ -415,7 +414,7 @@ class CopyMojo extends BaseGroovyMojo
         }
         finally
         {
-            file().delete(( File ) /* Occasionally fails with "Wrong number of arguments" otherwise */ tempDirectory )
+            fileBean().delete(( File ) /* Occasionally fails with "Wrong number of arguments" otherwise */ tempDirectory )
         }
     }
 
@@ -508,7 +507,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if (( ! resource.mkdir ) && failIfNotFound )
             {
-                verify().directory( sourceDirectory )
+                verifyBean().directory( sourceDirectory )
             }
 
             for ( path in resource.targetPaths())
@@ -518,28 +517,28 @@ class CopyMojo extends BaseGroovyMojo
                     filesToProcess << mkdir( path, verbose )
                 }
 
-                File targetPath = new File( verify().notNullOrEmpty( path ))
+                File targetPath = new File( verifyBean().notNullOrEmpty( path ))
 
                 if ( resource.pack )
                 {
                     final manifestDir = ( manifest.entries ? helper.prepareManifest( manifest ) : null )
                     pack( resource, sourceDirectory, targetPath, includes, excludes, failIfNotFound, manifestDir )?.with{ filesToProcess << delegate }
-                    if ( manifestDir ) { file().delete( manifestDir ) }
+                    if ( manifestDir ) { fileBean().delete( manifestDir ) }
                 }
                 else if ( sourceDirectory /* null when mkdir is performed */ )
                 {
-                    final files = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
-                    for ( file in filter( files, resource.filter, verbose, failIfNotFound ))
+                    final files = fileBean().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+                    for ( filteredFile in filter( files, resource.filter, verbose, failIfNotFound ))
                     {
-                        GCommons.file().mkdirs( targetPath )
+                        fileBean().mkdirs( targetPath )
 
                         if ( resource.unpack )
                         {
-                            filesToProcess.addAll( unpack( resource, file, targetPath, zipEntries, zipEntriesExclude, verbose, failIfNotFound ))
+                            filesToProcess.addAll( unpack( resource, filteredFile, targetPath, zipEntries, zipEntriesExclude, verbose, failIfNotFound ))
                         }
                         else
                         {
-                            copyResourceFile( resource, sourceDirectory, file, targetPath, verbose )?.with { filesToProcess << delegate }
+                            copyResourceFile( resource, sourceDirectory, filteredFile, targetPath, verbose )?.with { filesToProcess << delegate }
                         }
                     }
                 }
@@ -575,13 +574,13 @@ class CopyMojo extends BaseGroovyMojo
                 assert ( targetPaths() && directory && ( ! ( pack || unpack ))), \
                        '<destFilePrefix>, <destFileSuffix>, <destFileExtension> can only be used when files are copied from <targetPath> to <directory>'
 
-                String extension = file().extension( f )
+                String extension = fileBean().extension( f )
                 String body      = ( extension ? newName.substring( 0, newName.size() - extension.size() - 1 ) : newName )
                 extension        = destFileExtension  ?: extension
                 newName          = "${ destFilePrefix ?: '' }${ body }${ destFileSuffix ?: '' }${ extension ? '.' + extension : '' }"
             }
 
-            verify().notNullOrEmpty( newName )
+            verifyBean().notNullOrEmpty( newName )
         }
     }
 
@@ -604,27 +603,27 @@ class CopyMojo extends BaseGroovyMojo
                                     File         targetPath,
                                     boolean      verbose )
     {
-        assert ! net().isNet( sourceDirectory.path )
-        assert ! net().isNet( targetPath.path )
+        assert ! netBean().isNet( sourceDirectory.path )
+        assert ! netBean().isNet( targetPath.path )
 
         String  newName  = newName( sourceFile, resource )
         boolean noFilter = split(( resource.nonFilteredExtensions ?: nonFilteredExtensions ?: '' ).toLowerCase()).
-                           contains( file().extension( new File( newName )).toLowerCase())
-        String  newPath  = resource.preservePath ? file().relativePath( sourceDirectory, new File( sourceFile.parentFile, newName )) : newName
+                           contains( fileBean().extension( new File( newName )).toLowerCase())
+        String  newPath  = resource.preservePath ? fileBean().relativePath( sourceDirectory, new File( sourceFile.parentFile, newName )) : newName
         File    file     = new File( targetPath, newPath )
 
         assert file.canonicalPath.endsWith( newName )
 
         copyFile( sourceFile.canonicalFile,
                   file.canonicalFile,
-                  general().choose( resource.skipIdentical, skipIdentical ),
+                  generalBean().choose( resource.skipIdentical, skipIdentical ),
                   ( noFilter ? [] : resource.replaces()) as Replace[],
                   (( ! noFilter ) && resource.filtering ),
                   resource.encoding,
                   fileFilter,
                   verbose,
                   resource.move,
-                  general().choose( resource.filterWithDollarOnly, filterWithDollarOnly ))
+                  generalBean().choose( resource.filterWithDollarOnly, filterWithDollarOnly ))
     }
 
 
@@ -663,8 +662,8 @@ class CopyMojo extends BaseGroovyMojo
         }
 
         final packUsingTemp  = ( resource.replaces() || resource.filtering )
-        final filesDirectory = packUsingTemp ? file().tempDirectory() : sourceDirectory
-        final skipPacked     = general().choose( resource.skipPacked, this.skipPacked )
+        final filesDirectory = packUsingTemp ? fileBean().tempDirectory() : sourceDirectory
+        final skipPacked     = generalBean().choose( resource.skipPacked, this.skipPacked )
 
         if ( packUsingTemp )
         {
@@ -672,10 +671,10 @@ class CopyMojo extends BaseGroovyMojo
                                   false, failIfNotFound )
         }
 
-        file().with {
+        fileBean().with {
 
             pack( filesDirectory, targetArchive, includes, excludes,
-                  general().choose( resource.useTrueZipForPack, useTrueZipForPack ),
+                  generalBean().choose( resource.useTrueZipForPack, useTrueZipForPack ),
                   failIfNotFound, resource.update,
                   split( resource.defaultExcludes ?: defaultExcludes()),
                   resource.destFileName, resource.prefix, ( ! skipPacked ), manifestDir, resource.compressionLevel )
@@ -699,13 +698,13 @@ class CopyMojo extends BaseGroovyMojo
                    'It should be of the following form: "<deployUrl>|<groupId>|<artifactId>|<version>[|<classifier>]"'
 
             def ( String url, String groupId, String artifactId, String version ) =
-                data[ 0 .. 3 ].collect { String s -> verify().notNullOrEmpty( s ) }
-            def classifier = (( data.size() == 5 ) ? verify().notNullOrEmpty( data[ 4 ] ) : null )
+                data[ 0 .. 3 ].collect { String s -> verifyBean().notNullOrEmpty( s ) }
+            def classifier = (( data.size() == 5 ) ? verifyBean().notNullOrEmpty( data[ 4 ] ) : null )
 
             helper.deploy( targetArchive, url, groupId, artifactId, version, classifier )
         }
 
-        verify().file( targetArchive )
+        verifyBean().file( targetArchive )
     }
 
 
@@ -731,7 +730,7 @@ class CopyMojo extends BaseGroovyMojo
                                 boolean      verbose,
                                 boolean      failIfNotFound )
     {
-        boolean skipUnpacked = general().choose( resource.skipUnpacked, skipUnpacked )
+        boolean skipUnpacked = generalBean().choose( resource.skipUnpacked, skipUnpacked )
 
         if ( skipUnpacked && destinationDirectory.directory && destinationDirectory.listFiles())
         {
@@ -745,19 +744,19 @@ class CopyMojo extends BaseGroovyMojo
         }
 
         boolean unpackUsingTemp = ( resource.replaces() || resource.filtering )
-        File    unpackDirectory = unpackUsingTemp ? file().tempDirectory() : destinationDirectory
+        File    unpackDirectory = unpackUsingTemp ? fileBean().tempDirectory() : destinationDirectory
 
         ( zipEntries || zipEntriesExclude ) ?
-            file().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, failIfNotFound ) :
-            file().unpack( sourceArchive, unpackDirectory, general().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
+            fileBean().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, failIfNotFound ) :
+            fileBean().unpack( sourceArchive, unpackDirectory, generalBean().choose( resource.useTrueZipForUnpack, useTrueZipForUnpack ))
 
         if ( unpackUsingTemp )
         {
             processFilesResource( resource.makeCopy( this, destinationDirectory, unpackDirectory, null, null ), false, true )
-            file().delete( unpackDirectory )
+            fileBean().delete( unpackDirectory )
         }
 
-        file().files( destinationDirectory )
+        fileBean().files( destinationDirectory )
     }
 
 
@@ -771,7 +770,7 @@ class CopyMojo extends BaseGroovyMojo
      */
     private File mkdir( String path, boolean verbose )
     {
-        assert ( path && ! ( net().isNet( path ))), "<mkdir> doesn't work with remote path [$path]"
+        assert ( path && ! ( netBean().isNet( path ))), "<mkdir> doesn't work with remote path [$path]"
 
         final directory = new File( path )
 
@@ -781,10 +780,10 @@ class CopyMojo extends BaseGroovyMojo
             return directory
         }
 
-        file().mkdirs( directory )
+        fileBean().mkdirs( directory )
         if ( verbose ){ log.info( "Directory [$directory.canonicalPath] created" )}
 
-        verify().directory( directory )
+        verifyBean().directory( directory )
     }
 
 
@@ -818,17 +817,17 @@ class CopyMojo extends BaseGroovyMojo
             return []
         }
 
-        List<File> files        = file().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
+        List<File> files        = fileBean().files( sourceDirectory, includes, excludes, true, false, failIfNotFound )
         List<File> filesDeleted = filter( files, filterExpression, verbose, failIfNotFound )
 
-        file().delete( filesDeleted as File[] )
+        fileBean().delete( filesDeleted as File[] )
 
         if ( cleanEmptyDirectories )
         {
-            List<File> directoriesDeleted = ( file().recurse( sourceDirectory, [ type : FileType.DIRECTORIES ], {} ) + sourceDirectory ).
+            List<File> directoriesDeleted = ( fileBean().recurse( sourceDirectory, [ type : FileType.DIRECTORIES ], {} ) + sourceDirectory ).
                                             findAll{ File f -> assert f.directory
-                                                               file().directorySize( f ) == 0 } /* Not all files could be deleted */
-            file().delete( directoriesDeleted as File[] )
+                                                               fileBean().directorySize( f ) == 0 } /* Not all files could be deleted */
+            fileBean().delete( directoriesDeleted as File[] )
             filesDeleted += directoriesDeleted
         }
 
@@ -856,9 +855,9 @@ class CopyMojo extends BaseGroovyMojo
     {
         if  ( filterExpression )
         {
-            verify().file( files as File[] )
+            verifyBean().file( files as File[] )
 
-            String           expression    = verify().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
+            String           expression    = verifyBean().notNullOrEmpty( FILTERS[ filterExpression ] ?: filterExpression )
             Object           o             = eval( expression, Object, groovyConfig, 'files', files, 'file', files ? files.first() : null )
             Collection<File> filesIncluded = (( o instanceof File       ) ? [ ( File ) o ]            :
                                               ( o instanceof Collection ) ? (( Collection<File> ) o ) :
@@ -871,7 +870,7 @@ class CopyMojo extends BaseGroovyMojo
 
             if ( verbose )
             {
-                log.info( "Files left after applying <filter>:${ constants().CRLF }${ stars( filesIncluded ) }" )
+                log.info( "Files left after applying <filter>:${ constantsBean().CRLF }${ stars( filesIncluded ) }" )
             }
 
             return filesIncluded as List
@@ -904,7 +903,7 @@ class CopyMojo extends BaseGroovyMojo
 
             // noinspection GroovyAssignmentToMethodParameter
             files = ( filesSet.size() < files.size() ? filesSet as List /* Duplicates found */ : files )
-            if ( ! isClean ){ verify().file( files as File[] )}
+            if ( ! isClean ){ verifyBean().file( files as File[] )}
 
             eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null, 'time', time )
         }

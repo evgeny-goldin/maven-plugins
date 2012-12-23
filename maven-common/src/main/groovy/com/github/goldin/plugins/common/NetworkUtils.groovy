@@ -1,7 +1,7 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.gcommons.GCommons
+
 import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Requires
 
@@ -17,7 +17,7 @@ class NetworkUtils
     @Requires({ remoteHost && commands })
     static void sshexec( String remoteHost, List<String> commands, boolean verbose )
     {
-        final data    = net().parseNetworkPath( remoteHost )
+        final data    = netBean().parseNetworkPath( remoteHost )
         final command = [ "cd $data.directory", *commands ].join( '; ' )
         assert 'scp' == data.protocol
 
@@ -55,8 +55,8 @@ class NetworkUtils
                                String  httpUrl,
                                boolean verbose )
     {
-        file().mkdirs( parentDirectory )
-        assert net().isHttp( httpUrl )
+        fileBean().mkdirs( parentDirectory )
+        assert netBean().isHttp( httpUrl )
 
         String fileName  = httpUrl.substring( httpUrl.lastIndexOf( '/' ) + 1 )
         File   localFile = new File( parentDirectory, fileName )
@@ -65,7 +65,7 @@ class NetworkUtils
 
         localFile.withOutputStream { OutputStream os ->  httpUrl.toURL().eachByte( 10240 ) { byte[] buffer, int bytes -> os.write( buffer, 0, bytes ) }}
 
-        verify().file( localFile )
+        verifyBean().file( localFile )
         if ( verbose ) { log.info( "[$httpUrl] downloaded to [$localFile.canonicalPath]" )}
         localFile
     }
@@ -99,33 +99,33 @@ class NetworkUtils
                          boolean      failIfNotFound )
     {
         assert remotePaths
-        verify().notNullOrEmpty( *remotePaths )
-        verify().directory( directory )
+        verifyBean().notNullOrEmpty( remotePaths )
+        verifyBean().directory( directory )
+
+        final files = fileBean().files( directory, includes, excludes, true, false, failIfNotFound )
 
         for ( remotePath in remotePaths )
         {
-            assert net().isNet( remotePath )
+            assert netBean().isNet( remotePath )
 
-            if ( net().isHttp( remotePath ))
+            if ( netBean().isHttp( remotePath ))
             {
                 throw new MojoExecutionException( 'HTTP upload is not implemented yet, please vote for http://evgeny-goldin.org/youtrack/issue/pl-312' )
             }
 
-            for ( file in GCommons.file().files( directory, includes, excludes, true, false, failIfNotFound ))
+            for ( file in files )
             {
-                final destinationPath = preservePath ? "$remotePath${ file.canonicalPath - directory.canonicalPath }" :
-                                                       remotePath;
-                if ( net().isScp( destinationPath ))
+                if ( netBean().isScp( remotePath ))
                 {
-                    scpUpload( file, destinationPath, verbose )
+                    scpUpload( file, remotePath, verbose )
                 }
-                else if ( net().isFtp( destinationPath ))
+                else if ( netBean().isFtp( remotePath ))
                 {
-                    ftpUpload( file, destinationPath, verbose )
+                    ftpUpload( file, remotePath, verbose )
                 }
                 else
                 {
-                    throw new MojoExecutionException( "Unsupported remote path [$destinationPath]" )
+                    throw new MojoExecutionException( "Unsupported remote path [$remotePath]" )
                 }
             }
         }
@@ -144,9 +144,9 @@ class NetworkUtils
                                     String  remotePath,
                                     boolean verbose )
     {
-        def data = net().parseNetworkPath( remotePath )
+        def data = netBean().parseNetworkPath( remotePath )
         assert 'ftp' == data.protocol
-        verify().notNullOrEmpty( data.username, data.password, data.host, data.directory )
+        verifyBean().notNullOrEmpty( data.username, data.password, data.host, data.directory )
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
@@ -172,7 +172,7 @@ class NetworkUtils
                               boolean verbose,
                               boolean isDownload )
     {
-        final data = net().parseNetworkPath( remotePath )
+        final data = netBean().parseNetworkPath( remotePath )
         assert 'scp' == data.protocol
 
         /**

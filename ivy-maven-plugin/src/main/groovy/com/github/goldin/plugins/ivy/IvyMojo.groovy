@@ -95,7 +95,7 @@ class IvyMojo extends BaseGroovyMojo
             addIvyResolver( helper )
         }
 
-        ArtifactItem[] dependencies = general().list( this.dependencies, this.dependency ) as ArtifactItem[]
+        ArtifactItem[] dependencies = generalBean().list( this.dependencies, this.dependency ) as ArtifactItem[]
 
         if ( ivy || dependencies )
         {

@@ -34,7 +34,7 @@ class Trigger
 
     Project       project
     Project[]     projects
-    List<Project> projects(){ general().list( projects, project )}
+    List<Project> projects(){ generalBean().list( projects, project )}
 
     boolean escapeQuotes            = true
     boolean silentMode              = false

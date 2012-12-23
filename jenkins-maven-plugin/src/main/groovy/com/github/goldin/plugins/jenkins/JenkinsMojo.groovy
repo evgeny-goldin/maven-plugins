@@ -23,12 +23,12 @@ class JenkinsMojo extends BaseGroovyMojo
 {
     @MojoParameter ( required = true )
     public String jenkinsUrl
-    public String jenkinsUrl() { verify().notNullOrEmpty( this.jenkinsUrl ) }
+    public String jenkinsUrl() { verifyBean().notNullOrEmpty( this.jenkinsUrl ) }
 
 
     @MojoParameter ( required = true )
     public String generationPom
-    public String generationPom() { verify().notNullOrEmpty( this.generationPom ) }
+    public String generationPom() { verifyBean().notNullOrEmpty( this.generationPom ) }
 
 
     @MojoParameter ( required = true, defaultValue = '${project.build.directory}' )
@@ -58,7 +58,7 @@ class JenkinsMojo extends BaseGroovyMojo
     @MojoParameter
     public Job   job
 
-    private List<Job> jobs() { general().list( this.jobs, this.job ) }
+    private List<Job> jobs() { generalBean().list( this.jobs, this.job ) }
 
 
     @Override
@@ -75,7 +75,7 @@ class JenkinsMojo extends BaseGroovyMojo
             log.info( "${ job.toString().padRight( jobNamePad ) }  ==>  ${ configPath }" )
         }
 
-        log.info( "[${ jobsMap.size()}] job${ general().s( jobsMap.size()) } generated in [${ System.currentTimeMillis() - t }] ms" )
+        log.info( "[${ jobsMap.size()}] job${ generalBean().s( jobsMap.size()) } generated in [${ System.currentTimeMillis() - t }] ms" )
     }
 
 
@@ -101,9 +101,9 @@ class JenkinsMojo extends BaseGroovyMojo
             configMarkup = process( configMarkup, configFile, job, jobs, indent, newLine )
         }
 
-        file().mkdirs( file().delete( configFile ).parentFile )
+        fileBean().mkdirs( fileBean().delete( configFile ).parentFile )
         configFile.write( configMarkup.trim(), 'UTF-8' )
-        verify().file( configFile )
+        verifyBean().file( configFile )
     }
 
 
@@ -153,7 +153,7 @@ class JenkinsMojo extends BaseGroovyMojo
                     int index                    = repo.remote.lastIndexOf( svnRepositoryLocalBase )
                     if     ( index < 0 ) { index = repo.remote.lastIndexOf( '/' ) + 1 } // last path chunk
                     assert ( index > 0 )
-                    repo.local = verify().notNullOrEmpty( repo.remote.substring( index ))
+                    repo.local = verifyBean().notNullOrEmpty( repo.remote.substring( index ))
                 }
             }
         }
@@ -274,7 +274,7 @@ class JenkinsMojo extends BaseGroovyMojo
         /**
          * Updating rootNode structure with custom Groovy expression.
          */
-        final rootNode = verify().notNull( new XmlParser().parseText( configMarkup ))
+        final rootNode = verifyBean().notNull( new XmlParser().parseText( configMarkup ))
         for ( expression in expressions )
         {
             eval( expression, null, null, 'config', configMarkup,

@@ -3,7 +3,6 @@ package com.github.goldin.plugins.jenkins.markup
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.jenkins.Job
 import com.github.goldin.plugins.jenkins.beans.DescriptionRow
-import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
 import com.github.goldin.plugins.jenkins.Task
@@ -109,7 +108,7 @@ class DescriptionTableMarkup extends Markup
                     }
             })}
 
-            if ( job.childJobs ){ addRow( 'Child job' + general().s( job.childJobs.size()), {
+            if ( job.childJobs ){ addRow( 'Child job' + generalBean().s( job.childJobs.size()), {
                 job.childJobs.eachWithIndex {
                     Job childJob, int index ->
                     addJobLink( childJob.id )
