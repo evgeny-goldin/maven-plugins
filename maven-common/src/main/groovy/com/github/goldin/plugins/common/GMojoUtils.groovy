@@ -201,7 +201,7 @@ class GMojoUtils
                                     mavenVersion : mavenVersion(),
                                     startTime    : session.startTime,
                                     ant          : new AntBuilder(),
-                                    *:( project.properties + session.userProperties + session.executionProperties )]
+                                    *:( project.properties + session.userProperties + session.systemProperties )]
         groovyBean().eval( expression,
                        resultType,
                        groovyBean().binding( bindingMap, bindingObjects ),
@@ -258,14 +258,13 @@ class GMojoUtils
      * @param verbose    whether property value set is logged or hidden
      * @param padName    number of characters to pad the property name
      */
+    @Requires({ name && ( value != null ) && ( logMessage != null ) && ( padName >= 0 ) })
     static void setProperty( String name, String value, String logMessage = '', boolean verbose = true, int padName = 0 )
     {
-        assert name && ( value != null )
-
         MavenProject project = ThreadLocals.get( MavenProject )
         MavenSession session = ThreadLocals.get( MavenSession )
 
-        [ project.properties, session.executionProperties, session.userProperties ]*.setProperty( name, value )
+        [ project.properties, session.systemProperties, session.userProperties ]*.setProperty( name, value )
 
         log.info( logMessage ?: '>> Maven property ' +
                                 "\${$name}".padRight( padName + 3 ) +

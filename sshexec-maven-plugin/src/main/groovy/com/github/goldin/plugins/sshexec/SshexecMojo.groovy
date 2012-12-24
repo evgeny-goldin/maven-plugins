@@ -1,8 +1,10 @@
 package com.github.goldin.plugins.sshexec
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.plugins.common.NetworkUtils
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import com.github.goldin.plugins.common.NetworkUtils
+import org.apache.maven.plugin.MojoExecutionException
+import org.gcontracts.annotations.Requires
 import org.jfrog.maven.annomojo.annotations.MojoGoal
 import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.jfrog.maven.annomojo.annotations.MojoPhase
@@ -41,7 +43,22 @@ class SshexecMojo extends BaseGroovyMojo
     public String command
 
     @MojoParameter( required = false )
+    public String outputProperty
+
+    @MojoParameter( required = false )
+    public File outputFile
+
+    @MojoParameter( required = false )
+    public String failIfOutput
+
+    @MojoParameter( required = false )
+    public String failIfNoOutput
+
+    @MojoParameter( required = false )
     public String[] commands
+
+    @MojoParameter( required = false )
+    public String commandsShellSeparator = '; '
 
     @MojoParameter( required = false )
     public String commandDelimitersRegex = '\n|,|;'
@@ -64,6 +81,39 @@ class SshexecMojo extends BaseGroovyMojo
     @Override
     void doExecute()
     {
-        NetworkUtils.sshexec( location, commands(), verbose )
+        final startDirectory = netBean().parseNetworkPath( location ).directory
+        final outputFile     = NetworkUtils.sshexec( location,
+                                                     [ "cd '$startDirectory'", *commands() ].join( commandsShellSeparator ),
+                                                     verbose )
+        processOutputFile( outputFile )
+    }
+
+
+    @Requires({ outputFile.file })
+    private void processOutputFile ( File outputFile )
+    {
+        final outputContent = ( failIfOutput || failIfNoOutput || outputProperty ) ? outputFile.getText( 'UTF-8' ) : null
+
+        if ( failIfOutput && outputContent.contains( failIfOutput ))
+        {
+            throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$failIfOutput]" )
+        }
+
+        if ( failIfNoOutput && ( ! outputContent.contains( failIfNoOutput )))
+        {
+            throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$failIfNoOutput]" )
+        }
+
+        if ( outputProperty )
+        {
+            setProperty( outputProperty, outputContent, '', false )
+        }
+
+        if ( this.outputFile )
+        {
+            fileBean().mkdirs( this.outputFile.parentFile )
+            assert outputFile.renameTo( this.outputFile ) ,  \
+                    "Failed to rename [$outputFile.canonicalPath] to [${ this.outputFile.canonicalPath }]"
+        }
     }
 }

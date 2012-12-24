@@ -84,10 +84,10 @@ class PropertiesMojo extends BaseGroovyMojo
                 assert expression
                 assert expression != name, "Property [$name] has a circular definition dependency on itself"
                 String s = generalBean().choose (
-                    project.properties         [ expression ],
-                    session.executionProperties[ expression ],
-                    session.userProperties     [ expression ],
-                    map                        [ expression ],
+                    project.properties      [ expression ],
+                    session.systemProperties[ expression ],
+                    session.userProperties  [ expression ],
+                    map                     [ expression ],
                     System.getProperty( expression ),
                     ( expression.startsWith( 'env.' ) ? System.getenv( expression.substring( 'env.'.size())) : '' ),
                     '' )

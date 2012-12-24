@@ -120,7 +120,7 @@ class AssertMojo extends BaseGroovyMojo
 
             for ( propertyName in line.split())
             {
-                Map    superMap      = project.properties + session.userProperties + session.executionProperties
+                Map    superMap      = project.properties + session.userProperties + session.systemProperties
                 Object propertyValue = superMap[ propertyName ]
 
                 assert ( propertyValue != null ), 'Property ${' + propertyName + '} is undefined!'

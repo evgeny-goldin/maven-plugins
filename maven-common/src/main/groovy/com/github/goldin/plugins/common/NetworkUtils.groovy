@@ -1,8 +1,8 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-
 import org.apache.maven.plugin.MojoExecutionException
+import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
 
@@ -14,12 +14,14 @@ class NetworkUtils
     private NetworkUtils () {}
 
 
-    @Requires({ remoteHost && commands })
-    static void sshexec( String remoteHost, List<String> commands, boolean verbose )
+    @Requires({ remoteHost && command })
+    @Ensures ({ result.file })
+    static File sshexec( String remoteHost, String command, boolean verbose )
     {
         final data    = netBean().parseNetworkPath( remoteHost )
         assert 'scp' == data.protocol
-        final command = [ "cd ${ data.directory }", *commands ].join( '; ' )
+
+        final outputFile = fileBean().tempFile()
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/sshexec.html
@@ -31,12 +33,16 @@ class NetworkUtils
             username    : data.username,
             verbose     : verbose,
             trust       : true,
+            output      : outputFile.canonicalPath,
             failonerror : true ] +
         sshAuthArguments( data.password ) +
         ( data.port ? [ port : data.port ] : [:] )
 
         log.info( "Running sshexec [$command] in [${ data.host }:${ data.directory }]" )
         new AntBuilder().sshexec( arguments )
+
+        if ( ! outputFile.file ) { outputFile.write( '' ) }
+        outputFile
     }
 
 
@@ -146,7 +152,7 @@ class NetworkUtils
                           [ data.directory ]
 
         sshexec( "scp://${ data.username }:${ data.password }@${ data.host }:~",
-                 [ "mkdir -p ${ dirsToCreate.collect{ it.contains( ' ' ) ? "'$it'" : it }.join( ' ' )}" ],
+                 "mkdir -p ${ dirsToCreate.collect{ it.contains( ' ' ) ? "'$it'" : it }.join( ' ' )}",
                  verbose )
     }
 
