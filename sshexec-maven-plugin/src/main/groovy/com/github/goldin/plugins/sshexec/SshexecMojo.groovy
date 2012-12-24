@@ -49,6 +49,9 @@ class SshexecMojo extends BaseGroovyMojo
     public File outputFile
 
     @MojoParameter( required = false )
+    public boolean failOnError = true
+
+    @MojoParameter( required = false )
     public String failIfOutput
 
     @MojoParameter( required = false )
@@ -84,6 +87,7 @@ class SshexecMojo extends BaseGroovyMojo
         final startDirectory = netBean().parseNetworkPath( location ).directory
         final outputFile     = NetworkUtils.sshexec( location,
                                                      [ "cd '$startDirectory'", *commands() ].join( commandsShellSeparator ),
+                                                     failOnError,
                                                      verbose )
         processOutputFile( outputFile )
     }

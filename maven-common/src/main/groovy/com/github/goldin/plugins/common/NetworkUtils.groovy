@@ -16,7 +16,7 @@ class NetworkUtils
 
     @Requires({ remoteHost && command })
     @Ensures ({ result.file })
-    static File sshexec( String remoteHost, String command, boolean verbose )
+    static File sshexec( String remoteHost, String command, boolean failOnError = true, boolean verbose = true )
     {
         final data    = netBean().parseNetworkPath( remoteHost )
         assert 'scp' == data.protocol
@@ -34,7 +34,7 @@ class NetworkUtils
             verbose     : verbose,
             trust       : true,
             output      : outputFile.canonicalPath,
-            failonerror : true ] +
+            failonerror : failOnError ] +
         sshAuthArguments( data.password ) +
         ( data.port ? [ port : data.port ] : [:] )
 
@@ -153,6 +153,7 @@ class NetworkUtils
 
         sshexec( "scp://${ data.username }:${ data.password }@${ data.host }:~",
                  "mkdir -p ${ dirsToCreate.collect{ it.contains( ' ' ) ? "'$it'" : it }.join( ' ' )}",
+                 true,
                  verbose )
     }
 
