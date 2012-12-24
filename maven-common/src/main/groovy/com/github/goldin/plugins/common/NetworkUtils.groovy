@@ -18,8 +18,8 @@ class NetworkUtils
     static void sshexec( String remoteHost, List<String> commands, boolean verbose )
     {
         final data    = netBean().parseNetworkPath( remoteHost )
-        final command = [ "cd $data.directory", *commands ].join( '; ' )
         assert 'scp' == data.protocol
+        final command = [ "cd ${ data.directory }", *commands ].join( '; ' )
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/sshexec.html
@@ -113,11 +113,18 @@ class NetworkUtils
                 throw new MojoExecutionException( 'HTTP upload is not implemented yet, please vote for http://evgeny-goldin.org/youtrack/issue/pl-312' )
             }
 
+            if ( netBean().isScp( remotePath ))
+            {
+                createRemoteDirectories( remotePath,
+                                         preservePath ? files.collect { it.parentFile.canonicalPath - directory.canonicalPath }.grep() : [],
+                                         verbose )
+            }
+
             for ( file in files )
             {
                 if ( netBean().isScp( remotePath ))
                 {
-                    scpUpload( file, remotePath, verbose )
+                    scpUpload( file, remotePath + ( preservePath ? file.parentFile.canonicalPath - directory.canonicalPath : '' ), verbose )
                 }
                 else if ( netBean().isFtp( remotePath ))
                 {
@@ -129,6 +136,19 @@ class NetworkUtils
                 }
             }
         }
+    }
+
+
+    @Requires({ remotePath && ( directories != null ) })
+    static void createRemoteDirectories( String remotePath, List<String> directories, boolean verbose )
+    {
+        final data         = netBean().parseNetworkPath( remotePath )
+        final dirsToCreate = directories ? directories.collect { data.directory + ( data.directory.endsWith( '/' ) || it.startsWith( '/' ) ? it : "/$it" ) } :
+                                           [ data.directory ]
+
+        sshexec( "scp://${ data.username }:${ data.password }@${ data.host }:~",
+                 [ "mkdir -p ${ dirsToCreate.collect{ it.contains( ' ' ) ? "'$it'" : it }.join( ' ' )}" ],
+                 verbose )
     }
 
 
