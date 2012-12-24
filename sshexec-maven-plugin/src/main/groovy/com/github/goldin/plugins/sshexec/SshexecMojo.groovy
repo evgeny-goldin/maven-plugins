@@ -94,14 +94,26 @@ class SshexecMojo extends BaseGroovyMojo
     {
         final outputContent = ( failIfOutput || failIfNoOutput || outputProperty ) ? outputFile.getText( 'UTF-8' ) : null
 
-        if ( failIfOutput && outputContent.contains( failIfOutput ))
+        if ( failIfOutput )
         {
-            throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$failIfOutput]" )
+            for ( badOutput in failIfOutput.tokenize( '|' ))
+            {
+                if ( outputContent.contains( badOutput ))
+                {
+                    throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$badOutput]" )
+                }
+            }
         }
 
-        if ( failIfNoOutput && ( ! outputContent.contains( failIfNoOutput )))
+        if ( failIfNoOutput )
         {
-            throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$failIfNoOutput]" )
+            for ( goodOutput in failIfNoOutput.tokenize( '|' ))
+            {
+                if ( ! outputContent.contains( goodOutput ))
+                {
+                    throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$goodOutput]" )
+                }
+            }
         }
 
         if ( outputProperty )
