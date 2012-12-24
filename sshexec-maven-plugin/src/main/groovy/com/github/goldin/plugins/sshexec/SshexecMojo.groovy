@@ -34,7 +34,7 @@ class SshexecMojo extends BaseGroovyMojo
     public boolean verbose = false
 
     @MojoParameter( required = false )
-    public boolean echoPwd = true
+    public boolean echoPwd = false
 
     @MojoParameter( required = false )
     public boolean echoCommands = false
