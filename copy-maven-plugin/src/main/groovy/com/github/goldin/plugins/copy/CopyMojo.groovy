@@ -514,7 +514,8 @@ class CopyMojo extends BaseGroovyMojo
             {
                 if ( resource.mkdir )
                 {
-                    filesToProcess << mkdir( path, verbose )
+                    final directory = mkdir( path, verbose )
+                    if ( directory ){ filesToProcess << directory } // null when remote directory created
                 }
 
                 File targetPath = new File( verifyBean().notNullOrEmpty( path ))
@@ -763,27 +764,34 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Creates the directory specified.
      *
-     * @param path    path to directory to create
+     * @param path    path to directory to create, can be remote resource
      * @param verbose verbose logging
      *
-     * @return target path created
+     * @return target path created or {@code null} in case of remote resource
      */
+    @Requires({ path })
     private File mkdir( String path, boolean verbose )
     {
-        assert ( path && ! ( netBean().isNet( path ))), "<mkdir> doesn't work with remote path [$path]"
-
-        final directory = new File( path )
-
-        if ( directory.directory )
+        if ( netBean().isNet( path ))
         {
-            if ( verbose ){ log.info( "Directory [$directory.canonicalPath] already exists" )}
-            return directory
+            NetworkUtils.createRemoteDirectories( path, [], verbose )
+            null
         }
+        else
+        {
+            final directory = new File( path )
 
-        fileBean().mkdirs( directory )
-        if ( verbose ){ log.info( "Directory [$directory.canonicalPath] created" )}
+            if ( directory.directory )
+            {
+                if ( verbose ){ log.info( "Directory [$directory.canonicalPath] already exists" )}
+                return directory
+            }
 
-        verifyBean().directory( directory )
+            fileBean().mkdirs( directory )
+            if ( verbose ){ log.info( "Directory [$directory.canonicalPath] created" )}
+
+            verifyBean().directory( directory )
+        }
     }
 
 
