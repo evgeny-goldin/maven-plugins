@@ -35,10 +35,8 @@ class NetworkUtils
         sshAuthArguments( data.password ) +
         ( data.port ? [ port : data.port ] : [:] )
 
-        final t = System.currentTimeMillis()
-        log.info( "==> Running sshexec [$command] in [${ data.host }:${ data.directory }]" )
+        log.info( "Running sshexec [$command] in [${ data.host }:${ data.directory }]" )
         new AntBuilder().sshexec( arguments )
-        log.info( "==> Sshexec [$command] run in [${ data.host }:${ data.directory }] (${ System.currentTimeMillis() - t } ms)" )
     }
 
 
@@ -194,12 +192,13 @@ class NetworkUtils
         final data = netBean().parseNetworkPath( remotePath )
         assert 'scp' == data.protocol
 
+        final localDestination  = file.canonicalPath
+        final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
+
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
          */
 
-        final localDestination  = file.canonicalPath
-        final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
         final Map<String, String> arguments = [
             file                 : isDownload ? remoteDestination : localDestination,
             todir                : isDownload ? localDestination  : remoteDestination,
@@ -209,6 +208,9 @@ class NetworkUtils
             trust                : true ] +
             sshAuthArguments( data.password ) +
             ( data.port ? [ port : data.port ] : [:] )
+
+        if ( isDownload ){ log.info( "Downloading [scp://${ data.host }:${ data.directory }] to [$localDestination]" )}
+        else             { log.info( "Uploading [$localDestination] to [scp://${ data.host }:${ data.directory }]"   )}
 
         new AntBuilder().scp( arguments )
     }
