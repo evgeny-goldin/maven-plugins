@@ -37,10 +37,6 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @MojoParameter ( required = true, expression = '${project.basedir}' )
     public File basedir
 
-    @MojoParameter ( required = true, expression = '${project.build.directory}' )
-    public    File buildDirectory
-    protected File buildDirectory() { fileBean().mkdirs( this.buildDirectory ) }
-
     @MojoParameter ( required = true, expression = '${project.build.outputDirectory}' )
     public    File outputDirectory
     protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }

@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MojoExecutionException
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -18,8 +19,8 @@ class NetworkUtils
     @Ensures ({ result.file })
     static File sshexec( String remoteHost, String command, boolean failOnError = true, boolean verbose = true )
     {
-        final data    = netBean().parseNetworkPath( remoteHost )
-        assert 'scp' == data.protocol
+        final pathData = netBean().parseNetworkPath( remoteHost )
+        assert 'scp'  == pathData.protocol
 
         final outputFile = fileBean().tempFile()
 
@@ -27,18 +28,17 @@ class NetworkUtils
          * http://evgeny-goldin.org/javadoc/ant/Tasks/sshexec.html
          */
 
-        final Map<String, String> arguments = [
+        final Map<String, ?> arguments = grepMap(( Map<String,?> ) [
             command     : command,
-            host        : data.host,
-            username    : data.username,
+            host        : pathData.host,
+            port        : pathData.port,
+            username    : pathData.username,
             verbose     : verbose,
             trust       : true,
             output      : outputFile.canonicalPath,
-            failonerror : failOnError ] +
-        sshAuthArguments( data.password ) +
-        ( data.port ? [ port : data.port ] : [:] )
+            failonerror : failOnError ] + sshAuthArguments( pathData.password ))
 
-        log.info( "Running sshexec [$command] in [${ data.host }:${ data.directory }]" )
+        log.info( "Running sshexec [$command] in [${ pathData.host }:${ pathData.directory }]" )
         new AntBuilder().sshexec( arguments )
 
         if ( ! outputFile.file ) { outputFile.write( '' ) }
@@ -144,14 +144,14 @@ class NetworkUtils
     @Requires({ remotePath && ( directories != null ) })
     static void createRemoteDirectories( String remotePath, List<String> directories, boolean verbose )
     {
-        final  data = netBean().parseNetworkPath( remotePath )
-        assert data.protocol == 'scp', "<mkdir> only works for remote 'scp' resources, [$remotePath] is not supported"
+        final  pathData = netBean().parseNetworkPath( remotePath )
+        assert pathData.protocol == 'scp', "<mkdir> only works for remote 'scp' resources, [$remotePath] is not supported"
 
         final dirsToCreate =
-            directories ? directories.collect { data.directory + ( data.directory.endsWith( '/' ) || it.startsWith( '/' ) ? it : "/$it" ) } :
-                          [ data.directory ]
+            directories ? directories.collect { pathData.directory + ( pathData.directory.endsWith( '/' ) || it.startsWith( '/' ) ? it : "/$it" ) } :
+                          [ pathData.directory ]
 
-        sshexec( "scp://${ data.username }:${ data.password }@${ data.host }:~",
+        sshexec( "scp://${ pathData.username }:${ pathData.password }@${ pathData.host }:~",
                  "mkdir -p ${ dirsToCreate.collect{ it.contains( ' ' ) ? "'$it'" : it }.join( ' ' )}",
                  true,
                  verbose )
@@ -168,18 +168,18 @@ class NetworkUtils
     @Requires({ file.file && remotePath })
     private static void ftpUpload ( File file, String remotePath, boolean verbose )
     {
-        def data = netBean().parseNetworkPath( remotePath )
-        assert 'ftp' == data.protocol
-        verifyBean().notNullOrEmpty( data.username, data.password, data.host, data.directory )
+        def pathData  = netBean().parseNetworkPath( remotePath )
+        assert 'ftp' == pathData.protocol
+        verifyBean().notNullOrEmpty( pathData.username, pathData.password, pathData.host, pathData.directory )
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/ftp.html
          */
         new AntBuilder().ftp( action    : 'put',
-                              server    : data.host,
-                              userid    : data.username,
-                              password  : data.password,
-                              remotedir : data.directory,
+                              server    : pathData.host,
+                              userid    : pathData.username,
+                              password  : pathData.password,
+                              remotedir : pathData.directory,
                               verbose   : verbose,
                               passive   : true,
                               binary    : true )
@@ -196,29 +196,69 @@ class NetworkUtils
                               boolean verbose,
                               boolean isDownload )
     {
-        final data = netBean().parseNetworkPath( remotePath )
-        assert 'scp' == data.protocol
-
-        final localDestination  = file.canonicalPath
-        final remoteDestination = "${ data.username }@${ data.host }:${ data.directory }"
+        final pathData = netBean().parseNetworkPath( remotePath )
+        assert 'scp'  == pathData.protocol
 
         /**
          * http://evgeny-goldin.org/javadoc/ant/Tasks/scp.html
          */
 
-        final Map<String, String> arguments = [
+        final localDestination  = file.canonicalPath
+        final authMap           = sshAuthArguments( pathData.password )
+        final remoteDestination = "${ authMap.username ?: pathData.username }${ authMap.password ? ':' + authMap.password : '' }@${ pathData.host }:${ pathData.directory }"
+
+        final Map<String,?> arguments = grepMap(( Map<String,?> ) [
             file                 : isDownload ? remoteDestination : localDestination,
             todir                : isDownload ? localDestination  : remoteDestination,
+            port                 : pathData.port,
             verbose              : verbose,
             sftp                 : true,
             preserveLastModified : true,
-            trust                : true ] +
-            sshAuthArguments( data.password ) +
-            ( data.port ? [ port : data.port ] : [:] )
+            trust                : true ] + authMap )
 
-        if ( isDownload ){ log.info( "Downloading [scp://${ data.host }:${ data.directory }] to [$localDestination]" )}
-        else             { log.info( "Uploading [$localDestination] to [scp://${ data.host }:${ data.directory }]"   )}
+        if ( isDownload ){ log.info( "Downloading [scp://${ pathData.host }:${ pathData.directory }] to [$localDestination]" )}
+        else             { log.info( "Uploading [$localDestination] to [scp://${ pathData.host }:${ pathData.directory }]"   )}
 
         new AntBuilder().scp( arguments )
+    }
+
+
+    /**
+     * Retrieves a {@code Map} of arguments to be used for ssh-based authentication.
+     *
+     * @param authData data to use for authentication,
+     *        can be either a password, a keyfile path, or a combination of "keyfile___passphrase".
+     * @return {@code Map} of arguments to be used for ssh-based authentication
+     */
+    @Requires({ authData })
+    @Ensures ({ result })
+    private static Map<String,?> sshAuthArguments( String authData )
+    {
+        if ( authData == '<settings>' )
+        {   // http://maven.apache.org/settings.html
+            final  server = ThreadLocals.get( MavenSession ).settings.servers.find { it.username || it.privateKey }
+            assert server, "No 'settings.xml' server contains a username or a private key"
+            return grepMap ([ username   : server.username,
+                              password   : server.password,
+                              keyfile    : server.privateKey,
+                              passphrase : server.passphrase ])
+        }
+
+        if ( new File( authData ).file )
+        {
+            return [ keyfile : authData ]
+        }
+
+        if ( authData.contains( '___' ) && ( ! authData.with { startsWith( '___' ) || endsWith( '___' ) } ))
+        {
+            def ( String keyfile, String passphrase ) = authData.findAll( /^(.+?)___(.+?)$/ ){ it[ 1, 2 ] }[ 0 ]
+
+            if ( new File( keyfile ).file )
+            {
+                return [ keyfile : keyfile, passphrase : passphrase ]
+            }
+        }
+
+        [ password : authData ]
     }
 }

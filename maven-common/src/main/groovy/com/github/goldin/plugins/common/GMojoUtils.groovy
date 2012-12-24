@@ -663,35 +663,12 @@ class GMojoUtils
           replace( '"', '&quot;' )
     }
 
-
     /**
-     * Retrieves a {@code Map} of arguments to be used for ssh-based authentication.
-     *
-     * @param authData data to use for authentication,
-     *        can be either a password, a keyfile path, or a combination of "keyfile___passphrase".
-     * @return {@code Map} of arguments to be used for ssh-based authentication
+     * Removes entries with {@code null} values from the {@code Map} specified.
      */
-    @Requires({ authData })
-    @Ensures ({ result })
-    static Map<String, String> sshAuthArguments( String authData )
-    {
-        if ( new File( authData ).file )
-        {
-            return [ keyfile : authData ]
-        }
-
-        if ( authData.contains( '___' ) && ( ! authData.with { startsWith( '___' ) || endsWith( '___' ) } ))
-        {
-            def ( String keyfile, String passphrase ) = authData.findAll( /^(.+?)___(.+?)$/ ){ it[ 1, 2 ] }[ 0 ]
-
-            if ( new File( keyfile ).file )
-            {
-                return [ keyfile : keyfile, passphrase : passphrase ]
-            }
-        }
-
-        [ password : authData ]
-    }
+    @Requires({ map    != null })
+    @Ensures ({ result != null })
+    static Map<String,?> grepMap( Map<String,?> map ){ map.findAll { String key, Object value -> ( value != null )}}
 
 
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
