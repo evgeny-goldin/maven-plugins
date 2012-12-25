@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.sshexec
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import java.util.regex.Pattern
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.NetworkUtils
 import org.apache.maven.plugin.MojoExecutionException
@@ -96,28 +97,16 @@ class SshexecMojo extends BaseGroovyMojo
     @Requires({ outputFile.file })
     private void processOutputFile ( File outputFile )
     {
-        final outputContent = ( failIfOutput || failIfNoOutput || outputProperty ) ? outputFile.getText( 'UTF-8' ) : null
+        final outputContent = outputFile.getText( 'UTF-8' )
 
-        if ( failIfOutput )
+        if ( isMatch( outputContent, failIfOutput, false ))
         {
-            for ( badOutput in failIfOutput.tokenize( '|' ))
-            {
-                if ( outputContent.contains( badOutput ))
-                {
-                    throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$badOutput]" )
-                }
-            }
+            throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$failIfOutput]" )
         }
 
-        if ( failIfNoOutput )
+        if ( ! isMatch( outputContent, failIfNoOutput, true ))
         {
-            for ( goodOutput in failIfNoOutput.tokenize( '|' ))
-            {
-                if ( ! outputContent.contains( goodOutput ))
-                {
-                    throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$goodOutput]" )
-                }
-            }
+            throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$failIfNoOutput]" )
         }
 
         if ( outputProperty )
@@ -129,7 +118,26 @@ class SshexecMojo extends BaseGroovyMojo
         {
             fileBean().mkdirs( this.outputFile.parentFile )
             assert outputFile.renameTo( this.outputFile ) ,  \
-                    "Failed to rename [$outputFile.canonicalPath] to [${ this.outputFile.canonicalPath }]"
+                   "Failed to rename [$outputFile.canonicalPath] to [${ this.outputFile.canonicalPath }]"
+        }
+
+        fileBean().delete( outputFile )
+    }
+
+
+    @Requires({ text != null })
+    private boolean isMatch( String text, String matcher, boolean defaultValue )
+    {
+        if ( ! matcher ) { return defaultValue }
+
+        if (( matcher.length() > 2 ) && matcher.with{ startsWith( '/' ) && endsWith( '/' ) })
+        {   // Matcher is "/regex pattern/"
+            final pattern = verifyBean().notNullOrEmpty( matcher.substring( 1, matcher.length() - 1 ))
+            Pattern.compile( pattern ).matcher( text ).find()
+        }
+        else
+        {   // Matcher is "token1|token2"
+            matcher.tokenize( '|' ).any { String token -> text.contains( token )}
         }
     }
 }
