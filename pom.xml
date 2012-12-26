@@ -110,6 +110,7 @@
         <module>find-maven-plugin</module>
         <module>timestamp-maven-plugin</module>
         <module>properties-maven-plugin</module>
+        <module>silencer-maven-plugin</module>
         <module>sshexec-maven-plugin</module>
         <module>spring-batch-maven-plugin</module>
     </modules>
