@@ -29,33 +29,6 @@
             <version>2.3.0-rc2</version>
         </dependency>
 
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- To occasionally debug CompilerMojo -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-<!--
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.0</version>
-            <exclusions>
-                &lt;!&ndash; Outdated Maven dependencies &ndash;&gt;
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-plugin-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
--->
-
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
@@ -63,64 +36,8 @@
             <version>2.6</version>
             <exclusions>
                 <exclusion>
-                    <!-- Duplicate of "org.ow2.asm:asm:jar:4.0" -->
-                    <groupId>asm</groupId>
-                    <artifactId>asm</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-project</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-model:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-model</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-repository-metadata:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-repository-metadata</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact-manager</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.apache.maven:maven-plugin-api:jar:3.0.4" -->
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-plugin-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.sonatype.sisu:sisu-inject-plexus:jar:2.3.0" -->
-                    <groupId>org.codehaus.plexus</groupId>
-                    <artifactId>plexus-container-default</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "commons-beanutils:commons-beanutils:jar:1.7.0" -->
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Duplicate of "org.codehaus.plexus:plexus-classworlds:jar:2.4" -->
-                    <groupId>classworlds</groupId>
-                    <artifactId>classworlds</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- Not required -->
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging-api</artifactId>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

@@ -4,12 +4,12 @@ import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugins.annotations.Component
+import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoComponent
-import org.jfrog.maven.annomojo.annotations.MojoParameter
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
@@ -19,7 +19,7 @@ import org.sonatype.aether.resolution.ArtifactRequest
 /**
  * Base GroovyMojo class
  */
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
@@ -28,20 +28,20 @@ abstract class BaseGroovyMojo extends GroovyMojo
     protected final boolean isMac     = os.contains( 'mac os' )
 
 
-    @MojoParameter ( required = true, expression = '${project}' )
+    @Parameter ( required = true, defaultValue = '${project}' )
     public MavenProject project
 
-    @MojoParameter ( required = true, expression = '${session}' )
+    @Parameter ( required = true, defaultValue = '${session}' )
     public MavenSession session
 
-    @MojoParameter ( required = true, expression = '${project.basedir}' )
+    @Parameter ( required = true, defaultValue = '${project.basedir}' )
     public File basedir
 
-    @MojoParameter ( required = true, expression = '${project.build.outputDirectory}' )
+    @Parameter ( required = true, defaultValue = '${project.build.outputDirectory}' )
     public    File outputDirectory
     protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
 
-    @MojoParameter
+    @Parameter
     public String  runIf
 
     /**
@@ -51,13 +51,13 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * https://docs.sonatype.org/display/AETHER/Home
      */
 
-    @MojoComponent
+    @Component
     public RepositorySystem repoSystem
 
-    @MojoParameter ( defaultValue = '${repositorySystemSession}', readonly = true )
+    @Parameter ( defaultValue = '${repositorySystemSession}', readonly = true )
     public RepositorySystemSession repoSession
 
-    @MojoParameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
+    @Parameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
     public List<RemoteRepository> remoteRepos
 
 

@@ -1,37 +1,34 @@
 package com.github.goldin.plugins.jenkins
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.jenkins.markup.ConfigMarkup
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
 
 
 /**
  * Plugin that creates Jenkins config files to define new build projects
  */
-@MojoThreadSafe
-@MojoGoal ( 'generate' )
-@MojoPhase ( 'compile' )
-@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo ( name = 'generate', defaultPhase = LifecyclePhase.COMPILE, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class JenkinsMojo extends BaseGroovyMojo
 {
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String jenkinsUrl
     public String jenkinsUrl() { verifyBean().notNullOrEmpty( this.jenkinsUrl ) }
 
 
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String generationPom
     public String generationPom() { verifyBean().notNullOrEmpty( this.generationPom ) }
 
 
-    @MojoParameter ( required = true, defaultValue = '${project.build.directory}' )
+    @Parameter ( required = true, defaultValue = '${project.build.directory}' )
     public File outputDirectory
 
     /**
@@ -40,22 +37,22 @@ class JenkinsMojo extends BaseGroovyMojo
      *              and svnRepositoryLocalBase "svn"
      *              local repo path will be    "svn/trunk/"
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String svnRepositoryLocalBase = 'svn'
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String endOfLine = 'windows'
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean timestamp = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String timestampFormat = 'MMMM dd, yyyy (HH:mm:ss, \'GMT\'Z)'
 
-    @MojoParameter
+    @Parameter
     public Job[] jobs
 
-    @MojoParameter
+    @Parameter
     public Job   job
 
     private List<Job> jobs() { generalBean().list( this.jobs, this.job ) }

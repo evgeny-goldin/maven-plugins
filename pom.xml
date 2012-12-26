@@ -17,6 +17,7 @@
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.oss%22%20AND%20a%3A%22oss-parent%22 -->
         <version>7</version>
     </parent>
 
@@ -64,9 +65,6 @@
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.gmaven%22%20AND%20a%3A%22gmaven%22 -->
         <gmaven-version>1.5</gmaven-version>
-
-        <!-- http://repo.jfrog.org/artifactory/repo/org/jfrog/maven/annomojo/maven-plugin-anno/ -->
-        <annomojo-version>1.4.1</annomojo-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework%22%20AND%20a%3A%22spring-core%22 -->
         <spring-version>3.2.0.RELEASE</spring-version>
@@ -153,52 +151,15 @@
             <plugins>
 
                 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-                <!-- Configuring default compilation options                                       -->
-                <!-- http://maven.apache.org/plugins/maven-compiler-plugin/compile-mojo.html       -->
-                <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/ -->
+                <!-- Plugins descriptors generation                                                -->
+                <!-- http://maven.apache.org/plugin-tools/maven-plugin-plugin/descriptor-mojo.html -->
                 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-compiler-plugin%22 -->
-                    <version>3.0</version>
-                    <configuration>
-                        <source>${java-version}</source>
-                        <target>${java-version}</target>
-                        <compilerArgument>-Xlint:none</compilerArgument>
-                        <encoding>UTF-8</encoding>
-                        <showDeprecation>true</showDeprecation>
-                        <showWarnings>true</showWarnings>
-                    </configuration>
-                </plugin>
-
-                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-                <!-- AnnoMojo: http://wiki.jfrog.org/confluence/display/OSS/Maven+Anno+Mojo      -->
-                <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-plugin-plugin/ -->
-                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
                     <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-plugin-plugin%22 -->
                     <version>3.2</version>
-                    <dependencies>
-                        <dependency>
-                          <groupId>org.apache.maven.plugin-tools</groupId>
-                          <artifactId>maven-plugin-tools-api</artifactId>
-                          <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugin-tools%22%20AND%20a%3A%22maven-plugin-tools-api%22 -->
-                          <version>3.2</version>
-                        </dependency>
-                        <dependency>
-                        <!-- http://evgeny-goldin.org/youtrack/issue/pl-632 -->
-                        <!-- http://search.maven.org/#search|ga|1|maven-plugin-anno -->
-                            <groupId>br.com.ingenieux.maven.annomojo</groupId>
-                            <artifactId>org.jfrog.maven.maven-plugin-tools-anno</artifactId>
-                            <version>${annomojo-version}</version>
-                            <scope>runtime</scope>
-                        </dependency>
-                    </dependencies>
                 </plugin>
 
                 <!-- ~~~~~~~~~~~~~ -->
@@ -344,7 +305,7 @@
                     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     <execution>
                         <id>compile-groovy</id>
-                        <phase>compile</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>

@@ -20,6 +20,30 @@
         <relativePath>..</relativePath>
     </parent>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
+                <executions>
+                    <execution>
+                        <id>compile-java-ftp</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <source>${java-version}</source>
+                            <target>${java-version}</target>
+                            <compilerArgument>-Xlint:none</compilerArgument>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
 
@@ -73,6 +97,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>3.2</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- http://aether.sonatype.org/using-aether-in-maven-plugins.html -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -89,12 +120,11 @@
             <version>${aether-version}</version>
             <scope>compile</scope>
         </dependency>
-        <!-- For debugging purposes only -->
         <dependency>
             <groupId>org.eclipse.aether</groupId>
             <artifactId>aether-impl</artifactId>
             <version>${aether-version}</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.aether</groupId>
@@ -464,23 +494,8 @@
                 <exclusion>
                     <groupId>org.sonatype.sisu</groupId>
                     <artifactId>sisu-guice</artifactId>
-                    <!-- "org.sonatype.sisu:sisu-guice:jar:no_aop:3.1.0:compile" -->
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        <!-- http://www.jfrog.org/sites/mvn-anno-mojo/latest/ -->
-        <!-- New releases: http://goo.gl/SISr5                -->
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-        <dependency>
-        <!-- http://evgeny-goldin.org/youtrack/issue/pl-632 -->
-            <groupId>br.com.ingenieux.maven.annomojo</groupId>
-            <artifactId>org.jfrog.maven.maven-plugin-anno</artifactId>
-            <version>${annomojo-version}</version>
-            <scope>compile</scope>
-        </dependency>
-
     </dependencies>
 </project>

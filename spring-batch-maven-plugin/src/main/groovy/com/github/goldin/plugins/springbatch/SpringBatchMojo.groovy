@@ -1,31 +1,27 @@
 package com.github.goldin.plugins.springbatch
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.plugin.MojoFailureException
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
 import org.springframework.core.io.ClassPathResource
 
 
 /**
  * Spring Batch invoker
  */
-@MojoThreadSafe
-@MojoGoal  ( 'run' )
-@MojoPhase ( 'install' )
-@SuppressWarnings( [ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'run', defaultPhase = LifecyclePhase.INSTALL, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'UnnecessaryPublicModifier', 'PublicInstanceField', 'NonFinalPublicField' ])
 class SpringBatchMojo extends BaseGroovyMojo
 {
    /**
     * Comma-separated Spring context files
     */
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String configLocations
     public String configLocations(){ verifyBean().notNullOrEmpty( this.configLocations ) }
 
@@ -33,7 +29,7 @@ class SpringBatchMojo extends BaseGroovyMojo
     /**
      * SpringBatch job name
      */
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String jobId
     public String jobId(){ verifyBean().notNullOrEmpty( this.jobId )}
 
@@ -44,7 +40,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      *
      * @see org.springframework.batch.core.launch.support.CommandLineJobRunner#main(String[])
      */
-    @MojoParameter
+    @Parameter
     public String params
     public String params(){ this.params }
 
@@ -54,7 +50,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      *
      * @see org.springframework.batch.core.launch.support.CommandLineJobRunner#main(String[])
      */
-    @MojoParameter
+    @Parameter
     public String opts
     public String opts(){ this.opts }
 
@@ -68,7 +64,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      *     odWriter.commit.interval = 10000
      * </properties>
      */
-    @MojoParameter
+    @Parameter
     public String props
     public String props(){ this.props }
 
@@ -77,7 +73,7 @@ class SpringBatchMojo extends BaseGroovyMojo
      * Comma-separated list of integer values for "Ok" exit codes.
      * If job's exit code is not on the list - the build will fail.
      */
-    @MojoParameter
+    @Parameter
     public String failIfExitCodeOtherThan
     public String failIfExitCodeOtherThan(){ this.failIfExitCodeOtherThan }
 

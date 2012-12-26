@@ -1,30 +1,27 @@
 package com.github.goldin.plugins.timestamp
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 
 
 /**
  * Timestamp properties creation MOJO
  */
-@MojoThreadSafe
-@MojoGoal( 'timestamp' )
-@MojoPhase( 'validate' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'timestamp', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class TimestampMojo extends BaseGroovyMojo
 {
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String time
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public Timestamp[] timestamps
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  Timestamp timestamp
     private List<Timestamp> timestamps() { generalBean().list( this.timestamps, this.timestamp ) }
 

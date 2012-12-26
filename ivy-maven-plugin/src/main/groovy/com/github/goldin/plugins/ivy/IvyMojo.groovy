@@ -1,18 +1,16 @@
 package com.github.goldin.plugins.ivy
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.ivy.Ivy
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugins.annotations.ResolutionScope
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
 import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 
 
@@ -20,59 +18,56 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
  * Plugin that delegates artifacts resolving to Ivy, adds dependencies resolved to the Maven scope or
  * copies them to local directory.
  */
-@MojoThreadSafe
-@MojoGoal ( 'ivy' )
-@MojoPhase ( 'initialize' )
-@MojoRequiresDependencyResolution( 'test' )
+@Mojo ( name = 'ivy', defaultPhase = LifecyclePhase.INITIALIZE, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
 class IvyMojo extends BaseGroovyMojo
 {
     /**
      * Whether Ivy resolver should be added to Maven for subsequent resolutions of Ivy artifacts by other plugins.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean addIvyResolver = false
 
    /**
     * Ivy settings file: http://ant.apache.org/ivy/history/latest-milestone/settings.html.
     */
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String ivyconf
 
     /**
      * Ivy file: http://ant.apache.org/ivy/history/latest-milestone/ivyfile.html.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String ivy
 
     /**
      * Single Maven-style {@code <dependency>}.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public ArtifactItem dependency
 
     /**
      * Multiple Maven-style {@code <dependencies>}.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public ArtifactItem[] dependencies
 
     /**
      * Comma-separated Maven scope to add the dependencies resolved to: "compile", "compile, runtime", "test", etc.
      * Similar to Ivy's <cachepath>: http://ant.apache.org/ivy/history/latest-milestone/use/cachepath.html.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String scope
 
     /**
      * Directory to copy resolved dependencies to.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public File dir
 
     /**
      * Whether plugin should log verbosely (verbose = true), regularly (verbose is null) or not at all (verbose = false).
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public Boolean verbose
     private boolean logVerbosely(){ ( verbose ) }
     private boolean logNormally (){ ( verbose ) || ( verbose == null ) }
@@ -80,7 +75,7 @@ class IvyMojo extends BaseGroovyMojo
     /**
      * Whether execution should fail if resolving artifacts doesn't succeed.
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean failOnError = true
 
 

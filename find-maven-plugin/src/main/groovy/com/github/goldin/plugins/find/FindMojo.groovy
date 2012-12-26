@@ -1,36 +1,35 @@
 package com.github.goldin.plugins.find
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.GMojoUtils
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 
 
 /**
  * MOJO that finds the file specified and sets the corresponding property
  */
-@MojoThreadSafe
-@MojoGoal( 'find' )
-@MojoPhase( 'validate' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'find', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class FindMojo extends BaseGroovyMojo
 {
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public String file
 
-    @MojoParameter ( defaultValue = '${project.basedir}', required = false )
+    @Parameter ( defaultValue = '${project.basedir}', required = false )
     public File startDir
 
-    @MojoParameter
+    @Parameter
     public String propertyName
 
-    @MojoParameter
+    @Parameter
     public String sysPropertyName
 
-    @MojoParameter
+    @Parameter
     public boolean failIfNotFound = true
 
 

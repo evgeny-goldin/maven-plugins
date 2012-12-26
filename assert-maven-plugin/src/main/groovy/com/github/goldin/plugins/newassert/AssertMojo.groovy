@@ -1,21 +1,18 @@
 package com.github.goldin.plugins.newassert
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 
 
 /**
  * Asserts invoker
  */
-@MojoThreadSafe
-@MojoGoal  ( 'assert' )
-@MojoPhase ( 'install' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'assert', defaultPhase = LifecyclePhase.INSTALL, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class AssertMojo extends BaseGroovyMojo
 {
    /**
@@ -23,7 +20,7 @@ class AssertMojo extends BaseGroovyMojo
     * Each line - name of the Maven property to verify for existence.
     * Verifies each property is defined and logs its value.
     */
-    @MojoParameter
+    @Parameter
     public String assertProperties
 
 
@@ -32,10 +29,10 @@ class AssertMojo extends BaseGroovyMojo
      * Each line - file pattern to match: "path/*.something"
      * Verifies each pattern represents existing files.
      */
-    @MojoParameter
+    @Parameter
     public String assertFiles
 
-    @MojoParameter
+    @Parameter
     public String shouldFailAssertFiles
 
 
@@ -44,10 +41,10 @@ class AssertMojo extends BaseGroovyMojo
     * Each line - two entries, ":"-separated "entry1:entry1"
     * Verifies entries are "equal", comparing files with files, directories with directories
     */
-    @MojoParameter
+    @Parameter
     public String assertEqual
 
-    @MojoParameter
+    @Parameter
     public String shouldFailAssertEqual
 
 
@@ -56,10 +53,10 @@ class AssertMojo extends BaseGroovyMojo
     * Each line - two entries, ":"-separated "entry1:entry1"
     * Verifies entries are "equal", comparing files with files, directories with directories (no checksum check)
     */
-    @MojoParameter
+    @Parameter
     public String assertEqualNoChecksum
 
-    @MojoParameter
+    @Parameter
     public String shouldFailAssertEqualNoChecksum
 
 
@@ -67,14 +64,14 @@ class AssertMojo extends BaseGroovyMojo
     * Multi-line parameter.
     * Each line - Groovy expression verified to evaluate to true.
     */
-    @MojoParameter
+    @Parameter
     public String assertGroovy
 
 
    /**
     * Value to "normalize" CrLf when comparing files
     */
-    @MojoParameter
+    @Parameter
     public String endOfLine
 
 

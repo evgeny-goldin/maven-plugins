@@ -1,70 +1,65 @@
 package com.github.goldin.plugins.sshexec
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import java.util.regex.Pattern
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.NetworkUtils
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
+import java.util.regex.Pattern
 
 
 /**
- * MOJO that executes "sshexec"
- *
- * See
- * http://ant.apache.org/manual/Tasks/sshexec.html
+ * MOJO executing Ant's "sshexec"
  */
-@MojoThreadSafe
-@MojoGoal( 'sshexec' )
-@MojoPhase( 'install' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'sshexec', defaultPhase = LifecyclePhase.INSTALL, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 class SshexecMojo extends BaseGroovyMojo
 {
     /**
-     * Server location in format:
-     * <protocol>://<user>:<password>@<host>:<directory>
+     * Server location in formats:
+     * <protocol>://<user>:<auth>@<host>:<directory>
+     * <protocol>://<user>:<auth>@<host>:<port>:<directory>
      */
-    @MojoParameter( required = true )
+    @Parameter( required = true )
     public String location
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public boolean verbose = false
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public boolean echoPwd = false
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public boolean echoCommands = false
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String command
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String outputProperty
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public File outputFile
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public boolean failOnError = true
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String failIfOutput
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String failIfNoOutput
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String[] commands
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String commandsShellSeparator = '; '
 
-    @MojoParameter( required = false )
+    @Parameter( required = false )
     public String commandDelimitersRegex = '\n|,|;'
 
     /**

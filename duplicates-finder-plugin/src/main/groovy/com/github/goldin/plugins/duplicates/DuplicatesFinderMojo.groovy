@@ -1,16 +1,13 @@
 package com.github.goldin.plugins.duplicates
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoFailureException
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
-
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugins.annotations.ResolutionScope
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -18,11 +15,8 @@ import java.util.zip.ZipFile
 /**
  * A plugin that finds duplicate classes in the scope(s) specified
  */
-@MojoThreadSafe
-@MojoGoal ( 'find-duplicates' )
-@MojoPhase ( 'process-resources' )
-@MojoRequiresDependencyResolution ( 'test' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'find-duplicates', defaultPhase = LifecyclePhase.PROCESS_RESOURCES, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 class DuplicatesFinderMojo extends BaseGroovyMojo
 {
     /**
@@ -31,13 +25,13 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
     private static final Map<File, List<String>> CLASSES_CACHE = [:]
 
 
-    @MojoParameter
+    @Parameter
     public String scopes = 'compile'
 
-    @MojoParameter
+    @Parameter
     public boolean verbose = false
 
-    @MojoParameter
+    @Parameter
     public boolean fail = true
 
 

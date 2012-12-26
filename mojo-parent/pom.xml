@@ -12,7 +12,6 @@
     <version>0.2.6-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
-
     <parent>
         <groupId>com.github.goldin</groupId>
         <artifactId>main.plugins</artifactId>
@@ -24,49 +23,12 @@
     <!-- Parent POM for all MOJO modules -->
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
-    <build>
-        <sourceDirectory>${project.basedir}/src/main/groovy</sourceDirectory>
-
-        <plugins>
-
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-            <!-- Generating Java stubs from Groovy MOJOs -->
-            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>${gmaven-version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-stubs</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generateStubs</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <fileset>
-                                    <directory>${projects.basedir}/src/main/groovy</directory>
-                                    <includes>
-                                        <include>**/*.groovy</include>
-                                    </includes>
-                                </fileset>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-
     <dependencies>
         <dependency>
             <groupId>com.github.goldin</groupId>
             <artifactId>maven-common</artifactId>
-            <scope>compile</scope>
             <version>0.2.6-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

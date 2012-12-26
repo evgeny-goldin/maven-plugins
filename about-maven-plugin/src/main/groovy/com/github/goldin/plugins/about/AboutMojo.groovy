@@ -1,91 +1,86 @@
 package com.github.goldin.plugins.about
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugins.annotations.ResolutionScope
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import org.jfrog.maven.annomojo.annotations.MojoRequiresDependencyResolution
-
 import java.text.SimpleDateFormat
 
 
 /**
  * Updates files specified with "about" build metadata
  */
-@MojoThreadSafe
-@MojoGoal( 'create-about' )
-@MojoPhase( 'package' )
-@MojoRequiresDependencyResolution( 'test' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo ( name = 'create-about', defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class AboutMojo extends BaseGroovyMojo
 {
     public static final String SEPARATOR = '|==============================================================================='
 
-    @MojoParameter
+    @Parameter
     public boolean updateArchives = true
 
-    @MojoParameter
+    @Parameter
     public String  prefix = 'META-INF'
 
-    @MojoParameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
+    @Parameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
     public String  fileName
 
     // http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-dependency-plugin%22
-    @MojoParameter ( defaultValue = '2.6' )
+    @Parameter ( defaultValue = '2.6' )
     public String  mavenDependencyPluginVersion
 
-    @MojoParameter
+    @Parameter
     public String  mavenCommandLine
 
-    @MojoParameter
+    @Parameter
     public boolean dumpSCM    = true
 
-    @MojoParameter
+    @Parameter
     public boolean dumpMaven  = false
 
-    @MojoParameter
+    @Parameter
     public boolean dumpEnv    = false
 
-    @MojoParameter
+    @Parameter
     public boolean dumpSystem = false
 
-    @MojoParameter
+    @Parameter
     public boolean dumpPaths  = false
 
-    @MojoParameter
+    @Parameter
     public boolean dumpDependencies = false
 
-    @MojoParameter
+    @Parameter
     public  String addContent = ''
     private String evaluateAddContent()
     {
         addContent.trim().with { ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
     }
 
-    @MojoParameter
+    @Parameter
     public String  endOfLine   = 'windows'
 
-    @MojoParameter ( defaultValue = '${project.build.directory}' )
+    @Parameter ( defaultValue = '${project.build.directory}' )
     public File    directory
 
-    @MojoParameter
+    @Parameter
     public String  include = '*.jar'
 
-    @MojoParameter
+    @Parameter
     public String  exclude
 
-    @MojoParameter
+    @Parameter
     public boolean failOnError = true
 
-    @MojoParameter
+    @Parameter
     public boolean failIfNotFound = true
 
     private env = System.getenv()

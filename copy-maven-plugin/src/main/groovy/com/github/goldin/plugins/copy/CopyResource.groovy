@@ -6,11 +6,11 @@ import org.apache.maven.model.Resource
 import org.gcontracts.annotations.*
 
 
-
 /**
  * <resource> data container
  */
-@SuppressWarnings( [ 'CloneableWithoutClone', 'StatelessClass' ] )
+@SuppressWarnings([ 'CloneableWithoutClone', 'StatelessClass' ])
+
 final class CopyResource extends Resource implements Cloneable
 {
     /**

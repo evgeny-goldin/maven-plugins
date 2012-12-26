@@ -41,7 +41,7 @@ class Replace
      *         <code>pattern</code> is {@code Pattern.compile( getFrom())} and
      *         <code>replacement</code> is {@code quoteReplacement() ? Matcher.quoteReplacement( getTo()) : getTo()}
      */
-    @SuppressWarnings( [ 'ConfusingTernary', 'TernaryCouldBeElvis', 'UnnecessarySemicolon' ] )
+    @SuppressWarnings([ 'ConfusingTernary', 'TernaryCouldBeElvis', 'UnnecessarySemicolon' ])
     String replace( String data, File file = null )
     {
         //noinspection GroovyConditionalCanBeElvis

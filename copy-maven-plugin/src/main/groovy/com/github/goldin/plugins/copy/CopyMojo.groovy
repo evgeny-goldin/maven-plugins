@@ -1,102 +1,104 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.plugins.common.NetworkUtils
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import com.github.goldin.plugins.common.NetworkUtils
 import com.github.goldin.plugins.common.Replace
 import groovy.io.FileType
 import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Component
+import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugins.annotations.ResolutionScope
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.*
 
 
 /**
  * MOJO copying resources specified.
  */
-@MojoThreadSafe
-@MojoGoal( 'copy' )
-@MojoPhase( 'package' )
-@MojoRequiresDependencyResolution( 'test' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'copy', defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class CopyMojo extends BaseGroovyMojo
 {
    /**
     * Container-injected fields
     */
 
-    @MojoComponent
+    @Component
     public MavenProjectHelper mavenProjectHelper
 
-    @MojoComponent ( role = 'org.apache.maven.shared.filtering.MavenFileFilter', roleHint = 'default' )
+    @Component ( role = MavenFileFilter, hint = 'default' )
     public MavenFileFilter fileFilter
 
     /**
      * User-provided fields
      */
 
-    @MojoParameter
+    @Parameter
     public  CopyManifest manifest = new CopyManifest()
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean skipIdentical = false
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean skipPacked = false
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean skipUnpacked = false
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean stripVersion = false
 
     /**
      * "false" or comma-separated list of default excludes
      * Not active for Net operations
      */
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String  defaultExcludes
     String         defaultExcludes()
     {
         this.defaultExcludes ?:
-        (( [ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
+        (([ '**/.settings/**', '**/.classpath', '**/.project', '**/*.iws', '**/*.iml', '**/*.ipr' ] +
            fileBean().defaultExcludes + ( FileUtils.defaultExcludes as List )) as Set ).sort().join( ',' )
     }
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean verbose = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean filterWithDollarOnly = false
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  String nonFilteredExtensions
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean failIfNotFound = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean failOnError = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean useTrueZipForPack = false
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  boolean useTrueZipForUnpack = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  CopyResource[] resources
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public  CopyResource resource
 
     private List<CopyResource> resources () { generalBean().list( this.resources, this.resource ) }
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public GroovyConfig groovyConfig
 
 

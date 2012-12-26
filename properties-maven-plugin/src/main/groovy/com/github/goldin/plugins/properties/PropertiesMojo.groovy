@@ -1,47 +1,43 @@
 package com.github.goldin.plugins.properties
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
 
 
 /**
  * Creates Maven properties by evaluating a Groovy expression.
  */
-@MojoThreadSafe
-@MojoGoal( 'set-properties' )
-@MojoPhase( 'validate' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'set-properties', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 class PropertiesMojo extends BaseGroovyMojo
 {
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public Property   property
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public Property[] properties
 
     private List<Property> properties() { generalBean().list( this.properties, this.property ) }
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String rawProperties
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public String addDollar
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean normalizePath = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public boolean verbose = true
 
-    @MojoParameter ( required = false )
+    @Parameter ( required = false )
     public GroovyConfig groovyConfig = new GroovyConfig()
 
 

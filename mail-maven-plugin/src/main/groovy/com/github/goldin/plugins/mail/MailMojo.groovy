@@ -1,48 +1,45 @@
 package com.github.goldin.plugins.mail
 
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.jfrog.maven.annomojo.annotations.MojoThreadSafe
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
+import javax.mail.*
+import javax.mail.Message.RecipientType
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
-import org.jfrog.maven.annomojo.annotations.MojoGoal
-import org.jfrog.maven.annomojo.annotations.MojoParameter
-import org.jfrog.maven.annomojo.annotations.MojoPhase
-import javax.mail.*
-import javax.mail.Message.RecipientType
 
 
 /**
  * MOJO that sends mails with attachments
  */
-@MojoThreadSafe
-@MojoGoal( 'send' )
-@MojoPhase( 'install' )
-@SuppressWarnings( [ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ] )
+@Mojo( name = 'send', defaultPhase = LifecyclePhase.INSTALL, threadSafe = true )
+@SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
+
 class MailMojo extends BaseGroovyMojo
 {
-    @MojoParameter
+    @Parameter
     public String smtp = 'specify.your.SMTP.server'
 
-    @MojoParameter
+    @Parameter
     public String from = 'specify@your.mail'
 
-    @MojoParameter ( required = true )
+    @Parameter ( required = true )
     public Map<String, String> mails
 
-    @MojoParameter
+    @Parameter
     public String subject = ''
 
-    @MojoParameter
+    @Parameter
     public String text = ''
 
-    @MojoParameter
+    @Parameter
     public File textFile
 
-    @MojoParameter
+    @Parameter
     public File[] files
 
 
