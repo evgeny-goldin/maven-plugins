@@ -49,6 +49,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * http://www.sonatype.org/aether/
      * http://eclipse.org/aether/
      * https://docs.sonatype.org/display/AETHER/Home
+     * http://aether.sonatype.org/using-aether-in-maven-plugins.html
      */
 
     @Component
