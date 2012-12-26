@@ -28,12 +28,8 @@ class SilencerMavenPluginManager
                PluginContainerException
     {
         final mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
-
-        if ( mojo.class.getDeclaredField( 'log' ))
-        {
-            mojo.log = new SilencerLogger()
-        }
-
+        try { mojo.log = new SilencerLogger() }
+        catch ( Throwable ignored ){}
         mojo
     }
 }
