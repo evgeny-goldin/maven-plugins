@@ -5,6 +5,7 @@ import org.codehaus.plexus.logging.Logger
 
 
 /**
+ * Logger swallowing messages sent to it.
  */
 class SilencerLogger implements Log, Logger
 {
@@ -21,7 +22,7 @@ class SilencerLogger implements Log, Logger
     void debug ( Throwable error ){}
 
     @Override
-    boolean isInfoEnabled ( ){ false }
+    boolean isInfoEnabled (){ false }
 
     @Override
     void info ( CharSequence content ){}
@@ -45,7 +46,7 @@ class SilencerLogger implements Log, Logger
     void warn ( Throwable error ){}
 
     @Override
-    boolean isErrorEnabled ( ){ false }
+    boolean isErrorEnabled (){ false }
 
     @Override
     void error ( CharSequence content ){}
@@ -87,10 +88,10 @@ class SilencerLogger implements Log, Logger
     void fatalError ( String message, Throwable throwable ){}
 
     @Override
-    boolean isFatalErrorEnabled ( ){ return false }
+    boolean isFatalErrorEnabled (){ return false }
 
     @Override
-    int getThreshold ( ){ return 0 }
+    int getThreshold (){ return 0 }
 
     @Override
     void setThreshold ( int threshold ){}

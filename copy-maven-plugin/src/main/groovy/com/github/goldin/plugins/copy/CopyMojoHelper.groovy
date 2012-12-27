@@ -1,22 +1,21 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-
-import org.apache.maven.shared.artifact.filter.collection.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
+import org.apache.maven.shared.artifact.filter.collection.*
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.collection.CollectRequest
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
+import org.sonatype.aether.util.DefaultRepositorySystemSession
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
-
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
@@ -200,10 +199,11 @@ final class CopyMojoHelper
 
         try
         {
-            final request                       = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
-                                                                      mojo.remoteRepos )
-            final previousSelector              = mojo.repoSession.dependencySelector
-            mojo.repoSession.dependencySelector = new ScopeDependencySelector( includeScopes , excludeScopes )
+            final request                  = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
+                                                                 mojo.remoteRepos )
+            final repoSession              = mojo.repoSession
+            final previousSelector         = repoSession.dependencySelector
+            repoSession.dependencySelector = new ScopeDependencySelector( includeScopes, excludeScopes )
 
             if ( verbose )
             {
@@ -211,10 +211,10 @@ final class CopyMojoHelper
                                "include transitive [$includeTransitive], include optional [$includeOptional]" )
             }
 
-            final rootNode                      = mojo.repoSystem.collectDependencies( mojo.repoSession, request ).root
+            final rootNode = mojo.repoSystem.collectDependencies( repoSession, request ).root
             if ( verbose ) { mojo.log.info( "Collecting [$artifact] dependencies: done" ) }
 
-            mojo.repoSession.dependencySelector = previousSelector
+            repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
             {

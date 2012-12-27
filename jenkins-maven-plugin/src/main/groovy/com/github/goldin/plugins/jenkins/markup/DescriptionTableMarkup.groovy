@@ -187,7 +187,7 @@ class DescriptionTableMarkup extends Markup
      * Adds jobs invoked by this job to the table.
      */
     @Requires({ job.invoke.jobs })
-    void addInvokeJobs ( )
+    void addInvokeJobs ()
     {
         addRow( 'Invokes', {
             for ( jobId in job.invoke.jobsSplit )
@@ -204,7 +204,7 @@ class DescriptionTableMarkup extends Markup
      * Adds jobs this job is invoked by to the table.
      */
     @Requires({ job.invokedBy })
-    void addInvokedByJobs ( )
+    void addInvokedByJobs ()
     {
         addRow( 'Invoked by', {
             for ( invokedBy in job.invokedBy )

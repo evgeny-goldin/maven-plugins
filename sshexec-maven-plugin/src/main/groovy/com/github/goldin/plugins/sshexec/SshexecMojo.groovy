@@ -112,7 +112,7 @@ class SshexecMojo extends BaseGroovyMojo
         if ( this.outputFile )
         {
             fileBean().mkdirs( this.outputFile.parentFile )
-            assert outputFile.renameTo( this.outputFile ) ,  \
+            assert outputFile.renameTo( this.outputFile ),  \
                    "Failed to rename [$outputFile.canonicalPath] to [${ this.outputFile.canonicalPath }]"
         }
 

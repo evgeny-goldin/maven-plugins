@@ -104,6 +104,31 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-api</artifactId>
+            <version>${aether-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-util</artifactId>
+            <version>${aether-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-impl</artifactId>
+            <version>${aether-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-connector-wagon</artifactId>
+            <version>${aether-version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- org.apache.maven.shared -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~ -->

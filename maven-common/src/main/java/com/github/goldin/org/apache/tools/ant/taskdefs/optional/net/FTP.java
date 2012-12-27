@@ -513,7 +513,7 @@ public class FTP extends Task {
                                 slowScanAllowed = false;
                             } else if (isIncluded(name)) {
                                 accountForIncludedDir(name,
-                                                      new AntFTPFile(ftp, file, completePath) , fast);
+                                                      new AntFTPFile(ftp, file, completePath), fast);
                             } else {
                                 dirsNotIncluded.addElement(name);
                                 if (fast && couldHoldIncluded(name)) {

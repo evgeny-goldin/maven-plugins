@@ -86,7 +86,7 @@ class IvyHelper
             final md      = DefaultModuleDescriptor.newDefaultInstance( ModuleRevisionId.newInstance( groupId, artifactId + '-caller', 'working' ))
             final module  = ModuleRevisionId.newInstance( groupId, artifactId, version )
             final dd      = new DefaultDependencyDescriptor( md, module, false, false, true )
-            dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier ?: '.*' , type, type ),
+            dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier ?: '.*', type, type ),
                                                            new ExactOrRegexpPatternMatcher(),
                                                            [:] ))
             md.addDependency( dd );
