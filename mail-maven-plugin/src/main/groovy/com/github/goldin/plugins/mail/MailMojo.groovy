@@ -22,25 +22,25 @@ import javax.mail.internet.MimeMultipart
 class MailMojo extends BaseGroovyMojo
 {
     @Parameter
-    public String smtp = 'specify.your.SMTP.server'
+    private String smtp = 'specify.your.SMTP.server'
 
     @Parameter
-    public String from = 'specify@your.mail'
+    private String from = 'specify@your.mail'
 
     @Parameter ( required = true )
-    public Map<String, String> mails
+    private Map<String, String> mails
 
     @Parameter
-    public String subject = ''
+    private String subject = ''
 
     @Parameter
-    public String text = ''
+    private String text = ''
 
     @Parameter
-    public File textFile
+    private File textFile
 
     @Parameter
-    public File[] files
+    private File[] files
 
 
     @Override

@@ -25,63 +25,63 @@ class AboutMojo extends BaseGroovyMojo
     public static final String SEPARATOR = '|==============================================================================='
 
     @Parameter
-    public boolean updateArchives = true
+    private boolean updateArchives = true
 
     @Parameter
-    public String  prefix = 'META-INF'
+    private String  prefix = 'META-INF'
 
     @Parameter ( defaultValue = 'about-${project.groupId}-${project.artifactId}-${project.version}.txt' )
-    public String  fileName
+    private String  fileName
 
     // http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-dependency-plugin%22
     @Parameter ( defaultValue = '2.6' )
-    public String  mavenDependencyPluginVersion
+    private String  mavenDependencyPluginVersion
 
     @Parameter
-    public String  mavenCommandLine
+    private String  mavenCommandLine
 
     @Parameter
-    public boolean dumpSCM    = true
+    private boolean dumpSCM    = true
 
     @Parameter
-    public boolean dumpMaven  = false
+    private boolean dumpMaven  = false
 
     @Parameter
-    public boolean dumpEnv    = false
+    private boolean dumpEnv    = false
 
     @Parameter
-    public boolean dumpSystem = false
+    private boolean dumpSystem = false
 
     @Parameter
-    public boolean dumpPaths  = false
+    private boolean dumpPaths  = false
 
     @Parameter
-    public boolean dumpDependencies = false
+    private boolean dumpDependencies = false
 
     @Parameter
-    public  String addContent = ''
+    private String addContent = ''
     private String evaluateAddContent()
     {
         addContent.trim().with { ( startsWith( '{{' ) && endsWith( '}}' )) ? eval(( String ) delegate, String ) : delegate }
     }
 
     @Parameter
-    public String  endOfLine   = 'windows'
+    private String  endOfLine   = 'windows'
 
     @Parameter ( defaultValue = '${project.build.directory}' )
-    public File    directory
+    private File    directory
 
     @Parameter
-    public String  include = '*.jar'
+    private String  include = '*.jar'
 
     @Parameter
-    public String  exclude
+    private String  exclude
 
     @Parameter
-    public boolean failOnError = true
+    private boolean failOnError = true
 
     @Parameter
-    public boolean failIfNotFound = true
+    private boolean failIfNotFound = true
 
     private env = System.getenv()
 

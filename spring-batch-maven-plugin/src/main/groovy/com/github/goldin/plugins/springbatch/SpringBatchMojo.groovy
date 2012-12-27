@@ -22,16 +22,16 @@ class SpringBatchMojo extends BaseGroovyMojo
     * Comma-separated Spring context files
     */
     @Parameter ( required = true )
-    public String configLocations
-    public String configLocations(){ verifyBean().notNullOrEmpty( this.configLocations ) }
+    private String configLocations
+    private String configLocations(){ verifyBean().notNullOrEmpty( this.configLocations ) }
 
 
     /**
      * SpringBatch job name
      */
     @Parameter ( required = true )
-    public String jobId
-    public String jobId(){ verifyBean().notNullOrEmpty( this.jobId )}
+    private String jobId
+    private String jobId(){ verifyBean().notNullOrEmpty( this.jobId )}
 
 
     /**
@@ -41,8 +41,8 @@ class SpringBatchMojo extends BaseGroovyMojo
      * @see org.springframework.batch.core.launch.support.CommandLineJobRunner#main(String[])
      */
     @Parameter
-    public String params
-    public String params(){ this.params }
+    private String params
+    private String params(){ this.params }
 
     /**
      * SpringBatch additional command line options (arguments starting with '-'):
@@ -51,8 +51,8 @@ class SpringBatchMojo extends BaseGroovyMojo
      * @see org.springframework.batch.core.launch.support.CommandLineJobRunner#main(String[])
      */
     @Parameter
-    public String opts
-    public String opts(){ this.opts }
+    private String opts
+    private String opts(){ this.opts }
 
 
     /**
@@ -65,8 +65,8 @@ class SpringBatchMojo extends BaseGroovyMojo
      * </properties>
      */
     @Parameter
-    public String props
-    public String props(){ this.props }
+    private String props
+    private String props(){ this.props }
 
 
     /**
@@ -74,8 +74,8 @@ class SpringBatchMojo extends BaseGroovyMojo
      * If job's exit code is not on the list - the build will fail.
      */
     @Parameter
-    public String failIfExitCodeOtherThan
-    public String failIfExitCodeOtherThan(){ this.failIfExitCodeOtherThan }
+    private String failIfExitCodeOtherThan
+    private String failIfExitCodeOtherThan(){ this.failIfExitCodeOtherThan }
 
 
     void doExecute ()

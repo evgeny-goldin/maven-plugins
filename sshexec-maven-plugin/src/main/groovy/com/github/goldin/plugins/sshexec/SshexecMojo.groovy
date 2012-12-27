@@ -24,43 +24,43 @@ class SshexecMojo extends BaseGroovyMojo
      * <protocol>://<user>:<auth>@<host>:<port>:<directory>
      */
     @Parameter( required = true )
-    public String location
+    private String location
 
     @Parameter( required = false )
-    public boolean verbose = false
+    private boolean verbose = false
 
     @Parameter( required = false )
-    public boolean echoPwd = false
+    private boolean echoPwd = false
 
     @Parameter( required = false )
-    public boolean echoCommands = false
+    private boolean echoCommands = false
 
     @Parameter( required = false )
-    public String command
+    private String command
 
     @Parameter( required = false )
-    public String outputProperty
+    private String outputProperty
 
     @Parameter( required = false )
-    public File outputFile
+    private File outputFile
 
     @Parameter( required = false )
-    public boolean failOnError = true
+    private boolean failOnError = true
 
     @Parameter( required = false )
-    public String failIfOutput
+    private String failIfOutput
 
     @Parameter( required = false )
-    public String failIfNoOutput
+    private String failIfNoOutput
 
     @Parameter( required = false )
-    public String[] commands
+    private String[] commands
 
     @Parameter( required = false )
-    public String commandsShellSeparator = '; '
+    private String commandsShellSeparator = '; '
 
     @Parameter( required = false )
-    public String commandDelimitersRegex = '\n|,|;'
+    private String commandDelimitersRegex = '\n|,|;'
 
     /**
      * Retrieves all execution commands

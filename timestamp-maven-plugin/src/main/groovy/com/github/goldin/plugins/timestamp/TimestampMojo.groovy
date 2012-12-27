@@ -16,13 +16,13 @@ import org.apache.maven.plugins.annotations.Parameter
 class TimestampMojo extends BaseGroovyMojo
 {
     @Parameter ( required = false )
-    public String time
+    private String time
 
     @Parameter ( required = false )
-    public Timestamp[] timestamps
+    private Timestamp[] timestamps
 
     @Parameter ( required = false )
-    public  Timestamp timestamp
+    private Timestamp timestamp
     private List<Timestamp> timestamps() { generalBean().list( this.timestamps, this.timestamp ) }
 
 

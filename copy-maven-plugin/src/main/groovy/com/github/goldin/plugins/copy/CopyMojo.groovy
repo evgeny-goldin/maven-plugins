@@ -32,36 +32,36 @@ class CopyMojo extends BaseGroovyMojo
     */
 
     @Component
-    public MavenProjectHelper mavenProjectHelper
+    private MavenProjectHelper mavenProjectHelper
 
     @Component ( role = MavenFileFilter, hint = 'default' )
-    public MavenFileFilter fileFilter
+    private MavenFileFilter fileFilter
 
     /**
      * User-provided fields
      */
 
     @Parameter
-    public  CopyManifest manifest = new CopyManifest()
+    private CopyManifest manifest = new CopyManifest()
 
     @Parameter ( required = false )
-    public boolean skipIdentical = false
+    private boolean skipIdentical = false
 
     @Parameter ( required = false )
-    public boolean skipPacked = false
+    private boolean skipPacked = false
 
     @Parameter ( required = false )
-    public boolean skipUnpacked = false
+    private boolean skipUnpacked = false
 
     @Parameter ( required = false )
-    public boolean stripVersion = false
+    private boolean stripVersion = false
 
     /**
      * "false" or comma-separated list of default excludes
      * Not active for Net operations
      */
     @Parameter ( required = false )
-    public String  defaultExcludes
+    private String  defaultExcludes
     String         defaultExcludes()
     {
         this.defaultExcludes ?:
@@ -70,36 +70,36 @@ class CopyMojo extends BaseGroovyMojo
     }
 
     @Parameter ( required = false )
-    public  boolean verbose = true
+    private boolean verbose = true
 
     @Parameter ( required = false )
-    public  boolean filterWithDollarOnly = false
+    private boolean filterWithDollarOnly = false
 
     @Parameter ( required = false )
-    public  String nonFilteredExtensions
+    private String nonFilteredExtensions
 
     @Parameter ( required = false )
-    public  boolean failIfNotFound = true
+    private boolean failIfNotFound = true
 
     @Parameter ( required = false )
-    public  boolean failOnError = true
+    private boolean failOnError = true
 
     @Parameter ( required = false )
-    public  boolean useTrueZipForPack = false
+    private boolean useTrueZipForPack = false
 
     @Parameter ( required = false )
-    public  boolean useTrueZipForUnpack = true
+    private boolean useTrueZipForUnpack = true
 
     @Parameter ( required = false )
-    public  CopyResource[] resources
+    private CopyResource[] resources
 
     @Parameter ( required = false )
-    public  CopyResource resource
+    private CopyResource resource
 
     private List<CopyResource> resources () { generalBean().list( this.resources, this.resource ) }
 
     @Parameter ( required = false )
-    public GroovyConfig groovyConfig
+    private GroovyConfig groovyConfig
 
 
     private final CopyMojoHelper helper = new CopyMojoHelper( this )

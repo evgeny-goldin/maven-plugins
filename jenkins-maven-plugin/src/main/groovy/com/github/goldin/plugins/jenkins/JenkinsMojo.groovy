@@ -19,17 +19,17 @@ import org.gcontracts.annotations.Requires
 class JenkinsMojo extends BaseGroovyMojo
 {
     @Parameter ( required = true )
-    public String jenkinsUrl
-    public String jenkinsUrl() { verifyBean().notNullOrEmpty( this.jenkinsUrl ) }
+    private String jenkinsUrl
+    private String jenkinsUrl() { verifyBean().notNullOrEmpty( this.jenkinsUrl ) }
 
 
     @Parameter ( required = true )
-    public String generationPom
-    public String generationPom() { verifyBean().notNullOrEmpty( this.generationPom ) }
+    private String generationPom
+    private String generationPom() { verifyBean().notNullOrEmpty( this.generationPom ) }
 
 
     @Parameter ( required = true, defaultValue = '${project.build.directory}' )
-    public File outputDirectory
+    private File outputDirectory
 
     /**
      * When no repository local path is specified - the remote one starting from this value is used
@@ -38,22 +38,22 @@ class JenkinsMojo extends BaseGroovyMojo
      *              local repo path will be    "svn/trunk/"
      */
     @Parameter ( required = false )
-    public String svnRepositoryLocalBase = 'svn'
+    private String svnRepositoryLocalBase = 'svn'
 
     @Parameter ( required = false )
-    public String endOfLine = 'windows'
+    private String endOfLine = 'windows'
 
     @Parameter ( required = false )
-    public boolean timestamp = true
+    private boolean timestamp = true
 
     @Parameter ( required = false )
-    public String timestampFormat = 'MMMM dd, yyyy (HH:mm:ss, \'GMT\'Z)'
+    private String timestampFormat = 'MMMM dd, yyyy (HH:mm:ss, \'GMT\'Z)'
 
     @Parameter
-    public Job[] jobs
+    private Job[] jobs
 
     @Parameter
-    public Job   job
+    private Job   job
 
     private List<Job> jobs() { generalBean().list( this.jobs, this.job ) }
 

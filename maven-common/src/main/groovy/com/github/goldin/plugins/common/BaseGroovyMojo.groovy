@@ -29,20 +29,20 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     @Parameter ( required = true, defaultValue = '${project}' )
-    public MavenProject project
+    protected MavenProject project
 
     @Parameter ( required = true, defaultValue = '${session}' )
-    public MavenSession session
+    protected MavenSession session
 
     @Parameter ( required = true, defaultValue = '${project.basedir}' )
-    public File basedir
+    protected File basedir
 
     @Parameter ( required = true, defaultValue = '${project.build.outputDirectory}' )
-    public    File outputDirectory
+    private   File outputDirectory
     protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
 
     @Parameter
-    public String  runIf
+    protected String  runIf
 
     /**
      * Aether components:
@@ -53,13 +53,13 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
 
     @Component
-    public RepositorySystem repoSystem
+    private RepositorySystem repoSystem
 
     @Parameter ( defaultValue = '${repositorySystemSession}', readonly = true )
-    public RepositorySystemSession repoSession
+    private RepositorySystemSession repoSession
 
     @Parameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
-    public List<RemoteRepository> remoteRepos
+    private List<RemoteRepository> remoteRepos
 
 
     /**

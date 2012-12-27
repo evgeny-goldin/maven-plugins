@@ -21,7 +21,7 @@ class AssertMojo extends BaseGroovyMojo
     * Verifies each property is defined and logs its value.
     */
     @Parameter
-    public String assertProperties
+    private String assertProperties
 
 
     /**
@@ -30,10 +30,10 @@ class AssertMojo extends BaseGroovyMojo
      * Verifies each pattern represents existing files.
      */
     @Parameter
-    public String assertFiles
+    private String assertFiles
 
     @Parameter
-    public String shouldFailAssertFiles
+    private String shouldFailAssertFiles
 
 
    /**
@@ -42,10 +42,10 @@ class AssertMojo extends BaseGroovyMojo
     * Verifies entries are "equal", comparing files with files, directories with directories
     */
     @Parameter
-    public String assertEqual
+    private String assertEqual
 
     @Parameter
-    public String shouldFailAssertEqual
+    private String shouldFailAssertEqual
 
 
    /**
@@ -54,10 +54,10 @@ class AssertMojo extends BaseGroovyMojo
     * Verifies entries are "equal", comparing files with files, directories with directories (no checksum check)
     */
     @Parameter
-    public String assertEqualNoChecksum
+    private String assertEqualNoChecksum
 
     @Parameter
-    public String shouldFailAssertEqualNoChecksum
+    private String shouldFailAssertEqualNoChecksum
 
 
    /**
@@ -65,14 +65,14 @@ class AssertMojo extends BaseGroovyMojo
     * Each line - Groovy expression verified to evaluate to true.
     */
     @Parameter
-    public String assertGroovy
+    private String assertGroovy
 
 
    /**
     * Value to "normalize" CrLf when comparing files
     */
     @Parameter
-    public String endOfLine
+    private String endOfLine
 
 
 

@@ -18,27 +18,27 @@ import org.gcontracts.annotations.Requires
 class PropertiesMojo extends BaseGroovyMojo
 {
     @Parameter ( required = false )
-    public Property   property
+    private Property   property
 
     @Parameter ( required = false )
-    public Property[] properties
+    private Property[] properties
 
     private List<Property> properties() { generalBean().list( this.properties, this.property ) }
 
     @Parameter ( required = false )
-    public String rawProperties
+    private String rawProperties
 
     @Parameter ( required = false )
-    public String addDollar
+    private String addDollar
 
     @Parameter ( required = false )
-    public boolean normalizePath = true
+    private boolean normalizePath = true
 
     @Parameter ( required = false )
-    public boolean verbose = true
+    private boolean verbose = true
 
     @Parameter ( required = false )
-    public GroovyConfig groovyConfig = new GroovyConfig()
+    private GroovyConfig groovyConfig = new GroovyConfig()
 
 
     private String normalizePath( String s ){

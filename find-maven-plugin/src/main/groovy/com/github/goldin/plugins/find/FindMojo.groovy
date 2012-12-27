@@ -18,19 +18,19 @@ import org.gcontracts.annotations.Requires
 class FindMojo extends BaseGroovyMojo
 {
     @Parameter ( required = true )
-    public String file
+    private String file
 
     @Parameter ( defaultValue = '${project.basedir}', required = false )
-    public File startDir
+    private File startDir
 
     @Parameter
-    public String propertyName
+    private String propertyName
 
     @Parameter
-    public String sysPropertyName
+    private String sysPropertyName
 
     @Parameter
-    public boolean failIfNotFound = true
+    private boolean failIfNotFound = true
 
 
     /**

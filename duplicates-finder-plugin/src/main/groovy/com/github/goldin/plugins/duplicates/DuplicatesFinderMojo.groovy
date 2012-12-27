@@ -26,13 +26,13 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
 
 
     @Parameter
-    public String scopes = 'compile'
+    private String scopes = 'compile'
 
     @Parameter
-    public boolean verbose = false
+    private boolean verbose = false
 
     @Parameter
-    public boolean fail = true
+    private boolean fail = true
 
 
     @Override
