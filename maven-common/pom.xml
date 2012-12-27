@@ -269,6 +269,48 @@
             </exclusions>
         </dependency>
 
+        <!-- ~~~~~~~~~~~~~~~~~ -->
+        <!-- org.sonatype.sisu -->
+        <!-- ~~~~~~~~~~~~~~~~~ -->
+
+        <dependency>
+            <groupId>org.sonatype.sisu</groupId>
+            <artifactId>sisu-guice</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-guice%22 -->
+            <version>3.1.2</version>
+            <exclusions>
+                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
+                <exclusion>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </exclusion>
+                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
+                <exclusion>
+                    <groupId>aopalliance</groupId>
+                    <artifactId>aopalliance</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.sonatype.sisu</groupId>
+            <artifactId>sisu-inject-plexus</artifactId>
+            <version>${sisu-inject-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.sonatype.sisu</groupId>
+            <artifactId>sisu-inject-bean</artifactId>
+            <version>${sisu-inject-version}</version>
+            <exclusions>
+                <!-- Duplicate of "org.sonatype.sisu:sisu-guice:jar:3.1.1" -->
+                <exclusion>
+                    <groupId>org.sonatype.sisu</groupId>
+                    <artifactId>sisu-guice</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- ~~~~~~~~~~~~~~~~~~~ -->
         <!-- org.codehaus.groovy -->
         <!-- ~~~~~~~~~~~~~~~~~~~ -->
@@ -341,13 +383,19 @@
             </exclusions>
         </dependency>
 
-        <!-- ~~~ -->
-        <!-- Ant -->
-        <!-- ~~~ -->
+        <!-- ~~~~~~~~~~~~~~ -->
+        <!-- org.apache.ant -->
+        <!-- ~~~~~~~~~~~~~~ -->
 
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
+            <version>${ant-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-commons-net</artifactId>
             <version>${ant-version}</version>
         </dependency>
 
@@ -364,12 +412,6 @@
             <version>0.1.49</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-commons-net</artifactId>
-            <version>${ant-version}</version>
-        </dependency>
-
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- For <version> duplicates elimination            -->
         <!-- http://mojo.codehaus.org/versions-maven-plugin/ -->
@@ -381,40 +423,9 @@
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.mojo%22%20AND%20a%3A%22versions-maven-plugin%22 -->
             <version>2.0</version>
             <exclusions>
-                <!-- Duplicate of "org.codehaus.plexus:plexus-utils:jar:3.0.10" -->
                 <exclusion>
-                    <groupId>plexus</groupId>
-                    <artifactId>plexus-utils</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-artifact-manager</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.apache.maven:maven-core:jar:3.0.4" -->
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-project</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-plexus:jar:2.3.0" -->
-                <exclusion>
-                    <groupId>org.codehaus.plexus</groupId>
-                    <artifactId>plexus-container-default</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.codehaus.plexus:plexus-classworlds:jar:2.4" -->
-                <exclusion>
-                    <groupId>classworlds</groupId>
-                    <artifactId>classworlds</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.apache.maven:maven-plugin-api:jar:3.0.4" -->
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-plugin-descriptor</artifactId>
-                </exclusion>
-                <!-- Duplicate of "commons-beanutils:commons-beanutils:jar:1.7.0" -->
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -461,37 +472,5 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.sonatype.sisu</groupId>
-            <artifactId>sisu-guice</artifactId>
-            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-guice%22 -->
-            <version>3.1.2</version>
-            <exclusions>
-                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
-                <exclusion>
-                    <groupId>javax.inject</groupId>
-                    <artifactId>javax.inject</artifactId>
-                </exclusion>
-                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
-                <exclusion>
-                    <groupId>aopalliance</groupId>
-                    <artifactId>aopalliance</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.sonatype.sisu</groupId>
-            <artifactId>sisu-inject-bean</artifactId>
-            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22 -->
-            <version>2.3.2</version>
-            <exclusions>
-                <!-- Duplicate of "org.sonatype.sisu:sisu-guice:jar:3.1.1" -->
-                <exclusion>
-                    <groupId>org.sonatype.sisu</groupId>
-                    <artifactId>sisu-guice</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 </project>

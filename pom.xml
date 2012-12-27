@@ -83,6 +83,10 @@
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.gcontracts%22%20AND%20a%3A%22gcontracts-core%22 -->
         <gcontracts-version>1.2.10</gcontracts-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22   -->
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-plexus%22 -->
+        <sisu-inject-version>2.3.2</sisu-inject-version>
     </properties>
 
 
