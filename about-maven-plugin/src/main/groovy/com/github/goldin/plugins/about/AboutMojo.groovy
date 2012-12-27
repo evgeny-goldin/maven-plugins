@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 /**
  * Updates files specified with "about" build metadata
  */
-@Mojo ( name = 'create-about', defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST )
+@Mojo ( name = 'create-about', defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 
 class AboutMojo extends BaseGroovyMojo

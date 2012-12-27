@@ -18,7 +18,7 @@ import org.sonatype.aether.impl.internal.DefaultRepositorySystem
  * Plugin that delegates artifacts resolving to Ivy, adds dependencies resolved to the Maven scope or
  * copies them to local directory.
  */
-@Mojo ( name = 'ivy', defaultPhase = LifecyclePhase.INITIALIZE, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@Mojo ( name = 'ivy', defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
 class IvyMojo extends BaseGroovyMojo
 {
     /**

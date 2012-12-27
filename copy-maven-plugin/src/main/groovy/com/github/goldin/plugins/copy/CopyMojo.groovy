@@ -22,7 +22,7 @@ import org.gcontracts.annotations.Requires
 /**
  * MOJO copying resources specified.
  */
-@Mojo( name = 'copy', defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@Mojo( name = 'copy', defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 
 class CopyMojo extends BaseGroovyMojo

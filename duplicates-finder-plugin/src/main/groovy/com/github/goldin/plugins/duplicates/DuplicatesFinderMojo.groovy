@@ -15,7 +15,7 @@ import java.util.zip.ZipFile
 /**
  * A plugin that finds duplicate classes in the scope(s) specified
  */
-@Mojo( name = 'find-duplicates', defaultPhase = LifecyclePhase.PROCESS_RESOURCES, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST )
+@Mojo( name = 'find-duplicates', defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 class DuplicatesFinderMojo extends BaseGroovyMojo
 {
