@@ -172,13 +172,14 @@ class AboutMojo extends BaseGroovyMojo
         assert [ plugin, coordinates ].every { mdt.contains( it ) }, \
                "Failed to run [$plugin] - data received doesn't contain enough information: [$mdt]"
 
-        def mdtStripped = mdt.replace( '[INFO] ', '' ).
-                              replaceAll( /(?s)^.+?@.+?---/,              '' ). // Removing Maven 3 header
-                              replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
-                              replaceAll( /(?m)Downloading: .+$/,         '' ). // Removing Maven 3 download progress indicator
-                              replaceAll( /(?m)Downloaded: .+$/,          '' ). // Removing Maven 3 download progress indicator
-                              replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
-                              trim()
+        final mdtStripped = mdt.replace( '[INFO] ',                         '' ).
+                                replace( '[WARNING] ',                      '' ).
+                                replaceAll( /(?s)^.+?@.+ ---/,              '' ). // Removing Maven 3 header
+                                replaceAll( /(?s)^.+\[dependency:tree.+?]/, '' ). // Removing Maven 2 header
+                                replaceAll( /(?m)Downloading: .+$/,         '' ). // Removing Maven 3 download progress indicator
+                                replaceAll( /(?m)Downloaded: .+$/,          '' ). // Removing Maven 3 download progress indicator
+                                replaceAll( /(?s)----+.+$/,                 '' ). // Removing footer
+                                trim()
 
         assert mdtStripped.startsWith( coordinates ), \
                "Failed to run [$plugin] - cleaned up data should start with [$coordinates]: [$mdtStripped]"
