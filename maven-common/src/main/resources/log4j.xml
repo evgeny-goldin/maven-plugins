@@ -21,6 +21,11 @@
         <appender-ref ref="console"/>
     </logger>
 
+    <logger name="com.github.goldin.gcommons" additivity="false">
+        <level value="WARN"/>
+        <appender-ref ref="console"/>
+    </logger>
+
     <root>
         <level value="WARN"/>
     </root>
