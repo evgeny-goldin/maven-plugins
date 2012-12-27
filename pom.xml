@@ -9,7 +9,7 @@
     <groupId>com.github.goldin</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.6-beta-1</version>
+    <version>0.2.6-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
     <description>Maven plugins</description>
     <url>http://evgeny-goldin.com/wiki/Maven-plugins</url>
@@ -55,7 +55,7 @@
         <maven-version>3.0.4</maven-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/plugins-releases/com/github/goldin/about-maven-plugin/ -->
-        <previous-plugins-version>0.2.5-about-fix</previous-plugins-version>
+        <previous-plugins-version>0.2.6-beta-1</previous-plugins-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
         <gcommons-version>0.6.1</gcommons-version>
