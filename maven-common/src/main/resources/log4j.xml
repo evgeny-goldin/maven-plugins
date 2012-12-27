@@ -22,7 +22,7 @@
     </logger>
 
     <logger name="com.github.goldin.gcommons" additivity="false">
-        <level value="WARN"/>
+        <level value="INFO"/>
         <appender-ref ref="console"/>
     </logger>
 
