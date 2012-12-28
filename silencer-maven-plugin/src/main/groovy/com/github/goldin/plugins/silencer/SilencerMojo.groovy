@@ -2,6 +2,8 @@ package com.github.goldin.plugins.silencer
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
+import com.google.common.io.NullOutputStream
+import org.apache.maven.cli.AbstractMavenTransferListener
 import org.apache.maven.lifecycle.internal.MojoExecutor
 import org.apache.maven.plugin.DefaultBuildPluginManager
 import org.apache.maven.plugins.annotations.LifecyclePhase
@@ -46,8 +48,10 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
         if (( enabled == null ) || ( groovyBean().eval( enabled, Boolean )))
         {
             log.info( 'Silencer Mojo is on - enjoy the silence.' )
+
             updateMavenPluginManager()
-            updateRepositoryLogger()
+            updateRepositoryListener()
+            updateTransferListener()
         }
     }
 
@@ -64,11 +68,11 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     }
 
 
-    private void updateRepositoryLogger ()
+    private void updateRepositoryListener ()
     {
         try
         {
-            final listener            = session.repositorySession.repositoryListener
+            final listener            = repoSession.repositoryListener
             final loggerField         = listener.class.getDeclaredField( 'logger' )
             final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
             loggerField.accessible    = true
@@ -76,6 +80,16 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 
             modifiersField.setInt( loggerField, loggerField.modifiers & ~Modifier.FINAL )
             loggerField.set( listener, SILENT_LOGGER )
+        }
+        catch ( Throwable e ){ e.printStackTrace()}
+    }
+
+
+    private void updateTransferListener ()
+    {
+        try
+        {
+            (( AbstractMavenTransferListener ) repoSession.transferListener ).out = new PrintStream( new NullOutputStream())
         }
         catch ( Throwable e ){ e.printStackTrace()}
     }

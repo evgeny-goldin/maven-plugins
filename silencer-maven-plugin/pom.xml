@@ -23,6 +23,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-embedder</artifactId>
+            <version>${maven-version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22commons-logging%22%20AND%20a%3A%22commons-logging%22 -->
