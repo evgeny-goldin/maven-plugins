@@ -32,20 +32,20 @@ abstract class BaseGroovyMojo extends GroovyMojo
     protected final boolean isMac     = os.contains( 'mac os' )
 
     @Parameter ( required = true, defaultValue = '${project}' )
-    protected MavenProject project
+    MavenProject project
 
     @Parameter ( required = true, defaultValue = '${session}' )
-    protected MavenSession session
+    MavenSession session
 
     @Parameter ( required = true, defaultValue = '${project.basedir}' )
-    protected File basedir
+    File basedir
 
     @Parameter ( required = true, defaultValue = '${project.build.outputDirectory}' )
     private   File outputDirectory
-    protected File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
+    File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
 
     @Parameter
-    protected String  runIf
+    String runIf
 
     /**
      * Aether components:
@@ -56,13 +56,13 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
 
     @Component
-    private RepositorySystem repoSystem
+    RepositorySystem repoSystem
 
     @Parameter ( defaultValue = '${repositorySystemSession}', readonly = true )
-    private RepositorySystemSession repoSession
+    RepositorySystemSession repoSession
 
     @Parameter ( defaultValue = '${project.remoteProjectRepositories}', readonly = true )
-    private List<RemoteRepository> remoteRepos
+    List<RemoteRepository> remoteRepos
 
 
     /**
