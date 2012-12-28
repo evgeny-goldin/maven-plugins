@@ -21,6 +21,7 @@ ruleset {
         SpaceAfterOpeningBrace      ( enabled : false )
         SpaceBeforeClosingBrace     ( enabled : false )
         SpaceAfterClosingBrace      ( enabled : false )
+        PrivateFieldCouldBeFinal	( enabled : false )
 
         VariableName                ( finalRegex : /[a-zA-Z0-9_]+/ )
         LineLength                  ( length     : 160   )
