@@ -2,11 +2,11 @@ package com.github.goldin.plugins.silencer
 
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.*
+import org.apache.maven.plugin.MavenPluginManager
+import org.apache.maven.plugin.MojoExecution
+import org.apache.maven.plugin.PluginConfigurationException
+import org.apache.maven.plugin.PluginContainerException
 import org.gcontracts.annotations.Requires
-import org.springframework.util.ReflectionUtils
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 
 
 /**
@@ -14,20 +14,24 @@ import java.lang.reflect.Modifier
  */
 class SilencerMavenPluginManager
 {
+    private final SilencerMojo mojo
+
     @Delegate
     private final MavenPluginManager  delegate
-    private final Map<String, String> mojoFieldsMap
+    private final Map<String, List<String>> loggerFieldsMap
 
 
-    @Requires({ delegate && mojoFields })
-    SilencerMavenPluginManager ( MavenPluginManager delegate, String mojoFields )
+    @Requires({ mojo && delegate && loggerFields })
+    SilencerMavenPluginManager ( SilencerMojo mojo, MavenPluginManager delegate, String loggerFields )
     {
-        this.delegate      = delegate
-        this.mojoFieldsMap = mojoFields.readLines()*.trim().grep().inject( [:] ){
+        this.mojo            = mojo
+        this.delegate        = delegate
+        this.loggerFieldsMap = loggerFields.readLines()*.trim().grep().inject( [:].withDefault{ [] } ){
             Map m, String line ->
 
-            final list     = line.tokenize( ':' )
-            m[ list[ 0 ] ] = list[ 1 ]
+            def ( String className, String fieldsPath ) = line.tokenize( ':' )
+            assert className && fieldsPath
+            m[ className ] << fieldsPath
             m
         }
     }
@@ -37,49 +41,36 @@ class SilencerMavenPluginManager
         throws PluginConfigurationException,
                PluginContainerException
     {
-        final mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
+        final  mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
+        assert mojo
 
-        try
-        {
-            updateMojoFields( mojo )
-            mojo.log = SilencerMojo.SILENT_LOGGER
-            mojo.pluginContext[ BaseGroovyMojo.SILENT_GCOMMONS ] = true
-        }
-        catch ( Throwable e ){ e.printStackTrace() }
+        this.mojo.tryIt { updateLoggerFields( mojo ) }
+        this.mojo.tryIt { mojo.log = SilencerMojo.SILENT_LOGGER }
+        this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENT_GCOMMONS ] = true }
 
         mojo
     }
 
 
     @Requires({ mojo })
-    private void updateMojoFields ( Object mojo )
+    private void updateLoggerFields ( Object mojo )
     {
-        final  fields = mojoFieldsMap[ mojo.class.name ]
-        if ( ! fields ) { return }
-
-        try
+        for ( fieldsPath in loggerFieldsMap[ mojo.class.name ] )
         {
-            final  fieldsList = fields.tokenize( '.' )
+            final  fieldsList = fieldsPath.tokenize( '.' )
             Object o          = mojo
 
             fieldsList.eachWithIndex { String fieldName , int j ->
 
                 if ( j < ( fieldsList.size() - 1 ))
-                {
+                {   // o.fieldA.fieldB...
                     o = o."$fieldName"
                 }
                 else
-                {
-                    final loggerField         = ReflectionUtils.findField( o.class, fieldName )
-                    final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
-                    loggerField.accessible    = true
-                    modifiersField.accessible = true
-
-                    modifiersField.setInt( loggerField , loggerField.modifiers & ~Modifier.FINAL )
-                    loggerField.set( o, SilencerMojo.SILENT_LOGGER )
+                {   // o.loggerField
+                    this.mojo.setFieldValue( o, Object, fieldName, SilencerMojo.SILENT_LOGGER )
                 }
             }
         }
-        catch ( Throwable e ){ e.printStackTrace() }
     }
 }

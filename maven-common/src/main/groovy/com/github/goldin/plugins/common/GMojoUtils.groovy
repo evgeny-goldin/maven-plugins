@@ -2,6 +2,7 @@ package com.github.goldin.plugins.common
 
 import com.github.goldin.gcommons.GCommons
 import com.github.goldin.gcommons.util.GroovyConfig
+import com.google.common.io.ByteStreams
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import org.apache.maven.Maven
@@ -90,11 +91,7 @@ class GMojoUtils
      * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
      * @return instance of {@code OutputStream} ignoring everything that is written to it
      */
-    static OutputStream devNullOutputStream () { new OutputStream() {
-        @Override
-        @SuppressWarnings( 'EmptyMethod' )
-        void write( int b ) {}
-    }}
+    static OutputStream nullOutputStream () { ByteStreams.nullOutputStream() }
 
 
     /**

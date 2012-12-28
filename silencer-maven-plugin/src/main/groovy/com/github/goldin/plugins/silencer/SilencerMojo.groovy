@@ -2,7 +2,7 @@ package com.github.goldin.plugins.silencer
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
-import com.google.common.io.NullOutputStream
+import org.apache.maven.LoggingRepositoryListener
 import org.apache.maven.cli.AbstractMavenTransferListener
 import org.apache.maven.lifecycle.internal.MojoExecutor
 import org.apache.maven.plugin.DefaultBuildPluginManager
@@ -15,13 +15,12 @@ import org.codehaus.plexus.context.Context
 import org.codehaus.plexus.context.ContextException
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable
 import org.gcontracts.annotations.Requires
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 
 
 /**
  * Mojo for silencing Maven logging.
  */
+@SuppressWarnings([ 'GroovyAccessibility' ])
 @Mojo( name = 'silence', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
 class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 {
@@ -32,13 +31,13 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     private String enabled
 
 
-    private final String defaultMojoFields = '''
+    private final String defaultLoggerFields = '''
     org.apache.maven.plugin.resources.ResourcesMojo:mavenResourcesFiltering.logger
     '''.stripIndent()
 
 
     @Parameter ( required = false )
-    private String mojoFields = ''
+    private String loggerFields = ''
 
 
     private PlexusContainer container
@@ -54,53 +53,40 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     @Override
     void doExecute()
     {
+        if ( session.userProperties[ this.class.name ] != null ) { return }
+
         if (( enabled == null ) || ( groovyBean().eval( enabled, Boolean )))
         {
             log.info( 'Silencer Mojo is on - enjoy the silence.' )
 
-            updateMavenPluginManager()
-            updateRepositoryListener()
-            updateTransferListener()
+            tryIt { updateMavenPluginManager() }
+            tryIt { updateRepositoryListener() }
+            tryIt { updateTransferListener()   }
         }
+
+        session.userProperties[ this.class.name ] = true
     }
 
 
     private void updateMavenPluginManager ()
     {
-        try
-        {
-            final executor = container.lookup( MojoExecutor )
-            (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
-                new SilencerMavenPluginManager((( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
-                                               ( defaultMojoFields + '\n' + mojoFields ))
-        }
-        catch ( Throwable e ){ e.printStackTrace()}
+        final executor = container.lookup( MojoExecutor )
+        (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
+            new SilencerMavenPluginManager(
+                this,
+                (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
+                ( defaultLoggerFields + '\n' + loggerFields ))
     }
 
 
     private void updateRepositoryListener ()
     {
-        try
-        {
-            final listener            = repoSession.repositoryListener
-            final loggerField         = listener.class.getDeclaredField( 'logger' )
-            final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
-            loggerField.accessible    = true
-            modifiersField.accessible = true
-
-            modifiersField.setInt( loggerField, loggerField.modifiers & ~Modifier.FINAL )
-            loggerField.set( listener, SILENT_LOGGER )
-        }
-        catch ( Throwable e ){ e.printStackTrace()}
+        setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener, 'logger', SILENT_LOGGER )
     }
 
 
     private void updateTransferListener ()
     {
-        try
-        {
-            (( AbstractMavenTransferListener ) repoSession.transferListener ).out = new PrintStream( new NullOutputStream())
-        }
-        catch ( Throwable e ){ e.printStackTrace()}
+        setFieldValue( repoSession.transferListener, AbstractMavenTransferListener, 'out', new PrintStream( nullOutputStream()))
     }
 }

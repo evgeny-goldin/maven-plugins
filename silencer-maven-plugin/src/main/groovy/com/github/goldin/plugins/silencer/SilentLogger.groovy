@@ -2,7 +2,7 @@ package com.github.goldin.plugins.silencer
 
 
 /**
- * Logger swallowing all messages sent to it.
+ * Logger implementation swallowing all messages sent to it.
  */
 class SilentLogger extends    org.apache.log4j.Logger
                    implements org.apache.maven.plugin.logging.Log,
@@ -95,7 +95,7 @@ class SilentLogger extends    org.apache.log4j.Logger
     boolean isFatalErrorEnabled (){ false }
 
     @Override
-    int getThreshold (){ 0 }
+    int getThreshold (){ org.codehaus.plexus.logging.Logger.LEVEL_DISABLED }
 
     @Override
     void setThreshold ( int threshold ){}

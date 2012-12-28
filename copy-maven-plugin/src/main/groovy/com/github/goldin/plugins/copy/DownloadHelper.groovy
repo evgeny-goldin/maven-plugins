@@ -261,8 +261,8 @@ Timeout           : [$resource.timeout] sec (${ resource.timeout.intdiv( constan
             log.debug( "[${ exec.replace( ftpData.password, '*****' )}]" )
         }
 
-        def sout = ( verbose ? System.out : devNullOutputStream())
-        def serr = ( verbose ? System.err : devNullOutputStream())
+        def sout = ( verbose ? System.out : nullOutputStream())
+        def serr = ( verbose ? System.err : nullOutputStream())
 
         for ( def attempts = 1; ( attempts <= maxAttempts ); attempts++ )
         {

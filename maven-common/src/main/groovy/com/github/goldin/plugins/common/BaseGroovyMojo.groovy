@@ -2,6 +2,7 @@ package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.execution.MavenSession
@@ -17,6 +18,9 @@ import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.resolution.ArtifactRequest
+import org.springframework.util.ReflectionUtils
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 
 
 /**
@@ -106,8 +110,56 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
+    /**
+     * Sets object's field to the value specified.
+     *
+     * @param o          object owning the field
+     * @param c          object's expected class
+     * @param fieldName  name of the field
+     * @param fieldValue value to set to the field
+     */
+    @Requires({ ( o != null ) && fieldName })
+    final void setFieldValue ( Object o, Class c, String fieldName, Object fieldValue )
+    {
+        assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"
+
+        final  field = ReflectionUtils.findField( o.class, fieldName )
+        assert field, "Unable to find field [$fieldName] on object [$o][${ o.class.name }]"
+        field.accessible = true
+
+        if ( field.get( o ) == fieldValue ){ return }
+
+        assert (( fieldValue == null ) || ( field.type.primitive ) || field.type.isInstance( fieldValue )), \
+               "Field [$field.name][${ field.type.name }] of [${ o.class.name }] " +
+               "is not assignment-compatible with [$fieldValue][${ fieldValue.class.name }]"
+
+        if ( Modifier.isFinal( field.modifiers ))
+        {
+            final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
+            modifiersField.accessible = true
+            modifiersField.setInt( field, field.modifiers & ~Modifier.FINAL )
+        }
+
+        field.set( o, fieldValue )
+    }
+
+
+    /**
+     * Attempts to perform an action specified, prints a stack trace if fails.
+     * @param action action to perform
+     */
+    void tryIt ( Closure action )
+    {
+        try { action.call() }
+        catch ( Throwable e ){ e.printStackTrace() }
+    }
+
+
+    /**
+     * Executes the Mojo.
+     */
     @Override
-    @Requires({ log && project && session })
+    @Requires({ pluginContext && log && project && session })
     final void execute()
     {
         if ( pluginContext[ SILENT_GCOMMONS ] ){ disableGCommonsLoggers() }
@@ -124,11 +176,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    private void disableGCommonsLoggers ( )
+    private void disableGCommonsLoggers ()
     {
         final context         = (( LoggerContext ) LoggerFactory.ILoggerFactory )
-        final gcommonsLoggers = context.loggerList.findAll { it.name.with { contains( 'com.github.goldin.' ) && contains( '.gcommons' ) }}
-        gcommonsLoggers.each { it.effectiveLevelInt = Level.OFF_INT }
+        final gcommonsLoggers = context.loggerList.findAll { it.name.startsWith( 'com.github.goldin.gcommons' ) }
+        gcommonsLoggers.each { setFieldValue( it, Logger, 'effectiveLevelInt', Level.OFF_INT )}
     }
 
 
