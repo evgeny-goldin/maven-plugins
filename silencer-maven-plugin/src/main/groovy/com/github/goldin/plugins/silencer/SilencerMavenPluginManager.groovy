@@ -5,7 +5,6 @@ import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugin.MojoExecution
 import org.apache.maven.plugin.PluginConfigurationException
 import org.apache.maven.plugin.PluginContainerException
-import org.codehaus.plexus.logging.AbstractLogEnabled
 import org.gcontracts.annotations.Requires
 
 
@@ -32,17 +31,19 @@ class SilencerMavenPluginManager
 
         try
         {
+/*
             for ( field in mojo.class.declaredFields )
             {
                 field.accessible = true
                 final fieldValue = field.get( mojo )
                 if ( fieldValue instanceof AbstractLogEnabled )
                 {
-                    (( AbstractLogEnabled ) fieldValue ).enableLogging( new SilencerLogger())
+                    (( AbstractLogEnabled ) fieldValue ).enableLogging( new SilentLogger())
                 }
             }
+*/
 
-            mojo.log = new SilencerLogger()
+            mojo.log = SilencerMojo.SILENT_LOGGER
         }
         catch ( Throwable e ){ e.printStackTrace() }
 

@@ -1,18 +1,16 @@
 package com.github.goldin.plugins.silencer
 
-import org.slf4j.Marker
-
 
 /**
- * Logger swallowing messages sent to it.
+ * Logger swallowing all messages sent to it.
  */
-class SilencerLogger extends    org.apache.log4j.Logger
-                     implements org.apache.maven.plugin.logging.Log,
-                                org.codehaus.plexus.logging.Logger,
-                                org.apache.commons.logging.Log,
-                                org.slf4j.Logger
+class SilentLogger extends    org.apache.log4j.Logger
+                   implements org.apache.maven.plugin.logging.Log,
+                              org.codehaus.plexus.logging.Logger,
+                              org.apache.commons.logging.Log,
+                              org.slf4j.Logger
 {
-    SilencerLogger (){ super( 'SilencerLogger' ) }
+    SilentLogger (){ super( 'SilentLogger' ) }
 
     @Override
     boolean isDebugEnabled (){ false }
@@ -93,16 +91,16 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void fatalError ( String message, Throwable throwable ){}
 
     @Override
-    boolean isFatalErrorEnabled (){ return false }
+    boolean isFatalErrorEnabled (){ false }
 
     @Override
-    int getThreshold (){ return 0 }
+    int getThreshold (){ 0 }
 
     @Override
     void setThreshold ( int threshold ){}
 
     @Override
-    org.codehaus.plexus.logging.Logger getChildLogger ( String name ){ return null }
+    org.codehaus.plexus.logging.Logger getChildLogger ( String name ){ null }
 
     @Override
     boolean isFatalEnabled (){ false }
@@ -123,22 +121,22 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void trace ( String s, Throwable throwable ){}
 
     @Override
-    boolean isTraceEnabled ( Marker marker ){ false  }
+    boolean isTraceEnabled ( org.slf4j.Marker marker ){ false  }
 
     @Override
-    void trace ( Marker marker, String s ){}
+    void trace ( org.slf4j.Marker marker, String s ){}
 
     @Override
-    void trace ( Marker marker, String s, Object o ){}
+    void trace ( org.slf4j.Marker marker, String s, Object o ){}
 
     @Override
-    void trace ( Marker marker, String s, Object o, Object o1 ){}
+    void trace ( org.slf4j.Marker marker, String s, Object o, Object o1 ){}
 
     @Override
-    void trace ( Marker marker, String s, Object... objects ){}
+    void trace ( org.slf4j.Marker marker, String s, Object... objects ){}
 
     @Override
-    void trace ( Marker marker, String s, Throwable throwable ){}
+    void trace ( org.slf4j.Marker marker, String s, Throwable throwable ){}
 
     @Override
     void debug ( String s, Object o ){}
@@ -150,22 +148,22 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void debug ( String s, Object... objects ){}
 
     @Override
-    boolean isDebugEnabled ( Marker marker ){ false }
+    boolean isDebugEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
-    void debug ( Marker marker, String s ){}
+    void debug ( org.slf4j.Marker marker, String s ){}
 
     @Override
-    void debug ( Marker marker, String s, Object o ){}
+    void debug ( org.slf4j.Marker marker, String s, Object o ){}
 
     @Override
-    void debug ( Marker marker, String s, Object o, Object o1 ){}
+    void debug ( org.slf4j.Marker marker, String s, Object o, Object o1 ){}
 
     @Override
-    void debug ( Marker marker, String s, Object... objects ){}
+    void debug ( org.slf4j.Marker marker, String s, Object... objects ){}
 
     @Override
-    void debug ( Marker marker, String s, Throwable throwable ){}
+    void debug ( org.slf4j.Marker marker, String s, Throwable throwable ){}
 
     @Override
     void info ( String s, Object o ){}
@@ -177,22 +175,22 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void info ( String s, Object... objects ){}
 
     @Override
-    boolean isInfoEnabled ( Marker marker ){ false }
+    boolean isInfoEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
-    void info ( Marker marker, String s ){}
+    void info ( org.slf4j.Marker marker, String s ){}
 
     @Override
-    void info ( Marker marker, String s, Object o ){}
+    void info ( org.slf4j.Marker marker, String s, Object o ){}
 
     @Override
-    void info ( Marker marker, String s, Object o, Object o1 ){}
+    void info ( org.slf4j.Marker marker, String s, Object o, Object o1 ){}
 
     @Override
-    void info ( Marker marker, String s, Object... objects ){}
+    void info ( org.slf4j.Marker marker, String s, Object... objects ){}
 
     @Override
-    void info ( Marker marker, String s, Throwable throwable ){}
+    void info ( org.slf4j.Marker marker, String s, Throwable throwable ){}
 
     @Override
     void warn ( String s, Object o ){}
@@ -204,22 +202,22 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void warn ( String s, Object o, Object o1 ){}
 
     @Override
-    boolean isWarnEnabled ( Marker marker ){ false }
+    boolean isWarnEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
-    void warn ( Marker marker, String s ){}
+    void warn ( org.slf4j.Marker marker, String s ){}
 
     @Override
-    void warn ( Marker marker, String s, Object o ){}
+    void warn ( org.slf4j.Marker marker, String s, Object o ){}
 
     @Override
-    void warn ( Marker marker, String s, Object o, Object o1 ){}
+    void warn ( org.slf4j.Marker marker, String s, Object o, Object o1 ){}
 
     @Override
-    void warn ( Marker marker, String s, Object... objects ){}
+    void warn ( org.slf4j.Marker marker, String s, Object... objects ){}
 
     @Override
-    void warn ( Marker marker, String s, Throwable throwable ){}
+    void warn ( org.slf4j.Marker marker, String s, Throwable throwable ){}
 
     @Override
     void error ( String s, Object o ){}
@@ -231,20 +229,20 @@ class SilencerLogger extends    org.apache.log4j.Logger
     void error ( String s, Object... objects ){}
 
     @Override
-    boolean isErrorEnabled ( Marker marker ){ false }
+    boolean isErrorEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
-    void error ( Marker marker, String s ){}
+    void error ( org.slf4j.Marker marker, String s ){}
 
     @Override
-    void error ( Marker marker, String s, Object o ){}
+    void error ( org.slf4j.Marker marker, String s, Object o ){}
 
     @Override
-    void error ( Marker marker, String s, Object o, Object o1 ){}
+    void error ( org.slf4j.Marker marker, String s, Object o, Object o1 ){}
 
     @Override
-    void error ( Marker marker, String s, Object... objects ){}
+    void error ( org.slf4j.Marker marker, String s, Object... objects ){}
 
     @Override
-    void error ( Marker marker, String s, Throwable throwable ){}
+    void error ( org.slf4j.Marker marker, String s, Throwable throwable ){}
 }

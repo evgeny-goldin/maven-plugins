@@ -1,17 +1,18 @@
 package com.github.goldin.plugins.silencer
 
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.lifecycle.internal.MojoExecutor
 import org.apache.maven.plugin.DefaultBuildPluginManager
 import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.codehaus.plexus.PlexusConstants
 import org.codehaus.plexus.PlexusContainer
 import org.codehaus.plexus.context.Context
 import org.codehaus.plexus.context.ContextException
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable
 import org.gcontracts.annotations.Requires
-
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
@@ -22,6 +23,12 @@ import java.lang.reflect.Modifier
 @Mojo( name = 'silence', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
 class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 {
+
+    static final SilentLogger SILENT_LOGGER = new SilentLogger()
+
+    @Parameter ( required = false )
+    private String enabled
+
 
     private PlexusContainer container
 
@@ -36,8 +43,12 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     @Override
     void doExecute()
     {
-        updateMavenPluginManager()
-        updateRepositoryLogger()
+        if (( enabled == null ) || ( groovyBean().eval( enabled, Boolean )))
+        {
+            log.info( 'Silencer Mojo is on - enjoy the silence.' )
+            updateMavenPluginManager()
+            updateRepositoryLogger()
+        }
     }
 
 
@@ -64,7 +75,7 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
             modifiersField.accessible = true
 
             modifiersField.setInt( loggerField, loggerField.modifiers & ~Modifier.FINAL )
-            loggerField.set( listener, new SilencerLogger())
+            loggerField.set( listener, SILENT_LOGGER )
         }
         catch ( Throwable e ){ e.printStackTrace()}
     }
