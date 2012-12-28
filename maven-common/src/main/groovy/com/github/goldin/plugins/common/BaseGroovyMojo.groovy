@@ -25,11 +25,11 @@ import org.sonatype.aether.resolution.ArtifactRequest
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    static    final String  SILENT_GCOMMONS_FLAG = 'SILENT-GCOMMONS'
-    protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
-    protected final boolean isWindows = os.contains( 'windows' )
-    protected final boolean isLinux   = os.contains( 'linux' )
-    protected final boolean isMac     = os.contains( 'mac os' )
+    static    final String  SILENT_GCOMMONS = 'SILENT_GCOMMONS'
+    protected final String  os              = System.getProperty( 'os.name' ).toLowerCase()
+    protected final boolean isWindows       = os.contains( 'windows' )
+    protected final boolean isLinux         = os.contains( 'linux' )
+    protected final boolean isMac           = os.contains( 'mac os' )
 
     @Parameter ( required = true, defaultValue = '${project}' )
     MavenProject project
@@ -110,7 +110,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ log && project && session })
     final void execute()
     {
-        if ( pluginContext[ SILENT_GCOMMONS_FLAG ] ){ disableGCommonsLoggers() }
+        if ( pluginContext[ SILENT_GCOMMONS ] ){ disableGCommonsLoggers() }
 
         final  mavenVersion = mavenVersion()
         assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"

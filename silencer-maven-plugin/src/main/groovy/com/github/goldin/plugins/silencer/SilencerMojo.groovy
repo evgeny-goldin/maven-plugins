@@ -32,6 +32,15 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     private String enabled
 
 
+    private final String defaultMojoFields = '''
+    org.apache.maven.plugin.resources.ResourcesMojo:mavenResourcesFiltering.logger
+    '''.stripIndent()
+
+
+    @Parameter ( required = false )
+    private String mojoFields = ''
+
+
     private PlexusContainer container
 
     @Override
@@ -62,7 +71,8 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
         {
             final executor = container.lookup( MojoExecutor )
             (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
-                new SilencerMavenPluginManager((( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager )
+                new SilencerMavenPluginManager((( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
+                                               ( defaultMojoFields + '\n' + mojoFields ))
         }
         catch ( Throwable e ){ e.printStackTrace()}
     }
