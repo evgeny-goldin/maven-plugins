@@ -1,6 +1,8 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.LoggerContext
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MojoExecutionException
@@ -10,6 +12,7 @@ import org.apache.maven.project.MavenProject
 import org.codehaus.gmaven.mojo.GroovyMojo
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+import org.slf4j.LoggerFactory
 import org.sonatype.aether.RepositorySystem
 import org.sonatype.aether.RepositorySystemSession
 import org.sonatype.aether.repository.RemoteRepository
@@ -22,11 +25,11 @@ import org.sonatype.aether.resolution.ArtifactRequest
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
+    static    final String  SILENT_GCOMMONS_FLAG = 'SILENT-GCOMMONS'
     protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
     protected final boolean isWindows = os.contains( 'windows' )
     protected final boolean isLinux   = os.contains( 'linux' )
     protected final boolean isMac     = os.contains( 'mac os' )
-
 
     @Parameter ( required = true, defaultValue = '${project}' )
     protected MavenProject project
@@ -107,6 +110,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ log && project && session })
     final void execute()
     {
+        if ( pluginContext[ SILENT_GCOMMONS_FLAG ] ){ disableGCommonsLoggers() }
+
         final  mavenVersion = mavenVersion()
         assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
 
@@ -116,6 +121,14 @@ abstract class BaseGroovyMojo extends GroovyMojo
         if ( ! runIf( runIf )) { return }
 
         doExecute()
+    }
+
+
+    private void disableGCommonsLoggers ( )
+    {
+        final context         = (( LoggerContext ) LoggerFactory.ILoggerFactory )
+        final gcommonsLoggers = context.loggerList.findAll { it.name.with { contains( 'com.github.goldin.' ) && contains( '.gcommons' ) }}
+        gcommonsLoggers.each { it.effectiveLevelInt = Level.OFF_INT }
     }
 
 

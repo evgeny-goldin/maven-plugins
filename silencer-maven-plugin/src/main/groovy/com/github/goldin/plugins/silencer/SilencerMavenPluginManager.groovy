@@ -1,10 +1,8 @@
 package com.github.goldin.plugins.silencer
 
+import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.MavenPluginManager
-import org.apache.maven.plugin.MojoExecution
-import org.apache.maven.plugin.PluginConfigurationException
-import org.apache.maven.plugin.PluginContainerException
+import org.apache.maven.plugin.*
 import org.gcontracts.annotations.Requires
 
 
@@ -31,19 +29,8 @@ class SilencerMavenPluginManager
 
         try
         {
-/*
-            for ( field in mojo.class.declaredFields )
-            {
-                field.accessible = true
-                final fieldValue = field.get( mojo )
-                if ( fieldValue instanceof AbstractLogEnabled )
-                {
-                    (( AbstractLogEnabled ) fieldValue ).enableLogging( new SilentLogger())
-                }
-            }
-*/
-
             mojo.log = SilencerMojo.SILENT_LOGGER
+            mojo.pluginContext[ BaseGroovyMojo.SILENT_GCOMMONS_FLAG ] = true
         }
         catch ( Throwable e ){ e.printStackTrace() }
 
