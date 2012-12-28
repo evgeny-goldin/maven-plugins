@@ -121,9 +121,15 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ ( o != null ) && c && fieldName })
     final Object getFieldValue( Object o, Class c, String fieldName )
     {
-        assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"
-        final  field = ReflectionUtils.findField( o.class, fieldName )
-        assert field, "Unable to find field [$fieldName] on object [$o][${ o.class.name }]"
+        assert c.isInstance( o ), "Object [$o][${ o.getClass().name }] is not an instance of [$c.name]"
+        final  field = ReflectionUtils.findField( o.getClass(), fieldName )
+
+        if (( field == null ) && ( o instanceof Map ))
+        {
+            return (( Map ) o )[ fieldName ]
+        }
+
+        assert field, "Unable to find field [$fieldName] on object [$o][${ o.getClass().name }]"
         field.accessible = true
         field.get( o )
     }
@@ -141,6 +147,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
     final void setFieldValue ( Object o, Class c, String fieldName, Object fieldValue )
     {
         assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"
+        assert ( ! ( o instanceof Map )) // With Map o.class = o['class']
 
         final  field = ReflectionUtils.findField( o.class, fieldName )
         assert field, "Unable to find field [$fieldName] on object [$o][${ o.class.name }]"

@@ -33,6 +33,7 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 
     private final String defaultLoggerFields = '''
     org.apache.maven.plugin.resources.ResourcesMojo:mavenResourcesFiltering.logger
+    org.apache.maven.plugin.compiler.CompilerMojo:compilerManager.compilers.javac.logger
     org.apache.maven.plugin.jar.JarMojo:jarArchiver.logger
     '''.stripIndent()
 
