@@ -111,6 +111,25 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     /**
+     * Retrieves object's field value.
+     *
+     * @param o          object owning the field
+     * @param c          object's expected class
+     * @param fieldName  name of the field
+     * @return object's field value.
+     */
+    @Requires({ ( o != null ) && c && fieldName })
+    final Object getFieldValue( Object o, Class c, String fieldName )
+    {
+        assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"
+        final  field = ReflectionUtils.findField( o.class, fieldName )
+        assert field, "Unable to find field [$fieldName] on object [$o][${ o.class.name }]"
+        field.accessible = true
+        field.get( o )
+    }
+
+
+    /**
      * Sets object's field to the value specified.
      *
      * @param o          object owning the field
@@ -118,7 +137,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * @param fieldName  name of the field
      * @param fieldValue value to set to the field
      */
-    @Requires({ ( o != null ) && fieldName })
+    @Requires({ ( o != null ) && c && fieldName })
     final void setFieldValue ( Object o, Class c, String fieldName, Object fieldValue )
     {
         assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"

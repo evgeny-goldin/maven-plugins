@@ -64,7 +64,7 @@ class SilencerMavenPluginManager
 
                 if ( j < ( fieldsList.size() - 1 ))
                 {   // o.fieldA.fieldB...
-                    o = o."$fieldName"
+                    o = this.mojo.getFieldValue( o, Object, fieldName )
                 }
                 else
                 {   // o.loggerField
