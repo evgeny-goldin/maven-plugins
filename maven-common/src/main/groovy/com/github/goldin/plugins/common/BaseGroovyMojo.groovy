@@ -192,7 +192,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
         if ( pluginContext[ SILENCE ] )
         {
             tryIt { disableGCommonsLoggers()}
-            tryIt { updateAntBuilder()}
+            tryIt { updateAntBuilders()}
         }
 
         final  mavenVersion = mavenVersion()
@@ -215,19 +215,20 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    void updateAntBuilder ()
+    void updateAntBuilders ()
     {
-        AntBuilder.metaClass.constructor = {
-            final antBuilder = AntBuilder.getConstructor().newInstance()
-
+        final updateLoggers = {
+            AntBuilder antBuilder ->
             for ( logger in antBuilder.project.buildListeners.findAll{ it instanceof DefaultLogger })
             {
                 setFieldValue( logger, DefaultLogger, 'out', nullPrintStream())
                 setFieldValue( logger, DefaultLogger, 'err', nullPrintStream())
             }
-
             antBuilder
         }
+
+        AntBuilder.metaClass.constructor       = { updateLoggers( AntBuilder.getConstructor().newInstance())}
+        CustomAntBuilder.metaClass.constructor = { updateLoggers( CustomAntBuilder.getConstructor().newInstance())}
     }
 
 
