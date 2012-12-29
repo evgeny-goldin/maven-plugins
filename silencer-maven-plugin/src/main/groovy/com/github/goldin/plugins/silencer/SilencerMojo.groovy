@@ -32,6 +32,8 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     org.apache.maven.plugin.resources.ResourcesMojo:mavenResourcesFiltering.logger
     org.apache.maven.plugin.compiler.CompilerMojo:compilerManager.compilers.javac.logger
     org.apache.maven.plugin.jar.JarMojo:jarArchiver.logger
+    org.codehaus.gmaven.plugin.compile.CompileMojo:log
+    org.codehaus.gmaven.plugin.compile.TestCompileMojo:log
     '''.stripIndent()
 
 
@@ -63,7 +65,7 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
             tryIt { setFieldValue( repoSession.transferListener,   AbstractMavenTransferListener, 'out',    nullPrintStream())}
         }
 
-        session.userProperties[ this.class.name ] = true
+        session.userProperties[ this.class.name ] = 'true'
     }
 
 

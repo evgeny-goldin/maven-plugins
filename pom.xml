@@ -9,7 +9,7 @@
     <groupId>com.github.goldin</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.6-beta-2</version>
+    <version>0.2.6-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
     <description>Maven plugins</description>
     <url>http://evgeny-goldin.com/wiki/Maven-plugins</url>
@@ -55,7 +55,7 @@
         <maven-version>3.0.4</maven-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/plugins-releases/com/github/goldin/about-maven-plugin/ -->
-        <previous-plugins-version>0.2.6-beta-1</previous-plugins-version>
+        <previous-plugins-version>0.2.6-beta-2</previous-plugins-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
         <gcommons-version>0.6.2</gcommons-version>
@@ -270,6 +270,24 @@
 
         <plugins>
 
+            <plugin>
+                <groupId>com.github.goldin</groupId>
+                <artifactId>silencer-maven-plugin</artifactId>
+                <version>${previous-plugins-version}</version>
+                <executions>
+                    <execution>
+                        <id>enable-silencer</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>silence</goal>
+                        </goals>
+                        <configuration>
+                            <enabled>{{ System.getProperty( 'silence' ) != null }}</enabled>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Enforcing Maven/Java versions                                                 -->
             <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-enforcer-plugin/ -->
@@ -318,10 +336,12 @@
                         <phase>validate</phase>
                         <configuration>
                             <source>
-                                def props = new Properties()
-                                props.load( org.apache.maven.Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
-                                final mavenVersion = props.getProperty( 'version', 'Unknown' ).trim()
-                                println """
+                                if ( System.getProperty( 'silence' ) == null )
+                                {
+                                    final props = new Properties()
+                                    props.load( org.apache.maven.Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+                                    final mavenVersion = props.getProperty( 'version', 'Unknown' ).trim()
+                                    println """
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Module - [${project.groupId}:${project.artifactId}:${project.version}]
  Java   - [${java.version}][${java.home}][${java.vendor}]
@@ -329,6 +349,7 @@
  Groovy - [$GroovySystem.version]
  GMaven - [${gmaven-version}]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""".trim()
+                                }
                             </source>
                         </configuration>
                     </execution>

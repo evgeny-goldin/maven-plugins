@@ -142,35 +142,52 @@ abstract class BaseGroovyMojo extends GroovyMojo
     /**
      * Sets object's field to the value specified.
      *
-     * @param o          object owning the field
-     * @param c          object's expected class
-     * @param fieldName  name of the field
+     * @param o           object owning the field
+     * @param objectClass object's expected class
+     * @param fieldName   name of the field
      * @param fieldValue value to set to the field
      */
-    @Requires({ ( o != null ) && c && fieldName })
-    final void setFieldValue ( Object o, Class c, String fieldName, Object fieldValue )
+    @Requires({ ( o != null ) && objectClass && fieldName })
+    final void setFieldValue ( Object o, Class objectClass, String fieldName, Object fieldValue )
     {
-        assert c.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$c.name]"
+        assert objectClass.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$objectClass.name]"
         assert ( ! ( o instanceof Map )) // With Map o.class = o['class']
 
-        final  field = ReflectionUtils.findField( o.class, fieldName )
+        Field  field = ReflectionUtils.findField( o.class, fieldName )
         assert field, "Unable to find field [$fieldName] on object [$o][${ o.class.name }]"
-        field.accessible = true
+        field.accessible   = true
+        final currentValue = field.get( o )
 
-        if ( field.get( o ) == fieldValue ){ return }
+        if ( currentValue == fieldValue ){ return }
 
-        assert (( fieldValue == null ) || ( field.type.primitive ) || field.type.isInstance( fieldValue )), \
-               "Field [$field.name][${ field.type.name }] of [${ o.class.name }] " +
-               "is not assignment-compatible with [$fieldValue][${ fieldValue.class.name }]"
-
-        if ( Modifier.isFinal( field.modifiers ))
-        {
-            final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
-            modifiersField.accessible = true
-            modifiersField.setInt( field, field.modifiers & ~Modifier.FINAL )
+        if ( o.class.name.startsWith( 'org.codehaus.gmaven.plugin.compile.' ) && ( fieldName == 'log' ))
+        {   /**
+             * 'o'                 - org.codehaus.gmaven.plugin.compile.CompileMojo or
+             *                       org.codehaus.gmaven.plugin.compile.TestCompileMojo
+             * 'o.log'             - org.sonatype.gossip.Gossip.LoggerImpl
+             * 'o.log.cachedLevel' - org.sonatype.gossip.Level
+             */
+            final errorLevel = Enum.valueOf(( Class<Enum> ) o.class.classLoader.loadClass( 'org.sonatype.gossip.Level' ), 'ERROR' )
+            setFieldValue( currentValue, Object, 'cachedLevel', errorLevel )
         }
+        else
+        {
+            final boolean isAssignable = ( fieldValue == null )   ||
+                                         ( field.type.primitive ) ||
+                                         field.type.isInstance( fieldValue )
+            assert isAssignable,
+                   "Field [$field.name][${ field.type.name }] of [${ o.class.name }] " +
+                   "is not assignment-compatible with [$fieldValue][${ fieldValue.class.name }]"
 
-        field.set( o, fieldValue )
+            if ( Modifier.isFinal( field.modifiers ))
+            {
+                final modifiersField      = Field.class.getDeclaredField( 'modifiers' )
+                modifiersField.accessible = true
+                modifiersField.setInt( field, field.modifiers & ~Modifier.FINAL )
+            }
+
+            field.set( o, fieldValue )
+        }
     }
 
 
