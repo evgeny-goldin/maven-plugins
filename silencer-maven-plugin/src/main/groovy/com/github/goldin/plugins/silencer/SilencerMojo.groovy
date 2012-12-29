@@ -62,15 +62,15 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
             log.info( 'Silencer Mojo is on - enjoy the silence.' )
 
             tryIt { updateMavenPluginManager() }
-            tryIt { updateRepositoryListener() }
-            tryIt { updateTransferListener()   }
+            tryIt { setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener,     'logger', SILENT_LOGGER )}
+            tryIt { setFieldValue( repoSession.transferListener,   AbstractMavenTransferListener, 'out',    nullPrintStream())}
         }
 
         session.userProperties[ this.class.name ] = true
     }
 
 
-    private void updateMavenPluginManager ()
+    void updateMavenPluginManager ()
     {
         final executor = container.lookup( MojoExecutor )
         (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
@@ -78,17 +78,5 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
                 this,
                 (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
                 ( defaultLoggerFields + '\n' + loggerFields ))
-    }
-
-
-    private void updateRepositoryListener ()
-    {
-        setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener, 'logger', SILENT_LOGGER )
-    }
-
-
-    private void updateTransferListener ()
-    {
-        setFieldValue( repoSession.transferListener, AbstractMavenTransferListener, 'out', new PrintStream( nullOutputStream()))
     }
 }

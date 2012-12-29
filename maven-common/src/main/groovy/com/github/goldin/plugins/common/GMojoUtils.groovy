@@ -87,11 +87,8 @@ class GMojoUtils
      }
 
 
-    /**
-     * Retrieves an instance of {@code OutputStream} ignoring everything that is written to it.
-     * @return instance of {@code OutputStream} ignoring everything that is written to it
-     */
     static OutputStream nullOutputStream () { ByteStreams.nullOutputStream() }
+    static PrintStream  nullPrintStream  () { new PrintStream( nullOutputStream()) }
 
 
     /**

@@ -14,7 +14,37 @@ class SilentLogger extends    org.apache.log4j.Logger
     SilentLogger (){ super( 'SilentLogger' ) }
 
     @Override
+    boolean isErrorEnabled ( org.slf4j.Marker marker ){ true }
+
+    @Override
+    boolean isFatalEnabled (){ true }
+
+    @Override
+    boolean isFatalErrorEnabled (){ true }
+
+    @Override
+    boolean isErrorEnabled (){ true }
+
+    @Override
+    boolean isWarnEnabled ( org.slf4j.Marker marker ){ false }
+
+    @Override
+    boolean isWarnEnabled (){ false }
+
+    @Override
+    boolean isInfoEnabled (){ false }
+
+    @Override
+    boolean isInfoEnabled ( org.slf4j.Marker marker ){ false }
+
+    @Override
     boolean isDebugEnabled (){ false }
+
+    @Override
+    boolean isTraceEnabled ( org.slf4j.Marker marker ){ false  }
+
+    @Override
+    boolean isDebugEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
     void debug ( CharSequence content ){}
@@ -26,9 +56,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     void debug ( Throwable error ){}
 
     @Override
-    boolean isInfoEnabled (){ false }
-
-    @Override
     void info ( CharSequence content ){}
 
     @Override
@@ -38,9 +65,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     void info ( Throwable error ){}
 
     @Override
-    boolean isWarnEnabled (){ false }
-
-    @Override
     void warn ( CharSequence content ){}
 
     @Override
@@ -48,9 +72,6 @@ class SilentLogger extends    org.apache.log4j.Logger
 
     @Override
     void warn ( Throwable error ){}
-
-    @Override
-    boolean isErrorEnabled (){ false }
 
     @Override
     void error ( CharSequence content ){}
@@ -91,8 +112,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     @Override
     void fatalError ( String message, Throwable throwable ){}
 
-    @Override
-    boolean isFatalErrorEnabled (){ false }
 
     @Override
     int getThreshold (){ org.codehaus.plexus.logging.Logger.LEVEL_DISABLED }
@@ -103,8 +122,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     @Override
     org.codehaus.plexus.logging.Logger getChildLogger ( String name ){ null }
 
-    @Override
-    boolean isFatalEnabled (){ false }
 
     @Override
     void trace ( String s ){}
@@ -120,9 +137,6 @@ class SilentLogger extends    org.apache.log4j.Logger
 
     @Override
     void trace ( String s, Throwable throwable ){}
-
-    @Override
-    boolean isTraceEnabled ( org.slf4j.Marker marker ){ false  }
 
     @Override
     void trace ( org.slf4j.Marker marker, String s ){}
@@ -149,9 +163,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     void debug ( String s, Object... objects ){}
 
     @Override
-    boolean isDebugEnabled ( org.slf4j.Marker marker ){ false }
-
-    @Override
     void debug ( org.slf4j.Marker marker, String s ){}
 
     @Override
@@ -174,9 +185,6 @@ class SilentLogger extends    org.apache.log4j.Logger
 
     @Override
     void info ( String s, Object... objects ){}
-
-    @Override
-    boolean isInfoEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
     void info ( org.slf4j.Marker marker, String s ){}
@@ -203,9 +211,6 @@ class SilentLogger extends    org.apache.log4j.Logger
     void warn ( String s, Object o, Object o1 ){}
 
     @Override
-    boolean isWarnEnabled ( org.slf4j.Marker marker ){ false }
-
-    @Override
     void warn ( org.slf4j.Marker marker, String s ){}
 
     @Override
@@ -228,9 +233,6 @@ class SilentLogger extends    org.apache.log4j.Logger
 
     @Override
     void error ( String s, Object... objects ){}
-
-    @Override
-    boolean isErrorEnabled ( org.slf4j.Marker marker ){ false }
 
     @Override
     void error ( org.slf4j.Marker marker, String s ){}

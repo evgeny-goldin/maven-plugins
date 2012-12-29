@@ -390,18 +390,21 @@
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
             <version>${ant-version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant-commons-net</artifactId>
             <version>${ant-version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant-jsch</artifactId>
             <version>${ant-version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -409,6 +412,7 @@
             <artifactId>jsch</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.jcraft%22%20AND%20a%3A%22jsch%22 -->
             <version>0.1.49</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -438,6 +442,7 @@
             <artifactId>guava</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.google.guava%22%20AND%20a%3A%22guava%22 -->
             <version>14.0-rc1</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -459,6 +464,7 @@
             <artifactId>slf4j-api</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.slf4j%22%20AND%20a%3A%22slf4j-api%22 -->
             <version>1.7.2</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -466,6 +472,7 @@
             <artifactId>logback-classic</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22ch.qos.logback%22%20AND%20a%3A%22logback-classic%22 -->
             <version>1.0.9</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

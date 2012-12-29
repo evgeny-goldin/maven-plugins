@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.tools.ant.DefaultLogger
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
@@ -29,11 +30,11 @@ import java.lang.reflect.Modifier
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    static    final String  SILENT_GCOMMONS = 'SILENT_GCOMMONS'
-    protected final String  os              = System.getProperty( 'os.name' ).toLowerCase()
-    protected final boolean isWindows       = os.contains( 'windows' )
-    protected final boolean isLinux         = os.contains( 'linux' )
-    protected final boolean isMac           = os.contains( 'mac os' )
+    static    final String  SILENCE   = 'SILENCE'
+    protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
+    protected final boolean isWindows = os.contains( 'windows' )
+    protected final boolean isLinux   = os.contains( 'linux' )
+    protected final boolean isMac     = os.contains( 'mac os' )
 
     @Parameter ( required = true, defaultValue = '${project}' )
     MavenProject project
@@ -188,7 +189,11 @@ abstract class BaseGroovyMojo extends GroovyMojo
     @Requires({ pluginContext && log && project && session })
     final void execute()
     {
-        if ( pluginContext[ SILENT_GCOMMONS ] ){ disableGCommonsLoggers() }
+        if ( pluginContext[ SILENCE ] )
+        {
+            tryIt { disableGCommonsLoggers()}
+            tryIt { updateAntBuilder()}
+        }
 
         final  mavenVersion = mavenVersion()
         assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
@@ -202,11 +207,27 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    private void disableGCommonsLoggers ()
+    void disableGCommonsLoggers ()
     {
         final context         = (( LoggerContext ) LoggerFactory.ILoggerFactory )
         final gcommonsLoggers = context.loggerList.findAll { it.name.startsWith( 'com.github.goldin.gcommons' ) }
         gcommonsLoggers.each { setFieldValue( it, Logger, 'effectiveLevelInt', Level.OFF_INT )}
+    }
+
+
+    void updateAntBuilder ()
+    {
+        AntBuilder.metaClass.constructor = {
+            final antBuilder = AntBuilder.getConstructor().newInstance()
+
+            for ( logger in antBuilder.project.buildListeners.findAll{ it instanceof DefaultLogger })
+            {
+                setFieldValue( logger, DefaultLogger, 'out', nullPrintStream())
+                setFieldValue( logger, DefaultLogger, 'err', nullPrintStream())
+            }
+
+            antBuilder
+        }
     }
 
 

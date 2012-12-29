@@ -46,14 +46,14 @@ class SilencerMavenPluginManager
 
         this.mojo.tryIt { updateLoggerFields( mojo ) }
         this.mojo.tryIt { mojo.log = SilencerMojo.SILENT_LOGGER }
-        this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENT_GCOMMONS ] = true }
+        this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
         mojo
     }
 
 
     @Requires({ mojo })
-    private void updateLoggerFields ( Object mojo )
+    void updateLoggerFields ( Object mojo )
     {
         for ( fieldsPath in loggerFieldsMap[ mojo.class.name ] )
         {
