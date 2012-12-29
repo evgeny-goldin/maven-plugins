@@ -4,6 +4,7 @@ package com.github.goldin.plugins.common
 /**
  * Logger implementation swallowing all messages sent to it.
  */
+@SuppressWarnings([ 'MethodCount' ])
 class SilentLogger extends    org.apache.log4j.Logger
                    implements org.apache.maven.plugin.logging.Log,
                               org.codehaus.plexus.logging.Logger,
