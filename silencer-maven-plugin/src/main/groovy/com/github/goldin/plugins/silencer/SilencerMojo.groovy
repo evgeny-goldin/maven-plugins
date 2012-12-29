@@ -73,8 +73,9 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     void updateMavenPluginManager ()
     {
         final executor = container.lookup( MojoExecutor )
+
         (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
-            new SilencerMavenPluginManager(
+            new SilentMavenPluginManager(
                 this,
                 (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
                 ( defaultLoggerFields + '\n' + loggerFields ))

@@ -12,7 +12,7 @@ import org.gcontracts.annotations.Requires
 /**
  * Delegates to {@link MavenPluginManager} and updates mojos resolved.
  */
-class SilencerMavenPluginManager
+class SilentMavenPluginManager
 {
     private final SilencerMojo mojo
 
@@ -22,7 +22,7 @@ class SilencerMavenPluginManager
 
 
     @Requires({ mojo && delegate && loggerFields })
-    SilencerMavenPluginManager ( SilencerMojo mojo, MavenPluginManager delegate, String loggerFields )
+    SilentMavenPluginManager ( SilencerMojo mojo, MavenPluginManager delegate, String loggerFields )
     {
         this.mojo            = mojo
         this.delegate        = delegate
