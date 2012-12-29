@@ -48,6 +48,14 @@ class SilentMavenPluginManager
         this.mojo.tryIt { mojo.log = this.mojo.silentLogger }
         this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
+        if ( mojo.class.name == 'org.apache.maven.plugin.surefire.SurefirePlugin' )
+        {
+            this.mojo.setFieldValue( mojo, Object.class, 'useFile',                  true   )
+            this.mojo.setFieldValue( mojo, Object.class, 'printSummary',             false  )
+            this.mojo.setFieldValue( mojo, Object.class, 'redirectTestOutputToFile', true   )
+            this.mojo.setFieldValue( mojo, Object.class, 'reportFormat',             'none' )
+        }
+
         mojo
     }
 
