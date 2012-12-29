@@ -24,9 +24,6 @@ import org.gcontracts.annotations.Requires
 @Mojo( name = 'silence', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
 class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 {
-
-    static final SilentLogger SILENT_LOGGER = new SilentLogger()
-
     @Parameter ( required = false )
     private String enabled
 
@@ -62,7 +59,7 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
             log.info( 'Silencer Mojo is on - enjoy the silence.' )
 
             tryIt { updateMavenPluginManager() }
-            tryIt { setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener,     'logger', SILENT_LOGGER )}
+            tryIt { setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener,     'logger', silentLogger )}
             tryIt { setFieldValue( repoSession.transferListener,   AbstractMavenTransferListener, 'out',    nullPrintStream())}
         }
 

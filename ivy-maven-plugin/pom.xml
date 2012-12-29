@@ -23,21 +23,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-impl</artifactId>
-            <version>1.13.1</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ivy</groupId>
-            <artifactId>ivy</artifactId>
-            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ivy%22%20AND%20a%3A%22ivy%22 -->
-            <version>2.3.0-rc2</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-dependency-plugin%22 -->

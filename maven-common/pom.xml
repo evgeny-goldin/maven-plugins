@@ -433,6 +433,48 @@
             </exclusions>
         </dependency>
 
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Silencer plugin dependencies (BaseGroovyMojo) -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.slf4j%22%20AND%20a%3A%22slf4j-api%22 -->
+            <version>1.7.2</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22ch.qos.logback%22%20AND%20a%3A%22logback-classic%22 -->
+            <version>1.0.9</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22commons-logging%22%20AND%20a%3A%22commons-logging%22 -->
+            <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22log4j%22%20AND%20a%3A%22log4j%22 -->
+            <version>1.2.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ivy</groupId>
+            <artifactId>ivy</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ivy%22%20AND%20a%3A%22ivy%22 -->
+            <version>2.3.0-rc2</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- ~~~~ -->
         <!-- Misc -->
         <!-- ~~~~ -->
@@ -456,22 +498,6 @@
             <groupId>org.gcontracts</groupId>
             <artifactId>gcontracts-core</artifactId>
             <version>${gcontracts-version}</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.slf4j%22%20AND%20a%3A%22slf4j-api%22 -->
-            <version>1.7.2</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22ch.qos.logback%22%20AND%20a%3A%22logback-classic%22 -->
-            <version>1.0.9</version>
             <scope>compile</scope>
         </dependency>
 

@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.ivy.util.Message
 import org.apache.tools.ant.DefaultLogger
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
@@ -30,7 +31,9 @@ import java.lang.reflect.Modifier
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    static    final String  SILENCE   = 'SILENCE'
+    static final String       SILENCE      = 'SILENCE'
+           final SilentLogger silentLogger = new SilentLogger()
+
     protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
     protected final boolean isWindows = os.contains( 'windows' )
     protected final boolean isLinux   = os.contains( 'linux' )
@@ -183,17 +186,19 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
 
     /**
+     * {@link #execute()} replacement to be overridden by subclasses
+     */
+    abstract void doExecute()
+
+
+    /**
      * Executes the Mojo.
      */
     @Override
     @Requires({ pluginContext && log && project && session })
     final void execute()
     {
-        if ( pluginContext[ SILENCE ] )
-        {
-            tryIt { disableGCommonsLoggers()}
-            tryIt { updateAntBuilders()}
-        }
+        if ( pluginContext[ SILENCE ] ){ updateSilence()}
 
         final  mavenVersion = mavenVersion()
         assert mavenVersion.startsWith( '3' ), "Only Maven 3 is supported, current Maven version is [$mavenVersion]"
@@ -207,7 +212,15 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    void disableGCommonsLoggers ()
+    private void updateSilence ()
+    {
+        tryIt { updateGCommons() }
+        tryIt { updateAntBuilders() }
+        tryIt { updateIvy() }
+    }
+
+
+    void updateGCommons ()
     {
         final context         = (( LoggerContext ) LoggerFactory.ILoggerFactory )
         final gcommonsLoggers = context.loggerList.findAll { it.name.startsWith( 'com.github.goldin.gcommons' ) }
@@ -232,8 +245,8 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
-    /**
-     * {@link #execute()} replacement to be overridden by subclasses
-     */
-    abstract void doExecute()
+    void updateIvy ()
+    {
+        Message.defaultLogger = silentLogger
+    }
 }

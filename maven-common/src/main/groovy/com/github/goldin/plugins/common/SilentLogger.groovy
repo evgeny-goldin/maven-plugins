@@ -1,4 +1,4 @@
-package com.github.goldin.plugins.silencer
+package com.github.goldin.plugins.common
 
 
 /**
@@ -9,9 +9,55 @@ class SilentLogger extends    org.apache.log4j.Logger
                               org.codehaus.plexus.logging.Logger,
                               org.apache.commons.logging.Log,
                               org.sonatype.aether.spi.log.Logger,
-                              org.slf4j.Logger
+                              org.slf4j.Logger,
+                              org.apache.ivy.util.MessageLogger
 {
     SilentLogger (){ super( 'SilentLogger' ) }
+
+    @Override
+    void log ( String msg, int level ){}
+
+    @Override
+    void rawlog ( String msg, int level ){}
+
+    @Override
+    void verbose ( String msg ){}
+
+    @Override
+    void deprecated ( String msg ){}
+
+    @Override
+    void rawinfo ( String msg ){}
+
+    @Override
+    List getProblems (){ [] }
+
+    @Override
+    List getWarns () { [] }
+
+    @Override
+    List getErrors () { [] }
+
+    @Override
+    void clearProblems (){}
+
+    @Override
+    void sumupProblems (){}
+
+    @Override
+    void progress (){}
+
+    @Override
+    void endProgress (){}
+
+    @Override
+    void endProgress ( String msg ){}
+
+    @Override
+    boolean isShowProgress () { false }
+
+    @Override
+    void setShowProgress ( boolean progress ){}
 
     @Override
     boolean isErrorEnabled ( org.slf4j.Marker marker ){ true }

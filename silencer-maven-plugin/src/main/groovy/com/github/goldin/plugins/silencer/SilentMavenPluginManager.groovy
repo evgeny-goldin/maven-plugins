@@ -45,7 +45,7 @@ class SilentMavenPluginManager
         assert mojo
 
         this.mojo.tryIt { updateLoggerFields( mojo ) }
-        this.mojo.tryIt { mojo.log = SilencerMojo.SILENT_LOGGER }
+        this.mojo.tryIt { mojo.log = this.mojo.silentLogger }
         this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
         mojo
@@ -68,7 +68,7 @@ class SilentMavenPluginManager
                 }
                 else
                 {   // o.loggerField
-                    this.mojo.setFieldValue( o, Object, fieldName, SilencerMojo.SILENT_LOGGER )
+                    this.mojo.setFieldValue( o, Object, fieldName, this.mojo.silentLogger )
                 }
             }
         }
