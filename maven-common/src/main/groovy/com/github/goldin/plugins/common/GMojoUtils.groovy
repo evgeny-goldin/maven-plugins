@@ -1,18 +1,20 @@
 package com.github.goldin.plugins.common
 
 import com.github.goldin.gcommons.GCommons
+import com.github.goldin.gcommons.beans.*
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.google.common.io.ByteStreams
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
+import groovyx.gpars.GParsPool
 import org.apache.maven.Maven
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
+import org.apache.maven.model.Dependency
 import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
@@ -21,8 +23,6 @@ import org.apache.maven.shared.filtering.MavenFileFilter
 import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
-import com.github.goldin.gcommons.beans.*
-import org.apache.maven.model.Dependency
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
@@ -460,6 +460,7 @@ class GMojoUtils
      *
      * @return new Maven {@link Artifact}
      */
+    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ groupId && artifactId && version })
     @Ensures ({ result })
     static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier,
@@ -607,6 +608,37 @@ class GMojoUtils
     {
         ( includeScope.empty ||   ( scope in includeScope )) &&
         ( excludeScope.empty || ! ( scope in excludeScope ))
+    }
+
+
+    /**
+     * Throws a {@link MojoExecutionException} or logs a warning message according to {@code fail}.
+     *
+     * @param fail     whether execution should throw an exception
+     * @param message  error message to throw or log
+     * @param error    execution error, optional
+     */
+    @Requires({ message })
+    static void failOrWarn( boolean fail, String message, Throwable error = null )
+    {
+        if ( fail )
+        {
+            if ( error ) { throw new MojoExecutionException( message, error )}
+            else         { throw new MojoExecutionException( message )}
+        }
+        else
+        {
+            if ( error ) { log.warn( message, error )}
+            else         { log.warn( message )}
+        }
+    }
+
+
+    @Requires({ ( c != null ) && action })
+    static void each ( boolean parallel, Collection<?> c, Closure action )
+    {
+        if ( parallel ) { GParsPool.withPool { c.eachParallel( action ) }}
+        else            { c.each( action )}
     }
 
 

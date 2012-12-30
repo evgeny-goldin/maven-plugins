@@ -135,6 +135,7 @@ final class CopyResource extends Resource implements Cloneable
                               //          dependencies are processes in the same order they are declared
 
     boolean eliminateDuplicates   = true
+    boolean parallelDownload      = true
     boolean preservePath          = false
     boolean clean                 = false
     boolean cleanEmptyDirectories = false

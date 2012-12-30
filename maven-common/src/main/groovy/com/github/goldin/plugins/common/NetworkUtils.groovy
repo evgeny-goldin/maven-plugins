@@ -112,7 +112,8 @@ class NetworkUtils
 
             if ( netBean().isHttp( remotePath ))
             {
-                throw new MojoExecutionException( 'HTTP upload is not implemented yet, please vote for http://evgeny-goldin.org/youtrack/issue/pl-312' )
+                throw new MojoExecutionException(
+                    'HTTP upload is not implemented yet, please vote for http://evgeny-goldin.org/youtrack/issue/pl-312' )
             }
 
             if ( netBean().isScp( remotePath ))

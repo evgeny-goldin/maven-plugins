@@ -499,8 +499,7 @@ class AboutMojo extends BaseGroovyMojo
             {
                 if ( ! directory.directory )
                 {
-                    assert  ( ! failIfNotFound ), "Directory [$directory.canonicalPath] is not available, consider using <failIfNotFound>"
-                    log.warn( "Directory [$directory.canonicalPath] is not available, \"about\" is not created" )
+                    failOrWarn( failIfNotFound, "Directory [$directory.canonicalPath] is not available, consider using <failIfNotFound>" )
                     return
                 }
 
@@ -538,9 +537,7 @@ class AboutMojo extends BaseGroovyMojo
         }
         catch ( Throwable e )
         {
-            def message = 'Failed to create "about" file'
-            if ( failOnError ) { throw new MojoExecutionException( message, e ) }
-            log.error( "$message:", e )
+            failOrWarn( failOnError, 'Failed to create "about" file', e )
         }
     }
 }

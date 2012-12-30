@@ -4,6 +4,7 @@ import org.apache.maven.artifact.Artifact
 import org.apache.maven.plugin.dependency.fromConfiguration.ArtifactItem
 import org.gcontracts.annotations.Requires
 
+
 /**
  * Presents a {@code <dependency>} to copy
  */
@@ -12,11 +13,13 @@ class CopyDependency extends ArtifactItem
 {
     CopyDependency() {}
 
-    @Requires({ artifact })
-    CopyDependency( Artifact artifact )
+    @Requires({ dependency && artifact })
+    CopyDependency( CopyDependency dependency, Artifact artifact )
     {
         super( artifact )
-        this.optional = artifact.optional
+
+        this.optional     = dependency.optional
+        this.stripVersion = dependency.stripVersion
     }
 
 
@@ -47,10 +50,7 @@ class CopyDependency extends ArtifactItem
      * @return true if current dependency has its GAV coordinates defined,
      *         false otherwise
      */
-    boolean isGav ()
-    {
-        groupId && artifactId && version
-    }
+    boolean isGav () { groupId && artifactId && version }
 
 
     /**
@@ -61,7 +61,7 @@ class CopyDependency extends ArtifactItem
      *
      * @return true if dependency is "single", false otherwise.
      */
-    boolean isSingle()
+    boolean isSingle ()
     {
         gav &&
         (( excludeTransitive == null ) || ( excludeTransitive )) &&
@@ -91,7 +91,7 @@ class CopyDependency extends ArtifactItem
     String toString ()
     {
         final original = (( groupId || artifactId ) ? super.toString(): '' )
-        final us       = [ "includeOptional \"$includeOptional\"",
+        final ours     = [ "includeOptional \"$includeOptional\"",
                            excludeTransitive != null ? "exclude transitive \"$excludeTransitive\""  : '',
                            includeScope              ? "includeScope \"$includeScope\""             : '',
                            excludeScope              ? "excludeScope \"$excludeScope\""             : '',
@@ -107,6 +107,6 @@ class CopyDependency extends ArtifactItem
                          ].grep().join( ', ' )
 
 
-        original? "$original, $us" : us
+        original? "$original, $ours" : ours
     }
 }

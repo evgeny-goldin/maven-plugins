@@ -243,8 +243,6 @@ class IvyHelper
     @Requires({ errorMessage })
     void failOrWarn ( String errorMessage )
     {
-        errorMessage += ( offline ? ' (system is in offline mode).' : '.' )
-        if ( failOnError ) { throw new RuntimeException( errorMessage )}
-        else               { log.warn( errorMessage ) }
+        failOrWarn( failOnError, errorMessage + ( offline ? ' (system is in offline mode).' : '.' ))
     }
 }

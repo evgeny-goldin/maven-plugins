@@ -100,14 +100,14 @@ abstract class BaseGroovyMojo extends GroovyMojo
             }
             catch ( e )
             {
-                if (( ! artifact.optional ) && failOnError ) { throw new MojoExecutionException( errorMessage, e ) }
+                failOrWarn((( ! artifact.optional ) && failOnError ), errorMessage, e )
+                return artifact
             }
         }
 
         if ( ! artifact.file?.file )
         {
-            assert ( artifact.optional || ( ! failOnError )), errorMessage
-            log.warn( errorMessage )
+            failOrWarn((( ! artifact.optional ) && failOnError ), errorMessage )
         }
 
         artifact

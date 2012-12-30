@@ -480,6 +480,14 @@
         <!-- ~~~~ -->
 
         <dependency>
+            <groupId>org.codehaus.gpars</groupId>
+            <artifactId>gpars</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.gpars%22%20AND%20a%3A%22gpars%22 -->
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.google.guava%22%20AND%20a%3A%22guava%22 -->

@@ -341,7 +341,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             boolean resolved = false // Whether any dependency was resolved
 
-            resolve( resourceDependencies, resource.eliminateDuplicates, verbose, failIfNotFound ).each {
+            resolve( resourceDependencies, resource.eliminateDuplicates, resource.parallelDownload, verbose, failIfNotFound ).each {
                 CopyDependency d ->
 
                 resolved = true
@@ -392,7 +392,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, resource.eliminateDuplicates, verbose, failIfNotFound, isStripVersion ).each {
+                resolve( resourceDependencies, resource.eliminateDuplicates, resource.parallelDownload, verbose, failIfNotFound, isStripVersion ).each {
                     CopyDependency d -> fileBean().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
@@ -426,6 +426,7 @@ class CopyMojo extends BaseGroovyMojo
      *
      * @param dependencies        dependencies to resolve and filter
      * @param eliminateDuplicates whether duplicate dependencies should be removed from result
+     * @param parallelDownload    whether dependencies should be downloaded in parallel
      * @param verbose             whether resolving process should be logged
      * @param failIfNotFound      whether execution should fail if zero artifacts were resolved
      * @param stripVersion        whether dependencies version should be stripped
@@ -435,18 +436,14 @@ class CopyMojo extends BaseGroovyMojo
     @Ensures ({ result != null })
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
                                                  boolean              eliminateDuplicates,
+                                                 boolean              parallelDownload,
                                                  boolean              verbose,
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
-        final result = helper.resolveDependencies( dependencies, eliminateDuplicates, verbose, failIfNotFound ).
-        findAll {
-            // Filtering out (optional) unresolved artifacts
-            CopyDependency d ->
-            d.artifact?.file?.file
-        }.
-        collect {
-            CopyDependency d ->
+        final result = helper.resolveDependencies( dependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound ).
+        findAll { CopyDependency d -> d.artifact?.file?.file }. // Filtering out (optional) unresolved artifacts
+        collect { CopyDependency d ->
 
             d.destFileName = d.destFileName ?:
                              ( d.groupId.startsWith( IVY_PREFIX )) ?
@@ -653,11 +650,7 @@ class CopyMojo extends BaseGroovyMojo
     {
         if ( ! sourceDirectory.directory )
         {
-            "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be packed to [${targetArchive.canonicalPath}]".with {
-                assert ( ! failIfNotFound ), delegate
-                log.warn(( String ) delegate )
-            }
-
+            failOrWarn( failIfNotFound, "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be packed to [${ targetArchive.canonicalPath }]" )
             return null
         }
 
@@ -816,11 +809,7 @@ class CopyMojo extends BaseGroovyMojo
     {
         if ( ! sourceDirectory.directory )
         {
-            "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be deleted".with {
-                assert ( ! failIfNotFound ), delegate
-                log.warn(( String ) delegate )
-            }
-
+            failOrWarn( failIfNotFound, "Directory [$sourceDirectory.canonicalPath] doesn't exist, no files will be deleted" )
             return []
         }
 

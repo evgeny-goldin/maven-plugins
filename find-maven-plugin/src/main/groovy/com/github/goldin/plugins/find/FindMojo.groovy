@@ -102,12 +102,10 @@ class FindMojo extends BaseGroovyMojo
             }
         }
 
-        String message = "Failed to find [$file] going up from [$startDir.canonicalPath]. "   +
-                         ( propertyName    ? "Maven property [$propertyName] isn't set. "     : '' ) +
-                         ( sysPropertyName ? "System property [$sysPropertyName] isn't set. " : '' )
-
-        assert ( ! failIfNotFound ), message
-        log.warn( message )
+        failOrWarn( failIfNotFound,
+                    "Failed to find [$file] going up from [$startDir.canonicalPath]. "   +
+                    ( propertyName    ? "Maven property [$propertyName] isn't set. "     : '' ) +
+                    ( sysPropertyName ? "System property [$sysPropertyName] isn't set. " : '' ))
         null
     }
 }

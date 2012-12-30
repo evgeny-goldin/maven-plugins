@@ -17,6 +17,7 @@ import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
@@ -69,39 +70,47 @@ final class CopyMojoHelper
     /**
      * Scans project dependencies, resolves and filters them using dependencies provided.
      *
-     * @param dependencies        dependencies to resolve, either "single" or "filtering" ones
+     * @param inputDependencies   dependencies to resolve, either "single" or "filtering" ones
      * @param eliminateDuplicates whether duplicate dependencies should be removed from result
+     * @param parallelDownload    whether dependencies should be downloaded in parallel
      * @param verbose             whether resolving process should be logged
      * @param failIfNotFound      whether execution should fail if zero dependencies are resolved
      * @return                    project's dependencies that passed all filters, resolved (downloaded)
      */
-    @Requires({ dependencies })
+    @Requires({ inputDependencies })
     @Ensures({ result || ( ! failIfNotFound ) })
-    List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
-                                               boolean              eliminateDuplicates,
-                                               boolean              verbose,
-                                               boolean              failIfNotFound )
+    Collection<CopyDependency> resolveDependencies ( List<CopyDependency> inputDependencies,
+                                                     boolean              eliminateDuplicates,
+                                                     boolean              parallelDownload,
+                                                     boolean              verbose,
+                                                     boolean              failIfNotFound )
     {
         try
         {
-            final collectedArtifacts   = dependencies.collect { CopyDependency d -> collectDependencyArtifacts( d, verbose, failIfNotFound )}.flatten()
-            final resolvedDependencies = ( eliminateDuplicates ? removeDuplicates( collectedArtifacts ) : collectedArtifacts ).
-            collect { Artifact artifact -> new CopyDependency( mojo.downloadArtifact( artifact, verbose, failIfNotFound )) }
+            def dependencies = inputDependencies.collect {
+                CopyDependency d -> collectDependencies( d, parallelDownload, verbose, failIfNotFound )
+            }.flatten()
+
+            if ( eliminateDuplicates ){ dependencies = removeDuplicates( dependencies )}
+
+            each ( parallelDownload, dependencies ){
+                CopyDependency d -> mojo.downloadArtifact( d.artifact, verbose, failIfNotFound )
+            }
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$dependencies]: [${ resolvedDependencies.size() }] artifact${ generalBean().s( resolvedDependencies.size())} found" )
-            if ( log.debugEnabled ) { log.debug( "Artifacts found: $resolvedDependencies" ) }
+            log.info( "Resolving dependencies [$inputDependencies]: [${ dependencies.size() }] artifact${ generalBean().s( dependencies.size())} found" )
+            if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( resolvedDependencies || ( ! failIfNotFound ) || ( resolvedDependencies.every { it.optional } )), "No dependencies resolved with [$dependencies]"
-            assert resolvedDependencies.every { it.artifact?.file?.file || ( ! failIfNotFound ) || it.optional }
-            resolvedDependencies
+            assert ( dependencies || ( ! failIfNotFound ) || ( dependencies.every { it.optional } )), "No dependencies resolved with [$inputDependencies]"
+            assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
+            dependencies
         }
         catch( e )
         {
-            String errorMessage = "Failed to resolve and filter dependencies with [$dependencies]"
+            String errorMessage = "Failed to resolve and filter dependencies with [$inputDependencies]"
 
-            if ( dependencies.every { it.optional } || ( ! failIfNotFound ))
+            if ( inputDependencies.every { it.optional } || ( ! failIfNotFound ))
             {
                 String exceptionMessage = e.toString()
 
@@ -121,14 +130,20 @@ final class CopyMojoHelper
 
 
     @Requires({ dependency })
-    @Ensures ({ result != null })
-    private Collection<Artifact> collectDependencyArtifacts ( CopyDependency dependency, boolean verbose, boolean failIfNotFound )
+    @Ensures ({ result.artifact && result.artifact.with { groupId && artifactId && version }})
+    private Collection<CopyDependency> collectDependencies ( CopyDependency dependency,
+                                                             boolean        parallelDownload,
+                                                             boolean        verbose,
+                                                             boolean        failIfNotFound )
     {
         final mavenArtifact = dependency.gav ?
             dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
             null
 
-        if ( dependency.single ){ return [ mavenArtifact ] }
+        if ( dependency.single )
+        {
+            return [ new CopyDependency( dependency, mavenArtifact ) ]
+        }
 
         assert ( dependency.transitive || ( dependency.depth < 1 )), \
                "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
@@ -143,7 +158,7 @@ final class CopyMojoHelper
 
             collectArtifactDependencies( mavenArtifact, includeScopes, excludeScopes,
                                          dependency.transitive, dependency.includeOptional,
-                                         verbose, failIfNotFound, dependency.depth ) :
+                                         parallelDownload, verbose, failIfNotFound, dependency.depth ) :
             /**
              * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
              * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
@@ -157,36 +172,37 @@ final class CopyMojoHelper
                 dependency.transitive ?
                     collectArtifactDependencies( a, includeScopes, excludeScopes,
                                                  dependency.transitive, dependency.includeOptional,
-                                                 verbose, failIfNotFound, dependency.depth ) :
+                                                 parallelDownload, verbose, failIfNotFound, dependency.depth ) :
                     a
             }.
             flatten().
             toSet()
 
         final filters = composeFilters( dependency )
-        artifacts.findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}
+        artifacts.findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}.
+                  collect { Artifact a -> new CopyDependency( dependency, a )}
     }
 
 
     /**
-     * Removes duplicate versions of the same artifacts by choosing the highest version.
+     * Removes duplicate versions of the same dependency by choosing the highest version.
      *
-     * @param artifacts artifacts containing possible duplicates
-     * @return new list of artifacts with duplicate eliminates removed
+     * @param dependencies dependencies containing possible duplicates
+     * @return new list of dependencies with duplicate eliminates removed
      */
-    @Requires({ artifacts != null })
+    @Requires({ dependencies != null })
     @Ensures ({ result != null })
-    private Collection<Artifact> removeDuplicates( Collection<Artifact> artifacts )
+    private Collection<CopyDependency> removeDuplicates( Collection<CopyDependency> dependencies )
     {
-        if ( artifacts.size() < 2 ) { return artifacts }
+        if ( dependencies.size() < 2 ) { return dependencies }
 
         /**
-         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate artifacts
+         * Mapping of "[groupId]::[artifactId]::[type]::[classifier]" to their duplicate dependencies
          */
-        Map<String, List<Artifact>> mapping = artifacts.inject( [:].withDefault{ [] } ) {
-            Map m, Artifact a ->
-            assert a.groupId && a.artifactId
-            m[ "$a.groupId::$a.artifactId::${ a.type ?: '' }::${ a.classifier ?: '' }" ] << a
+        Map<String, List<CopyDependency>> mapping = dependencies.inject( [:].withDefault{ [] } ) {
+            Map m, CopyDependency d ->
+            assert d.groupId && d.artifactId
+            m[ "[$d.groupId]::[$d.artifactId]::[${ d.type ?: '' }]::[${ d.classifier ?: '' }]".toString() ] << d
             m
         }
 
@@ -195,12 +211,12 @@ final class CopyMojoHelper
          * if there are more than one element in a list.
          */
         final result = mapping.values().collect {
-            List<Artifact> duplicateArtifacts ->
+            List<CopyDependency> duplicateDependencies ->
+            assert               duplicateDependencies
 
-            assert duplicateArtifacts
-            ( duplicateArtifacts.size() < 2 ) ? duplicateArtifacts.first() : duplicateArtifacts.max {
-                Artifact a1, Artifact a2 ->
-                new DefaultArtifactVersion( a1.version ) <=> new DefaultArtifactVersion( a2.version )
+            ( duplicateDependencies.size() < 2 ) ? duplicateDependencies.first() : duplicateDependencies.max {
+                CopyDependency d1, CopyDependency d2 ->
+                new DefaultArtifactVersion( d1.version ) <=> new DefaultArtifactVersion( d2.version )
             }
         }
 
@@ -216,31 +232,37 @@ final class CopyMojoHelper
      * @param excludeScopes       dependencies scopes to exclude
      * @param includeTransitive   whether dependencies should be traversed transitively
      * @param includeOptional     whether optional dependencies should be included
-     * @param depth               depth of transitive dependencies to collect
+     * @param parallelDownload    whether dependencies should be collected in parallel
      * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
-     * @param aggregator internal variable used by recursive iteration, shouldn't be used by caller!
-     * @return                    dependencies collected (not resolved!)
+     * @param depth               depth of transitive dependencies to collect
+     * @param currentDepth        current transitive dependencies depth
+     * @param aggregator          aggregates recursive results
+     * @return                    transitive dependencies collected (not resolved!)
      */
     @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ artifact && ( includeScopes != null ) && ( excludeScopes != null ) && ( currentDepth >= 0 ) && ( aggregator != null ) })
     @Ensures ({ result != null })
-    private final Collection<Artifact> collectArtifactDependencies ( Artifact       artifact,
-                                                                     List<String>   includeScopes,
-                                                                     List<String>   excludeScopes,
-                                                                     boolean        includeTransitive,
-                                                                     boolean        includeOptional,
-                                                                     boolean        verbose,
-                                                                     boolean        failOnError,
-                                                                     int            depth,
-                                                                     int            currentDepth = 0,
-                                                                     Set<Artifact>  aggregator   = new HashSet<Artifact>())
+    private final Collection<Artifact> collectArtifactDependencies (
+            Artifact             artifact,
+            List<String>         includeScopes,
+            List<String>         excludeScopes,
+            boolean              includeTransitive,
+            boolean              includeOptional,
+            boolean              parallelDownload,
+            boolean              verbose,
+            boolean              failOnError,
+            int                  depth,
+            int                  currentDepth = 0,
+            Collection<Artifact> aggregator   = ( parallelDownload ? new ConcurrentLinkedQueue<Artifact>() :
+                                                                     new HashSet<Artifact>()))
     {
         assert artifact.with { groupId && artifactId && version }
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
         if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { aggregator << artifact }
+
         if ( currentDepth == depth )
         {
             return aggregator
@@ -276,18 +298,14 @@ final class CopyMojoHelper
             assert childArtifacts.every { scopeMatches( it.scope, includeScopes, excludeScopes )}
 
             if ( includeTransitive )
-            {   /**
-                 * Recursively iterating over node's children and collecting their transitive dependencies.
-                 * findAll{ .. } doesn't fit here since we want to check every artifact separately before going recursive.
-                 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                 * The problem we have is graph at this point containing only partial data, some of node's children
-                 * may have dependencies not shown by it (I don't know why).
-                 */
-                childArtifacts.each {
-                    if ( ! ( it in aggregator ))
+            {
+                each( parallelDownload, childArtifacts ){
+                    Artifact a ->
+
+                    if ( ! ( a in aggregator ))
                     {
-                        collectArtifactDependencies( it, includeScopes, excludeScopes, includeTransitive, includeOptional,
-                                                     verbose, failOnError, depth, currentDepth + 1, aggregator )
+                        collectArtifactDependencies( a, includeScopes, excludeScopes, includeTransitive, includeOptional,
+                                                     parallelDownload, verbose, failOnError, depth, currentDepth + 1, aggregator )
                     }
                 }
             }
@@ -295,14 +313,13 @@ final class CopyMojoHelper
             {
                 aggregator.addAll( childArtifacts )
             }
-
-            aggregator
         }
         catch ( e )
         {
-            if ( failOnError ) { throw new RuntimeException( "Failed to collect [$artifact] dependencies", e ) }
-            Collections.emptyList()
+            failOrWarn( failOnError, "Failed to collect [$artifact] dependencies", e )
         }
+
+        aggregator
     }
 
 
