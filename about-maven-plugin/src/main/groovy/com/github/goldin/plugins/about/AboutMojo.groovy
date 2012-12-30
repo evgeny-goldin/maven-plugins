@@ -105,11 +105,11 @@ class AboutMojo extends BaseGroovyMojo
     {
         assert command && directory
 
-        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath]" ) }
+        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath]" )}
 
         String result = generalBean().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
 
-        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" ) }
+        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" )}
 
         if ( minimalListSize > 0 )
         {

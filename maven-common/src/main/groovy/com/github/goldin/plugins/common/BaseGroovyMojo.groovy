@@ -123,7 +123,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * @return object's field value.
      */
     @Requires({ ( o != null ) && c && fieldName })
-    final Object getFieldValue( Object o, Class c, String fieldName )
+    final Object getFieldValue( Object o, Class c = Object, String fieldName )
     {
         assert c.isInstance( o ), "Object [$o][${ o.getClass().name }] is not an instance of [$c.name]"
         final  field = ReflectionUtils.findField( o.getClass(), fieldName )
@@ -148,7 +148,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * @param fieldValue value to set to the field
      */
     @Requires({ ( o != null ) && objectClass && fieldName })
-    final void setFieldValue ( Object o, Class objectClass, String fieldName, Object fieldValue )
+    final void setFieldValue ( Object o, Class objectClass = Object, String fieldName, Object fieldValue )
     {
         assert objectClass.isInstance( o ), "Object [$o][${ o.class.name }] is not an instance of [$objectClass.name]"
         assert ( ! ( o instanceof Map )) // With Map o.class = o['class']
@@ -168,7 +168,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
              * 'o.log.cachedLevel' - org.sonatype.gossip.Level
              */
             final errorLevel = Enum.valueOf(( Class<Enum> ) o.class.classLoader.loadClass( 'org.sonatype.gossip.Level' ), 'ERROR' )
-            setFieldValue( currentValue, Object, 'cachedLevel', errorLevel )
+            setFieldValue( currentValue, 'cachedLevel', errorLevel )
         }
         else
         {

@@ -6,7 +6,9 @@ import org.apache.maven.plugin.MavenPluginManager
 import org.apache.maven.plugin.MojoExecution
 import org.apache.maven.plugin.PluginConfigurationException
 import org.apache.maven.plugin.PluginContainerException
+import org.codehaus.plexus.logging.AbstractLogEnabled
 import org.gcontracts.annotations.Requires
+import java.lang.reflect.Field
 
 
 /**
@@ -14,17 +16,17 @@ import org.gcontracts.annotations.Requires
  */
 class SilentMavenPluginManager
 {
-    private final SilencerMojo mojo
+    private final SilencerMojo parentMojo
 
     @Delegate
     private final MavenPluginManager  delegate
     private final Map<String, List<String>> loggerFieldsMap
 
 
-    @Requires({ mojo && delegate && loggerFields })
-    SilentMavenPluginManager ( SilencerMojo mojo, MavenPluginManager delegate, String loggerFields )
+    @Requires({ parentMojo && delegate && loggerFields })
+    SilentMavenPluginManager ( SilencerMojo parentMojo, MavenPluginManager delegate, String loggerFields )
     {
-        this.mojo            = mojo
+        this.parentMojo      = parentMojo
         this.delegate        = delegate
         this.loggerFieldsMap = loggerFields.readLines()*.trim().grep().inject( [:].withDefault{ [] } ){
             Map m, String line ->
@@ -44,16 +46,17 @@ class SilentMavenPluginManager
         final  mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
         assert mojo
 
-        this.mojo.tryIt { updateLoggerFields( mojo ) }
-        this.mojo.tryIt { mojo.log = this.mojo.silentLogger }
-        this.mojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
+        parentMojo.tryIt { updateLoggerFields( mojo )}
+        parentMojo.tryIt { updateAbstractLogEnabledFields( mojo )}
+        parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
+        parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
         if ( mojo.class.name == 'org.apache.maven.plugin.surefire.SurefirePlugin' )
         {
-            this.mojo.setFieldValue( mojo, Object.class, 'useFile',                  true   )
-            this.mojo.setFieldValue( mojo, Object.class, 'printSummary',             false  )
-            this.mojo.setFieldValue( mojo, Object.class, 'redirectTestOutputToFile', true   )
-            this.mojo.setFieldValue( mojo, Object.class, 'reportFormat',             'none' )
+            parentMojo.setFieldValue( mojo, 'useFile',                  true   )
+            parentMojo.setFieldValue( mojo, 'printSummary',             false  )
+            parentMojo.setFieldValue( mojo, 'redirectTestOutputToFile', true   )
+            parentMojo.setFieldValue( mojo, 'reportFormat',             'none' )
         }
 
         mojo
@@ -68,17 +71,30 @@ class SilentMavenPluginManager
             final  fieldsList = fieldsPath.tokenize( '.' )
             Object o          = mojo
 
-            fieldsList.eachWithIndex { String fieldName , int j ->
+            fieldsList.eachWithIndex { String fieldName, int j ->
 
                 if ( j < ( fieldsList.size() - 1 ))
                 {   // o.fieldA.fieldB...
-                    o = this.mojo.getFieldValue( o, Object, fieldName )
+                    o = parentMojo.getFieldValue( o, fieldName )
                 }
                 else
                 {   // o.loggerField
-                    this.mojo.setFieldValue( o, Object, fieldName, this.mojo.silentLogger )
+                    parentMojo.setFieldValue( o, fieldName, parentMojo.silentLogger )
                 }
             }
         }
+    }
+
+
+    @Requires({ mojo })
+    void updateAbstractLogEnabledFields ( Object mojo )
+    {
+        final List<Field> mojoFields = []
+        for ( Class c = mojo.class; ( c != Object ); c = c.superclass ){ mojoFields.addAll( c.declaredFields )}
+
+        mojoFields.
+        collect { Field  f     -> parentMojo.getFieldValue( mojo, f.name )}.
+        findAll { Object value -> AbstractLogEnabled.isInstance( value )}.
+        each    { Object value -> parentMojo.setFieldValue( value, 'logger', parentMojo.silentLogger )}
     }
 }

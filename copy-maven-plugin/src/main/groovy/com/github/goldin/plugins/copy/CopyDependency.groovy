@@ -20,6 +20,7 @@ class CopyDependency extends ArtifactItem
 
         this.optional     = dependency.optional
         this.stripVersion = dependency.stripVersion
+        this.destFileName = dependency.destFileName
     }
 
 
