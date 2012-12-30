@@ -430,19 +430,16 @@ class CopyMojo extends BaseGroovyMojo
      * @param stripVersion   whether dependencies version should be stripped
      * @return               dependencies resolved and filtered
      */
+    @Requires({ dependencies })
+    @Ensures ({ result != null })
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
                                                  boolean              verbose,
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
-        assert dependencies
-
-        final result = dependencies.
-        collect {
-            CopyDependency d ->
-            helper.resolveDependencies( d, verbose, failIfNotFound )
-        }.
-        flatten().
+        final result = helper.eliminateDuplicates (
+            dependencies.collect { helper.resolveDependencies( it, verbose, failIfNotFound )}.flatten()
+        ).
         findAll {
             // Filtering out (optional) unresolved artifacts
             CopyDependency d ->

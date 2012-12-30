@@ -588,46 +588,6 @@ class GMojoUtils
 
 
     /**
-     * Eliminates duplicate versions of the same artifact by choosing the highest version. Duplicate artifacts
-     * are artifacts with identical coordinates, type and classifier but different versions, like "junit:junit:4.1"
-     * and "junit:junit:4.8.2".
-     *
-     * @param list of artifacts containing possible duplicates
-     * @return new list of artifacts with duplicate artifacts eliminated
-     */
-    static Collection<Artifact> eliminateDuplicates( Collection<Artifact> artifacts )
-    {
-        if ( artifacts.size() < 2 ) { return artifacts }
-
-        /**
-         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate Artifacts
-         */
-        Map<String, List<Artifact>> mapping = artifacts.inject( [:].withDefault{ [] } ) {
-            Map m, Artifact a ->
-            assert a.groupId && a.artifactId
-            m[ "$a.groupId::$a.artifactId::${ a.type ?: '' }::${ a.classifier ?: '' }" ] << a
-            m
-        }
-
-        /**
-         * For every list of duplicates in the mapping, finding the maximal version
-         * if there are more than one element in a list.
-         */
-        final result = mapping.values().collect {
-            List<Artifact> duplicateArtifacts ->
-
-            assert duplicateArtifacts
-            ( duplicateArtifacts.size() < 2 ) ? duplicateArtifacts.first() : duplicateArtifacts.max {
-                Artifact a1, Artifact a2 ->
-                new DefaultArtifactVersion( a1.version ) <=> new DefaultArtifactVersion( a2.version )
-            }
-        }
-
-        result
-    }
-
-
-    /**
      * Determines if scope specified matches include/exclude scopes provided.
      *
      * @param scope        scope to check

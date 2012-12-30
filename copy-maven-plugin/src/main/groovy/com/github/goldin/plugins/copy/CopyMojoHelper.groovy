@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
@@ -136,7 +137,9 @@ final class CopyMojoHelper
              */
             final                filters      = composeFilters( dependency )
             List<CopyDependency> dependencies =
-                eliminateDuplicates( artifacts.toSet()).
+                // Artifacts => CopyDependencies => Artifacts ..
+                eliminateDuplicates( artifacts.toSet().collect { new CopyDependency( it ) }).
+                collect { CopyDependency d  -> d.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }}.
                 findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
                 collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, verbose, failIfNotFound )) }
 
@@ -173,6 +176,46 @@ final class CopyMojoHelper
 
 
     /**
+     * Eliminates duplicate versions of the same dependencies by choosing the highest version.
+     *
+     * @param dependencies dependencies containing possible duplicates
+     * @return new list of dependencies with duplicate eliminates eliminated
+     */
+    @Requires({ dependencies != null })
+    @Ensures ({ result != null })
+    Collection<CopyDependency> eliminateDuplicates( Collection<CopyDependency> dependencies )
+    {
+        if ( dependencies.size() < 2 ) { return dependencies }
+
+        /**
+         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate dependencies
+         */
+        Map<String, List<CopyDependency>> mapping = dependencies.inject( [:].withDefault{ [] } ) {
+            Map m, CopyDependency d ->
+            assert d.groupId && d.artifactId
+            m[ "$d.groupId::$d.artifactId::${ d.type ?: '' }::${ d.classifier ?: '' }" ] << d
+            m
+        }
+
+        /**
+         * For every list of duplicates in the mapping, finding the maximal version
+         * if there are more than one element in a list.
+         */
+        final result = mapping.values().collect {
+            List<CopyDependency> duplicateDependencies ->
+
+            assert duplicateDependencies
+            ( duplicateDependencies.size() < 2 ) ? duplicateDependencies.first() : duplicateDependencies.max {
+                CopyDependency d1, CopyDependency d2 ->
+                new DefaultArtifactVersion( d1.version ) <=> new DefaultArtifactVersion( d2.version )
+            }
+        }
+
+        result
+    }
+
+
+    /**
      * Collects dependencies of the artifact specified.
      *
      * @param artifact            Artifact to collect dependencies of
@@ -200,7 +243,7 @@ final class CopyMojoHelper
                                                      Set<Artifact>  aggregator   = new HashSet<Artifact>())
     {
         assert artifact.with { groupId && artifactId && version }
-        assert ( currentDepth <= depth ), "Required depth is [$depth], current depth is [$currentDepth]"
+        assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
         if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { aggregator << artifact }

@@ -83,7 +83,7 @@ class CopyDependency extends ArtifactItem
      */
     boolean isTransitive ()
     {
-        ( excludeTransitive != null ) ? excludeTransitive : ( ! single )
+        ( excludeTransitive != null ) ? ( ! excludeTransitive ) : ( ! single )
     }
 
 
