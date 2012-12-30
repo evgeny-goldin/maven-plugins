@@ -59,7 +59,7 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     {
         if ( session.userProperties[ this.class.name ] != null ) { return }
 
-        if (( enabled == null ) || ( groovyBean().eval( enabled, Boolean )))
+        if (( enabled == null ) || ( enabled == 'true' ) || ( groovyBean().eval( enabled, Boolean )))
         {
             log.info( 'Silencer Mojo is on - enjoy the silence.' )
 
