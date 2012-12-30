@@ -69,20 +69,23 @@ final class CopyMojoHelper
     /**
      * Scans project dependencies, resolves and filters them using dependencies provided.
      *
-     * @param dependencies   dependencies to resolve, either "single" or "filtering" ones
-     * @param verbose        whether resolving process should be logged
-     * @param failIfNotFound whether execution should fail if zero dependencies are resolved
-     * @return               project's dependencies that passed all filters, resolved
+     * @param dependencies        dependencies to resolve, either "single" or "filtering" ones
+     * @param eliminateDuplicates whether duplicate dependencies should be removed from result
+     * @param verbose             whether resolving process should be logged
+     * @param failIfNotFound      whether execution should fail if zero dependencies are resolved
+     * @return                    project's dependencies that passed all filters, resolved (downloaded)
      */
     @Requires({ dependencies })
     @Ensures({ result || ( ! failIfNotFound ) })
-    List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies, boolean verbose, boolean failIfNotFound )
+    List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies,
+                                               boolean              eliminateDuplicates,
+                                               boolean              verbose,
+                                               boolean              failIfNotFound )
     {
         try
         {
-            final resolvedDependencies = eliminateDuplicates( dependencies.collect {
-                CopyDependency d -> collectDependencyArtifacts( d, verbose, failIfNotFound )
-            }.flatten()).
+            final collectedArtifacts   = dependencies.collect { CopyDependency d -> collectDependencyArtifacts( d, verbose, failIfNotFound )}.flatten()
+            final resolvedDependencies = ( eliminateDuplicates ? removeDuplicates( collectedArtifacts ) : collectedArtifacts ).
             collect { Artifact artifact -> new CopyDependency( mojo.downloadArtifact( artifact, verbose, failIfNotFound )) }
 
             Log log = ThreadLocals.get( Log )
@@ -166,14 +169,14 @@ final class CopyMojoHelper
 
 
     /**
-     * Eliminates duplicate versions of the same artifacts by choosing the highest version.
+     * Removes duplicate versions of the same artifacts by choosing the highest version.
      *
      * @param artifacts artifacts containing possible duplicates
-     * @return new list of artifacts with duplicate eliminates eliminated
+     * @return new list of artifacts with duplicate eliminates removed
      */
     @Requires({ artifacts != null })
     @Ensures ({ result != null })
-    private Collection<Artifact> eliminateDuplicates( Collection<Artifact> artifacts )
+    private Collection<Artifact> removeDuplicates( Collection<Artifact> artifacts )
     {
         if ( artifacts.size() < 2 ) { return artifacts }
 

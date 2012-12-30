@@ -341,7 +341,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             boolean resolved = false // Whether any dependency was resolved
 
-            resolve( resourceDependencies, verbose, failIfNotFound ).each {
+            resolve( resourceDependencies, resource.eliminateDuplicates, verbose, failIfNotFound ).each {
                 CopyDependency d ->
 
                 resolved = true
@@ -392,7 +392,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, verbose, failIfNotFound, isStripVersion ).each {
+                resolve( resourceDependencies, resource.eliminateDuplicates, verbose, failIfNotFound, isStripVersion ).each {
                     CopyDependency d -> fileBean().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
@@ -424,20 +424,22 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Resolves and filters resource dependencies.
      *
-     * @param dependencies   dependencies to resolve and filter
-     * @param verbose        whether resolving process should be logged
-     * @param failIfNotFound whether execution should fail if zero artifacts were resolved
-     * @param stripVersion   whether dependencies version should be stripped
-     * @return               dependencies resolved and filtered
+     * @param dependencies        dependencies to resolve and filter
+     * @param eliminateDuplicates whether duplicate dependencies should be removed from result
+     * @param verbose             whether resolving process should be logged
+     * @param failIfNotFound      whether execution should fail if zero artifacts were resolved
+     * @param stripVersion        whether dependencies version should be stripped
+     * @return                    dependencies resolved and filtered
      */
     @Requires({ dependencies })
     @Ensures ({ result != null })
     private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
+                                                 boolean              eliminateDuplicates,
                                                  boolean              verbose,
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
-        final result = helper.resolveDependencies( dependencies, verbose, failIfNotFound ).
+        final result = helper.resolveDependencies( dependencies, eliminateDuplicates, verbose, failIfNotFound ).
         findAll {
             // Filtering out (optional) unresolved artifacts
             CopyDependency d ->
