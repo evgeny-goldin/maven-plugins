@@ -99,9 +99,9 @@
         <module>maven-common</module>
         <module>mojo-parent</module>
 
-        <!-- ~~~~~~~~~~~~~ -->
-        <!-- Maven Plugins -->
-        <!-- ~~~~~~~~~~~~~ -->
+        <!-- ~~~~~~~ -->
+        <!-- Plugins -->
+        <!-- ~~~~~~~ -->
 
         <module>duplicates-finder-plugin</module>
         <module>ivy-maven-plugin</module>
@@ -120,12 +120,11 @@
 
 
     <dependencies>
-        <!-- Occasionally required for Groovy compilation -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit-version}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
