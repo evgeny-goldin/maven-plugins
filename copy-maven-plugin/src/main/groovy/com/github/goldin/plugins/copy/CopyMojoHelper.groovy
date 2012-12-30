@@ -14,7 +14,6 @@ import org.sonatype.aether.collection.CollectRequest
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
-import org.sonatype.aether.util.DefaultRepositorySystemSession
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 import java.util.jar.Attributes
 import java.util.jar.Manifest
@@ -94,12 +93,16 @@ final class CopyMojoHelper
             return [ dependency ]
         }
 
+        assert ( dependency.transitive || ( dependency.depth < 1 )), \
+               "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
+
         /**
          * Iterating over all dependencies and selecting those passing the filters.
          */
 
         final includeScopes = split( dependency.includeScope )
         final excludeScopes = split( dependency.excludeScope )
+        final depth         = dependency.depth
         final artifacts     = dependency.gav ?
 
             /**
@@ -107,23 +110,22 @@ final class CopyMojoHelper
              */
             collectDependencies( mavenArtifact, includeScopes, excludeScopes,
                                  dependency.transitive, dependency.includeOptional,
-                                 verbose, failIfNotFound ) :
+                                 verbose, failIfNotFound, depth ) :
             /**
              * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
              * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
              * so we can't use it.
              */
             ( Collection<Artifact> ) mojo.project.dependencies.
-            findAll {
-                scopeMatches( it.scope, includeScopes, excludeScopes )
-            }.
+            findAll { scopeMatches( it.scope, includeScopes, excludeScopes ) }.
             collect { toMavenArtifact( it ) }.
             collect {
                 Artifact a ->
-                dependency.transitive ? collectDependencies( a, includeScopes, excludeScopes,
-                                                             dependency.transitive, dependency.includeOptional,
-                                                             verbose, failIfNotFound ) :
-                                        a
+                dependency.transitive ?
+                    collectDependencies( a, includeScopes, excludeScopes,
+                                         dependency.transitive, dependency.includeOptional,
+                                         verbose, failIfNotFound, depth ) :
+                    a
             }.
             flatten()
 
@@ -178,9 +180,10 @@ final class CopyMojoHelper
      * @param excludeScopes       dependencies scopes to exclude
      * @param includeTransitive   whether dependencies should be traversed transitively
      * @param includeOptional     whether optional dependencies should be included
+     * @param depth               depth of transitive dependencies to collect
      * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
-     * @param artifactsAggregator internal variable used by recursive iteration, shouldn't be used by caller!
+     * @param aggregator internal variable used by recursive iteration, shouldn't be used by caller!
      * @return                    dependencies collected (not resolved!)
      */
     @Requires({ artifact })
@@ -192,15 +195,23 @@ final class CopyMojoHelper
                                                      boolean        includeOptional,
                                                      boolean        verbose,
                                                      boolean        failOnError,
-                                                     Set<Artifact>  artifactsAggregator = new HashSet<Artifact>())
+                                                     int            depth,
+                                                     int            currentDepth = 0,
+                                                     Set<Artifact>  aggregator   = new HashSet<Artifact>())
     {
         assert artifact.with { groupId && artifactId && version }
-        if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { artifactsAggregator << artifact }
+        assert ( currentDepth <= depth ), "Required depth is [$depth], current depth is [$currentDepth]"
+        assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
+
+        if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { aggregator << artifact }
+        if ( currentDepth == depth )
+        {
+            return aggregator
+        }
 
         try
         {
-            final request                  = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ),
-                                                                 mojo.remoteRepos )
+            final request                  = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
             final repoSession              = mojo.repoSession
             final previousSelector         = repoSession.dependencySelector
             repoSession.dependencySelector = new ScopeDependencySelector( includeScopes, excludeScopes )
@@ -212,25 +223,18 @@ final class CopyMojoHelper
             }
 
             final rootNode = mojo.repoSystem.collectDependencies( repoSession, request ).root
-            if ( verbose ) { mojo.log.info( "Collecting [$artifact] dependencies: done" ) }
 
             repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
             {
                 assert ( ! failOnError ), "Failed to collect [$artifact] dependencies"
-                return Collections.emptyList()
+                return []
             }
 
             final childArtifacts = rootNode.children.
-            findAll {
-                DependencyNode childNode ->
-                (( ! childNode.dependency.optional ) || includeOptional )
-            }.
-            collect {
-                DependencyNode childNode ->
-                toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )
-            }
+            findAll { DependencyNode childNode -> (( ! childNode.dependency.optional ) || includeOptional )}.
+            collect { DependencyNode childNode -> toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )}
 
             assert childArtifacts.every { scopeMatches( it.scope, includeScopes, excludeScopes )}
 
@@ -243,19 +247,19 @@ final class CopyMojoHelper
                  * may have dependencies not shown by it (I don't know why).
                  */
                 childArtifacts.each {
-                    if ( ! ( it in artifactsAggregator ))
+                    if ( ! ( it in aggregator ))
                     {
                         collectDependencies( it, includeScopes, excludeScopes, includeTransitive, includeOptional,
-                                             verbose, failOnError, artifactsAggregator )
+                                             verbose, failOnError, depth, currentDepth + 1, aggregator )
                     }
                 }
             }
             else
             {
-                artifactsAggregator.addAll( childArtifacts )
+                aggregator.addAll( childArtifacts )
             }
 
-            artifactsAggregator
+            aggregator
         }
         catch ( e )
         {
@@ -344,15 +348,15 @@ final class CopyMojoHelper
 
         if ( ! removeVersion )
         {
-            buffer.append( "-${ artifact.version}" )
+            buffer.append( "-${ artifact.version }".toString())
         }
 
         if ( artifact.classifier )
         {
-            buffer.append( "-${ artifact.classifier}" )
+            buffer.append( "-${ artifact.classifier }".toString())
         }
 
-        buffer.append( ".${ artifact.type }" ).
+        buffer.append( ".${ artifact.type }".toString()).
         toString()
     }
 

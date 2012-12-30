@@ -24,6 +24,7 @@ class CopyDependency extends ArtifactItem
     boolean includeOptional = false  // Whether this filtering dependency should include optional dependencies
     Boolean stripVersion             // Whether version number should be removed from file names
     Boolean excludeTransitive        // Whether transitive dependencies should be excluded
+    int     depth           = -1     // Depth of transitive arguments
 
     String  includeScope
     String  excludeScope
@@ -74,7 +75,7 @@ class CopyDependency extends ArtifactItem
 
     /**
      * Determines if current dependency is transitive or not.
-     * When {@link #excludeTransitive} is not specified then the return value is false for GAV dependencies
+     * When {@link #excludeTransitive} is not specified then the return value is false for single dependencies
      * and true for "filtering" dependencies. When {@link #excludeTransitive} is specified then its
      * value is reverted.
      *
@@ -82,7 +83,7 @@ class CopyDependency extends ArtifactItem
      */
     boolean isTransitive ()
     {
-        ( excludeTransitive == null ) ? ( ! gav ) : ( ! excludeTransitive )
+        ( excludeTransitive != null ) ? excludeTransitive : ( ! single )
     }
 
 
