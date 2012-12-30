@@ -347,7 +347,7 @@ class Job
 
         setMany( split( '|authToken|scm|buildWrappers|properties|publishers|quietPeriod|scmCheckoutRetryCount|gitHubUrl' +
                         '|useUpdate|doRevert|blockBuildWhenDownstreamBuilding|blockBuildWhenUpstreamBuilding|appendTasks|daysToKeep' +
-                        '|numToKeep|artifactDaysToKeep|artifactNumToKeep', '\\|' ),
+                        '|numToKeep|artifactDaysToKeep|artifactNumToKeep', '|' ),
                  parentJob, override )
 
         //noinspection GroovyConditionalCanBeElvis
@@ -402,7 +402,7 @@ class Job
 
             setMany( split( '|mavenName|mavenOpts|reporters|localRepoBase|localRepo|buildOnSNAPSHOT' +
                             '|privateRepository|privateRepositoryPerExecutor|archivingDisabled' +
-                            '|prebuilders|postbuilders|incrementalBuild', '\\|' ),
+                            '|prebuilders|postbuilders|incrementalBuild', '|' ),
                      parentJob, override )
 
         }

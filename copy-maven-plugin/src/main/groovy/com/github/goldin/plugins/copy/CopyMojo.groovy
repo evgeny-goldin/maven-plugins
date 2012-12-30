@@ -437,9 +437,7 @@ class CopyMojo extends BaseGroovyMojo
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
-        final result = helper.eliminateDuplicates (
-            dependencies.collect { helper.resolveDependencies( it, verbose, failIfNotFound )}.flatten()
-        ).
+        final result = helper.resolveDependencies( dependencies, verbose, failIfNotFound ).
         findAll {
             // Filtering out (optional) unresolved artifacts
             CopyDependency d ->
@@ -691,7 +689,7 @@ class CopyMojo extends BaseGroovyMojo
 
         if ( resource.deploy )
         {
-            String[] data = split( resource.deploy, '\\|' )
+            String[] data = split( resource.deploy, '|' )
 
             assert data?.size()?.with{( it == 4 ) || ( it == 5 )}, \
                    "Failed to read <deploy> data [$resource.deploy]. " +

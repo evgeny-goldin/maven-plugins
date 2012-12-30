@@ -85,7 +85,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      */
     @Requires({ artifact })
     @Ensures({ result.is( artifact ) })
-    final Artifact resolveArtifact( Artifact artifact, boolean verbose, boolean failOnError )
+    final Artifact downloadArtifact ( Artifact artifact, boolean verbose, boolean failOnError )
     {
         final errorMessage = "Failed to resolve ${ artifact.optional ? 'optional artifact ' : '' }[$artifact]"
 

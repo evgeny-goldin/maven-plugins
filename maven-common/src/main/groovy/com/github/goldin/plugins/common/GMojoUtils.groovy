@@ -414,11 +414,13 @@ class GMojoUtils
     /**
      * Splits a delimiter-separated String.
      *
-     * @param s          String to split
-     * @param delimRegex delimiter regex expression to split the String with
+     * @param s         String to split
+     * @param delimiter delimiter (not regex!) to split the String with
      * @return result of {@code s.split( delim )*.trim().grep()}
      */
-    static List<String> split( String s, String delimRegex = ',' ) { ( s ?: '' ).split( delimRegex )*.trim().grep() as List }
+    @Requires({ delimiter })
+    @Ensures ({ result != null })
+    static List<String> split( String s, String delimiter = ',' ) { ( s ?: '' ).tokenize( delimiter )*.trim().grep() }
 
 
     /**
@@ -458,11 +460,11 @@ class GMojoUtils
      *
      * @return new Maven {@link Artifact}
      */
+    @Requires({ groupId && artifactId && version })
+    @Ensures ({ result })
     static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier,
                                       boolean optional, File file = null )
     {
-        assert groupId && artifactId && version
-
         final a = new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ),
                                        scope ?: 'compile', type, classifier, new DefaultArtifactHandler(), optional )
         if ( file ) { a.file = verifyBean().file( file ) }
@@ -476,9 +478,10 @@ class GMojoUtils
      * @param scope artifact scope
      * @return new Maven {@link Artifact}
      */
+    @Requires({ artifact && scope })
+    @Ensures ({ result })
     static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact artifact, String scope )
     {
-        assert artifact
         artifact.with { toMavenArtifact( groupId, artifactId, version, scope, extension, classifier, false, file )}
     }
 
@@ -488,9 +491,10 @@ class GMojoUtils
      * @param mavenDependency Maven dependency
      * @return new Maven {@link Artifact}
      */
+    @Requires({ mavenDependency })
+    @Ensures ({ result })
     static Artifact toMavenArtifact( Dependency mavenDependency )
     {
-        assert mavenDependency
         mavenDependency.with { toMavenArtifact( groupId, artifactId, version, scope, type, classifier, optional ) }
     }
 
@@ -498,13 +502,15 @@ class GMojoUtils
     /**
      * Converts Maven artifact to Aether artifact.
      *
-     * @param a Maven artifact
+     * @param artifact Maven artifact
      * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
      */
-    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Artifact a )
+    @Requires({ artifact })
+    @Ensures ({ result })
+    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Artifact artifact )
     {
-        assert a
-        new org.sonatype.aether.util.artifact.DefaultArtifact( a.groupId, a.artifactId, a.classifier, a.type, a.version, null, a.file )
+        new org.sonatype.aether.util.artifact.DefaultArtifact(
+                artifact.groupId, artifact.artifactId, artifact.classifier, artifact.type, artifact.version, null, artifact.file )
     }
 
 
@@ -514,11 +520,12 @@ class GMojoUtils
      * @param s path of disk file or jar-located resource.
      * @return path's URL
      */
+    @Requires({ s })
+    @Ensures ({ result })
     static URL url( String s )
     {
         s.trim().with { ( startsWith( 'jar:' ) || startsWith( 'file:' )) ? new URL( s ) : new File( s ).toURL() }
     }
-
 
 
     /**

@@ -1,11 +1,12 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.resolver.MultipleArtifactsNotFoundException
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion
+import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.shared.artifact.filter.collection.*
@@ -22,9 +23,6 @@ import java.util.jar.Manifest
 
 /**
  * {@link CopyMojo} helper class.
- *
- * Class is marked "final" as it's not meant for subclassing.
- * Methods are marked as "protected" to allow package-access only.
  */
 @SuppressWarnings( 'FinalClassWithProtectedMember' )
 final class CopyMojoHelper
@@ -52,7 +50,7 @@ final class CopyMojoHelper
      */
     @Requires({ encoding })
     @Ensures({ result != null })
-    protected List<String> updatePatterns( String directory, List<String> patterns, String encoding )
+    List<String> updatePatterns( String directory, List<String> patterns, String encoding )
     {
         if ( ! patterns ) { return patterns }
 
@@ -69,105 +67,49 @@ final class CopyMojoHelper
 
 
     /**
-     * Scans project dependencies, resolves and filters them using dependency provided.
-     * If dependency specified is a "single" one then it is resolved normally.
+     * Scans project dependencies, resolves and filters them using dependencies provided.
      *
-     * @param dependency     dependency to resolve, either "single" or "filtering" one
+     * @param dependencies   dependencies to resolve, either "single" or "filtering" ones
      * @param verbose        whether resolving process should be logged
      * @param failIfNotFound whether execution should fail if zero dependencies are resolved
      * @return               project's dependencies that passed all filters, resolved
      */
-    @Requires({ dependency })
+    @Requires({ dependencies })
     @Ensures({ result || ( ! failIfNotFound ) })
-    protected List<CopyDependency> resolveDependencies ( CopyDependency dependency, boolean verbose, boolean failIfNotFound )
+    List<CopyDependency> resolveDependencies ( List<CopyDependency> dependencies, boolean verbose, boolean failIfNotFound )
     {
-        /**
-         * We convert GAV dependency to Maven artifact to use it later
-         */
-        final mavenArtifact = dependency.gav ?
-            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
-            null
-
-        if ( dependency.single )
-        {
-            dependency.artifact = mojo.resolveArtifact( mavenArtifact, verbose, failIfNotFound )
-            return [ dependency ]
-        }
-
-        assert ( dependency.transitive || ( dependency.depth < 1 )), \
-               "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
-
-        /**
-         * Iterating over all dependencies and selecting those passing the filters.
-         */
-
-        final includeScopes = split( dependency.includeScope )
-        final excludeScopes = split( dependency.excludeScope )
-        final depth         = dependency.depth
-        final artifacts     = dependency.gav ?
-
-            /**
-             * For regular GAV dependency we collect its dependencies
-             */
-            collectDependencies( mavenArtifact, includeScopes, excludeScopes,
-                                 dependency.transitive, dependency.includeOptional,
-                                 verbose, failIfNotFound, depth ) :
-            /**
-             * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
-             * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
-             * so we can't use it.
-             */
-            ( Collection<Artifact> ) mojo.project.dependencies.
-            findAll { scopeMatches( it.scope, includeScopes, excludeScopes ) }.
-            collect { toMavenArtifact( it ) }.
-            collect {
-                Artifact a ->
-                dependency.transitive ?
-                    collectDependencies( a, includeScopes, excludeScopes,
-                                         dependency.transitive, dependency.includeOptional,
-                                         verbose, failIfNotFound, depth ) :
-                    a
-            }.
-            flatten()
-
         try
         {
-            /**
-             * When GAV coordinates appear, scope and transitivity were applied already by {@link #collectDependencies} call above.
-             */
-            final                filters      = composeFilters( dependency )
-            List<CopyDependency> dependencies =
-                // Artifacts => CopyDependencies => Artifacts ..
-                eliminateDuplicates( artifacts.toSet().collect { new CopyDependency( it ) }).
-                collect { CopyDependency d  -> d.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }}.
-                findAll { Artifact artifact -> filters.every{ it.isArtifactIncluded( artifact ) }}.
-                collect { Artifact artifact -> new CopyDependency( mojo.resolveArtifact( artifact, verbose, failIfNotFound )) }
+            final resolvedDependencies = eliminateDuplicates( dependencies.collect {
+                CopyDependency d -> collectDependencyArtifacts( d, verbose, failIfNotFound )
+            }.flatten()).
+            collect { Artifact artifact -> new CopyDependency( mojo.downloadArtifact( artifact, verbose, failIfNotFound )) }
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$dependency]: [${ dependencies.size() }] artifact${ generalBean().s( dependencies.size())} found" )
-            if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
+            log.info( "Resolving dependencies [$dependencies]: [${ resolvedDependencies.size() }] artifact${ generalBean().s( resolvedDependencies.size())} found" )
+            if ( log.debugEnabled ) { log.debug( "Artifacts found: $resolvedDependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound ) || ( dependency.optional )), "No dependencies resolved with [$dependency]"
-            assert dependencies.every { it.artifact?.file?.file || ( ! failIfNotFound ) || it.optional }
-            dependencies
+            assert ( resolvedDependencies || ( ! failIfNotFound ) || ( resolvedDependencies.every { it.optional } )), "No dependencies resolved with [$dependencies]"
+            assert resolvedDependencies.every { it.artifact?.file?.file || ( ! failIfNotFound ) || it.optional }
+            resolvedDependencies
         }
         catch( e )
         {
-            String errorMessage = "Failed to resolve and filter dependencies with [$dependency]"
+            String errorMessage = "Failed to resolve and filter dependencies with [$dependencies]"
 
-            if ( dependency.optional || ( ! failIfNotFound ))
+            if ( dependencies.every { it.optional } || ( ! failIfNotFound ))
             {
                 String exceptionMessage = e.toString()
 
                 if ( e instanceof MultipleArtifactsNotFoundException )
                 {
                     final missingArtifacts = (( MultipleArtifactsNotFoundException ) e ).missingArtifacts
-                    exceptionMessage = "${ missingArtifacts.size() } missing dependenc${ missingArtifacts.size() == 1 ? 'y' : 'ies' } - $missingArtifacts"
+                    exceptionMessage       = "${ missingArtifacts.size() } missing dependenc${ missingArtifacts.size() == 1 ? 'y' : 'ies' } - $missingArtifacts"
                 }
 
                 log.warn( "$errorMessage: $exceptionMessage" )
-                []
+                return []
             }
 
             throw new MojoExecutionException( errorMessage, e )
@@ -175,25 +117,73 @@ final class CopyMojoHelper
     }
 
 
-    /**
-     * Eliminates duplicate versions of the same dependencies by choosing the highest version.
-     *
-     * @param dependencies dependencies containing possible duplicates
-     * @return new list of dependencies with duplicate eliminates eliminated
-     */
-    @Requires({ dependencies != null })
+    @Requires({ dependency })
     @Ensures ({ result != null })
-    Collection<CopyDependency> eliminateDuplicates( Collection<CopyDependency> dependencies )
+    private Collection<Artifact> collectDependencyArtifacts ( CopyDependency dependency, boolean verbose, boolean failIfNotFound )
     {
-        if ( dependencies.size() < 2 ) { return dependencies }
+        final mavenArtifact = dependency.gav ?
+            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
+            null
+
+        if ( dependency.single ){ return [ mavenArtifact ] }
+
+        assert ( dependency.transitive || ( dependency.depth < 1 )), \
+               "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
+
+        final includeScopes = split( dependency.includeScope )
+        final excludeScopes = split( dependency.excludeScope )
+        final artifacts     = ( Collection<Artifact> ) dependency.gav ?
+
+            /**
+             * For regular GAV dependency we collect its dependencies
+             */
+
+            collectArtifactDependencies( mavenArtifact, includeScopes, excludeScopes,
+                                         dependency.transitive, dependency.includeOptional,
+                                         verbose, failIfNotFound, dependency.depth ) :
+            /**
+             * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
+             * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
+             * so we can't use it.
+             */
+
+            mojo.project.dependencies.
+            findAll { Dependency d -> scopeMatches( d.scope, includeScopes, excludeScopes ) }.
+            collect { Dependency d -> toMavenArtifact( d ) }.
+            collect { Artifact   a ->
+                dependency.transitive ?
+                    collectArtifactDependencies( a, includeScopes, excludeScopes,
+                                                 dependency.transitive, dependency.includeOptional,
+                                                 verbose, failIfNotFound, dependency.depth ) :
+                    a
+            }.
+            flatten().
+            toSet()
+
+        final filters = composeFilters( dependency )
+        artifacts.findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}
+    }
+
+
+    /**
+     * Eliminates duplicate versions of the same artifacts by choosing the highest version.
+     *
+     * @param artifacts artifacts containing possible duplicates
+     * @return new list of artifacts with duplicate eliminates eliminated
+     */
+    @Requires({ artifacts != null })
+    @Ensures ({ result != null })
+    private Collection<Artifact> eliminateDuplicates( Collection<Artifact> artifacts )
+    {
+        if ( artifacts.size() < 2 ) { return artifacts }
 
         /**
-         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate dependencies
+         * Mapping of "<groupId>::<artifactId>::<type>::<classifier>" to their duplicate artifacts
          */
-        Map<String, List<CopyDependency>> mapping = dependencies.inject( [:].withDefault{ [] } ) {
-            Map m, CopyDependency d ->
-            assert d.groupId && d.artifactId
-            m[ "$d.groupId::$d.artifactId::${ d.type ?: '' }::${ d.classifier ?: '' }" ] << d
+        Map<String, List<Artifact>> mapping = artifacts.inject( [:].withDefault{ [] } ) {
+            Map m, Artifact a ->
+            assert a.groupId && a.artifactId
+            m[ "$a.groupId::$a.artifactId::${ a.type ?: '' }::${ a.classifier ?: '' }" ] << a
             m
         }
 
@@ -202,12 +192,12 @@ final class CopyMojoHelper
          * if there are more than one element in a list.
          */
         final result = mapping.values().collect {
-            List<CopyDependency> duplicateDependencies ->
+            List<Artifact> duplicateArtifacts ->
 
-            assert duplicateDependencies
-            ( duplicateDependencies.size() < 2 ) ? duplicateDependencies.first() : duplicateDependencies.max {
-                CopyDependency d1, CopyDependency d2 ->
-                new DefaultArtifactVersion( d1.version ) <=> new DefaultArtifactVersion( d2.version )
+            assert duplicateArtifacts
+            ( duplicateArtifacts.size() < 2 ) ? duplicateArtifacts.first() : duplicateArtifacts.max {
+                Artifact a1, Artifact a2 ->
+                new DefaultArtifactVersion( a1.version ) <=> new DefaultArtifactVersion( a2.version )
             }
         }
 
@@ -229,18 +219,19 @@ final class CopyMojoHelper
      * @param aggregator internal variable used by recursive iteration, shouldn't be used by caller!
      * @return                    dependencies collected (not resolved!)
      */
-    @Requires({ artifact })
-    @Ensures({ result != null })
-    final Collection<Artifact> collectDependencies ( Artifact       artifact,
-                                                     List<String>   includeScopes,
-                                                     List<String>   excludeScopes,
-                                                     boolean        includeTransitive,
-                                                     boolean        includeOptional,
-                                                     boolean        verbose,
-                                                     boolean        failOnError,
-                                                     int            depth,
-                                                     int            currentDepth = 0,
-                                                     Set<Artifact>  aggregator   = new HashSet<Artifact>())
+    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
+    @Requires({ artifact && ( includeScopes != null ) && ( excludeScopes != null ) && ( currentDepth >= 0 ) && ( aggregator != null ) })
+    @Ensures ({ result != null })
+    private final Collection<Artifact> collectArtifactDependencies ( Artifact       artifact,
+                                                                     List<String>   includeScopes,
+                                                                     List<String>   excludeScopes,
+                                                                     boolean        includeTransitive,
+                                                                     boolean        includeOptional,
+                                                                     boolean        verbose,
+                                                                     boolean        failOnError,
+                                                                     int            depth,
+                                                                     int            currentDepth = 0,
+                                                                     Set<Artifact>  aggregator   = new HashSet<Artifact>())
     {
         assert artifact.with { groupId && artifactId && version }
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
@@ -292,8 +283,8 @@ final class CopyMojoHelper
                 childArtifacts.each {
                     if ( ! ( it in aggregator ))
                     {
-                        collectDependencies( it, includeScopes, excludeScopes, includeTransitive, includeOptional,
-                                             verbose, failOnError, depth, currentDepth + 1, aggregator )
+                        collectArtifactDependencies( it, includeScopes, excludeScopes, includeTransitive, includeOptional,
+                                                     verbose, failOnError, depth, currentDepth + 1, aggregator )
                     }
                 }
             }

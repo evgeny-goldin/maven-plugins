@@ -182,10 +182,10 @@ class IvyMojo extends BaseGroovyMojo
             ArtifactItem d ->
 
             d.groupId.startsWith( IVY_PREFIX ) ?
-                helper.resolve(                   d.groupId, d.artifactId, d.version, d.type, d.classifier ) :
-                resolveArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, false ),
-                                 logVerbosely(),
-                                 failOnError )
+                helper.resolve(                    d.groupId, d.artifactId, d.version,     d.type, d.classifier ) :
+                downloadArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, false ),
+                                  logVerbosely(),
+                                  failOnError )
         }
     }
 }

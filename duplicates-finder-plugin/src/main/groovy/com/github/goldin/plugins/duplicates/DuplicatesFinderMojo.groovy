@@ -59,7 +59,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
             project.artifacts.findAll { Artifact a -> scopes.contains( a.scope ) && ( a.type != 'pom' ) }.
                               // Artifact => File
                               collect { Artifact a ->
-                                        File f   = resolveArtifact( a, false, true ).file
+                                        File f   = downloadArtifact( a, false, true ).file
                                         f2A[ f ] = a
                                         if ( verbose ) { log.info( "Checking [$a]" ) }
                                         f }.
