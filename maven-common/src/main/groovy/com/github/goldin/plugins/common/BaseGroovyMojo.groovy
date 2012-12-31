@@ -8,7 +8,6 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.Component
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
@@ -123,6 +122,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
      * @return object's field value.
      */
     @Requires({ ( o != null ) && c && fieldName })
+    @SuppressWarnings([ 'JavaStylePropertiesInvocation', 'GroovyGetterCallCanBePropertyAccess' ])
     final Object getFieldValue( Object o, Class c = Object, String fieldName )
     {
         assert c.isInstance( o ), "Object [$o][${ o.getClass().name }] is not an instance of [$c.name]"
@@ -242,6 +242,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
     }
 
 
+    @SuppressWarnings([ 'GroovyGetterCallCanBePropertyAccess' ])
     void updateAntBuilders ()
     {
         final updateLoggers = {

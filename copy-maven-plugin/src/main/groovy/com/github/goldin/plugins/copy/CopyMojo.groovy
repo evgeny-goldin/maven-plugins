@@ -368,7 +368,7 @@ class CopyMojo extends BaseGroovyMojo
                     skipIdentical = isSkipIdentical
                     dependencies  = null
                     dependency    = null
-                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependench> but not default one, set by Maven */
+                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependency> but not default one, set by Maven */
                                     ( destFileName )                                  ? destFileName   : /* the one from <resource> */
                                                                                         f.name
                     if ( d.stripVersion || isStripVersion )
@@ -464,7 +464,7 @@ class CopyMojo extends BaseGroovyMojo
             d
         }
 
-        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), "No dependencies resolved with [$dependencies]"
+        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), "No dependencies resolved with $dependencies"
         assert result.every { it.artifact.file.file }
         result
     }
@@ -852,6 +852,7 @@ class CopyMojo extends BaseGroovyMojo
      *         or original <code>files</code> if <code>filterExpression</code> is null
      */
     @Requires({ files != null })
+    @SuppressWarnings([ 'JavaStylePropertiesInvocation', 'GroovyGetterCallCanBePropertyAccess' ])
     private List<File> filter( List<File> files,
                                String     filterExpression,
                                boolean    verbose,

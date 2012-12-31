@@ -102,7 +102,7 @@ final class CopyMojoHelper
             log.info( "Resolving dependencies [$inputDependencies]: [${ dependencies.size() }] artifact${ generalBean().s( dependencies.size())} found" )
             if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
 
-            assert ( dependencies || ( ! failIfNotFound ) || ( dependencies.every { it.optional } )), "No dependencies resolved with [$inputDependencies]"
+            assert ( dependencies || ( ! failIfNotFound ) || ( dependencies.every { it.optional } )), "No dependencies resolved with $inputDependencies"
             assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
             dependencies
         }
@@ -228,8 +228,8 @@ final class CopyMojoHelper
      * Collects dependencies of the artifact specified.
      *
      * @param artifact            Artifact to collect dependencies of
-     * @param includeScopes       dependencies scopes to include
-     * @param excludeScopes       dependencies scopes to exclude
+     * @param scopeSelector       {@link org.sonatype.aether.collection.DependencySelector} filtering out dependencies based on include/exclude scopes
+     * @param filtersSelector     {@link org.sonatype.aether.collection.DependencySelector} filtering out dependencies based on filters composed
      * @param includeTransitive   whether dependencies should be traversed transitively
      * @param includeOptional     whether optional dependencies should be included
      * @param verbose             whether collecting process should be logged
