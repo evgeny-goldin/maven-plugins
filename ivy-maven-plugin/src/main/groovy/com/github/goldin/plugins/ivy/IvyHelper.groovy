@@ -1,7 +1,7 @@
 package com.github.goldin.plugins.ivy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.ivy.Ivy
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor
 import org.apache.ivy.core.module.descriptor.DefaultIncludeRule
@@ -26,6 +26,7 @@ class IvyHelper
 {
     static final String SEPARATOR  = '\n * '
 
+    final IvyMojo mojo
     final Ivy     ivy
     final URL     ivyconfUrl
     final boolean verbose
@@ -41,12 +42,13 @@ class IvyHelper
      * @param failOnError whether execution should fail when resolving Ivy artifacts fails.
      * @param offline     whether Maven build operates in offline mode.
      */
-    @Requires({ ivyconfUrl })
-    IvyHelper ( URL ivyconfUrl, boolean verbose, boolean failOnError, boolean offline )
+    @Requires({ mojo && ivyconfUrl })
+    IvyHelper ( IvyMojo mojo, URL ivyconfUrl, boolean verbose, boolean failOnError, boolean offline )
     {
         IvySettings settings = new IvySettings()
         settings.load( ivyconfUrl )
 
+        this.mojo        = mojo
         this.ivy         = Ivy.newInstance( settings )
         this.ivyconfUrl  = ivyconfUrl
         this.verbose     = verbose
@@ -233,6 +235,62 @@ class IvyHelper
     String artifactsToString( List<Artifact> l )
     {
         SEPARATOR + l.collect{ "$it - [$it.file.canonicalPath]" }.join( SEPARATOR )
+    }
+
+
+    /**
+     * Adds artifacts to the scope specified.
+     *
+     * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
+     * @param artifacts dependencies to add to the scope
+     * @param project   current Maven project
+     */
+    @Requires({ artifacts && scopes })
+    void addToScopes ( List<Artifact> artifacts, String scopes )
+    {
+        assert artifacts && scopes && artifacts.every{ it.file.file }
+
+        split( scopes ).each {
+            String scope ->
+
+           /**
+             * Adding jars to Maven's scope and compilation classpath.
+             */
+            artifacts.each {
+                Artifact a ->
+                a.scope = scope
+                assert a.artifactHandler instanceof DefaultArtifactHandler
+                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
+            }
+
+            mojo.project.resolvedArtifacts = new HashSet<Artifact>( mojo.project.resolvedArtifacts + artifacts )
+        }
+    }
+
+
+    /**
+     * Copies artifacts to directory specified.
+     *
+     * @param directory directory to copy the artifacts to
+     * @param artifacts artifacts to copy
+     * @param verbose   whether copy operation should be logged
+     */
+    @Requires({ artifacts && directory })
+    void copyToDir ( List<Artifact> artifacts, File directory, boolean verbose )
+    {
+        assert artifacts && directory && artifacts.every{ it.file.file }
+
+        artifacts.each {
+            Artifact a ->
+            File destination = fileBean().copy( a.file, directory )
+
+            if ( verbose )
+            {
+                log.info( "$a - [$a.file.canonicalPath] copied to [$destination.canonicalPath]" )
+            }
+        }
+
+        assert artifacts.every{ new File( directory, it.file.name ).file }
     }
 
 

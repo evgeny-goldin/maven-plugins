@@ -17,7 +17,7 @@ import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
 import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
-import java.util.concurrent.ConcurrentLinkedQueue
+import org.sonatype.aether.util.graph.selector.AndDependencySelector
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
@@ -147,15 +147,15 @@ final class CopyMojoHelper
         assert ( dependency.transitive || ( dependency.depth < 1 )), \
                "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
 
-        final includeScopes = split( dependency.includeScope )
-        final excludeScopes = split( dependency.excludeScope )
-        final artifacts     = ( Collection<Artifact> ) dependency.gav ?
+        final scopeSelector   = new ScopeDependencySelector( split( dependency.includeScope ), split( dependency.excludeScope ))
+        final filtersSelector = new ArtifactFiltersDependencySelector( composeFilters( dependency ))
+        final artifacts       = ( Collection<Artifact> ) dependency.gav ?
 
             /**
              * For regular GAV dependency we collect its dependencies
              */
 
-            collectArtifactDependencies( mavenArtifact, includeScopes, excludeScopes,
+            collectArtifactDependencies( mavenArtifact, scopeSelector, filtersSelector,
                                          dependency.transitive, dependency.includeOptional,
                                          verbose, failIfNotFound, dependency.depth ):
 
@@ -166,20 +166,21 @@ final class CopyMojoHelper
              */
 
             mojo.project.dependencies.
-            findAll { Dependency d -> scopeMatches( d.scope, includeScopes, excludeScopes ) }.
+            findAll { Dependency d -> new org.sonatype.aether.graph.Dependency( toAetherArtifact( d ), d.scope ).with {
+                org.sonatype.aether.graph.Dependency aetherDependency ->
+                scopeSelector.selectDependency( aetherDependency ) && filtersSelector.selectDependency( aetherDependency )
+            }}.
             collect { Dependency d -> toMavenArtifact( d ) }.
             collect { Artifact   a ->
                 dependency.transitive ?
-                    collectArtifactDependencies( a, includeScopes, excludeScopes,
+                    collectArtifactDependencies( a, scopeSelector, filtersSelector,
                                                  dependency.transitive, dependency.includeOptional,
                                                  verbose, failIfNotFound, dependency.depth ) :
                     a
             }.
             flatten()
 
-        final filters = composeFilters( dependency )
-        artifacts.toSet().findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}.
-                          collect { Artifact a -> new CopyDependency( dependency, a )}
+        artifacts.toSet().collect { Artifact a -> new CopyDependency( dependency, a )}
     }
 
 
@@ -238,68 +239,61 @@ final class CopyMojoHelper
      * @param aggregator          aggregates recursive results
      * @return                    transitive dependencies collected (not resolved!)
      */
-    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
-    @Requires({ artifact && ( includeScopes != null ) && ( excludeScopes != null ) && ( currentDepth >= 0 ) && ( aggregator != null ) })
+    @SuppressWarnings([ 'GroovyMethodParameterCount' , 'GroovyAccessibility' ])
+    @Requires({ artifact && scopeSelector && filtersSelector && ( currentDepth >= 0 ) && ( aggregator != null ) })
     @Ensures ({ result != null })
-    private final Collection<Artifact> collectArtifactDependencies ( Artifact             artifact,
-                                                                     List<String>         includeScopes,
-                                                                     List<String>         excludeScopes,
-                                                                     boolean              includeTransitive,
-                                                                     boolean              includeOptional,
-                                                                     boolean              verbose,
-                                                                     boolean              failOnError,
-                                                                     int                  depth,
-                                                                     int                  currentDepth = 0,
-                                                                     Collection<Artifact> aggregator   = new HashSet<Artifact>())
+    private final Collection<Artifact> collectArtifactDependencies (
+            Artifact                          artifact,
+            ScopeDependencySelector           scopeSelector,
+            ArtifactFiltersDependencySelector filtersSelector,
+            boolean                           includeTransitive,
+            boolean                           includeOptional,
+            boolean                           verbose,
+            boolean                           failOnError,
+            int                               depth,
+            int                               currentDepth = 0,
+            Collection<Artifact>              aggregator   = new HashSet<Artifact>())
     {
         assert artifact.with { groupId && artifactId && version }
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
-        if ( scopeMatches( artifact.scope, includeScopes, excludeScopes )) { aggregator << artifact }
-
-        if ( currentDepth == depth )
-        {
-            return aggregator
+        final boolean artifactMatches = new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), artifact.scope ).with {
+            org.sonatype.aether.graph.Dependency d ->
+            scopeSelector.selectDependency( d ) && filtersSelector.selectDependency( d )
         }
+
+        if ( artifactMatches ){ aggregator << artifact }
+        if (( ! artifactMatches ) || ( currentDepth == depth )){ return aggregator }
 
         try
         {
             final request                  = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
             final repoSession              = mojo.repoSession
             final previousSelector         = repoSession.dependencySelector
-            repoSession.dependencySelector = new ScopeDependencySelector( includeScopes, excludeScopes )
-
-            if ( verbose )
-            {
-                mojo.log.info( "Collecting [$artifact] dependencies: include scopes $includeScopes, exclude scopes $excludeScopes, " +
-                               "include transitive [$includeTransitive], include optional [$includeOptional]" )
-            }
-
-            final rootNode = mojo.repoSystem.collectDependencies( repoSession, request ).root
-
+            repoSession.dependencySelector = new AndDependencySelector( scopeSelector, filtersSelector )
+            final rootNode                 = mojo.repoSystem.collectDependencies( repoSession, request ).root
             repoSession.dependencySelector = previousSelector
 
             if ( ! rootNode )
             {
-                assert ( ! failOnError ), "Failed to collect [$artifact] dependencies"
-                return []
+                failOrWarn( failOnError, "Failed to collect [$artifact] dependencies" )
+                return aggregator
             }
 
             final childArtifacts = rootNode.children.
             findAll { DependencyNode childNode -> (( ! childNode.dependency.optional ) || includeOptional )}.
-            collect { DependencyNode childNode -> toMavenArtifact( childNode.dependency.artifact, childNode.dependency.scope )}
-
-            assert childArtifacts.every { scopeMatches( it.scope, includeScopes, excludeScopes )}
+            collect { DependencyNode childNode -> toMavenArtifact( childNode.dependency )}
 
             if ( includeTransitive )
             {
                 childArtifacts.each {
-                    Artifact a ->
+                    Artifact childArtifact ->
 
-                    if ( ! ( a in aggregator ))
+                    if ( ! ( childArtifact in aggregator ))
                     {
-                        collectArtifactDependencies( a, includeScopes, excludeScopes, includeTransitive, includeOptional,
+                        collectArtifactDependencies( childArtifact, scopeSelector, filtersSelector,
+                                                     includeTransitive, includeOptional,
                                                      verbose, failOnError, depth, currentDepth + 1, aggregator )
                     }
                 }
@@ -426,7 +420,8 @@ final class CopyMojoHelper
         final description  = "[$f.canonicalPath] to [$url] as [<$groupId>:<$artifactId>:<$version>${ classifier ? ':<' + classifier + '>' : '' }]"
         final request      = new DeployRequest()
         request.repository = new RemoteRepository( url: url, type: 'default' )
-        request.artifacts  = [ toAetherArtifact( toMavenArtifact( groupId, artifactId, version, '', fileBean().extension( f ), classifier, false, f )) ]
+        request.artifacts  = [ toAetherArtifact( toMavenArtifact(
+            groupId, artifactId, version, '', fileBean().extension( f ), classifier, false, f )) ]
 
         try
         {

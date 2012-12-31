@@ -262,4 +262,13 @@ class NetworkUtils
 
         [ password : authData ]
     }
+
+
+
+    /**
+     * Removes entries with {@code null} values from the {@code Map} specified.
+     */
+    @Requires({ map    != null })
+    @Ensures ({ result != null })
+    private static Map<String,?> grepMap( Map<String,?> map ){ map.findAll { String key, Object value -> ( value != null )}}
 }

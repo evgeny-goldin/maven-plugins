@@ -83,7 +83,7 @@ class IvyMojo extends BaseGroovyMojo
     @Requires({ this.ivyconf })
     void doExecute ()
     {
-        final helper = new IvyHelper( url( this.ivyconf ), logVerbosely(), this.failOnError, this.session.offline )
+        final helper = new IvyHelper( this, url( this.ivyconf ), logVerbosely(), this.failOnError, this.session.offline )
 
         if ( addIvyResolver )
         {
@@ -106,7 +106,7 @@ class IvyMojo extends BaseGroovyMojo
             {
                 if ( scope ){
 
-                    addToScopes( artifacts, scope, project )
+                    helper.addToScopes( artifacts, scope )
 
                     if ( logVerbosely() || logNormally())
                     {
@@ -118,7 +118,7 @@ class IvyMojo extends BaseGroovyMojo
 
                 if ( dir ){
 
-                    copyToDir( artifacts, dir, logVerbosely())
+                    helper.copyToDir( artifacts, dir, logVerbosely())
 
                     if ( logVerbosely() || logNormally() )
                     {
@@ -136,6 +136,7 @@ class IvyMojo extends BaseGroovyMojo
      * @return configured {@link Ivy} instance.
      */
     @Requires({ repoSystem && helper && helper.ivyconfUrl })
+    @SuppressWarnings([ 'GroovyAccessibility' ])
     void addIvyResolver ( IvyHelper helper )
     {
         assert repoSystem instanceof DefaultRepositorySystem

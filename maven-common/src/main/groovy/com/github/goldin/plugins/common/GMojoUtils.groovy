@@ -10,7 +10,6 @@ import groovyx.gpars.GParsPool
 import org.apache.maven.Maven
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.artifact.DefaultArtifact
-import org.apache.maven.artifact.factory.ArtifactFactory
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
@@ -197,9 +196,9 @@ class GMojoUtils
                                     ant          : new AntBuilder(),
                                     *:( project.properties + session.userProperties + session.systemProperties )]
         groovyBean().eval( expression,
-                       resultType,
-                       groovyBean().binding( bindingMap, bindingObjects ),
-                       config )
+                           resultType,
+                           groovyBean().binding( bindingMap, bindingObjects ),
+                           config )
     }
 
 
@@ -213,16 +212,6 @@ class GMojoUtils
      * @return String to use for log messages
      */
     static String stars ( Collection c ) { "* [${ c.join( "]${ constantsBean().CRLF }* [") }]" }
-
-
-    /**
-     * {@link ArtifactFactory#createBuildArtifact} wrapper
-     */
-    static Artifact buildArtifact( String groupId, String artifactId, String version, String type )
-    {
-        assert groupId && artifactId && version && type
-        ThreadLocals.get( ArtifactFactory ).createBuildArtifact( groupId, artifactId, version, type )
-    }
 
 
     /**
@@ -474,34 +463,35 @@ class GMojoUtils
 
 
     /**
-     * Converts Aether artifact to Maven {@link Artifact}.
-     * @param artifact     Aether artifact
-     * @param scope artifact scope
+     * Converts Aether {@link org.sonatype.aether.graph.Dependency} to Maven {@link Artifact}.
+     * @param aetherDependency Aether dependency
      * @return new Maven {@link Artifact}
      */
-    @Requires({ artifact && scope })
+    @Requires({ aetherDependency })
     @Ensures ({ result })
-    static Artifact toMavenArtifact ( org.sonatype.aether.artifact.Artifact artifact, String scope )
+    static Artifact toMavenArtifact ( org.sonatype.aether.graph.Dependency aetherDependency )
     {
-        artifact.with { toMavenArtifact( groupId, artifactId, version, scope, extension, classifier, false, file )}
+        aetherDependency.artifact.with {
+            toMavenArtifact( groupId, artifactId, version, aetherDependency.scope, extension, classifier, false, file )
+        }
     }
 
 
     /**
-     * Converts Maven model {@link Dependency} to {@link Artifact}.
+     * Converts Maven {@link org.apache.maven.model.Dependency} to {@link Artifact}.
      * @param mavenDependency Maven dependency
      * @return new Maven {@link Artifact}
      */
     @Requires({ mavenDependency })
     @Ensures ({ result })
-    static Artifact toMavenArtifact( Dependency mavenDependency )
+    static Artifact toMavenArtifact( org.apache.maven.model.Dependency mavenDependency )
     {
         mavenDependency.with { toMavenArtifact( groupId, artifactId, version, scope, type, classifier, optional ) }
     }
 
 
     /**
-     * Converts Maven artifact to Aether artifact.
+     * Converts Maven {@link Artifact} to Aether artifact.
      *
      * @param artifact Maven artifact
      * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
@@ -510,8 +500,21 @@ class GMojoUtils
     @Ensures ({ result })
     static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Artifact artifact )
     {
-        new org.sonatype.aether.util.artifact.DefaultArtifact(
-                artifact.groupId, artifact.artifactId, artifact.classifier, artifact.type, artifact.version, null, artifact.file )
+        artifact.with { new org.sonatype.aether.util.artifact.DefaultArtifact( groupId, artifactId, classifier, type, version, null, file )}
+    }
+
+
+    /**
+     * Converts Maven {@link Dependency} to Aether artifact.
+     *
+     * @param dependency Maven dependency
+     * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
+     */
+    @Requires({ dependency })
+    @Ensures ({ result })
+    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Dependency dependency )
+    {
+        dependency.with { new org.sonatype.aether.util.artifact.DefaultArtifact( groupId, artifactId, classifier, type, version )}
     }
 
 
@@ -530,60 +533,6 @@ class GMojoUtils
 
 
     /**
-     * Adds artifacts to the scope specified.
-     *
-     * @param scope     Maven scope to add artifacts to: "compile", "runtime", "test", etc.
-     * @param artifacts dependencies to add to the scope
-     * @param project   current Maven project
-     */
-    static void addToScopes ( List<Artifact> artifacts, String scopes, MavenProject project )
-    {
-        assert artifacts && scopes && artifacts.every{ it.file.file }
-
-        split( scopes ).each {
-            String scope ->
-
-           /**
-             * Adding jars to Maven's scope and compilation classpath.
-             */
-            artifacts.each {
-                Artifact a ->
-                a.scope = scope
-                assert a.artifactHandler instanceof DefaultArtifactHandler
-                (( DefaultArtifactHandler ) a.artifactHandler ).addedToClasspath = true
-            }
-
-            project.resolvedArtifacts = new HashSet<Artifact>( project.resolvedArtifacts + artifacts )
-        }
-    }
-
-
-    /**
-     * Copies artifacts to directory specified.
-     *
-     * @param directory directory to copy the artifacts to
-     * @param artifacts artifacts to copy
-     * @param verbose   whether copy operation should be logged
-     */
-    static void copyToDir ( List<Artifact> artifacts, File directory, boolean verbose )
-    {
-        assert artifacts && directory && artifacts.every{ it.file.file }
-
-        artifacts.each {
-            Artifact a ->
-            File destination = fileBean().copy( a.file, directory )
-
-            if ( verbose )
-            {
-                log.info( "$a - [$a.file.canonicalPath] copied to [$destination.canonicalPath]" )
-            }
-        }
-
-        assert artifacts.every{ new File( directory, it.file.name ).file }
-    }
-
-
-    /**
      * Convert path to its canonical form.
      *
      * @param s path to convert
@@ -592,22 +541,6 @@ class GMojoUtils
     static String canonicalPath ( String s )
     {
         ( s && ( ! netBean().isNet( s ))) ? new File( s ).canonicalPath.replace( '\\', '/' ) : s
-    }
-
-
-    /**
-     * Determines if scope specified matches include/exclude scopes provided.
-     *
-     * @param scope        scope to check
-     * @param includeScope include scopes
-     * @param excludeScope exclude scopes
-     * @return true if scope specified matches include/exclude scopes provided,
-     *         false otherwise
-     */
-    static boolean scopeMatches( String scope, List<String> includeScope, List<String> excludeScope )
-    {
-        ( includeScope.empty ||   ( scope in includeScope )) &&
-        ( excludeScope.empty || ! ( scope in excludeScope ))
     }
 
 
@@ -640,28 +573,6 @@ class GMojoUtils
         if ( parallel ) { GParsPool.withPool { c.eachParallel( action ) }}
         else            { c.each( action )}
     }
-
-
-    /**
-     * Escapes {@code <}, {@code >} and {@code "} characters.
-     *
-     * @param s String to escape
-     * @return String with {@code <}, {@code >} and {@code "} characters escaped
-     */
-    static String escapeHtml( String s )
-    {
-        assert s
-        s.replace( '<', '&lt;'   ).
-          replace( '>', '&gt;'   ).
-          replace( '"', '&quot;' )
-    }
-
-    /**
-     * Removes entries with {@code null} values from the {@code Map} specified.
-     */
-    @Requires({ map    != null })
-    @Ensures ({ result != null })
-    static Map<String,?> grepMap( Map<String,?> map ){ map.findAll { String key, Object value -> ( value != null )}}
 
 
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
