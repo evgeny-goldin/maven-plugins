@@ -88,7 +88,7 @@ final class CopyMojoHelper
         try
         {
             def dependencies = inputDependencies.collect {
-                CopyDependency d -> collectDependencies( d, parallelDownload, verbose, failIfNotFound )
+                CopyDependency d -> collectDependencies( d, verbose, failIfNotFound )
             }.flatten()
 
             if ( eliminateDuplicates ){ dependencies = removeDuplicates( dependencies )}
@@ -132,7 +132,6 @@ final class CopyMojoHelper
     @Requires({ dependency })
     @Ensures ({ result.artifact && result.artifact.with { groupId && artifactId && version }})
     private Collection<CopyDependency> collectDependencies ( CopyDependency dependency,
-                                                             boolean        parallelDownload,
                                                              boolean        verbose,
                                                              boolean        failIfNotFound )
     {
@@ -158,7 +157,8 @@ final class CopyMojoHelper
 
             collectArtifactDependencies( mavenArtifact, includeScopes, excludeScopes,
                                          dependency.transitive, dependency.includeOptional,
-                                         parallelDownload, verbose, failIfNotFound, dependency.depth ) :
+                                         verbose, failIfNotFound, dependency.depth ):
+
             /**
              * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
              * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
@@ -172,15 +172,14 @@ final class CopyMojoHelper
                 dependency.transitive ?
                     collectArtifactDependencies( a, includeScopes, excludeScopes,
                                                  dependency.transitive, dependency.includeOptional,
-                                                 parallelDownload, verbose, failIfNotFound, dependency.depth ) :
+                                                 verbose, failIfNotFound, dependency.depth ) :
                     a
             }.
-            flatten().
-            toSet()
+            flatten()
 
         final filters = composeFilters( dependency )
-        artifacts.findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}.
-                  collect { Artifact a -> new CopyDependency( dependency, a )}
+        artifacts.toSet().findAll { Artifact a -> filters.every{ it.isArtifactIncluded( a ) }}.
+                          collect { Artifact a -> new CopyDependency( dependency, a )}
     }
 
 
@@ -232,7 +231,6 @@ final class CopyMojoHelper
      * @param excludeScopes       dependencies scopes to exclude
      * @param includeTransitive   whether dependencies should be traversed transitively
      * @param includeOptional     whether optional dependencies should be included
-     * @param parallelDownload    whether dependencies should be collected in parallel
      * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
      * @param depth               depth of transitive dependencies to collect
@@ -243,19 +241,16 @@ final class CopyMojoHelper
     @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ artifact && ( includeScopes != null ) && ( excludeScopes != null ) && ( currentDepth >= 0 ) && ( aggregator != null ) })
     @Ensures ({ result != null })
-    private final Collection<Artifact> collectArtifactDependencies (
-            Artifact             artifact,
-            List<String>         includeScopes,
-            List<String>         excludeScopes,
-            boolean              includeTransitive,
-            boolean              includeOptional,
-            boolean              parallelDownload,
-            boolean              verbose,
-            boolean              failOnError,
-            int                  depth,
-            int                  currentDepth = 0,
-            Collection<Artifact> aggregator   = ( parallelDownload ? new ConcurrentLinkedQueue<Artifact>() :
-                                                                     new HashSet<Artifact>()))
+    private final Collection<Artifact> collectArtifactDependencies ( Artifact             artifact,
+                                                                     List<String>         includeScopes,
+                                                                     List<String>         excludeScopes,
+                                                                     boolean              includeTransitive,
+                                                                     boolean              includeOptional,
+                                                                     boolean              verbose,
+                                                                     boolean              failOnError,
+                                                                     int                  depth,
+                                                                     int                  currentDepth = 0,
+                                                                     Collection<Artifact> aggregator   = new HashSet<Artifact>())
     {
         assert artifact.with { groupId && artifactId && version }
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
@@ -299,13 +294,13 @@ final class CopyMojoHelper
 
             if ( includeTransitive )
             {
-                each( parallelDownload, childArtifacts ){
+                childArtifacts.each {
                     Artifact a ->
 
                     if ( ! ( a in aggregator ))
                     {
                         collectArtifactDependencies( a, includeScopes, excludeScopes, includeTransitive, includeOptional,
-                                                     parallelDownload, verbose, failOnError, depth, currentDepth + 1, aggregator )
+                                                     verbose, failOnError, depth, currentDepth + 1, aggregator )
                     }
                 }
             }
