@@ -39,25 +39,19 @@ class SilentMavenPluginManager
     }
 
 
+    @Override
     public <T> T getConfiguredMojo ( Class<T> mojoInterface, MavenSession session, MojoExecution mojoExecution )
         throws PluginConfigurationException,
                PluginContainerException
     {
         final  mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
-        assert mojo
+        assert mojo, "Failed to retrieve Mojo [${ mojoInterface.name }]"
 
         parentMojo.tryIt { updateLoggerFields( mojo )}
         parentMojo.tryIt { updateAbstractLogEnabledFields( mojo )}
+        parentMojo.tryIt { updateSurefireMojo( mojo )}
         parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
         parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
-
-        if ( mojo.class.name == 'org.apache.maven.plugin.surefire.SurefirePlugin' )
-        {
-            parentMojo.setFieldValue( mojo, 'useFile',                  true   )
-            parentMojo.setFieldValue( mojo, 'printSummary',             false  )
-            parentMojo.setFieldValue( mojo, 'redirectTestOutputToFile', true   )
-            parentMojo.setFieldValue( mojo, 'reportFormat',             'none' )
-        }
 
         mojo
     }
@@ -98,5 +92,17 @@ class SilentMavenPluginManager
         collect { Field  f     -> parentMojo.getFieldValue( mojo, f.name )}.
         findAll { Object value -> AbstractLogEnabled.isInstance( value )}.
         each    { Object value -> parentMojo.setFieldValue( value, 'logger', parentMojo.silentLogger )}
+    }
+
+
+    @Requires({ mojo })
+    void updateSurefireMojo ( Object mojo )
+    {
+        if ( mojo.class.name == 'org.apache.maven.plugin.surefire.SurefirePlugin' )
+        {
+            parentMojo.setFieldValue( mojo, 'useFile',                  true   )
+            parentMojo.setFieldValue( mojo, 'redirectTestOutputToFile', true   )
+            parentMojo.setFieldValue( mojo, 'printSummary',             false  )
+        }
     }
 }
