@@ -115,6 +115,8 @@ final class CopyResource extends Resource implements Cloneable
     /**
      * Boolean flags that we need 3 states for: true, false, undefined
      */
+    Boolean eliminateDuplicates
+    Boolean parallelDownload
     Boolean stripVersion
     Boolean verbose
     Boolean failIfNotFound
@@ -134,8 +136,6 @@ final class CopyResource extends Resource implements Cloneable
                               //          <filter> and <process> operate on each dependency individually,
                               //          dependencies are processes in the same order they are declared
 
-    boolean eliminateDuplicates   = true
-    boolean parallelDownload      = false
     boolean preservePath          = false
     boolean clean                 = false
     boolean cleanEmptyDirectories = false

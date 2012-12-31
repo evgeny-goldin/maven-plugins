@@ -56,6 +56,12 @@ class CopyMojo extends BaseGroovyMojo
     @Parameter ( required = false )
     private boolean stripVersion = false
 
+    @Parameter ( required = false )
+    private boolean eliminateDuplicates = true
+
+    @Parameter ( required = false )
+    private boolean parallelDownload = false
+
     /**
      * "false" or comma-separated list of default excludes
      * Not active for Net operations
@@ -334,14 +340,16 @@ class CopyMojo extends BaseGroovyMojo
     {
         List<CopyDependency> resourceDependencies = verifyBean().notNullOrEmpty( resource.dependencies())
         final                dependenciesAtM2     = resource.dependenciesAtM2()
-        final                isSkipIdentical      = generalBean().choose( resource.skipIdentical, this.skipIdentical )
-        final                isStripVersion       = generalBean().choose( resource.stripVersion,  this.stripVersion  )
+        final                isSkipIdentical      = generalBean().choose( resource.skipIdentical,       this.skipIdentical )
+        final                isStripVersion       = generalBean().choose( resource.stripVersion,        this.stripVersion  )
+        final                eliminateDuplicates  = generalBean().choose( resource.eliminateDuplicates, this.eliminateDuplicates )
+        final                parallelDownload     = generalBean().choose( resource.parallelDownload,    this.parallelDownload  )
 
         if ( dependenciesAtM2 )
         {
             boolean resolved = false // Whether any dependency was resolved
 
-            resolve( resourceDependencies, resource.eliminateDuplicates, resource.parallelDownload, verbose, failIfNotFound ).each {
+            resolve( resourceDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound ).each {
                 CopyDependency d ->
 
                 resolved = true
@@ -392,7 +400,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, resource.eliminateDuplicates, resource.parallelDownload, verbose, failIfNotFound, isStripVersion ).each {
+                resolve( resourceDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound, isStripVersion ).each {
                     CopyDependency d -> fileBean().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
