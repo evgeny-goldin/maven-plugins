@@ -432,7 +432,7 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Resolves and filters resource dependencies.
      *
-     * @param dependencies        dependencies to resolve and filter
+     * @param inputDependencies   dependencies to resolve and filter
      * @param eliminateDuplicates whether duplicate dependencies should be removed from result
      * @param parallelDownload    whether dependencies should be downloaded in parallel
      * @param verbose             whether resolving process should be logged
@@ -440,16 +440,16 @@ class CopyMojo extends BaseGroovyMojo
      * @param stripVersion        whether dependencies version should be stripped
      * @return                    dependencies resolved and filtered
      */
-    @Requires({ dependencies })
+    @Requires({ inputDependencies })
     @Ensures ({ result != null })
-    private Collection<CopyDependency> resolve ( List<CopyDependency> dependencies,
+    private Collection<CopyDependency> resolve ( List<CopyDependency> inputDependencies,
                                                  boolean              eliminateDuplicates,
                                                  boolean              parallelDownload,
                                                  boolean              verbose,
                                                  boolean              failIfNotFound,
                                                  boolean              stripVersion = false )
     {
-        final result = helper.resolveDependencies( dependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound ).
+        final result = helper.resolveDependencies( inputDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound ).
         findAll { CopyDependency d -> d.artifact?.file?.file }. // Filtering out (optional) unresolved artifacts
         collect { CopyDependency d ->
 
@@ -464,7 +464,7 @@ class CopyMojo extends BaseGroovyMojo
             d
         }
 
-        assert ( result || ( ! failIfNotFound ) || dependencies.every { it.optional } ), "No dependencies resolved with $dependencies"
+        assert ( result || ( ! failIfNotFound ) || inputDependencies.every { it.optional }), "No dependencies resolved with $inputDependencies"
         assert result.every { it.artifact.file.file }
         result
     }

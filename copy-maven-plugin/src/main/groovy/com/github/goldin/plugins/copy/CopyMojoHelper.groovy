@@ -87,28 +87,28 @@ final class CopyMojoHelper
     {
         try
         {
-            def dependencies = inputDependencies.collect {
+            def result = inputDependencies.collect {
                 CopyDependency d -> collectDependencies( d, verbose, failIfNotFound )
             }.flatten()
 
-            if ( eliminateDuplicates ){ dependencies = removeDuplicates( dependencies )}
+            if ( eliminateDuplicates ){ result = removeDuplicates( result )}
 
-            each ( parallelDownload, dependencies ){
+            each ( parallelDownload, result ){
                 CopyDependency d -> mojo.downloadArtifact( d.artifact, verbose, failIfNotFound )
             }
 
             Log log = ThreadLocals.get( Log )
 
-            log.info( "Resolving dependencies [$inputDependencies]: [${ dependencies.size() }] artifact${ generalBean().s( dependencies.size())} found" )
-            if ( log.debugEnabled ) { log.debug( "Artifacts found: $dependencies" ) }
+            log.info( "Resolving dependencies $inputDependencies: [${ result.size() }] artifact${ generalBean().s( result.size())} found" )
+            if ( log.debugEnabled ) { log.debug( "Artifacts found: $result" ) }
 
-            assert ( dependencies || ( ! failIfNotFound ) || ( dependencies.every { it.optional } )), "No dependencies resolved with $inputDependencies"
-            assert dependencies.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
-            dependencies
+            assert ( result || ( ! failIfNotFound ) || ( inputDependencies.every { it.optional } )), "No dependencies resolved with $inputDependencies"
+            assert result.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
+            result
         }
         catch( e )
         {
-            String errorMessage = "Failed to resolve and filter dependencies with [$inputDependencies]"
+            String errorMessage = "Failed to resolve and filter dependencies with $inputDependencies"
 
             if ( inputDependencies.every { it.optional } || ( ! failIfNotFound ))
             {
