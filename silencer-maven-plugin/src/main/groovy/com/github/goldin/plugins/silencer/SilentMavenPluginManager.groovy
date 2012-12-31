@@ -72,14 +72,16 @@ class SilentMavenPluginManager
             Object o          = mojo
 
             fieldsList.eachWithIndex { String fieldName, int j ->
-
-                if ( j < ( fieldsList.size() - 1 ))
-                {   // o.fieldA.fieldB...
-                    o = parentMojo.getFieldValue( o, fieldName )
-                }
-                else
-                {   // o.loggerField
-                    parentMojo.setFieldValue( o, fieldName, parentMojo.silentLogger )
+                if ( o != null )
+                {
+                    if ( j < ( fieldsList.size() - 1 ))
+                    {   // o.fieldA.fieldB...
+                        o = parentMojo.getFieldValue( o, fieldName )
+                    }
+                    else
+                    {   // o.loggerField
+                        parentMojo.setFieldValue( o, fieldName, parentMojo.silentLogger )
+                    }
                 }
             }
         }
