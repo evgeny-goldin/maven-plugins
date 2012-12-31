@@ -25,7 +25,7 @@ import java.util.jar.Manifest
 /**
  * {@link CopyMojo} helper class.
  */
-@SuppressWarnings( 'FinalClassWithProtectedMember' )
+@SuppressWarnings([ 'FinalClassWithProtectedMember', 'GroovyAccessibility' ])
 final class CopyMojoHelper
 {
     private final BaseGroovyMojo mojo
@@ -147,7 +147,7 @@ final class CopyMojoHelper
         assert ( dependency.transitive || ( dependency.depth < 1 )), \
                "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
 
-        final scopeSelector   = new ScopeDependencySelector( split( dependency.includeScope ), split( dependency.excludeScope ))
+        final scopeSelector   = new ScopeDependencySelector( true, split( dependency.includeScope ), split( dependency.excludeScope ))
         final filtersSelector = new ArtifactFiltersDependencySelector( composeFilters( dependency ))
         final artifacts       = ( Collection<Artifact> ) dependency.gav ?
 
@@ -239,7 +239,7 @@ final class CopyMojoHelper
      * @param aggregator          aggregates recursive results
      * @return                    transitive dependencies collected (not resolved!)
      */
-    @SuppressWarnings([ 'GroovyMethodParameterCount' , 'GroovyAccessibility' ])
+    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ artifact && scopeSelector && filtersSelector && ( currentDepth >= 0 ) && ( aggregator != null ) })
     @Ensures ({ result != null })
     private final Collection<Artifact> collectArtifactDependencies (
@@ -258,13 +258,8 @@ final class CopyMojoHelper
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
-        final boolean artifactMatches = new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), artifact.scope ).with {
-            org.sonatype.aether.graph.Dependency d ->
-            scopeSelector.selectDependency( d ) && filtersSelector.selectDependency( d )
-        }
-
-        if ( artifactMatches ){ aggregator << artifact }
-        if (( ! artifactMatches ) || ( currentDepth == depth )){ return aggregator }
+        if ( currentDepth == 0     ){ aggregator << artifact } // Root artifact is always included
+        if ( currentDepth == depth ){ return aggregator      }
 
         try
         {
@@ -290,8 +285,9 @@ final class CopyMojoHelper
                 childArtifacts.each {
                     Artifact childArtifact ->
 
-                    if ( ! ( childArtifact in aggregator ))
+                    if ( ! ( childArtifact in aggregator )) // Only go recursive for newly met artifacts
                     {
+                        aggregator << childArtifact
                         collectArtifactDependencies( childArtifact, scopeSelector, filtersSelector,
                                                      includeTransitive, includeOptional,
                                                      verbose, failOnError, depth, currentDepth + 1, aggregator )
