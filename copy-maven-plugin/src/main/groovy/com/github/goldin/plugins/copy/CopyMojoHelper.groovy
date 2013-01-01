@@ -1,5 +1,7 @@
 package com.github.goldin.plugins.copy
 
+import org.sonatype.aether.resolution.ArtifactDescriptorRequest
+
 import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
@@ -264,27 +266,18 @@ final class CopyMojoHelper
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
-        if ( selectArtifact( artifact, scopeSelector, filtersSelector )){ aggregator << artifact }
-        if ( currentDepth == depth ){ return aggregator }
+        final artifactSelected = selectArtifact( artifact, scopeSelector, filtersSelector )
+        if ( artifactSelected      ){ aggregator << artifact }
+        if ( currentDepth == depth ){ return aggregator      }
 
         try
         {
-            final request                  = new CollectRequest( toAetherDependency( artifact ), mojo.remoteRepos )
-            final repoSession              = mojo.repoSession
-            final previousSelector         = repoSession.dependencySelector
-            repoSession.dependencySelector = new AndDependencySelector( scopeSelector, filtersSelector )
-            final rootNode                 = mojo.repoSystem.collectDependencies( repoSession, request ).root
-            repoSession.dependencySelector = previousSelector
-
-            if ( ! rootNode )
-            {
-                failOrWarn( failOnError, "Failed to collect [$artifact] dependencies" )
-                return aggregator
-            }
-
-            final childArtifacts = rootNode.children.
-            findAll { DependencyNode childNode -> (( ! childNode.dependency.optional ) || includeOptional )}.
-            collect { DependencyNode childNode -> toMavenArtifact( childNode.dependency )}
+            final request        = new ArtifactDescriptorRequest( toAetherArtifact( artifact ), mojo.remoteRepos, null )
+            final childArtifacts = mojo.repoSystem.readArtifactDescriptor( mojo.repoSession, request ).
+                                   dependencies.
+                                   findAll { org.sonatype.aether.graph.Dependency d -> (( ! d.optional ) || includeOptional )}.
+                                   collect { org.sonatype.aether.graph.Dependency d -> toMavenArtifact( d )}.
+                                   findAll { Artifact a                             -> selectArtifact( a, scopeSelector )}
 
             if ( includeTransitive )
             {
@@ -301,7 +294,7 @@ final class CopyMojoHelper
             }
             else
             {
-                aggregator.addAll( childArtifacts )
+                aggregator.addAll( childArtifacts.findAll { selectArtifact( it, filtersSelector ) })
             }
         }
         catch ( e )
