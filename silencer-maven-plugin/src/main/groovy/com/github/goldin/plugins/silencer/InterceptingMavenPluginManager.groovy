@@ -56,7 +56,7 @@ class InterceptingMavenPluginManager
         parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
         parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
-        return ( T ) (( parentMojo.logTime || parentMojo.logSummary ) ? new InterceptingLoggingMojo( parentMojo, mojo ) :
+        return ( T ) (( parentMojo.logTime || parentMojo.logSummary ) ? new InterceptingLoggingMojo( parentMojo, mojo, mojoExecution ) :
                                                                         mojo )
     }
 

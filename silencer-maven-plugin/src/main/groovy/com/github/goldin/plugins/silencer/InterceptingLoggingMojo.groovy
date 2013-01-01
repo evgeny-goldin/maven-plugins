@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.silencer
 
 import org.apache.maven.plugin.Mojo
+import org.apache.maven.plugin.MojoExecution
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.codehaus.plexus.logging.Logger
@@ -13,18 +14,23 @@ import org.gcontracts.annotations.Requires
  */
 class InterceptingLoggingMojo
 {
-    private SilencerMojo  parentMojo
+    private SilencerMojo        parentMojo
     @Delegate
-    private final Mojo    delegate
-    private final Logger  logger
+    private final Mojo          delegate
+    private final MojoExecution mojoExecution
+    private final Logger        logger
+
+    class ExecutionTime { long time; Mojo mojo; MojoExecution execution }
+    private static final List<ExecutionTime> executions = []
 
 
-    @Requires({ parentMojo && delegate })
-    InterceptingLoggingMojo ( SilencerMojo parentMojo, Mojo delegate )
+    @Requires({ parentMojo && delegate && mojoExecution })
+    InterceptingLoggingMojo ( SilencerMojo parentMojo, Mojo delegate, MojoExecution mojoExecution )
     {
-        this.parentMojo = parentMojo
-        this.delegate   = delegate
-        this.logger     = new ConsoleLogger( Logger.LEVEL_INFO, this.class.name )
+        this.parentMojo    = parentMojo
+        this.delegate      = delegate
+        this.mojoExecution = mojoExecution
+        this.logger        = new ConsoleLogger( Logger.LEVEL_INFO, this.class.name )
     }
 
 
@@ -46,13 +52,34 @@ class InterceptingLoggingMojo
     {
         if ( parentMojo.logTime )
         {
-            logger.info( "[$timeMillis] ms" + ( parentMojo.logMojo ? " (${ delegate.getClass().name })" : '' ))
+            logger.info( "$timeMillis ms" + ( parentMojo.logMojo ? " - ${ delegate.getClass().name }" : '' ))
         }
 
-        if ( parentMojo.logSummary )
+        if ( ! parentMojo.logSummary ) { return }
+
+        executions << new ExecutionTime( time: timeMillis, mojo: this.delegate, execution: this.mojoExecution )
+
+        if ( parentMojo.mojoExecutor.mojoExecutions )
         {
-            final executions = parentMojo.mojoExecutor.mojoExecutions
-            int j = 5
+            final firstExecution = ( parentMojo.mojoExecutor.mojoExecutions[ 0  ] == this.mojoExecution )
+            final lastExecution  = ( parentMojo.mojoExecutor.mojoExecutions[ -1 ] == this.mojoExecution )
+
+            if ( firstExecution ) { executions.clear() }
+            if ( lastExecution  )
+            {
+                logger.info( '' )
+                logger.info( 'Summary:' )
+                final timePadding = executions*.time*.toString()*.length().max()
+
+                executions.sort { ExecutionTime e1, ExecutionTime e2 -> e2.time <=> e1.time }. // Sort in decreasing order
+                           each { ExecutionTime e ->
+                    logger.info( "${ e.time } ms".padRight( timePadding + 3 )   +
+                                 " - ${ e.execution.mojoDescriptor.roleHint.replaceAll( /^.+?:/, '' )} " +
+                                 "(${ e.execution.executionId })"               +
+                                 ( parentMojo.logMojo ? " (${ e.mojo.class.name })" : '' ))
+                }
+            }
         }
     }
 }
+
