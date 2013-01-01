@@ -14,22 +14,27 @@ import org.gcontracts.annotations.Requires
 class ExecutionTimingMojo
 {
     @Delegate
-    private final Mojo delegate
-    private final Logger logger = new ConsoleLogger( Logger.LEVEL_INFO, this.class.name )
+    private final Mojo    delegate
+    private final boolean logMojoClass
+    private final Logger  logger
 
 
     @Requires({ delegate })
-    ExecutionTimingMojo ( Mojo delegate )
+    ExecutionTimingMojo ( Mojo delegate, boolean logMojoClass )
     {
-        this.delegate = delegate
+        this.delegate     = delegate
+        this.logMojoClass = logMojoClass
+        this.logger       = new ConsoleLogger( Logger.LEVEL_INFO, this.class.name )
     }
 
 
     @Override
+    @SuppressWarnings([ 'JavaStylePropertiesInvocation', 'GroovyGetterCallCanBePropertyAccess' ])
     void execute () throws MojoExecutionException, MojoFailureException
     {
         final t = System.currentTimeMillis()
-        try { delegate.execute() }
-        finally{ logger.info( "[${ System.currentTimeMillis() - t }] ms" ) }
+        try     { delegate.execute() }
+        finally { logger.info( "[${ System.currentTimeMillis() - t }] ms" +
+                               ( logMojoClass ? " (${ delegate.getClass().name })" : '' )) }
     }
 }

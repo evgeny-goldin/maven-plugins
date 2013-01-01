@@ -28,13 +28,16 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     private String enabled
 
     @Parameter ( required = false )
-    private boolean timeExecution = false
+    boolean logTime = false
 
     @Parameter ( required = false )
-    private String loggerFields
+    boolean logMojoClass = false
+
+    @Parameter ( required = false )
+    String loggerFields
 
 
-    private final String defaultLoggerFields = '''
+    final String defaultLoggerFields = '''
     org.apache.maven.plugin.compiler.CompilerMojo:compilerManager.compilers.javac.logger
     org.codehaus.gmaven.plugin.compile.CompileMojo:log
     org.codehaus.gmaven.plugin.compile.TestCompileMojo:log
@@ -72,13 +75,8 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
 
     void updateMavenPluginManager ()
     {
-        final executor = container.lookup( MojoExecutor )
-
-        (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
-            new SilentMavenPluginManager(
-                this,
-                timeExecution,
-                (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
-                ( defaultLoggerFields + '\n' + ( loggerFields ?: '' )))
+        final executor                                = container.lookup( MojoExecutor )
+        final DefaultBuildPluginManager pluginManager = ( DefaultBuildPluginManager ) executor.pluginManager
+        pluginManager.mavenPluginManager              = new SilentMavenPluginManager( this, pluginManager.mavenPluginManager )
     }
 }

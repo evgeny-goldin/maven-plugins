@@ -20,19 +20,18 @@ import java.lang.reflect.Field
 class SilentMavenPluginManager
 {
     private final SilencerMojo parentMojo
-    private final boolean      timeExecution
 
     @Delegate
     private final MavenPluginManager  delegate
     private final Map<String, List<String>> loggerFieldsMap
 
 
-    @Requires({ parentMojo && delegate && loggerFields })
-    SilentMavenPluginManager ( SilencerMojo parentMojo, boolean timeExecution, MavenPluginManager delegate, String loggerFields )
+    @Requires({ parentMojo && delegate })
+    SilentMavenPluginManager ( SilencerMojo parentMojo, MavenPluginManager delegate )
     {
         this.parentMojo      = parentMojo
-        this.timeExecution   = timeExecution
         this.delegate        = delegate
+        final loggerFields   = parentMojo.defaultLoggerFields + '\n' + ( parentMojo.loggerFields ?: '' )
         this.loggerFieldsMap = readLines( loggerFields ).inject( [:].withDefault{ [] } ){
             Map m, String line ->
 
@@ -59,7 +58,8 @@ class SilentMavenPluginManager
         parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
         parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
-        return ( T ) ( timeExecution ? new ExecutionTimingMojo( mojo ) : mojo )
+        return ( T ) ( parentMojo.logTime ? new ExecutionTimingMojo( mojo, parentMojo.logMojoClass ) :
+                                            mojo )
     }
 
 
