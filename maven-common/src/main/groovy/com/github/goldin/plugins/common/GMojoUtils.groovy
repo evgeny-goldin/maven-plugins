@@ -575,6 +575,11 @@ class GMojoUtils
     }
 
 
+    @Requires({ s != null })
+    @Ensures ({ result != null })
+    static List<String> readLines( String s ){ s.readLines()*.trim().grep() }
+
+
     @SuppressWarnings( 'UnnecessaryObjectReferences' )
     static ConstantsBean constantsBean (){ GCommons.constants ()}
     @SuppressWarnings( 'UnnecessaryObjectReferences' )

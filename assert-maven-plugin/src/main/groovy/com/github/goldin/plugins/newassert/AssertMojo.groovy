@@ -102,7 +102,7 @@ class AssertMojo extends BaseGroovyMojo
     {
         if ( data )
         {
-            verifyBean().notNullOrEmpty( data ).readLines()*.trim().grep().each { callback( it ) }
+            readLines( verifyBean().notNullOrEmpty( data )).each { callback( it ) }
         }
     }
 

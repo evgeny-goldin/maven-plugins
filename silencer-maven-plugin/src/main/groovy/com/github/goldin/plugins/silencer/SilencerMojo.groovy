@@ -27,6 +27,12 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     @Parameter ( required = false )
     private String enabled
 
+    @Parameter ( required = false )
+    private boolean timeExecution = false
+
+    @Parameter ( required = false )
+    private String loggerFields
+
 
     private final String defaultLoggerFields = '''
     org.apache.maven.plugin.compiler.CompilerMojo:compilerManager.compilers.javac.logger
@@ -35,11 +41,8 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
     '''.stripIndent()
 
 
-    @Parameter ( required = false )
-    private String loggerFields = ''
-
-
     private PlexusContainer container
+
 
     @Override
     @Requires({ context })
@@ -74,7 +77,8 @@ class SilencerMojo extends BaseGroovyMojo implements Contextualizable
         (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager =
             new SilentMavenPluginManager(
                 this,
+                timeExecution,
                 (( DefaultBuildPluginManager ) executor.pluginManager ).mavenPluginManager,
-                ( defaultLoggerFields + '\n' + loggerFields ))
+                ( defaultLoggerFields + '\n' + ( loggerFields ?: '' )))
     }
 }

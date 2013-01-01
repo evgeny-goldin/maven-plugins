@@ -140,7 +140,7 @@ options         : $optsSplit
     private String propertiesConfigLocation( String propertiesValue )
     {
         def file       = new File( outputDirectory(), 'PropertyPlaceholderConfigurer.xml' )
-        def lines      = propertiesValue.readLines().collect { it.trim().replace( '\\', '/' ) }
+        def lines      = readLines( propertiesValue ).collect { it.replace( '\\', '/' ) }
         def properties = [ '', *lines ].join( "${ constantsBean().CRLF }${ ' ' * 16 }" )
         def text       = makeTemplate( '/PropertyPlaceholderConfigurer.xml', [ properties : properties ] )
 

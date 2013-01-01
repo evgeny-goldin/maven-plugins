@@ -1,5 +1,8 @@
 package com.github.goldin.plugins.silencer
 
+import org.apache.maven.plugin.Mojo
+
+import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.MavenPluginManager
@@ -17,6 +20,7 @@ import java.lang.reflect.Field
 class SilentMavenPluginManager
 {
     private final SilencerMojo parentMojo
+    private final boolean      timeExecution
 
     @Delegate
     private final MavenPluginManager  delegate
@@ -24,11 +28,12 @@ class SilentMavenPluginManager
 
 
     @Requires({ parentMojo && delegate && loggerFields })
-    SilentMavenPluginManager ( SilencerMojo parentMojo, MavenPluginManager delegate, String loggerFields )
+    SilentMavenPluginManager ( SilencerMojo parentMojo, boolean timeExecution, MavenPluginManager delegate, String loggerFields )
     {
         this.parentMojo      = parentMojo
+        this.timeExecution   = timeExecution
         this.delegate        = delegate
-        this.loggerFieldsMap = loggerFields.readLines()*.trim().grep().inject( [:].withDefault{ [] } ){
+        this.loggerFieldsMap = readLines( loggerFields ).inject( [:].withDefault{ [] } ){
             Map m, String line ->
 
             def ( String className, String fieldsPath ) = line.tokenize( ':' )
@@ -44,7 +49,8 @@ class SilentMavenPluginManager
         throws PluginConfigurationException,
                PluginContainerException
     {
-        final  mojo = delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
+        assert Mojo.isAssignableFrom( mojoInterface )
+        final  Mojo mojo = ( Mojo ) delegate.getConfiguredMojo( mojoInterface, session, mojoExecution )
         assert mojo, "Failed to retrieve Mojo [${ mojoInterface.name }]"
 
         parentMojo.tryIt { updateLoggerFields( mojo )}
@@ -53,12 +59,12 @@ class SilentMavenPluginManager
         parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
         parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
-        mojo
+        return ( T ) ( timeExecution ? new ExecutionTimingMojo( mojo ) : mojo )
     }
 
 
     @Requires({ mojo })
-    void updateLoggerFields ( Object mojo )
+    void updateLoggerFields ( Mojo mojo )
     {
         for ( fieldsPath in loggerFieldsMap[ mojo.class.name ] )
         {
@@ -83,7 +89,7 @@ class SilentMavenPluginManager
 
 
     @Requires({ mojo })
-    void updateAbstractLogEnabledFields ( Object mojo )
+    void updateAbstractLogEnabledFields ( Mojo mojo )
     {
         final List<Field> mojoFields = []
         for ( Class c = mojo.class; ( c != Object ); c = c.superclass ){ mojoFields.addAll( c.declaredFields )}
@@ -96,7 +102,7 @@ class SilentMavenPluginManager
 
 
     @Requires({ mojo })
-    void updateSurefireMojo ( Object mojo )
+    void updateSurefireMojo ( Mojo mojo )
     {
         if ( mojo.class.name == 'org.apache.maven.plugin.surefire.SurefirePlugin' )
         {

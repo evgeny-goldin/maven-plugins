@@ -103,7 +103,7 @@ class PropertiesMojo extends BaseGroovyMojo
     {
         assert rawProperties
 
-        Map<String, String> map = rawProperties.readLines().inject( [:] ) {
+        Map<String, String> map = readLines( rawProperties ).inject( [:] ) {
             Map m, String line ->
             def ( String name, String value ) = line.split( /=/ ).with{ size() > 1 ? delegate[ 0, 1 ] : [ delegate[ 0 ], '' ] }*.trim()
             m[ name ] = addDollar( value, addDollar )
