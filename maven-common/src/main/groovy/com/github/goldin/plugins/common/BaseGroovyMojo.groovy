@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.common
 
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.apache.ivy.util.Message
 import org.apache.tools.ant.DefaultLogger

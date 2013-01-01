@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.ivy
 
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.ivy.Ivy

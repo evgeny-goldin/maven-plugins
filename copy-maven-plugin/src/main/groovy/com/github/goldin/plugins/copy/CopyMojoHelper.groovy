@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.copy
 
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
@@ -13,11 +14,12 @@ import org.apache.maven.shared.artifact.filter.collection.*
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.sonatype.aether.collection.CollectRequest
+import org.sonatype.aether.collection.DependencySelector
 import org.sonatype.aether.deployment.DeployRequest
 import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
-import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 import org.sonatype.aether.util.graph.selector.AndDependencySelector
+import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
@@ -87,15 +89,10 @@ final class CopyMojoHelper
     {
         try
         {
-            def result = inputDependencies.collect {
-                CopyDependency d -> collectDependencies( d, verbose, failIfNotFound )
-            }.flatten()
-
+            Collection<CopyDependency>  result = inputDependencies.collect { collectDependencies( it, verbose, failIfNotFound )}.flatten()
             if ( eliminateDuplicates ){ result = removeDuplicates( result )}
 
-            each ( parallelDownload, result ){
-                CopyDependency d -> mojo.downloadArtifact( d.artifact, verbose, failIfNotFound )
-            }
+            each ( parallelDownload, result ){ CopyDependency d -> mojo.downloadArtifact( d.artifact, verbose, failIfNotFound )}
 
             Log log = ThreadLocals.get( Log )
 
@@ -103,7 +100,7 @@ final class CopyMojoHelper
             if ( log.debugEnabled ) { log.debug( "Artifacts found: $result" ) }
 
             assert ( result || ( ! failIfNotFound ) || ( inputDependencies.every { it.optional } )), "No dependencies resolved with $inputDependencies"
-            assert result.every { it.artifact?.file?.file || it.optional || ( ! failIfNotFound ) }
+            assert result.every { CopyDependency d -> d.artifact?.file?.file || d.optional || ( ! failIfNotFound ) }
             result
         }
         catch( e )
@@ -166,11 +163,8 @@ final class CopyMojoHelper
              */
 
             mojo.project.dependencies.
-            findAll { Dependency d -> new org.sonatype.aether.graph.Dependency( toAetherArtifact( d ), d.scope ).with {
-                org.sonatype.aether.graph.Dependency aetherDependency ->
-                scopeSelector.selectDependency( aetherDependency ) && filtersSelector.selectDependency( aetherDependency )
-            }}.
             collect { Dependency d -> toMavenArtifact( d ) }.
+            findAll { Artifact   a -> selectArtifact ( a, scopeSelector, filtersSelector )}.
             collect { Artifact   a ->
                 dependency.transitive ?
                     collectArtifactDependencies( a, scopeSelector, filtersSelector,
@@ -180,7 +174,19 @@ final class CopyMojoHelper
             }.
             flatten()
 
-        artifacts.toSet().collect { Artifact a -> new CopyDependency( dependency, a )}
+        final Collection<CopyDependency> result = artifacts.toSet().collect { new CopyDependency( dependency, it )}
+        assert result.every { it.optional ? true : selectArtifact( it.artifact, scopeSelector, filtersSelector ) }
+        result
+    }
+
+
+    /**
+     * Determines if artifact specified is selected by all selectors provided.
+     */
+    private boolean selectArtifact( Artifact a, DependencySelector ... selectors )
+    {
+        final aetherDependency = toAetherDependency( a )
+        selectors.every { it.selectDependency( aetherDependency )}
     }
 
 
@@ -258,12 +264,12 @@ final class CopyMojoHelper
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
         assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
-        if ( currentDepth == 0     ){ aggregator << artifact } // Root artifact is always included
-        if ( currentDepth == depth ){ return aggregator      }
+        if ( selectArtifact( artifact, scopeSelector, filtersSelector )){ aggregator << artifact }
+        if ( currentDepth == depth ){ return aggregator }
 
         try
         {
-            final request                  = new CollectRequest( new org.sonatype.aether.graph.Dependency( toAetherArtifact( artifact ), null ), mojo.remoteRepos )
+            final request                  = new CollectRequest( toAetherDependency( artifact ), mojo.remoteRepos )
             final repoSession              = mojo.repoSession
             final previousSelector         = repoSession.dependencySelector
             repoSession.dependencySelector = new AndDependencySelector( scopeSelector, filtersSelector )
@@ -287,7 +293,6 @@ final class CopyMojoHelper
 
                     if ( ! ( childArtifact in aggregator )) // Only go recursive for newly met artifacts
                     {
-                        aggregator << childArtifact
                         collectArtifactDependencies( childArtifact, scopeSelector, filtersSelector,
                                                      includeTransitive, includeOptional,
                                                      verbose, failOnError, depth, currentDepth + 1, aggregator )

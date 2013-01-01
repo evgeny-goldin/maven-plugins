@@ -1,6 +1,6 @@
 package com.github.goldin.plugins.copy
 
-import static com.github.goldin.plugins.common.GMojoUtils.*
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
@@ -25,7 +25,7 @@ class ArtifactFiltersDependencySelector implements DependencySelector
     }
 
 
-    @Requires({ dependency })
+    @Requires({ dependency && ( this.filters != null ) })
     @Override
     boolean selectDependency ( Dependency dependency )
     {

@@ -8,12 +8,7 @@ import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovyx.gpars.GParsPool
 import org.apache.maven.Maven
-import org.apache.maven.artifact.Artifact
-import org.apache.maven.artifact.DefaultArtifact
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
-import org.apache.maven.artifact.versioning.VersionRange
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.model.Dependency
 import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
@@ -30,7 +25,7 @@ import org.gcontracts.annotations.Requires
  * Various Mojo helper methods
  */
 @SuppressWarnings([ 'MethodCount', 'AbcMetric' ])
-class GMojoUtils
+final class GMojoUtils
 {
     /**
      * <groupId> prefix for Ivy <dependencies>.
@@ -38,14 +33,12 @@ class GMojoUtils
     static final String IVY_PREFIX = 'ivy.'
 
 
-    private GMojoUtils ()
-    {
-    }
+    private GMojoUtils (){}
 
 
     /**
-     * Retrieves plugin's {@link Log} instance
-     * @return plugin's {@link Log} instance
+     * Retrieves current {@link Log} instance
+     * @return current {@link Log} instance
      */
     static Log getLog () { ThreadLocals.get( Log ) }
 
@@ -311,7 +304,7 @@ class GMojoUtils
                     fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
                                                          ThreadLocals.get( MavenSession ), new MavenResourcesExecution())
                 if ( filterWithDollarOnly )
-                {   // noinspection GroovyUnresolvedAccess
+                {
                     wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
                 }
                 else if ( fileBean().extension( fromFile ).toLowerCase() == 'bat' )
@@ -436,89 +429,6 @@ class GMojoUtils
 
 
     /**
-     * Converts artifact coordinates to Maven {@link Artifact}.
-     *
-     * @param groupId    artifact {@code <groupId>}
-     * @param artifactId artifact {@code <artifactId>}
-     * @param version    artifact {@code <version>}
-     * @param scope      artifact {@code <scope>}
-     * @param type       artifact {@code <type>}
-     * @param classifier artifact {@code <classifier>}
-     * @param optional   whether artifact is optional
-     * @param file       artifact local file, may be {@code null}
-     *
-     * @return new Maven {@link Artifact}
-     */
-    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
-    @Requires({ groupId && artifactId && version })
-    @Ensures ({ result })
-    static Artifact toMavenArtifact ( String groupId, String artifactId, String version, String scope, String type, String classifier,
-                                      boolean optional, File file = null )
-    {
-        final a = new DefaultArtifact( groupId, artifactId, VersionRange.createFromVersion( version ),
-                                       scope ?: 'compile', type, classifier, new DefaultArtifactHandler(), optional )
-        if ( file ) { a.file = verifyBean().file( file ) }
-        a
-    }
-
-
-    /**
-     * Converts Aether {@link org.sonatype.aether.graph.Dependency} to Maven {@link Artifact}.
-     * @param aetherDependency Aether dependency
-     * @return new Maven {@link Artifact}
-     */
-    @Requires({ aetherDependency })
-    @Ensures ({ result })
-    static Artifact toMavenArtifact ( org.sonatype.aether.graph.Dependency aetherDependency )
-    {
-        aetherDependency.artifact.with {
-            toMavenArtifact( groupId, artifactId, version, aetherDependency.scope, extension, classifier, false, file )
-        }
-    }
-
-
-    /**
-     * Converts Maven {@link org.apache.maven.model.Dependency} to {@link Artifact}.
-     * @param mavenDependency Maven dependency
-     * @return new Maven {@link Artifact}
-     */
-    @Requires({ mavenDependency })
-    @Ensures ({ result })
-    static Artifact toMavenArtifact( org.apache.maven.model.Dependency mavenDependency )
-    {
-        mavenDependency.with { toMavenArtifact( groupId, artifactId, version, scope, type, classifier, optional ) }
-    }
-
-
-    /**
-     * Converts Maven {@link Artifact} to Aether artifact.
-     *
-     * @param artifact Maven artifact
-     * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
-     */
-    @Requires({ artifact })
-    @Ensures ({ result })
-    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Artifact artifact )
-    {
-        artifact.with { new org.sonatype.aether.util.artifact.DefaultArtifact( groupId, artifactId, classifier, type, version, null, file )}
-    }
-
-
-    /**
-     * Converts Maven {@link Dependency} to Aether artifact.
-     *
-     * @param dependency Maven dependency
-     * @return new Aether {@link org.sonatype.aether.artifact.Artifact}
-     */
-    @Requires({ dependency })
-    @Ensures ({ result })
-    static org.sonatype.aether.artifact.Artifact toAetherArtifact ( Dependency dependency )
-    {
-        dependency.with { new org.sonatype.aether.util.artifact.DefaultArtifact( groupId, artifactId, classifier, type, version )}
-    }
-
-
-    /**
      * Converts path specified to URL.
      *
      * @param s path of disk file or jar-located resource.
@@ -567,6 +477,13 @@ class GMojoUtils
     }
 
 
+    /**
+     * Iterates over collection specified serially or in parallel.
+     *
+     * @param parallel whether iteration should be performed in parallel
+     * @param c        collection to iterate over
+     * @param action   action to perform on each iteration
+     */
     @Requires({ ( c != null ) && action })
     static void each ( boolean parallel, Collection<?> c, Closure action )
     {
@@ -575,21 +492,21 @@ class GMojoUtils
     }
 
 
-    @Requires({ s != null })
+    /**
+     * Reads lines of the {@code String} specified, trimming and grepping them.
+     * @param s String to read its lines
+     * @return lines read, trimmed and grepped
+     */
+    @Requires({ s != null      })
     @Ensures ({ result != null })
     static List<String> readLines( String s ){ s.readLines()*.trim().grep() }
 
 
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
+
     static ConstantsBean constantsBean (){ GCommons.constants ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static GeneralBean  generalBean (){ GCommons.general ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static FileBean    fileBean (){ GCommons.file ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static NetBean     netBean (){ GCommons.net ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static VerifyBean  verifyBean (){ GCommons.verify ()}
-    @SuppressWarnings( 'UnnecessaryObjectReferences' )
-    static GroovyBean  groovyBean (){ GCommons.groovy ()}
+    static GeneralBean   generalBean   (){ GCommons.general ()}
+    static FileBean      fileBean      (){ GCommons.file ()}
+    static NetBean       netBean       (){ GCommons.net ()}
+    static VerifyBean    verifyBean    (){ GCommons.verify ()}
+    static GroovyBean    groovyBean    (){ GCommons.groovy ()}
 }

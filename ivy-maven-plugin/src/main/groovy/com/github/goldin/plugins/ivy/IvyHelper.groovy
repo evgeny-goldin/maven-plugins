@@ -1,7 +1,7 @@
 package com.github.goldin.plugins.ivy
 
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.ivy.Ivy
 import org.apache.ivy.core.module.descriptor.DefaultDependencyDescriptor
 import org.apache.ivy.core.module.descriptor.DefaultIncludeRule
@@ -15,6 +15,7 @@ import org.apache.ivy.core.settings.IvySettings
 import org.apache.ivy.plugins.matcher.ExactOrRegexpPatternMatcher
 import org.apache.ivy.plugins.parser.xml.XmlModuleDescriptorWriter
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 
