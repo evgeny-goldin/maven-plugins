@@ -24,7 +24,7 @@ class ThreadLocals
      * @param objects objects to store
      * @return first object stored
      */
-    @SuppressWarnings([ 'JavaStylePropertiesInvocation', 'GroovyGetterCallCanBePropertyAccess' , 'GroovyStaticMethodNamingConvention' ])
+    @SuppressWarnings([ 'JavaStylePropertiesInvocation', 'GroovyGetterCallCanBePropertyAccess', 'GroovyStaticMethodNamingConvention' ])
     static <T> T set ( T ... objects )
     {
         for ( T t in objects ) { THREAD_LOCAL.get()[ t.getClass() ] = t }

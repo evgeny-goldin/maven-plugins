@@ -1,7 +1,5 @@
 package com.github.goldin.plugins.silencer
 
-import org.apache.maven.plugin.Mojo
-
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.execution.MavenSession
@@ -12,22 +10,22 @@ import org.apache.maven.plugin.PluginContainerException
 import org.codehaus.plexus.logging.AbstractLogEnabled
 import org.gcontracts.annotations.Requires
 import java.lang.reflect.Field
+import org.apache.maven.plugin.Mojo
 
 
 /**
  * Delegates to {@link MavenPluginManager} and updates mojos resolved.
  */
-class SilentMavenPluginManager
+class InterceptingMavenPluginManager
 {
-    private final SilencerMojo parentMojo
-
+    private final SilencerMojo              parentMojo
     @Delegate
-    private final MavenPluginManager  delegate
+    private final MavenPluginManager        delegate
     private final Map<String, List<String>> loggerFieldsMap
 
 
     @Requires({ parentMojo && delegate })
-    SilentMavenPluginManager ( SilencerMojo parentMojo, MavenPluginManager delegate )
+    InterceptingMavenPluginManager ( SilencerMojo parentMojo, MavenPluginManager delegate )
     {
         this.parentMojo      = parentMojo
         this.delegate        = delegate
@@ -58,8 +56,8 @@ class SilentMavenPluginManager
         parentMojo.tryIt { mojo.log = parentMojo.silentLogger }
         parentMojo.tryIt { mojo.pluginContext[ BaseGroovyMojo.SILENCE ] = true }
 
-        return ( T ) ( parentMojo.logTime ? new ExecutionTimingMojo( mojo, parentMojo.logMojoClass ) :
-                                            mojo )
+        return ( T ) (( parentMojo.logTime || parentMojo.logSummary ) ? new InterceptingLoggingMojo( parentMojo, mojo ) :
+                                                                        mojo )
     }
 
 
