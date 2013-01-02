@@ -24,11 +24,13 @@ class CopyDependency extends ArtifactItem
     }
 
 
-    boolean optional        = false  // Whether this dependency is optional
-    boolean includeOptional = false  // Whether this filtering dependency should include optional dependencies
-    Boolean stripVersion             // Whether version number should be removed from file names
-    Boolean excludeTransitive        // Whether transitive dependencies should be excluded
-    int     depth           = -1     // Depth of transitive arguments
+    boolean optional             = false  // Whether this dependency is optional
+    boolean includeOptional      = false  // Whether this filtering dependency should include optional dependencies
+    boolean applyWhileTraversing = false  // Whether [groupId, artifactId, classifier, type] filtering
+                                          // should be applied while traversing the dependencies tree
+    Boolean stripVersion                  // Whether version number should be removed from file names
+    Boolean excludeTransitive             // Whether transitive dependencies should be excluded
+    int     depth           = -1          // Depth of transitive arguments
 
     String  includeScope
     String  excludeScope

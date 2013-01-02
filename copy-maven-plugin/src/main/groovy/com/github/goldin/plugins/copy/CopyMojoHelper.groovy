@@ -1,9 +1,8 @@
 package com.github.goldin.plugins.copy
 
-import org.sonatype.aether.resolution.ArtifactDescriptorRequest
-
 import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.sonatype.aether.resolution.ArtifactDescriptorRequest
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.ThreadLocals
 import org.apache.maven.artifact.Artifact
@@ -15,13 +14,8 @@ import org.apache.maven.plugin.logging.Log
 import org.apache.maven.shared.artifact.filter.collection.*
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.collection.CollectRequest
-import org.sonatype.aether.collection.DependencySelector
 import org.sonatype.aether.deployment.DeployRequest
-import org.sonatype.aether.graph.DependencyNode
 import org.sonatype.aether.repository.RemoteRepository
-import org.sonatype.aether.util.graph.selector.AndDependencySelector
-import org.sonatype.aether.util.graph.selector.ScopeDependencySelector
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
@@ -82,16 +76,18 @@ final class CopyMojoHelper
      * @return                    project's dependencies that passed all filters, resolved (downloaded)
      */
     @Requires({ inputDependencies })
-    @Ensures({ result || ( ! failIfNotFound ) })
+    @Ensures ({ result != null })
     Collection<CopyDependency> resolveDependencies ( List<CopyDependency> inputDependencies,
                                                      boolean              eliminateDuplicates,
                                                      boolean              parallelDownload,
                                                      boolean              verbose,
                                                      boolean              failIfNotFound )
     {
+        Collection<CopyDependency> result
+
         try
         {
-            Collection<CopyDependency>  result = inputDependencies.collect { collectDependencies( it, verbose, failIfNotFound )}.flatten()
+            result = inputDependencies.collect { collectDependencies( it, failIfNotFound )}.flatten()
             if ( eliminateDuplicates ){ result = removeDuplicates( result )}
 
             each ( parallelDownload, result ){ CopyDependency d -> mojo.downloadArtifact( d.artifact, verbose, failIfNotFound )}
@@ -120,7 +116,7 @@ final class CopyMojoHelper
                 }
 
                 log.warn( "$errorMessage: $exceptionMessage" )
-                return []
+                return result
             }
 
             throw new MojoExecutionException( errorMessage, e )
@@ -129,66 +125,48 @@ final class CopyMojoHelper
 
 
     @Requires({ dependency })
-    @Ensures ({ result.artifact && result.artifact.with { groupId && artifactId && version }})
-    private Collection<CopyDependency> collectDependencies ( CopyDependency dependency,
-                                                             boolean        verbose,
-                                                             boolean        failIfNotFound )
+    @Ensures ({ result != null })
+    private Collection<CopyDependency> collectDependencies ( CopyDependency dependency, boolean failIfNotFound )
     {
-        final mavenArtifact = dependency.gav ?
-            dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
-            null
+        final isTransitive  = dependency.transitive
+        final depth         = dependency.depth
+        final mavenArtifact = dependency.gav ? dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
+                                               null
 
-        if ( dependency.single )
-        {
-            return [ new CopyDependency( dependency, mavenArtifact ) ]
-        }
+        assert ( isTransitive || ( depth < 1 )), \
+               "Depth is [$depth] for dependency [$dependency] that is not transitive"
 
-        assert ( dependency.transitive || ( dependency.depth < 1 )), \
-               "Dependency [$dependency] - depth is [$dependency.depth] while it is not transitive"
+        if ( dependency.single ) { return [ new CopyDependency( dependency, mavenArtifact ) ]}
 
-        final scopeSelector   = new ScopeDependencySelector( true, split( dependency.includeScope ), split( dependency.excludeScope ))
-        final filtersSelector = new ArtifactFiltersDependencySelector( composeFilters( dependency ))
-        final artifacts       = ( Collection<Artifact> ) dependency.gav ?
+        final scopeFilter      = new ScopeArtifactsFilter( split( dependency.includeScope ), split( dependency.excludeScope ))
+        final dependencyFilter = new AndArtifactsFilter  ( composeDependencyFilters( dependency ))
+        final artifacts        = dependency.gav ?
 
-            /**
-             * For regular GAV dependency we collect its dependencies
-             */
-
-            collectArtifactDependencies( mavenArtifact, scopeSelector, filtersSelector,
-                                         dependency.transitive, dependency.includeOptional,
-                                         verbose, failIfNotFound, dependency.depth ):
-
-            /**
-             * Otherwise, we take project's direct dependencies matching the scopes and collect their dependencies.
-             * {@link org.apache.maven.project.MavenProject#getArtifacts} doesn't return transitive test dependencies
-             * so we can't use it.
-             */
+            collectArtifactDependencies( mavenArtifact, scopeFilter, dependencyFilter, dependency.applyWhileTraversing,
+                                         false, dependency.includeOptional, failIfNotFound,
+                                         isTransitive ? Math.max( -1, depth ) : ( depth == 0 ? 0 : 1 ))
+            :
 
             mojo.project.dependencies.
             collect { Dependency d -> toMavenArtifact( d ) }.
-            findAll { Artifact   a -> selectArtifact ( a, scopeSelector, filtersSelector )}.
-            collect { Artifact   a ->
-                dependency.transitive ?
-                    collectArtifactDependencies( a, scopeSelector, filtersSelector,
-                                                 dependency.transitive, dependency.includeOptional,
-                                                 verbose, failIfNotFound, dependency.depth ) :
-                    a
+            collect { Artifact   a -> collectArtifactDependencies( a, scopeFilter, dependencyFilter, dependency.applyWhileTraversing,
+                                                                   true, dependency.includeOptional, failIfNotFound,
+                                                                   isTransitive ? Math.max( -1, depth ) : 0 )
             }.
             flatten()
 
-        final Collection<CopyDependency> result = artifacts.toSet().collect { new CopyDependency( dependency, it )}
-        assert result.every { it.optional ? true : selectArtifact( it.artifact, scopeSelector, filtersSelector ) }
-        result
+        assert artifacts.every { isArtifactIncluded( it, scopeFilter, dependencyFilter ) }
+        artifacts.toSet().collect { new CopyDependency( dependency, it )}
     }
 
 
     /**
      * Determines if artifact specified is selected by all selectors provided.
      */
-    private boolean selectArtifact( Artifact a, DependencySelector ... selectors )
+    @Requires({ artifact && ( filters != null ) })
+    private boolean isArtifactIncluded ( Artifact artifact, ArtifactsFilter ... filters )
     {
-        final aetherDependency = toAetherDependency( a )
-        selectors.every { it.selectDependency( aetherDependency )}
+        filters.every { it.isArtifactIncluded( artifact ) }
     }
 
 
@@ -235,66 +213,67 @@ final class CopyMojoHelper
     /**
      * Collects dependencies of the artifact specified.
      *
-     * @param artifact            Artifact to collect dependencies of
-     * @param scopeSelector       {@link org.sonatype.aether.collection.DependencySelector} filtering out dependencies based on include/exclude scopes
-     * @param filtersSelector     {@link org.sonatype.aether.collection.DependencySelector} filtering out dependencies based on filters composed
-     * @param includeTransitive   whether dependencies should be traversed transitively
+     * @param artifact            {@link Artifact} to collect dependencies of
+     * @param scopeFilter         filter based on on include/exclude scopes
+     * @param dependencyFilter    filter based on dependency filters (groupId, artifactId, classifier, type)
+     * @param projectDependencies whether request initially originated from traversing project's dependencies (vs. traversing single artifact dependencies)
      * @param includeOptional     whether optional dependencies should be included
-     * @param verbose             whether collecting process should be logged
      * @param failOnError         whether execution should fail if failed to collect dependencies
      * @param depth               depth of transitive dependencies to collect
      * @param currentDepth        current transitive dependencies depth
-     * @param aggregator          aggregates recursive results
-     * @return                    transitive dependencies collected (not resolved!)
+     * @param resultAggregator    aggregates results
+     * @param visitedAggregator   aggregates visited artifacts
+     * @return                    artifact's dependencies collected (but not resolved!)
      */
     @SuppressWarnings([ 'GroovyMethodParameterCount' ])
-    @Requires({ artifact && scopeSelector && filtersSelector && ( currentDepth >= 0 ) && ( aggregator != null ) })
+    @Requires({ artifact                      &&
+                scopeFilter                   &&
+                dependencyFilter              &&
+                ( currentDepth      >= 0    ) &&
+                ( resultAggregator  != null ) &&
+                ( visitedAggregator != null ) })
     @Ensures ({ result != null })
-    private final Collection<Artifact> collectArtifactDependencies (
-            Artifact                          artifact,
-            ScopeDependencySelector           scopeSelector,
-            ArtifactFiltersDependencySelector filtersSelector,
-            boolean                           includeTransitive,
-            boolean                           includeOptional,
-            boolean                           verbose,
-            boolean                           failOnError,
-            int                               depth,
-            int                               currentDepth = 0,
-            Collection<Artifact>              aggregator   = new HashSet<Artifact>())
+    private final Collection<Artifact> collectArtifactDependencies ( Artifact        artifact,
+                                                                     ArtifactsFilter scopeFilter,
+                                                                     ArtifactsFilter dependencyFilter,
+                                                                     boolean         applyWhileTraversing,
+                                                                     boolean         projectDependencies,
+                                                                     boolean         includeOptional,
+                                                                     boolean         failOnError,
+                                                                     int             depth,
+                                                                     int             currentDepth      = 0,
+                                                                     Set<Artifact>   resultAggregator  = new HashSet<Artifact>(),
+                                                                     Set<Artifact>   visitedAggregator = new HashSet<Artifact>())
     {
-        assert artifact.with { groupId && artifactId && version }
+        assert artifact.groupId && artifact.artifactId && artifact.version
+        assert ( ! (( artifact in resultAggregator ) || ( artifact in visitedAggregator )))
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
-        assert ( includeTransitive || ( depth < 1 )), "[$artifact] - depth is [$depth] while request is not transitive"
 
-        final artifactSelected = selectArtifact( artifact, scopeSelector, filtersSelector )
-        if ( artifactSelected      ){ aggregator << artifact }
-        if ( currentDepth == depth ){ return aggregator      }
+        if ( projectDependencies  && ( ! isArtifactIncluded( artifact, scopeFilter      ))){ return resultAggregator } // Excluded by scope filtering
+        if ( applyWhileTraversing && ( ! isArtifactIncluded( artifact, dependencyFilter ))){ return resultAggregator } // Excluded by dependency filtering
+        if ( artifact.optional    && ( ! includeOptional ))                                { return resultAggregator } // Excluded by being optional
+
+        visitedAggregator << artifact
+        if ( isArtifactIncluded( artifact, scopeFilter, dependencyFilter )){ resultAggregator << artifact }
+        if ( currentDepth == depth ){ return resultAggregator }
 
         try
         {
-            final request        = new ArtifactDescriptorRequest( toAetherArtifact( artifact ), mojo.remoteRepos, null )
-            final childArtifacts = mojo.repoSystem.readArtifactDescriptor( mojo.repoSession, request ).
-                                   dependencies.
-                                   findAll { org.sonatype.aether.graph.Dependency d -> (( ! d.optional ) || includeOptional )}.
-                                   collect { org.sonatype.aether.graph.Dependency d -> toMavenArtifact( d )}.
-                                   findAll { Artifact a                             -> selectArtifact( a, scopeSelector )}
+            final request = new ArtifactDescriptorRequest( toAetherArtifact( artifact ), mojo.remoteRepos, null )
 
-            if ( includeTransitive )
-            {
-                childArtifacts.each {
-                    Artifact childArtifact ->
+            mojo.repoSystem.readArtifactDescriptor( mojo.repoSession, request ).
+            dependencies.
+            collect { toMavenArtifact( it )}.
+            each    {
+                Artifact childArtifact ->
 
-                    if ( ! ( childArtifact in aggregator )) // Only go recursive for newly met artifacts
-                    {
-                        collectArtifactDependencies( childArtifact, scopeSelector, filtersSelector,
-                                                     includeTransitive, includeOptional,
-                                                     verbose, failOnError, depth, currentDepth + 1, aggregator )
-                    }
+                if ( ! ( childArtifact in visitedAggregator )) // Go recursive for newly met artifacts only
+                {
+                    collectArtifactDependencies( childArtifact, scopeFilter, dependencyFilter, applyWhileTraversing,
+                                                 true, includeOptional, failOnError,
+                                                 depth,
+                                                 currentDepth + 1, resultAggregator, visitedAggregator )
                 }
-            }
-            else
-            {
-                aggregator.addAll( childArtifacts.findAll { selectArtifact( it, filtersSelector ) })
             }
         }
         catch ( e )
@@ -302,44 +281,36 @@ final class CopyMojoHelper
             failOrWarn( failOnError, "Failed to collect [$artifact] dependencies", e )
         }
 
-        aggregator
+        resultAggregator
     }
 
 
     /**
-     * Retrieves filters defined by "filtering" dependency.
+     * Composes {@link ArtifactsFilter} instances based on a "filtering" dependency.
      *
-     * @param dependency                  "filtering" dependency
-     * @param useScopeTransitivityFilters whether scope and transitivity filters should be added
-     * @return filters defined by "filtering" dependency
+     * @param dependency  "filtering" dependency
+     * @return filters defined by the "filtering" dependency specified
      */
     @Requires({ dependency && ( ! dependency.single ) })
     @Ensures ({ result != null })
-    private List<ArtifactsFilter> composeFilters ( CopyDependency dependency )
+    private List<ArtifactsFilter> composeDependencyFilters ( CopyDependency dependency )
     {
-        assert dependency && ( ! dependency.single )
-
-        def c                         = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
         List<ArtifactsFilter> filters = []
+        final clean                   = { String s -> split( s ).join( ',' )} // Splits by "," and joins back to loose spaces
+        final addFilter               = {
+            String includePattern, String excludePattern, Class<? extends ArtifactsFilter> filterClass ->
 
-        if ( dependency.includeGroupIds || dependency.excludeGroupIds )
-        {
-            filters << new GroupIdFilter( c ( dependency.includeGroupIds ), c ( dependency.excludeGroupIds ))
+            if ( includePattern || excludePattern )
+            {
+                filters << filterClass.newInstance( clean ( includePattern ), clean ( excludePattern ))
+            }
         }
 
-        if ( dependency.includeArtifactIds || dependency.excludeArtifactIds )
-        {
-            filters << new ArtifactIdFilter( c ( dependency.includeArtifactIds ), c ( dependency.excludeArtifactIds ))
-        }
-
-        if ( dependency.includeClassifiers || dependency.excludeClassifiers )
-        {
-            filters << new ClassifierFilter( c ( dependency.includeClassifiers ), c ( dependency.excludeClassifiers ))
-        }
-
-        if ( dependency.includeTypes || dependency.excludeTypes )
-        {
-            filters << new TypeFilter( c ( dependency.includeTypes ), c ( dependency.excludeTypes ))
+        dependency.with {
+            addFilter( includeGroupIds,    excludeGroupIds,    GroupIdFilter    )
+            addFilter( includeArtifactIds, excludeArtifactIds, ArtifactIdFilter )
+            addFilter( includeClassifiers, excludeClassifiers, ClassifierFilter )
+            addFilter( includeTypes,       excludeTypes,       TypeFilter       )
         }
 
         filters

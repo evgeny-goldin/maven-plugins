@@ -58,16 +58,8 @@ final class ConversionUtils
     static org.apache.maven.artifact.Artifact toMavenArtifact ( org.sonatype.aether.graph.Dependency aetherDependency )
     {
         aetherDependency.artifact.with {
-            toMavenArtifact( groupId, artifactId, version, aetherDependency.scope, extension, classifier, false, file )
+            toMavenArtifact( groupId, artifactId, version, aetherDependency.scope, extension, classifier, aetherDependency.optional, file )
         }
-    }
-
-
-    @Requires({ mavenArtifact })
-    @Ensures ({ result })
-    static org.sonatype.aether.graph.Dependency toAetherDependency( org.apache.maven.artifact.Artifact mavenArtifact )
-    {
-        new org.sonatype.aether.graph.Dependency( toAetherArtifact( mavenArtifact ), mavenArtifact.scope )
     }
 
 
