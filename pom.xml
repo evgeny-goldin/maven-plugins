@@ -282,6 +282,7 @@
                         </goals>
                         <configuration>
                             <enabled>{{ System.getProperty( 'silence' ) != null }}</enabled>
+                            <logSummary>true</logSummary>
                         </configuration>
                     </execution>
                 </executions>
