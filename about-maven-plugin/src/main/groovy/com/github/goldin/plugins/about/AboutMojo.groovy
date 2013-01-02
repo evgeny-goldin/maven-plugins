@@ -152,27 +152,18 @@ class AboutMojo extends BaseGroovyMojo
         final coordinates  = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
         final plugin       = "maven-dependency-plugin:$mavenDependencyPluginVersion:tree"
         final mvnHome      = env[ 'M2_HOME' ]
-        final settingsFile = (( SettingsAdapter ) session.settings ).request.userSettingsFile ?:
-                             (( SettingsAdapter ) session.settings ).request.globalSettingsFile
-
-        assert mvnHome,  "'M2_HOME' environment variable is not defined"
-        assert settingsFile && settingsFile.file, 'Unable to locate settings file'
-
-        final mvn       = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' ))
-        final mavenRepo = System.getProperty( 'maven.repo.local' )
-        final command   = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin " +
-                          "-s \"$settingsFile.canonicalPath\"" +
-                          ( mavenRepo        ? " -Dmaven.repo.local=$mavenRepo" : '' ) +
-                          ( mavenCommandLine ? " $mavenCommandLine"             : '' )
-        final t         = System.currentTimeMillis()
-
-        assert mvn.file, "[$mvn] - not found"
+        final settingsFile = ( File ) [ session.settings.request.userSettingsFile,
+                                        session.settings.request.globalSettingsFile ].find { File f -> f.file }
+        final mvn          = ( mvnHome ? new File( mvnHome, 'bin' ).canonicalPath  + '/' : '' ) + 'mvn'
+        final mavenRepo    = System.getProperty( 'maven.repo.local' )
+        final command      = "$mvn -e -B -f \"${ project.file.canonicalPath }\" org.apache.maven.plugins:$plugin" +
+                             ( settingsFile.file ? " -s \"$settingsFile.canonicalPath\"" : '' ) +
+                             ( mavenRepo         ? " -Dmaven.repo.local=$mavenRepo"      : '' ) +
+                             ( mavenCommandLine  ? " $mavenCommandLine"                  : '' )
 
         log.info( "Running [$command]" )
 
         final mdt = exec( command )
-
-        log.info( "Running [$command] - done, [${ System.currentTimeMillis() - t }] ms" )
 
         assert [ plugin, coordinates ].every { mdt.contains( it ) }, \
                "Failed to run [$plugin] - data received doesn't contain enough information: [$mdt]"
@@ -483,14 +474,9 @@ class AboutMojo extends BaseGroovyMojo
     File writeAboutFile( File aboutFile )
     {
         fileBean().delete( aboutFile )
-
-        long t = System.currentTimeMillis()
-
         log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
         fileBean().mkdirs( aboutFile.parentFile )
         aboutFile.write( allContent())
-        log.info( "Generated  \"about\" in [$aboutFile.canonicalPath] (${ System.currentTimeMillis() - t } ms)" )
-
         aboutFile
     }
 
