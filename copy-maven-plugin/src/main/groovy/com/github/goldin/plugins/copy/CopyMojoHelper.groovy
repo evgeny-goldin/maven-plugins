@@ -142,15 +142,15 @@ final class CopyMojoHelper
         final dependencyFilter = new AndArtifactsFilter  ( composeDependencyFilters( dependency ))
         final artifacts        = dependency.gav ?
 
-            collectArtifactDependencies( mavenArtifact, scopeFilter, dependencyFilter, dependency.applyWhileTraversing,
-                                         false, dependency.includeOptional, failIfNotFound,
+            collectArtifactDependencies( mavenArtifact, scopeFilter, dependencyFilter,
+                                         false, dependency.applyWhileTraversing, dependency.includeOptional, failIfNotFound,
                                          isTransitive ? Math.max( -1, depth ) : ( depth == 0 ? 0 : 1 ))
             :
 
             mojo.project.dependencies.
             collect { Dependency d -> toMavenArtifact( d ) }.
-            collect { Artifact   a -> collectArtifactDependencies( a, scopeFilter, dependencyFilter, dependency.applyWhileTraversing,
-                                                                   true, dependency.includeOptional, failIfNotFound,
+            collect { Artifact   a -> collectArtifactDependencies( a, scopeFilter, dependencyFilter,
+                                                                   true, dependency.applyWhileTraversing, dependency.includeOptional, failIfNotFound,
                                                                    isTransitive ? Math.max( -1, depth ) : 0 )
             }.
             flatten()
@@ -213,17 +213,18 @@ final class CopyMojoHelper
     /**
      * Collects dependencies of the artifact specified.
      *
-     * @param artifact            {@link Artifact} to collect dependencies of
-     * @param scopeFilter         filter based on on include/exclude scopes
-     * @param dependencyFilter    filter based on dependency filters (groupId, artifactId, classifier, type)
-     * @param projectDependencies whether request initially originated from traversing project's dependencies (vs. traversing single artifact dependencies)
-     * @param includeOptional     whether optional dependencies should be included
-     * @param failOnError         whether execution should fail if failed to collect dependencies
-     * @param depth               depth of transitive dependencies to collect
-     * @param currentDepth        current transitive dependencies depth
-     * @param resultAggregator    aggregates results
-     * @param visitedAggregator   aggregates visited artifacts
-     * @return                    artifact's dependencies collected (but not resolved!)
+     * @param artifact                {@link Artifact} to collect dependencies of
+     * @param scopeFilter             filter based on on include/exclude scopes
+     * @param dependencyFilter        filter based on dependency filters (groupId, artifactId, classifier, type)
+     * @param respectScopeFilter      whether scope filter should be respected when traversing the tree
+     * @param respectDependencyFilter whether dependency filter should be respected when traversing the tree
+     * @param includeOptional         whether optional dependencies should be included
+     * @param failOnError             whether execution should fail if failed to collect dependencies
+     * @param depth                   depth of transitive dependencies to collect
+     * @param currentDepth            current transitive dependencies depth
+     * @param resultAggregator        aggregates results
+     * @param visitedAggregator       aggregates visited artifacts
+     * @return                        artifact's dependencies collected (but not resolved!)
      */
     @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ artifact                      &&
@@ -236,8 +237,8 @@ final class CopyMojoHelper
     private final Collection<Artifact> collectArtifactDependencies ( Artifact        artifact,
                                                                      ArtifactsFilter scopeFilter,
                                                                      ArtifactsFilter dependencyFilter,
-                                                                     boolean         applyWhileTraversing,
-                                                                     boolean         projectDependencies,
+                                                                     boolean         respectScopeFilter,
+                                                                     boolean         respectDependencyFilter,
                                                                      boolean         includeOptional,
                                                                      boolean         failOnError,
                                                                      int             depth,
@@ -249,9 +250,12 @@ final class CopyMojoHelper
         assert ( ! (( artifact in resultAggregator ) || ( artifact in visitedAggregator )))
         assert (( depth < 0 ) || ( currentDepth <= depth )), "Required depth is [$depth], current depth is [$currentDepth]"
 
-        if ( projectDependencies  && ( ! isArtifactIncluded( artifact, scopeFilter      ))){ return resultAggregator } // Excluded by scope filtering
-        if ( applyWhileTraversing && ( ! isArtifactIncluded( artifact, dependencyFilter ))){ return resultAggregator } // Excluded by dependency filtering
-        if ( artifact.optional    && ( ! includeOptional ))                                { return resultAggregator } // Excluded by being optional
+        boolean stopRecursion =
+            ( respectScopeFilter      && ( ! isArtifactIncluded( artifact, scopeFilter      ))) ||  // Excluded by scope filtering
+            ( respectDependencyFilter && ( ! isArtifactIncluded( artifact, dependencyFilter ))) ||  // Excluded by dependency filtering
+            ( artifact.optional       && ( ! includeOptional ))                                     // Excluded by being optional
+
+        if ( stopRecursion ) { return resultAggregator }
 
         visitedAggregator << artifact
         if ( isArtifactIncluded( artifact, scopeFilter, dependencyFilter )){ resultAggregator << artifact }
@@ -269,8 +273,8 @@ final class CopyMojoHelper
 
                 if ( ! ( childArtifact in visitedAggregator )) // Go recursive for newly met artifacts only
                 {
-                    collectArtifactDependencies( childArtifact, scopeFilter, dependencyFilter, applyWhileTraversing,
-                                                 true, includeOptional, failOnError,
+                    collectArtifactDependencies( childArtifact, scopeFilter, dependencyFilter,
+                                                 true, respectDependencyFilter, includeOptional, failOnError,
                                                  depth,
                                                  currentDepth + 1, resultAggregator, visitedAggregator )
                 }
