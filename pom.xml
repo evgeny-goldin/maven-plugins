@@ -9,7 +9,7 @@
     <groupId>com.github.goldin</groupId>
     <artifactId>main.plugins</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.6-SNAPSHOT</version>
+    <version>0.3-beta-1</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
     <description>Maven plugins</description>
     <url>http://evgeny-goldin.com/wiki/Maven-plugins</url>
