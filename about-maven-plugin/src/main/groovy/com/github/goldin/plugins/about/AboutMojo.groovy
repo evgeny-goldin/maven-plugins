@@ -4,7 +4,7 @@ import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.plugin.MojoExecutionException
+import org.apache.maven.execution.SettingsAdapter
 import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
@@ -129,7 +129,7 @@ class AboutMojo extends BaseGroovyMojo
     private String find ( String prefix, List<String> l ) { l.find{ it.startsWith( prefix ) }?.replace( prefix, '' )?.trim() ?: '' }
     private String sort ( Map<?,?> map )
     {
-        def maxKey = maxKeyLength( map ) + 3
+        final maxKey = maxKeyLength( map ) + 3
         map.sort().collect { key, value -> " [$key]".padRight( maxKey ) + ":[$value]" }.
                    join( '\n' )
     }
@@ -140,6 +140,7 @@ class AboutMojo extends BaseGroovyMojo
      *
      * @return Result of running "mvn dependency:tree" for the current project.
      */
+    @SuppressWarnings([ 'GroovyAccessibility' ])
     @Ensures({ result })
     private String dependencyTree()
     {
@@ -148,24 +149,28 @@ class AboutMojo extends BaseGroovyMojo
             return 'Aggregate project, no dependencies shown'
         }
 
-        String coordinates = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
-        String plugin      = "maven-dependency-plugin:$mavenDependencyPluginVersion:tree"
-        String mvnHome     = env[ 'M2_HOME' ]
+        final coordinates  = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
+        final plugin       = "maven-dependency-plugin:$mavenDependencyPluginVersion:tree"
+        final mvnHome      = env[ 'M2_HOME' ]
+        final settingsFile = (( SettingsAdapter ) session.settings ).request.userSettingsFile ?:
+                             (( SettingsAdapter ) session.settings ).request.globalSettingsFile
 
-        assert mvnHome, "'M2_HOME' environment variable is not defined"
+        assert mvnHome,  "'M2_HOME' environment variable is not defined"
+        assert settingsFile && settingsFile.file, 'Unable to locate settings file'
 
-        File   mvn       = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' )).canonicalFile
-        String mavenRepo = System.getProperty( 'maven.repo.local' )
-        String command   = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin" +
-                           ( mavenRepo        ? " -Dmaven.repo.local=$mavenRepo" : '' ) +
-                           ( mavenCommandLine ? " $mavenCommandLine"             : '' )
-        long   t       = System.currentTimeMillis()
+        final mvn       = new File( new File( mvnHome ), 'bin/mvn' + ( isWindows ? '.bat' : '' ))
+        final mavenRepo = System.getProperty( 'maven.repo.local' )
+        final command   = "$mvn -e -B -f ${ project.file.canonicalPath } org.apache.maven.plugins:$plugin " +
+                          "-s \"$settingsFile.canonicalPath\"" +
+                          ( mavenRepo        ? " -Dmaven.repo.local=$mavenRepo" : '' ) +
+                          ( mavenCommandLine ? " $mavenCommandLine"             : '' )
+        final t         = System.currentTimeMillis()
 
         assert mvn.file, "[$mvn] - not found"
 
         log.info( "Running [$command]" )
 
-        def mdt = exec( command )
+        final mdt = exec( command )
 
         log.info( "Running [$command] - done, [${ System.currentTimeMillis() - t }] ms" )
 
@@ -232,11 +237,11 @@ class AboutMojo extends BaseGroovyMojo
         // http://confluence.jetbrains.net/display/TCD65/Predefined+Build+Parameters
         // http://confluence.jetbrains.net/display/TCD7/Predefined+Build+Parameters
 
-        def urlMessage  = 'Define \'TEAMCITY_URL\' environment variable and make sure \'-Dteamcity.build.id\' specified when job starts'
-        def buildId     = System.getProperty( 'teamcity.build.id' )
-        def teamCityUrl = ( env[ 'TEAMCITY_URL' ]?.replaceAll( /(?<!\\|\/)(\\|\/)*$/, '/' )       ?: '' )
-        def buildUrl    = ( buildId && teamCityUrl ? "${teamCityUrl}viewLog.html?buildId=$buildId" : '' )
-        def logUrl      = ( buildUrl               ? "$buildUrl&tab=buildLog"                      : '' )
+        final urlMessage  = 'Define \'TEAMCITY_URL\' environment variable and make sure \'-Dteamcity.build.id\' specified when job starts'
+        final buildId     = System.getProperty( 'teamcity.build.id' )
+        final teamCityUrl = ( env[ 'TEAMCITY_URL' ]?.replaceAll( /(?<!\\|\/)(\\|\/)*$/, '/' )       ?: '' )
+        final buildUrl    = ( buildId && teamCityUrl ? "${teamCityUrl}viewLog.html?buildId=$buildId" : '' )
+        final logUrl      = ( buildUrl               ? "$buildUrl&tab=buildLog"                      : '' )
 
         """
         $SEPARATOR
@@ -264,8 +269,8 @@ class AboutMojo extends BaseGroovyMojo
     @SuppressWarnings( 'LineLength' )
     String buildContent ()
     {
-        def props  = System.properties
-        def format = new SimpleDateFormat( "dd MMM, EEEE, yyyy, HH:mm:ss (zzzzzz:'GMT'ZZZZZZ)", Locale.ENGLISH )
+        final props  = System.properties
+        final format = new SimpleDateFormat( "dd MMM, EEEE, yyyy, HH:mm:ss (zzzzzz:'GMT'ZZZZZZ)", Locale.ENGLISH )
 
         """
         $SEPARATOR
@@ -295,7 +300,7 @@ class AboutMojo extends BaseGroovyMojo
 
     String optionalContent()
     {
-        def props = System.properties
+        final props = System.properties
 
         section( dumpMaven,                    'Maven Properties'      ) { sort( project.properties ) } +
         section( addContent.trim() as boolean, 'User Content'          ) { evaluateAddContent() }       +
@@ -459,8 +464,8 @@ class AboutMojo extends BaseGroovyMojo
 
     String allContent()
     {
-        def version = properties( 'META-INF/maven/com.github.goldin/about-maven-plugin/pom.properties', AboutMojo.classLoader ).
-                      getProperty( 'version', '' )
+        final version = properties( 'META-INF/maven/com.github.goldin/about-maven-plugin/pom.properties', AboutMojo.classLoader ).
+                        getProperty( 'version', '' )
 
         ( " Created with http://evgeny-goldin.com/wiki/Maven-about-plugin${ version ? ', version "' + version + '"' : '' }\n" +
           serverContent()   +
@@ -503,19 +508,19 @@ class AboutMojo extends BaseGroovyMojo
                     return
                 }
 
-                def split = { String s -> s ? split( s ) : null }
-                def files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
+                final split = { String s -> s ? split( s ) : null }
+                final files = fileBean().files( directory, split( include ), split( exclude ), false, false, failIfNotFound )
 
                 if ( files )
                 {
-                    def aboutFile = new File( outputDirectory(), fileName )
-                    def prefix    = (( prefix == '/' ) ? '' : prefix )
+                    final aboutFile = new File( outputDirectory(), fileName )
+                    final prefix    = (( prefix == '/' ) ? '' : prefix )
 
                     writeAboutFile( aboutFile )
 
                     for ( f in files )
                     {
-                        def aboutPath = "$f.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
+                        final aboutPath = "$f.canonicalPath/$prefix${ prefix ? '/' : '' }$fileName"
 
                         log.info( "Adding \"about\" to [$aboutPath]" )
                         fileBean().pack( aboutFile.parentFile, f, [ aboutFile.name ], null, false, true, true, null, null, prefix )
@@ -531,7 +536,7 @@ class AboutMojo extends BaseGroovyMojo
             }
             else
             {
-                def aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory(), fileName )}
+                final aboutFile = ( File ) new File( fileName ).with{ absolute ? delegate : new File( outputDirectory(), fileName )}
                 writeAboutFile( aboutFile )
             }
         }
