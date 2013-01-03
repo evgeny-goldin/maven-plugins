@@ -283,6 +283,7 @@
                         <configuration>
                             <enabled>{{ System.getProperty( 'silence' ) != null }}</enabled>
                             <logSummary>true</logSummary>
+                            <topN>5</topN>
                         </configuration>
                     </execution>
                 </executions>
