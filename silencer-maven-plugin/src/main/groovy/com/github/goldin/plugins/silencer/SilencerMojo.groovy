@@ -32,6 +32,9 @@ class SilencerMojo extends BaseGroovyMojo
     boolean logSummary = false
 
     @Parameter ( required = false )
+    int topN = -1
+
+    @Parameter ( required = false )
     String loggerFields
 
     @Component( role = LifecycleModuleBuilder )

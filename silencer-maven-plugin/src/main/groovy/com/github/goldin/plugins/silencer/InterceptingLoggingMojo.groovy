@@ -69,13 +69,15 @@ class InterceptingLoggingMojo
             {
                 logger.info( '' )
                 logger.info( 'Summary:' )
-                final timePadding = executions*.time*.toString()*.length().max()
+
+                final timePadding  = executions*.time*.toString()*.length().max()
 
                 executions.sort { ExecutionTime e1, ExecutionTime e2 -> e2.time <=> e1.time }. // Sort in decreasing order
-                           each { ExecutionTime e ->
-                    logger.info( "${ e.time } ms".padRight( timePadding + 3 )   +
-                                 " - ${ e.execution.mojoDescriptor.roleHint.replaceAll( /^.+?:/, '' )} " +
-                                 "(${ e.execution.executionId })"               +
+                take ( parentMojo.topN < 1 ? Integer.MAX_VALUE : parentMojo.topN ).
+                each { ExecutionTime e ->
+                    logger.info( "${ e.time } ms".padRight( timePadding + 3 )                            +
+                                 " - ${ e.execution.mojoDescriptor.roleHint.replaceAll( /^.+?:/, '' )} " + // Plugin's groupId is removed
+                                 "(${ e.execution.executionId })"                                        +
                                  ( parentMojo.logMojo ? " (${ e.mojo.class.name })" : '' ))
                 }
             }
