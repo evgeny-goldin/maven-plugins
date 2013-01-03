@@ -31,13 +31,7 @@ import java.lang.reflect.Modifier
 @SuppressWarnings([ 'StatelessClass', 'PublicInstanceField', 'NonFinalPublicField' ])
 abstract class BaseGroovyMojo extends GroovyMojo
 {
-    static final String       SILENCE      = 'SILENCE'
-           final SilentLogger silentLogger = new SilentLogger()
-
-    protected final String  os        = System.getProperty( 'os.name' ).toLowerCase()
-    protected final boolean isWindows = os.contains( 'windows' )
-    protected final boolean isLinux   = os.contains( 'linux' )
-    protected final boolean isMac     = os.contains( 'mac os' )
+    static final String SILENCE = 'SILENCE'
 
     @Parameter ( required = true, defaultValue = '${project}' )
     MavenProject project
@@ -53,7 +47,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
     File outputDirectory() { fileBean().mkdirs( this.outputDirectory ) }
 
     @Parameter
-    String runIf
+    private String runIf
 
     /**
      * Aether components:
@@ -221,9 +215,7 @@ abstract class BaseGroovyMojo extends GroovyMojo
         ThreadLocals.set( log, project, session )
         mopInit()
 
-        if ( ! runIf( runIf )) { return }
-
-        doExecute()
+        if ( runIf( runIf )) { doExecute() }
     }
 
 
@@ -263,6 +255,6 @@ abstract class BaseGroovyMojo extends GroovyMojo
 
     void updateIvy ()
     {
-        Message.defaultLogger = silentLogger
+        Message.defaultLogger = new SilentLogger()
     }
 }

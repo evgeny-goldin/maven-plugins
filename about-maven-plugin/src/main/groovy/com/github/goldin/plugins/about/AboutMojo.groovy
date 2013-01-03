@@ -151,11 +151,13 @@ class AboutMojo extends BaseGroovyMojo
 
         final coordinates  = "${project.groupId}:${project.artifactId}:${project.packaging}:${project.version}"
         final plugin       = "maven-dependency-plugin:$mavenDependencyPluginVersion:tree"
-        final mvnHome      = env[ 'M2_HOME' ]
         final settingsFile = ( File ) [ session.settings.request.userSettingsFile,
                                         session.settings.request.globalSettingsFile ].find { File f -> f.file }
-        final mvn          = ( mvnHome ? new File( mvnHome, 'bin' ).canonicalPath  + '/' : '' ) + 'mvn'
-        final mavenRepo    = System.getProperty( 'maven.repo.local' )
+        final isWindows    = System.getProperty( 'os.name', '' ).toLowerCase().contains( 'windows' )
+        final mvnHome      = env[ 'M2_HOME' ]
+        final mvn          = mvnHome ? new File( mvnHome, 'bin' ).canonicalPath + '/mvn' + ( isWindows ? '.bat' : '' ) :
+                                       'mvn'
+        final mavenRepo    = System.getProperty( 'maven.repo.local', session.localRepository?.basedir )
         final command      = "$mvn -e -B -f \"${ project.file.canonicalPath }\" org.apache.maven.plugins:$plugin" +
                              ( settingsFile.file ? " -s \"$settingsFile.canonicalPath\"" : '' ) +
                              ( mavenRepo         ? " -Dmaven.repo.local=$mavenRepo"      : '' ) +

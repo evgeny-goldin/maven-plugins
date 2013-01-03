@@ -149,15 +149,10 @@ final class GMojoUtils
      */
     static boolean runIf( String s )
     {
-        boolean run = true
-
-        if ( s )
-        {
-            run = Boolean.valueOf(( String ) eval( s, String ))
-            log.info( "<runIf>: [$s] evaluated to [$run] - ${ run ? 'continuing' : 'returning' }" )
-        }
-
-        run
+        ( 'false' == s ) ? false :
+        ( 'true'  == s ) ? true  :
+        ( s            ) ? Boolean.valueOf( eval( s, String )) :
+                           true
     }
 
 
@@ -175,6 +170,7 @@ final class GMojoUtils
      * @return           expression evaluated and casted to the type specified
      *                   (after verifying compliance with {@link Class#isInstance(Object)}
      */
+    @Requires({ expression != null })
     static <T> T eval ( String       expression,
                         Class<T>     resultType = null,
                         GroovyConfig config     = new GroovyConfig(),

@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.silencer
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import com.github.goldin.plugins.common.SilentLogger
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.LoggingRepositoryListener
 import org.apache.maven.cli.AbstractMavenTransferListener
@@ -19,8 +20,7 @@ import org.apache.maven.plugins.annotations.Parameter
 @Mojo( name = 'silence', defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true )
 class SilencerMojo extends BaseGroovyMojo
 {
-    @Parameter ( required = false )
-    private String enabled
+    final SilentLogger silentLogger = new SilentLogger()
 
     @Parameter ( required = false )
     boolean logTime = false
@@ -56,20 +56,17 @@ class SilencerMojo extends BaseGroovyMojo
     {
         if ( session.userProperties[ this.class.name ] != null ) { return }
 
-        if (( enabled == null ) || ( enabled == 'true' ) || eval( enabled, Boolean ))
-        {
-            log.info( 'Silencer Mojo is on - enjoy the silence.' )
+        log.info( 'Silencer Mojo is on - enjoy the silence.' )
 
-            tryIt { updateMavenExecutor() }
-            tryIt { setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener,     'logger', silentLogger )}
-            tryIt { setFieldValue( repoSession.transferListener,   AbstractMavenTransferListener, 'out',    nullPrintStream())}
-        }
+        tryIt { updateMavenRuntime() }
+        tryIt { setFieldValue( repoSession.repositoryListener, LoggingRepositoryListener,     'logger', silentLogger )}
+        tryIt { setFieldValue( repoSession.transferListener,   AbstractMavenTransferListener, 'out',    nullPrintStream())}
 
         session.userProperties[ this.class.name ] = 'true'
     }
 
 
-    void updateMavenExecutor ()
+    void updateMavenRuntime ()
     {
         final pluginManager              = ( DefaultBuildPluginManager ) moduleBuilder.mojoExecutor.pluginManager
         pluginManager.mavenPluginManager = new InterceptingMavenPluginManager( this, pluginManager.mavenPluginManager )
