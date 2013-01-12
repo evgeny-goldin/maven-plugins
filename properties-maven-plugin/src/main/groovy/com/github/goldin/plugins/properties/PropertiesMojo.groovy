@@ -75,7 +75,7 @@ class PropertiesMojo extends BaseGroovyMojo
         String newValue = value
         while ( newValue.contains( '${' ))
         {
-            newValue = newValue.replaceAll( /\$\{(.+?)\}/ ) {
+            newValue = newValue.replaceAll( ~/\$\{(.+?)\}/ ) {
                 String all, String expression ->
                 assert expression
                 assert expression != name, "Property [$name] has a circular definition dependency on itself"

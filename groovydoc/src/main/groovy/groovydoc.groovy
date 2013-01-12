@@ -71,10 +71,10 @@ ant.groovydoc(
     {
        link( packages :'org.apache.maven.artifact.',          href : "http://maven.apache.org/ref/$mavenVersion/maven-artifact/apidocs" )
        link( packages :'org.apache.maven.',                   href : "http://maven.apache.org/ref/$mavenVersion/maven-core/apidocs/" )
-       link( packages :'java.,org.xml.,javax.,org.xml.',      href : 'http://download.oracle.com/javase/6/docs/api'    )
+       link( packages :'java.,org.xml.,javax.,org.xml.',      href : 'http://docs.oracle.com/javase/7/docs/api/'    )
        link( packages :'groovy.,org.codehaus.groovy.',        href : 'http://groovy.codehaus.org/api'                  )
        link( packages :'org.springframework.batch.',          href : 'http://static.springsource.org/spring-batch/apidocs/'          )
-       link( packages :'org.springframework.',                href : 'http://static.springsource.org/spring/docs/3.1.x/javadoc-api/' )
+       link( packages :'org.springframework.',                href : 'http://static.springsource.org/spring/docs/3.2.x/javadoc-api/' )
        link( packages :'org.apache.tools.ant.',               href : 'http://evgeny-goldin.org/javadoc/ant/api'        )
        link( packages :'org.junit.,junit.framework.',         href : 'http://kentbeck.github.com/junit/javadoc/latest' )
        link( packages :'org.apache.commons.net.',             href : 'http://commons.apache.org/net/apidocs'           )

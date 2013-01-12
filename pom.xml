@@ -58,7 +58,7 @@
         <previous-plugins-version>0.3-beta-1</previous-plugins-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
-        <gcommons-version>0.6.2</gcommons-version>
+        <gcommons-version>0.6.3-SNAPSHOT</gcommons-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.groovy%22%20AND%20a%3A%22groovy%22 -->
         <groovy-version>2.0.6</groovy-version>
