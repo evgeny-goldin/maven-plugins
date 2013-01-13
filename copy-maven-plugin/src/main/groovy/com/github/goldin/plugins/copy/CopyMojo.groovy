@@ -62,6 +62,9 @@ class CopyMojo extends BaseGroovyMojo
     @Parameter ( required = false )
     private boolean parallelDownload = false
 
+    @Parameter ( required = false )
+    private String customArchiveFormats
+
     /**
      * "false" or comma-separated list of default excludes
      * Not active for Net operations
@@ -145,6 +148,8 @@ class CopyMojo extends BaseGroovyMojo
         final  resources = resources()
         assert resources, "No <resource> or <resources> provided"
 
+        updateCustomArchiveFormats()
+
         for ( CopyResource resource in resources )
         {
             resource.with {
@@ -194,6 +199,21 @@ class CopyMojo extends BaseGroovyMojo
                               ------------------------------------------------'''.stripIndent())
                     System.exit( 0 )
                 }
+            }
+        }
+    }
+
+
+    void updateCustomArchiveFormats ( )
+    {
+        if ( customArchiveFormats )
+        {
+            fileBean().customArchiveFormats = customArchiveFormats.readLines()*.trim().grep().
+                                              inject( [:].withDefault{ [] }){
+                Map m, String line ->
+                def ( String format, String extensions ) = line.tokenize( '=' )*.trim()
+                (( List ) m[ format ] ).addAll( extensions.tokenize( ',' )*.trim().grep())
+                m
             }
         }
     }
