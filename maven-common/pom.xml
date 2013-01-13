@@ -488,6 +488,14 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.google.guava%22%20AND%20a%3A%22guava%22 -->
+            <version>14.0-rc1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>${spring-version}</version>
@@ -507,6 +515,11 @@
             <version>${gcommons-version}</version>
             <scope>compile</scope>
             <exclusions>
+                <!-- Already specified above -->
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
                 <!-- Duplicate of "org.sonatype.sisu:sisu-guice:jar:no_aop:3.1.0" -->
                 <exclusion>
                     <groupId>com.google.inject</groupId>
