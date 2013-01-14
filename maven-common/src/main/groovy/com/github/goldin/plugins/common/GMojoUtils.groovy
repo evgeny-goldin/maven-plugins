@@ -218,7 +218,9 @@ final class GMojoUtils
     /**
      * Retrieves maximal length of map's key.
      */
-    static int maxKeyLength ( Map<?, ?> map ) { map.keySet().max{ Object o -> o.toString().size() }.toString().size() }
+    @Requires({ map })
+    @Ensures ({ result > 0 })
+    static int maxKeyLength ( Map<?,?> map ) { map.keySet()*.toString()*.size().max() }
 
 
     /**
