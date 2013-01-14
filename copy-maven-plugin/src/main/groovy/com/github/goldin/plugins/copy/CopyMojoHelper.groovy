@@ -349,18 +349,19 @@ final class CopyMojoHelper
      * Creates artifact file name, identically to
      * {@link org.apache.maven.plugin.dependency.utils.DependencyUtil#getFormattedFileName}.
      *
-     * @param artifact      artifact to create the file name for
-     * @param removeVersion whether version should be removed from the file name
+     * @param artifact       artifact to create the file name for
+     * @param stripVersion   whether version should be removed from the file name
+     * @param stripTimestamp whether timestamp should be removed from snapshot file name
      * @return artifact file name
      */
-    @Requires({ artifact && artifact.artifactId && artifact.version })
-    String artifactFileName( Artifact artifact, boolean removeVersion )
+    @Requires({ artifact && artifact.artifactId && artifact.version && artifact.type })
+    String artifactFileName( Artifact artifact, boolean stripVersion, boolean stripTimestamp )
     {
         StringBuilder buffer = new StringBuilder( artifact.artifactId )
 
-        if ( ! removeVersion )
+        if ( ! stripVersion )
         {
-            buffer.append( "-${ artifact.version }".toString())
+            buffer.append( "-${ stripTimestamp ? stripTimestampFromVersion( artifact.version ) : artifact.version }".toString())
         }
 
         if ( artifact.classifier )
@@ -368,8 +369,16 @@ final class CopyMojoHelper
             buffer.append( "-${ artifact.classifier }".toString())
         }
 
-        buffer.append( ".${ artifact.type }".toString()).
-        toString()
+        buffer.append( ".${ artifact.type }".toString()).toString()
+    }
+
+
+    @Requires({ timestampedSnapshot })
+    @Ensures ({ result })
+    String stripTimestampFromVersion ( String timestampedSnapshot )
+    {
+        // http://evgenyg.artifactoryonline.com/evgenyg/tests-local/com/github/goldin/about-maven-plugin/0.3-SNAPSHOT/about-maven-plugin-0.3-20130114.213852-1.jar
+        timestampedSnapshot.replaceFirst( ~/-\d{8}\.\d{6}-\d+/, '-SNAPSHOT' )
     }
 
 

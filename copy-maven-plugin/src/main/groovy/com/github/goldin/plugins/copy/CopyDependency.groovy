@@ -13,14 +13,16 @@ class CopyDependency extends ArtifactItem
 {
     CopyDependency() {}
 
+    @SuppressWarnings([ 'GroovyUntypedAccess' ])
     @Requires({ dependency && artifact })
     CopyDependency( CopyDependency dependency, Artifact artifact )
     {
         super( artifact )
 
-        this.optional     = dependency.optional
-        this.stripVersion = dependency.stripVersion
-        this.destFileName = dependency.destFileName
+        this.optional       = dependency.optional
+        this.stripVersion   = dependency.stripVersion
+        this.stripTimestamp = dependency.stripTimestamp
+        this.destFileName   = dependency.destFileName
     }
 
 
@@ -29,6 +31,7 @@ class CopyDependency extends ArtifactItem
     boolean applyWhileTraversing = false  // Whether [groupId, artifactId, classifier, type] filtering
                                           // should be applied while traversing the dependencies tree
     Boolean stripVersion                  // Whether version number should be removed from file names
+    Boolean stripTimestamp                // Whether snapshot timestamp should be removed from file names
     Boolean excludeTransitive             // Whether transitive dependencies should be excluded
     int     depth           = -1          // Depth of transitive arguments
 

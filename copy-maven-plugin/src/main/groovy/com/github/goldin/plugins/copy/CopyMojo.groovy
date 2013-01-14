@@ -7,11 +7,7 @@ import com.github.goldin.plugins.common.NetworkUtils
 import com.github.goldin.plugins.common.Replace
 import groovy.io.FileType
 import org.apache.maven.plugin.MojoExecutionException
-import org.apache.maven.plugins.annotations.LifecyclePhase
-import org.apache.maven.plugins.annotations.Mojo
-import org.apache.maven.plugins.annotations.Component
-import org.apache.maven.plugins.annotations.Parameter
-import org.apache.maven.plugins.annotations.ResolutionScope
+import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
@@ -55,6 +51,9 @@ class CopyMojo extends BaseGroovyMojo
 
     @Parameter ( required = false )
     private boolean stripVersion = false
+
+    @Parameter ( required = false )
+    private boolean stripTimestamp = false
 
     @Parameter ( required = false )
     private boolean eliminateDuplicates = true
@@ -362,6 +361,7 @@ class CopyMojo extends BaseGroovyMojo
         final                dependenciesAtM2     = resource.dependenciesAtM2()
         final                isSkipIdentical      = generalBean().choose( resource.skipIdentical,       this.skipIdentical )
         final                isStripVersion       = generalBean().choose( resource.stripVersion,        this.stripVersion  )
+        final                isStripTimestamp     = generalBean().choose( resource.stripTimestamp,      this.stripTimestamp )
         final                eliminateDuplicates  = generalBean().choose( resource.eliminateDuplicates, this.eliminateDuplicates )
         final                parallelDownload     = generalBean().choose( resource.parallelDownload,    this.parallelDownload  )
 
@@ -396,15 +396,19 @@ class CopyMojo extends BaseGroovyMojo
                         if ( d.version.endsWith( '-SNAPSHOT' ))
                         {
                             final version    = d.version.substring( 0, d.version.lastIndexOf( '-SNAPSHOT' ))
-                            final classifier = d.classifier.with          { delegate ? "-$delegate" : '' }
+                            final classifier = d.classifier.with              { delegate ? "-$delegate" : '' }
                             final extension  = fileBean().extension( f ).with { delegate ? ".$delegate" : '' }
-                            destFileName     = destFileName.replaceAll( /-\Q$version\E.+?\Q$classifier$extension\E$/,
-                                                                        "$classifier$extension" )
+                            destFileName     = destFileName.replaceAll( ~/-\Q$version\E.+?\Q$classifier$extension\E$/,
+                                                                        "$classifier$extension".toString())
                         }
                         else
                         {
                             destFileName = destFileName.replace( "-${ d.version }", '' )
                         }
+                    }
+                    else if ( d.stripTimestamp || isStripTimestamp )
+                    {
+                        destFileName = helper.stripTimestampFromVersion( destFileName )
                     }
 
                     processFilesResource(( CopyResource ) delegate, verbose, true )
@@ -420,7 +424,7 @@ class CopyMojo extends BaseGroovyMojo
         {
             if ( ! dependenciesAtM2 )
             {
-                resolve( resourceDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound, isStripVersion ).each {
+                resolve( resourceDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound, isStripVersion, isStripTimestamp ).each {
                     CopyDependency d -> fileBean().copy( d.artifact.file, tempDirectory, d.destFileName )
                 }
             }
@@ -458,6 +462,7 @@ class CopyMojo extends BaseGroovyMojo
      * @param verbose             whether resolving process should be logged
      * @param failIfNotFound      whether execution should fail if zero artifacts were resolved
      * @param stripVersion        whether dependencies version should be stripped
+     * @param stripTimestamp      whether dependencies snapshot timestamp should be stripped
      * @return                    dependencies resolved and filtered
      */
     @Requires({ inputDependencies })
@@ -467,7 +472,8 @@ class CopyMojo extends BaseGroovyMojo
                                                  boolean              parallelDownload,
                                                  boolean              verbose,
                                                  boolean              failIfNotFound,
-                                                 boolean              stripVersion = false )
+                                                 boolean              stripVersion   = false,
+                                                 boolean              stripTimestamp = false )
     {
         final result = helper.resolveDependencies( inputDependencies, eliminateDuplicates, parallelDownload, verbose, failIfNotFound ).
         findAll { CopyDependency d -> d.artifact?.file?.file }. // Filtering out (optional) unresolved artifacts
@@ -480,7 +486,9 @@ class CopyMojo extends BaseGroovyMojo
                                 * in "destFileName" which now needs to be removed.
                                 */
                                 d.artifact.file.name :
-                                helper.artifactFileName( d.artifact, ( d.stripVersion || stripVersion ))
+                                helper.artifactFileName( d.artifact,
+                                                         ( d.stripVersion   || stripVersion   ),
+                                                         ( d.stripTimestamp || stripTimestamp ))
             d
         }
 

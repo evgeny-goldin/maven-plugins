@@ -118,6 +118,7 @@ final class CopyResource extends Resource implements Cloneable
     Boolean eliminateDuplicates
     Boolean parallelDownload
     Boolean stripVersion
+    Boolean stripTimestamp
     Boolean verbose
     Boolean failIfNotFound
     Boolean failOnError
@@ -246,7 +247,7 @@ final class CopyResource extends Resource implements Cloneable
     boolean needsProcessingBeforeUpload()
     {
         filter       || filtering      || process        || deploy       ||
-        replaces()   || manifest       || attachArtifact || stripVersion ||
+        replaces()   || manifest       || attachArtifact || stripVersion || stripTimestamp ||
         destFileName || destFilePrefix || destFileSuffix || destFileExtension
     }
 
