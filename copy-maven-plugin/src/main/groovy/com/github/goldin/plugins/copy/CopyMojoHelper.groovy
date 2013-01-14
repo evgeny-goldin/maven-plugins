@@ -377,7 +377,7 @@ final class CopyMojoHelper
     @Ensures ({ result })
     String stripTimestampFromVersion ( String timestampedSnapshot )
     {
-        // http://evgenyg.artifactoryonline.com/evgenyg/tests-local/com/github/goldin/about-maven-plugin/0.3-SNAPSHOT/about-maven-plugin-0.3-20130114.213852-1.jar
+        // http://repo/evgenyg/tests-local/com/github/goldin/about-maven-plugin/0.3-SNAPSHOT/about-maven-plugin-0.3-20130114.213852-1.jar
         timestampedSnapshot.replaceFirst( ~/-\d{8}\.\d{6}-\d+/, '-SNAPSHOT' )
     }
 
