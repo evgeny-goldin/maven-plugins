@@ -130,7 +130,7 @@ final class CopyMojoHelper
     {
         final isTransitive  = dependency.transitive
         final depth         = dependency.depth
-        final mavenArtifact = dependency.gav ? dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
+        final mavenArtifact = dependency.gav ? ( Artifact ) dependency.with { toMavenArtifact( groupId, artifactId, version, '', type, classifier, optional ) }:
                                                null
 
         assert ( isTransitive || ( depth < 1 )), \
