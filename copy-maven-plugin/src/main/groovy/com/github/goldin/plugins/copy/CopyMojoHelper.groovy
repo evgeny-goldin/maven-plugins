@@ -431,7 +431,7 @@ final class CopyMojoHelper
      * @param replaces                 replacements to make
      * @param filtering                whether Maven filtering should be performed
      * @param encoding                 Filtering/replacement encoding
-     * @param fileFilter               {@link org.apache.maven.shared.filtering.MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
+     * @param fileFilter               {@link MavenFileFilter} instance, allowed to be null if filter is false
      * @param verbose                  whether information is written to log with "INFO" level
      * @param move                     whether file should be moved and not copied
      * @param filterWithDollarOnly     whether only ${ .. } expressions should be recognized as delimiters when files are filtered
