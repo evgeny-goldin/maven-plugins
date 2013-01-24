@@ -1,4 +1,5 @@
 apply plugin: 'groovy'
+apply from:   'https://raw.github.com/evgeny-goldin/scripts/master/src/main/gradle/wrapper.gradle'
 
 /**
  * CodeNarc runner task
@@ -23,5 +24,3 @@ timestamp-maven-plugin
 ext.codenarcRuleSetFiles = [ 'codenarc.groovy' ]
 ext.codenarcSources      = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
 apply from: 'https://raw.github.com/evgeny-goldin/gradle-plugins/master/codenarc/CodeNarc.gradle'
-
-task wrapper( type: Wrapper ) { gradleVersion = '1.3' }
