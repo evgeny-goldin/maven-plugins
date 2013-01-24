@@ -44,6 +44,9 @@ class CopyMojo extends BaseGroovyMojo
     private boolean skipIdentical = false
 
     @Parameter ( required = false )
+    private boolean skipIdenticalUseChecksum = false
+
+    @Parameter ( required = false )
     private boolean skipPacked = false
 
     @Parameter ( required = false )
@@ -358,12 +361,13 @@ class CopyMojo extends BaseGroovyMojo
     private void processDependenciesResource ( final CopyResource resource, final boolean verbose, final boolean failIfNotFound )
     {
         List<CopyDependency> resourceDependencies = verifyBean().notNullOrEmpty( resource.dependencies())
-        final                dependenciesAtM2     = resource.dependenciesAtM2()
-        final                isSkipIdentical      = generalBean().choose( resource.skipIdentical,       this.skipIdentical )
-        final                isStripVersion       = generalBean().choose( resource.stripVersion,        this.stripVersion  )
-        final                isStripTimestamp     = generalBean().choose( resource.stripTimestamp,      this.stripTimestamp )
-        final                eliminateDuplicates  = generalBean().choose( resource.eliminateDuplicates, this.eliminateDuplicates )
-        final                parallelDownload     = generalBean().choose( resource.parallelDownload,    this.parallelDownload  )
+        final dependenciesAtM2           = resource.dependenciesAtM2()
+        final isSkipIdentical            = generalBean().choose( resource.skipIdentical,            this.skipIdentical )
+        final isSkipIdenticalUseChecksum = generalBean().choose( resource.skipIdenticalUseChecksum, this.skipIdenticalUseChecksum )
+        final isStripVersion             = generalBean().choose( resource.stripVersion,             this.stripVersion  )
+        final isStripTimestamp           = generalBean().choose( resource.stripTimestamp,           this.stripTimestamp )
+        final eliminateDuplicates        = generalBean().choose( resource.eliminateDuplicates,      this.eliminateDuplicates )
+        final parallelDownload           = generalBean().choose( resource.parallelDownload,         this.parallelDownload  )
 
         if ( dependenciesAtM2 )
         {
@@ -375,7 +379,6 @@ class CopyMojo extends BaseGroovyMojo
                 resolved = true
 
                 /**
-                 * http://evgeny-goldin.org/youtrack/issue/pl-469
                  * File may be resolved from other module "target" (that is built in the same reactor),
                  * not necessarily from ".m2"
                  */
@@ -383,14 +386,16 @@ class CopyMojo extends BaseGroovyMojo
 
                 (( CopyResource ) resource.clone()).with {
 
-                    directory     = f.parent
-                    includes      = [ f.name ]
-                    skipIdentical = isSkipIdentical
-                    dependencies  = null
-                    dependency    = null
-                    destFileName  = ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependency> but not default one, set by Maven */
-                                    ( destFileName )                                  ? destFileName   : /* the one from <resource> */
-                                                                                        f.name
+                    directory                = f.parent
+                    includes                 = [ f.name ]
+                    skipIdentical            = isSkipIdentical
+                    skipIdenticalUseChecksum = isSkipIdenticalUseChecksum
+                    dependencies             = null
+                    dependency               = null
+                    destFileName  =
+                        ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependency> but not default one, set by Maven */
+                        ( destFileName )                                  ? destFileName   : /* the one from <resource> */
+                                                                            f.name
                     if ( d.stripVersion || isStripVersion )
                     {
                         if ( d.version.endsWith( '-SNAPSHOT' ))
@@ -437,11 +442,12 @@ class CopyMojo extends BaseGroovyMojo
 
             (( CopyResource ) resource.clone()).with {
 
-                directory     = tempDirectory
-                includes      = [ '**' ]
-                skipIdentical = isSkipIdentical
-                dependencies  = null
-                dependency    = null
+                directory                = tempDirectory
+                includes                 = [ '**' ]
+                skipIdentical            = isSkipIdentical
+                skipIdenticalUseChecksum = isSkipIdenticalUseChecksum
+                dependencies             = null
+                dependency               = null
 
                 processFilesResource(( CopyResource ) delegate, verbose, ( tempDirectory.listFiles().size() > 0 ))
             }
@@ -647,16 +653,17 @@ class CopyMojo extends BaseGroovyMojo
 
         assert file.canonicalPath.endsWith( newName )
 
-        copyFile( sourceFile.canonicalFile,
-                  file.canonicalFile,
-                  generalBean().choose( resource.skipIdentical, skipIdentical ),
-                  ( noFilter ? [] : resource.replaces()) as Replace[],
-                  (( ! noFilter ) && resource.filtering ),
-                  resource.encoding,
-                  fileFilter,
-                  verbose,
-                  resource.move,
-                  generalBean().choose( resource.filterWithDollarOnly, filterWithDollarOnly ))
+        helper.copyFile( sourceFile.canonicalFile,
+                         file.canonicalFile,
+                         generalBean().choose( resource.skipIdentical,            skipIdentical ),
+                         generalBean().choose( resource.skipIdenticalUseChecksum, skipIdenticalUseChecksum ),
+                         ( noFilter ? [] : resource.replaces()) as Replace[],
+                         (( ! noFilter ) && resource.filtering ),
+                         resource.encoding,
+                         fileFilter,
+                         verbose,
+                         resource.move,
+                         generalBean().choose( resource.filterWithDollarOnly, filterWithDollarOnly ))
     }
 
 

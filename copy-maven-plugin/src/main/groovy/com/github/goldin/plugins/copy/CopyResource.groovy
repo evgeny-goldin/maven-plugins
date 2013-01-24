@@ -37,17 +37,18 @@ final class CopyResource extends Resource implements Cloneable
         final oldResource = this
         final newResource = new CopyResource()
 
-        newResource.startTime             = oldResource.startTime
-        newResource.targetPath            = targetPathFile.canonicalPath
-        newResource.directory             = directoryFile.canonicalPath
-        newResource.includes              = includePatterns
-        newResource.excludes              = excludePatterns
-        newResource.preservePath          = true
-        newResource.skipIdentical         = false
-        newResource.replaces              = oldResource.replaces() as Replace[]
+        newResource.startTime                = oldResource.startTime
+        newResource.targetPath               = targetPathFile.canonicalPath
+        newResource.directory                = directoryFile.canonicalPath
+        newResource.includes                 = includePatterns
+        newResource.excludes                 = excludePatterns
+        newResource.preservePath             = true
+        newResource.skipIdentical            = false
+        newResource.skipIdenticalUseChecksum = false
+        newResource.replaces                 = oldResource.replaces() as Replace[]
         newResource.setFiltering( oldResource.filtering ) // Otherwise, it gets set to "true"
-        newResource.filter                = oldResource.filter
-        newResource.encoding              = oldResource.encoding
+        newResource.filter                   = oldResource.filter
+        newResource.encoding                 = oldResource.encoding
 
         if ( copyNameUpdates )
         {
@@ -123,6 +124,7 @@ final class CopyResource extends Resource implements Cloneable
     Boolean failIfNotFound
     Boolean failOnError
     Boolean skipIdentical
+    Boolean skipIdenticalUseChecksum
     Boolean skipPacked
     Boolean skipUnpacked
     Boolean useTrueZipForPack

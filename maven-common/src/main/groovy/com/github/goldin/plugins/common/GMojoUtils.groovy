@@ -13,8 +13,6 @@ import org.apache.maven.monitor.logging.DefaultLog
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
-import org.apache.maven.shared.filtering.MavenFileFilter
-import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.logging.Logger
 import org.codehaus.plexus.logging.console.ConsoleLogger
 import org.gcontracts.annotations.Ensures
@@ -247,151 +245,6 @@ final class GMojoUtils
 
 
     /**
-     *
-     * Copies source file to destination applying replacements and filtering.
-     *
-     * @param sourceFile           source file to copy
-     * @param destinationFile      destination file to copy the source to
-     * @param skipIdentical        whether identical files should be skipped (not copied)
-     * @param replaces             replacements to make
-     * @param filtering            whether Maven
-     *                             <a href="http://www.sonatype.com/books/maven-book/reference/resource-filtering-sect-description.html">filtering</a>
-     *                             should be performed
-     * @param encoding             Filtering/replacement encoding
-     * @param fileFilter           {@link MavenFileFilter} instance, allowed to be <code>null</code> if <code>filter</code> is <code>false</code>
-     * @param verbose              whether information is written to log with "INFO" level
-     * @param move                 whether file should be moved and not copied
-     * @param filterWithDollarOnly whether only ${ .. } expressions should be recognized as delimiters when files are filtered
-     *
-     * @return destinationFile if file was copied,
-     *         null            if file was skipped (identical)
-     */
-    @SuppressWarnings([ 'MethodSize', 'AbcComplexity', 'CyclomaticComplexity' ])
-    static File copyFile ( final File            sourceFile,
-                           final File            destinationFile,
-                           final boolean         skipIdentical,
-                           final Replace[]       replaces,
-                           final boolean         filtering,
-                           final String          encoding,
-                           final MavenFileFilter fileFilter,
-                           final boolean         verbose,
-                           final boolean         move,
-                           final boolean         filterWithDollarOnly )
-    {
-        assert sourceFile.file && destinationFile && ( ! netBean().isNet( destinationFile.path ))
-        assert ( replaces != null ) && encoding
-
-        File             fromFile           = sourceFile
-        boolean          operationPerformed = false
-        boolean          operationSkipped   = false
-        Closure<Boolean> samePath           = { fromFile.canonicalPath == destinationFile.canonicalPath }
-
-        assert ! ( move && samePath()), \
-               "It is not possible to <move> [$fromFile] into itself - <move> means source file is deleted"
-
-        /**
-         * Deleting destination file if possible
-         */
-        if ( ! ( skipIdentical || samePath())) { fileBean().mkdirs( fileBean().delete( destinationFile ).parentFile )}
-
-        try
-        {
-            if ( filtering && (( ! filterWithDollarOnly ) || fromFile.getText( encoding ).contains( '${' )))
-            {
-                List<MavenFileFilter> wrappers =
-                    fileFilter.getDefaultFilterWrappers( ThreadLocals.get( MavenProject ), null, false,
-                                                         ThreadLocals.get( MavenSession ), new MavenResourcesExecution())
-                if ( filterWithDollarOnly )
-                {
-                    wrappers.each { it.delimiters = new LinkedHashSet<String>([ '${*}' ]) }
-                }
-                else if ( fileBean().extension( fromFile ).toLowerCase() == 'bat' )
-                {
-                    log.warn( "[$fromFile] - filtering *.bat files without <filterWithDollarOnly> may not work correctly due to '@' character, " +
-                              'see http://evgeny-goldin.org/youtrack/issue/pl-233.' )
-                }
-
-                File tempFile = null
-                if ( samePath())
-                {
-                    tempFile = fileBean().tempFile()
-                    fileBean().copy( fromFile, tempFile.parentFile, tempFile.name )
-                    if ( verbose ) { log.info( "[$fromFile] copied to [$tempFile] (to filter it into itself)" ) }
-
-                    fromFile = tempFile
-                }
-
-                assert ! samePath()
-                fileBean().mkdirs( destinationFile.parentFile )
-                fileFilter.copyFile( fromFile, destinationFile, true, wrappers, encoding, true )
-                assert destinationFile.setLastModified( System.currentTimeMillis())
-                fileBean().delete(( tempFile ? [ tempFile ] : [] ) as File[] )
-
-                if ( verbose ) { log.info( "[$fromFile] filtered to [$destinationFile]" ) }
-
-                /**
-                 * - Destination file created becomes input file for the following operations
-                 * - If no replacements should be made - we're done
-                 */
-                fromFile           = destinationFile
-                operationPerformed = ( replaces.size() < 1 )
-            }
-
-            if ( replaces )
-            {
-                destinationFile.write(( String ) replaces.inject( fromFile.getText( encoding )){ String s, Replace r -> r.replace( s, fromFile ) },
-                                      encoding )
-                if ( verbose ) { log.info( "[$fromFile] content written to [$destinationFile], " +
-                                           "[${ replaces.size()}] replace${ generalBean().s( replaces.size()) } made" )}
-                operationPerformed = true
-            }
-
-            final boolean identical = destinationFile.file && [ ( ! operationPerformed ), skipIdentical,
-                                                                destinationFile.length()       == fromFile.length(),
-                                                                destinationFile.lastModified() == fromFile.lastModified() ].every()
-            if ( identical )
-            {
-                if ( verbose ) { log.info( "[$fromFile] skipped - content is identical to destination [$destinationFile]" ) }
-                operationPerformed = true
-                operationSkipped   = true
-            }
-
-            if ( ! operationPerformed )
-            {
-                if ( samePath())
-                {
-                    log.warn( "[$fromFile] skipped - path is identical to destination [$destinationFile]" )
-                    operationPerformed = true
-                    operationSkipped   = true
-                }
-                else if ( move )
-                {
-                    operationPerformed = fromFile.renameTo( destinationFile )
-                    if ( verbose && operationPerformed ) { log.info( "[$fromFile] renamed to [$destinationFile]" )}
-                }
-
-                if ( ! operationPerformed )
-                {
-                    fileBean().copy( fromFile, destinationFile.parentFile, destinationFile.name )
-                    if ( verbose ) { log.info( "[$fromFile] ${ move ? 'moved' : 'copied' } to [$destinationFile]" )}
-                }
-            }
-
-            /**
-             * If it's a "move" operation and file content was filtered/replaced or renameTo() call
-             * doesn't succeed - source file is deleted
-             */
-            if ( move && sourceFile.file && ( sourceFile.canonicalPath != destinationFile.canonicalPath )) { fileBean().delete( sourceFile ) }
-            ( operationSkipped ? null : verifyBean().file( destinationFile ))
-        }
-        catch ( e )
-        {
-            throw new MojoExecutionException( "Failed to copy [$sourceFile] to [$destinationFile]", e )
-        }
-    }
-
-
-    /**
      * Splits a delimiter-separated String.
      *
      * @param s         String to split
@@ -432,6 +285,7 @@ final class GMojoUtils
      * @param s path of disk file or jar-located resource.
      * @return path's URL
      */
+    @SuppressWarnings([ 'GroovyStaticMethodNamingConvention', 'GrDeprecatedAPIUsage' ])
     @Requires({ s })
     @Ensures ({ result })
     static URL url( String s )
