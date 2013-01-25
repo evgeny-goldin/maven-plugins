@@ -6,4 +6,6 @@
 
 * **Only Maven 3 is supported!**
 
-* Run `"mvn -s settings.xml clean install"` to build and install the plugins into your local Maven repository.
+* Run `"mvn -s settings.xml clean install"` to build and install plugins into your local Maven repository.
+
+* Run `"mvn -s settings.xml clean install -Dsilence"` to build and install plugins with Maven logging minimized.
