@@ -238,10 +238,6 @@
                             <exclusions>
                                 <exclusion>
                                     <groupId>org.codehaus.groovy</groupId>
-                                    <artifactId>groovy</artifactId>
-                                </exclusion>
-                                <exclusion>
-                                    <groupId>org.codehaus.groovy</groupId>
                                     <artifactId>groovy-all</artifactId>
                                 </exclusion>
                             </exclusions>

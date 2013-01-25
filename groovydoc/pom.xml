@@ -56,7 +56,7 @@
     <dependencies>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
+            <artifactId>groovy-all</artifactId>
             <version>${groovy-version}</version>
             <scope>compile</scope>
         </dependency>

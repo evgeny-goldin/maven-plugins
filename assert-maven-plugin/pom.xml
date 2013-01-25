@@ -28,11 +28,5 @@
             <version>${junit-version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-test</artifactId>
-            <version>${groovy-version}</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>
