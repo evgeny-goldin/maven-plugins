@@ -4,6 +4,6 @@
 
 * [Issue tracker](http://evgeny-goldin.org/youtrack/issues/pl).
 
-* Only Maven 3 is supported!
+* **Only Maven 3 is supported!**
 
-* Run `mvn clean install` to build and install the plugins into your local Maven repository.
+* Run `"mvn -s settings.xml clean install"` to build and install the plugins into your local Maven repository.

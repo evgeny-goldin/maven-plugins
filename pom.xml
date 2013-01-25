@@ -281,7 +281,7 @@
                             <goal>silence</goal>
                         </goals>
                         <configuration>
-                            <enabled>{{ System.getProperty( 'silence' ) != null }}</enabled>
+                            <runIf>{{ System.getProperty( 'silence' ) != null }}</runIf>
                             <logSummary>true</logSummary>
                             <topN>5</topN>
                         </configuration>
