@@ -121,7 +121,7 @@ class SshexecMojo extends BaseGroovyMojo
 
         if (( matcher.length() > 2 ) && matcher.with{ startsWith( '/' ) && endsWith( '/' ) })
         {   // Matcher is "/regex pattern/"
-            final pattern = verifyBean().notNullOrEmpty( matcher.substring( 1, matcher.length() - 1 ))
+            final pattern = verifyBean().notNullOrEmpty( matcher[ 1 .. -2 ] )
             Pattern.compile( pattern ).matcher( text ).find()
         }
         else
