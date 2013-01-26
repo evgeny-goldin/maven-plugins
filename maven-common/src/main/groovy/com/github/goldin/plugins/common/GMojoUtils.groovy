@@ -354,6 +354,17 @@ final class GMojoUtils
     static List<String> readLines( String s ){ s.readLines()*.trim().grep() }
 
 
+    @Requires({ file && ( content != null ) && encoding })
+    @Ensures ({ result == file })
+    static File write ( File file, String content, String encoding = 'UTF-8' )
+    {
+        fileBean().delete( file )
+        fileBean().mkdirs( file.parentFile )
+        file.write( content, encoding )
+        assert ( file.file && ( file.size() >= content.size()))
+        file
+    }
+
 
     static ConstantsBean constantsBean (){ GCommons.constants ()}
     static GeneralBean   generalBean   (){ GCommons.general ()}

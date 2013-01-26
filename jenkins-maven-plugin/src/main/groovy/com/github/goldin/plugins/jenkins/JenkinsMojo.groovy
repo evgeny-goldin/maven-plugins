@@ -98,9 +98,7 @@ class JenkinsMojo extends BaseGroovyMojo
             configMarkup = process( configMarkup, configFile, job, jobs, indent, newLine )
         }
 
-        fileBean().mkdirs( fileBean().delete( configFile ).parentFile )
-        configFile.write( configMarkup.trim(), 'UTF-8' )
-        verifyBean().file( configFile )
+        write( configFile, configMarkup.trim())
     }
 
 

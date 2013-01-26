@@ -16,8 +16,8 @@ class NetworkUtils
 
 
     @Requires({ remoteHost && command })
-    @Ensures ({ result.file })
-    static File sshexec( String remoteHost, String command, boolean failOnError = true, boolean verbose = true )
+    @Ensures ({ result != null })
+    static String sshexec( String remoteHost, String command, boolean failOnError = true, boolean verbose = true )
     {
         final pathData = netBean().parseNetworkPath( remoteHost )
         assert 'scp'  == pathData.protocol
@@ -41,8 +41,9 @@ class NetworkUtils
         log.info( "Running sshexec [$command] in [${ pathData.host }:${ pathData.directory }]" )
         new AntBuilder().sshexec( arguments )
 
-        if ( ! outputFile.file ) { outputFile.write( '' ) }
-        outputFile
+        final output = outputFile.file ? outputFile.getText( 'UTF-8' ) : ''
+        fileBean().delete( outputFile )
+        output
     }
 
 

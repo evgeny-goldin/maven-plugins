@@ -81,42 +81,36 @@ class SshexecMojo extends BaseGroovyMojo
     void doExecute()
     {
         final startDirectory = netBean().parseNetworkPath( location ).directory
-        final outputFile     = NetworkUtils.sshexec( location,
+        final output         = NetworkUtils.sshexec( location,
                                                      [ "cd '$startDirectory'", *commands() ].join( commandsShellSeparator ),
                                                      failOnError,
                                                      verbose )
-        processOutputFile( outputFile )
+        processOutput( output )
     }
 
 
-    @Requires({ outputFile.file })
-    private void processOutputFile ( File outputFile )
+    @Requires({ output != null })
+    private void processOutput ( String output )
     {
-        final outputContent = outputFile.getText( 'UTF-8' )
-
-        if ( isMatch( outputContent, failIfOutput, false ))
+        if ( isMatch( output, failIfOutput, false ))
         {
-            throw new MojoExecutionException( "Sshexec output [$outputContent] contains [$failIfOutput]" )
+            throw new MojoExecutionException( "Sshexec output [$output] contains [$failIfOutput]" )
         }
 
-        if ( ! isMatch( outputContent, failIfNoOutput, true ))
+        if ( ! isMatch( output, failIfNoOutput, true ))
         {
-            throw new MojoExecutionException( "Sshexec output [$outputContent] contains no [$failIfNoOutput]" )
+            throw new MojoExecutionException( "Sshexec output [$output] contains no [$failIfNoOutput]" )
         }
 
         if ( outputProperty )
         {
-            setProperty( outputProperty, outputContent, '', false )
+            setProperty( outputProperty, output, '', false )
         }
 
         if ( this.outputFile )
         {
-            fileBean().mkdirs( this.outputFile.parentFile )
-            assert outputFile.renameTo( this.outputFile ),  \
-                   "Failed to rename [$outputFile.canonicalPath] to [${ this.outputFile.canonicalPath }]"
+            write( this.outputFile, output )
         }
-
-        fileBean().delete( outputFile )
     }
 
 

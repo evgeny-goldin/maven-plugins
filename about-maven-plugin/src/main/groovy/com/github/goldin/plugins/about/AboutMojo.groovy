@@ -472,14 +472,11 @@ class AboutMojo extends BaseGroovyMojo
 
 
     @Requires({ aboutFile })
-    @Ensures({ result == aboutFile })
+    @Ensures ({ result == aboutFile })
     File writeAboutFile( File aboutFile )
     {
-        fileBean().delete( aboutFile )
         log.info( "Generating \"about\" in [$aboutFile.canonicalPath], basedir is [${ basedir.canonicalPath }]" )
-        fileBean().mkdirs( aboutFile.parentFile )
-        aboutFile.write( allContent())
-        aboutFile
+        write( aboutFile, allContent())
     }
 
 

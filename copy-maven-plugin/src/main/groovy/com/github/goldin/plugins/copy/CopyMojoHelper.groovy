@@ -512,8 +512,8 @@ final class CopyMojoHelper
 
             if ( replaces )
             {
-                destinationFile.write(( String ) replaces.inject( fromFile.getText( encoding )){ String s, Replace r -> r.replace( s, fromFile ) },
-                                      encoding )
+                final content = ( String ) replaces.inject( fromFile.getText( encoding )){ String s, Replace r -> r.replace( s, fromFile ) }
+                write( destinationFile, content, encoding )
                 if ( verbose ) { log.info( "[$fromFile] content written to [$destinationFile], " +
                                            "[${ replaces.size()}] replace${ generalBean().s( replaces.size()) } made" )}
                 operationPerformed = true
