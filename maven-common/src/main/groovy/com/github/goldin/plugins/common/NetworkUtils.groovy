@@ -91,7 +91,10 @@ class NetworkUtils
      * @param preservePath   whether local path should be preserved when files are uploaded
      * @param verbose        verbose logging
      * @param failIfNotFound whether execution should fail if not files were found
+     * @param skipIdentical  whether identical files shouldn't be uploaded (scp only!)
+     * @param failIfNotFound whether identical files should be identified using checksum (scp only!)
      */
+    @SuppressWarnings([ 'GroovyMethodParameterCount' ])
     @Requires({ remotePaths && directory })
     static void upload ( String[]     remotePaths,
                          File         directory,
@@ -99,7 +102,9 @@ class NetworkUtils
                          List<String> excludes,
                          boolean      preservePath,
                          boolean      verbose,
-                         boolean      failIfNotFound )
+                         boolean      failIfNotFound,
+                         boolean      skipIdentical,
+                         boolean      skipIdenticalUseChecksum )
     {
         assert remotePaths
         verifyBean().notNullOrEmpty( remotePaths )
@@ -128,6 +133,13 @@ class NetworkUtils
             {
                 if ( netBean().isScp( remotePath ))
                 {
+                    if ( skipIdentical && scpIdenticalFiles( file, remotePath, skipIdenticalUseChecksum ))
+                    {
+                        if ( verbose ) { log.info( "Scp upload of [$file.canonicalPath] skipped - content is identical to destination" ) }
+                        // noinspection GroovyContinue
+                        continue
+                    }
+
                     scpUpload( file, remotePath + ( preservePath ? file.parentFile.canonicalPath - directory.canonicalPath : '' ), verbose )
                 }
                 else if ( netBean().isFtp( remotePath ))
@@ -140,6 +152,25 @@ class NetworkUtils
                 }
             }
         }
+    }
+
+
+    @Requires({ file.file && remotePath })
+    private static boolean scpIdenticalFiles ( File file, String remotePath, boolean useChecksum )
+    {
+        final fileRemotePath = "${ netBean().parseNetworkPath( remotePath ).directory }/${ file.name }"
+        final command        = "du -b \"${ fileRemotePath }\"; " + ( useChecksum ? "sha1sum \"${ fileRemotePath }\"" : '' )
+        final sshExecOutput  = sshexec( remotePath, command, false, false )
+
+        if ([ 'cannot access', 'no such file' ].any{ sshExecOutput.toLowerCase().contains( it ) }) { return false }
+
+        final  sshExecLines = sshExecOutput.readLines()
+        assert sshExecLines.size() == ( useChecksum ? 2 : 1 )
+
+        final identicalFiles =  (( file.size() as String ) == sshExecLines[ 0 ].tokenize().head()) &&
+                                ( useChecksum ? fileBean().checksum( file, 'SHA-1' ) == sshExecLines[ 1 ].tokenize().head() :
+                                                true )
+        identicalFiles
     }
 
 

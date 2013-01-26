@@ -318,6 +318,8 @@ class CopyMojo extends BaseGroovyMojo
 
                     if ( isUpload )
                     {
+                        assert ( ! resource.process ), "<process> is not supported for remote uploads"
+
                         if ( resource.needsProcessingBeforeUpload())
                         {
                             assert ( ! resource.with { clean || mkdir || pack || unpack }), \
@@ -334,7 +336,15 @@ class CopyMojo extends BaseGroovyMojo
                             excludes        = null           //
                         }
 
-                        NetworkUtils.upload( resource.targetPaths(), sourceDirectory, includes, excludes, resource.preservePath, verbose, failIfNotFound )
+                        NetworkUtils.upload( resource.targetPaths(),
+                                             sourceDirectory,
+                                             includes,
+                                             excludes,
+                                             resource.preservePath,
+                                             verbose,
+                                             failIfNotFound,
+                                             generalBean().choose( resource.skipIdentical,            skipIdentical ),
+                                             generalBean().choose( resource.skipIdenticalUseChecksum, skipIdenticalUseChecksum ))
                         return
                     }
                 }
