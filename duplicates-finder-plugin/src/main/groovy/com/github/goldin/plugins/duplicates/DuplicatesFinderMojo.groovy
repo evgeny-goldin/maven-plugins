@@ -48,7 +48,7 @@ class DuplicatesFinderMojo extends BaseGroovyMojo
         * Makes sure map specified has a new list entry and adds a new value to it
         */
         def updateMap = { Map m, Object key, Object value ->
-                          m[ key ] = m[ key ]?: []
+                          m[ key ] = m[ key ] ?: []
                           m[ key ] << value }
 
         /**
