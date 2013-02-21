@@ -1,6 +1,7 @@
 package com.github.goldin.plugins.copy
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.gcommons.util.GroovyConfig
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import com.github.goldin.plugins.common.NetworkUtils
@@ -596,7 +597,7 @@ class CopyMojo extends BaseGroovyMojo
 
         assert ( resource.startTime > 0 )
         resource.endTime = System.currentTimeMillis()
-        process( filesToProcess, resource.process, resource.clean, ( resource.endTime - resource.startTime ))
+        process( filesToProcess, resource.chmod, resource.process, resource.clean, ( resource.endTime - resource.startTime ))
         resource
     }
 
@@ -936,27 +937,28 @@ class CopyMojo extends BaseGroovyMojo
     /**
      * Processes files provided using Groovy expression specified.
      *
-     * @param                   files to process
+     * @param files             files to process
+     * @param chmod             chmod to set
      * @param processExpression Groovy expression, if <code>null</code> - no processing is executed
      * @param verbose           whether logging should be verbose
      * @param isClean           whether files processed are of <clean> operation
      */
-    @Requires({ ! ( files == null ) })
-    private void process( List<File> files, String processExpression, boolean isClean, long time )
+    @Requires({ ( files != null ) && ( time >= 0 ) })
+    private void process( List<File> files, String chmod, String processExpression, boolean isClean, long time )
     {
-        assert ( time >= 0 )
+        if ( ! files ){ return }
+
+        // noinspection GroovyAssignmentToMethodParameter
+        files = files.toSet().sort()
+        if ( ! isClean ){ verifyBean().file( files as File[] )}
+
+        if ( chmod )
+        {
+            exec( "chmod $chmod '${ files.join( "' '" )}'", basedir, true, false, ExecOption.CommonsExec )
+        }
 
         if ( processExpression )
-        {   /**
-             * There may be no files to process if all of them were skipped due to "skipIdentical"
-             */
-            Set<File> filesSet = files as Set
-            assert    filesSet.size() <= files.size()
-
-            // noinspection GroovyAssignmentToMethodParameter
-            files = ( filesSet.size() < files.size() ? filesSet as List /* Duplicates found */ : files )
-            if ( ! isClean ){ verifyBean().file( files as File[] )}
-
+        {
             eval( processExpression, null, groovyConfig, 'files', files, 'file', files ? files.first() : null, 'time', time )
         }
     }

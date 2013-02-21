@@ -155,6 +155,39 @@ final class GMojoUtils
 
 
     /**
+     * Executes the command specified and returns the result.
+     */
+    @Requires({ command && directory && execOption })
+    static String exec ( String  command,
+                         File       directory       = ThreadLocals.get( MavenProject ).basedir,
+                         boolean    failOnError     = true,
+                         boolean    failIfEmpty     = true,
+                         ExecOption execOption      = ExecOption.Runtime,
+                         int        minimalListSize = -1 )
+    {
+        assert command && directory
+
+        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath]" )}
+
+        String result = generalBean().executeWithResult( command, execOption, failOnError, -1, directory )
+
+        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" )}
+
+        if ( minimalListSize > 0 )
+        {
+            List lines = result.readLines()
+            assert lines.size() >= minimalListSize, \
+                   "Received not enough data when running [$command] in [$directory.canonicalPath] - " +
+                   "expected list of size [$minimalListSize] at least, received [$result]$lines of size [${ lines.size() }]"
+        }
+
+        assert ( result || ( ! failIfEmpty )), \
+               "Failed to run [$command] in [$directory.canonicalPath] - result is empty [$result]"
+        result
+    }
+
+
+    /**
      * Evaluates Groovy expression provided and casts it to the class specified.
      *
      * @param expression   Groovy expression to evaluate, if null or empty - null is returned

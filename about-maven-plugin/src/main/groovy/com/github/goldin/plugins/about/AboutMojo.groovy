@@ -1,10 +1,8 @@
 package com.github.goldin.plugins.about
 
 import static com.github.goldin.plugins.common.GMojoUtils.*
-import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.artifact.Artifact
-import org.apache.maven.execution.SettingsAdapter
 import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
@@ -94,34 +92,6 @@ class AboutMojo extends BaseGroovyMojo
         ( lines ? ( lines[ 0 ] + (( lines.size() > 1 ) ? '\n' + lines[ 1 .. -1 ].collect { '|' + ( ' ' * prefix.size()) + it }.join( '\n' ) :
                                                          '' )) :
                   '' )
-    }
-
-
-    private String exec ( String  command,
-                          File    directory       = basedir,
-                          boolean failOnError     = true,
-                          boolean failIfEmpty     = true,
-                          int     minimalListSize = -1 )
-    {
-        assert command && directory
-
-        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath]" )}
-
-        String result = generalBean().executeWithResult( command, ExecOption.Runtime, failOnError, -1, directory )
-
-        if ( log.debugEnabled ) { log.debug( "Running [$command] in [$directory.canonicalPath] - result is [$result]" )}
-
-        if ( minimalListSize > 0 )
-        {
-            List lines = result.readLines()
-            assert lines.size() >= minimalListSize, \
-                   "Received not enough data when running [$command] in [$directory.canonicalPath] - " +
-                   "expected list of size [$minimalListSize] at least, received [$result]$lines of size [${ lines.size() }]"
-        }
-
-        assert ( result || ( ! failIfEmpty )), \
-               "Failed to run [$command] in [$directory.canonicalPath] - result is empty [$result]"
-        result
     }
 
 

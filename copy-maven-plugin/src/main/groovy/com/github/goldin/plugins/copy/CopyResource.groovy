@@ -161,6 +161,7 @@ final class CopyResource extends Resource implements Cloneable
     String  description
     String  runIf
     String  encoding = 'UTF-8'
+    String  chmod
     String  wget
     String  curl
     String  destFileName
