@@ -789,9 +789,10 @@ class CopyMojo extends BaseGroovyMojo
             return []
         }
 
+        final   readFiles       = { File directory -> fileBean().files( directory, null, null, true, false, false ) }
         boolean unpackUsingTemp = ( resource.replaces() || resource.filtering )
         File    unpackDirectory = unpackUsingTemp ? fileBean().tempDirectory() : destinationDirectory
-        final   previousFiles   = fileBean().files( destinationDirectory )
+        final   previousFiles   = readFiles( destinationDirectory )
 
         ( zipEntries || zipEntriesExclude ) ?
             fileBean().unpackZipEntries( sourceArchive, unpackDirectory, zipEntries, zipEntriesExclude, resource.preservePath, failIfNotFound ) :
@@ -803,7 +804,7 @@ class CopyMojo extends BaseGroovyMojo
             fileBean().delete( unpackDirectory )
         }
 
-        ( fileBean().files( destinationDirectory ) - previousFiles )
+        ( readFiles( destinationDirectory ) - previousFiles )
     }
 
 
