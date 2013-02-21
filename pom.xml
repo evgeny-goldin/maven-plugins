@@ -61,13 +61,13 @@
         <gcommons-version>0.6.3-SNAPSHOT</gcommons-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.groovy%22%20AND%20a%3A%22groovy%22 -->
-        <groovy-version>2.1.0</groovy-version>
+        <groovy-version>2.1.1</groovy-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.gmaven%22%20AND%20a%3A%22gmaven%22 -->
         <gmaven-version>1.5</gmaven-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework%22%20AND%20a%3A%22spring-core%22 -->
-        <spring-version>3.2.0.RELEASE</spring-version>
+        <spring-version>3.2.1.RELEASE</spring-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework.batch%22%20AND%20a%3A%22spring-batch-core%22 -->
         <spring-batch-version>2.1.9.RELEASE</spring-batch-version>
