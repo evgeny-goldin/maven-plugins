@@ -950,7 +950,7 @@ class CopyMojo extends BaseGroovyMojo
 
         // noinspection GroovyAssignmentToMethodParameter
         files = files.toSet().sort()
-        if ( ! isClean ){ verifyBean().file( files as File[] )}
+        if ( ! isClean ){ verifyBean().exists( files as File[] )}
 
         if ( chmod )
         {
