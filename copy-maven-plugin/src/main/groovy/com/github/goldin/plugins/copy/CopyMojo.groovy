@@ -946,13 +946,11 @@ class CopyMojo extends BaseGroovyMojo
     @Requires({ ( files != null ) && ( time >= 0 ) })
     private void process( List<File> files, String chmod, String processExpression, boolean isClean, long time )
     {
-        if ( ! files ){ return }
-
         // noinspection GroovyAssignmentToMethodParameter
         files = files.toSet().sort()
         if ( ! isClean ){ verifyBean().exists( files as File[] )}
 
-        if ( chmod )
+        if ( chmod && files )
         {
             exec( "chmod $chmod '${ files.join( "' '" )}'", basedir, true, false, ExecOption.CommonsExec )
         }
