@@ -1,5 +1,6 @@
 package com.github.goldin.plugins.copy
 
+import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.gcommons.beans.ExecOption
 import com.github.goldin.gcommons.util.GroovyConfig
@@ -9,11 +10,14 @@ import com.github.goldin.plugins.common.Replace
 import groovy.io.FileType
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugins.annotations.*
+import org.apache.maven.model.building.*
+import org.apache.maven.model.resolution.ModelResolver;
 import org.apache.maven.project.MavenProjectHelper
 import org.apache.maven.shared.filtering.MavenFileFilter
 import org.codehaus.plexus.util.FileUtils
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
+import org.apache.maven.artifact.Artifact
 
 
 /**
@@ -34,6 +38,9 @@ class CopyMojo extends BaseGroovyMojo
     @Component ( role = MavenFileFilter, hint = 'default' )
     private MavenFileFilter fileFilter
 
+    @Component
+    private ModelBuilder modelBuilder
+    
     /**
      * User-provided fields
      */
@@ -64,7 +71,6 @@ class CopyMojo extends BaseGroovyMojo
 
     @Parameter ( required = false )
     private boolean parallelDownload = false
-
     @Parameter ( required = false )
     private String customArchiveFormats
 
@@ -407,6 +413,23 @@ class CopyMojo extends BaseGroovyMojo
                         ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependency> but not default one, set by Maven */
                         ( destFileName )                                  ? destFileName   : /* the one from <resource> */
                                                                             f.name
+                             
+                    if ( d.useFinalName || useFinalName )
+                    {
+                        Artifact pom = null
+                        // Resolve POM file
+                        d.artifact.with {
+                            pom = this.downloadArtifact(toMavenArtifact(groupId, artifactId, version, '', 'pom', '', false), verbose, failIfNotFound)
+                        }
+                        DefaultModelBuildingRequest request = new DefaultModelBuildingRequest()
+                        request.pomFile = pom.file
+                        def name = modelBuilder.build(request)?.effectiveModel?.build?.finalName
+                        if (name)
+                        {
+                            destFileName = name + '.' + fileBean().extension( f )
+                        }
+                    }
+
                     if ( d.stripVersion || isStripVersion )
                     {
                         if ( d.version.endsWith( '-SNAPSHOT' ))
