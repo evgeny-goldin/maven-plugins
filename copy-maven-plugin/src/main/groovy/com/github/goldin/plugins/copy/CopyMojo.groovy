@@ -413,20 +413,18 @@ class CopyMojo extends BaseGroovyMojo
                         ( d.destFileName && ( d.destFileName != f.name )) ? d.destFileName : /* the one from <dependency> but not default one, set by Maven */
                         ( destFileName )                                  ? destFileName   : /* the one from <resource> */
                                                                             f.name
-                             
+
                     if ( d.useFinalName || useFinalName )
                     {
-                        Artifact pom = null
-                        // Resolve POM file
-                        d.artifact.with {
-                            pom = this.downloadArtifact(toMavenArtifact(groupId, artifactId, version, '', 'pom', '', false), verbose, failIfNotFound)
-                        }
+                        def resolver = new PomResolver(this, verbose, failIfNotFound)
                         DefaultModelBuildingRequest request = new DefaultModelBuildingRequest()
-                        request.pomFile = pom.file
+                        request.validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL
+                        request.modelResolver = resolver
+                        request.modelSource = resolver.resolveModel(d.groupId, d.artifactId, d.version)
                         def name = modelBuilder.build(request)?.effectiveModel?.build?.finalName
                         if (name)
                         {
-                            destFileName = name + '.' + fileBean().extension( f )
+                            destFileName = name + (d.classifier ? "-${d.classifier}" : '') + '.' + fileBean().extension( f )
                         }
                     }
 
