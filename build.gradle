@@ -1,6 +1,4 @@
 apply plugin: 'groovy'
-apply from:   'http://dl.bintray.com/content/evgenyg/GradleScripts/wrapper.gradle'
-
 
 /**
  * CodeNarc runner task
@@ -24,4 +22,6 @@ timestamp-maven-plugin
 
 ext.codenarcRuleSetFiles = [ 'codenarc.groovy' ]
 ext.codenarcSources      = groovyModules.trim().readLines().collect{ [ "$it/src/main/groovy", "$it/src/test/groovy" ] }.flatten()
-apply from:   'http://dl.bintray.com/content/evgenyg/GradleScripts/CodeNarc.gradle'
+
+apply from: 'http://evgenyg.artifactoryonline.com/evgenyg/libs-releases-local/CodeNarc.gradle'
+apply from: 'http://evgenyg.artifactoryonline.com/evgenyg/libs-releases-local/wrapper.gradle'
