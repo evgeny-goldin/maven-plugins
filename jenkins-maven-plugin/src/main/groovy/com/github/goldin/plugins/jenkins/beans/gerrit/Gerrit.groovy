@@ -3,6 +3,7 @@ package com.github.goldin.plugins.jenkins.beans.gerrit
 import static com.github.goldin.plugins.common.GMojoUtils.*
 
 
+@SuppressWarnings([ 'FieldName' ])
 enum GerritType
 {
     plain  ( 'PLAIN'   ),
