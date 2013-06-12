@@ -282,11 +282,6 @@
                     <groupId>javax.inject</groupId>
                     <artifactId>javax.inject</artifactId>
                 </exclusion>
-                <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
-                <exclusion>
-                    <groupId>aopalliance</groupId>
-                    <artifactId>aopalliance</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
 
