@@ -2,6 +2,7 @@ package com.github.goldin.plugins.common
 
 import static com.github.goldin.plugins.common.ConversionUtils.*
 import static com.github.goldin.plugins.common.GMojoUtils.*
+import org.codehaus.plexus.PlexusContainer
 import org.apache.ivy.util.Message
 import org.apache.tools.ant.DefaultLogger
 import ch.qos.logback.classic.Level
@@ -32,6 +33,9 @@ import java.lang.reflect.Modifier
 abstract class BaseGroovyMojo extends GroovyMojo
 {
     static final String SILENCE = 'SILENCE'
+
+    @Component
+    PlexusContainer container
 
     @Parameter ( required = true, defaultValue = '${project}' )
     MavenProject project
