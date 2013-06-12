@@ -116,6 +116,7 @@
         <module>silencer-maven-plugin</module>
         <module>sshexec-maven-plugin</module>
         <module>spring-batch-maven-plugin</module>
+        <module>artifactory-maven-plugin</module>
     </modules>
 
 
