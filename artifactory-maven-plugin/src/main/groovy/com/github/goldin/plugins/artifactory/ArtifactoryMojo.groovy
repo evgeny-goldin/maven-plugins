@@ -33,6 +33,7 @@ class ArtifactoryMojo extends BaseGroovyMojo
         recorder.afterProjectsRead( session )
 
         eventCatapult.fire( ExecutionEvent.Type.SessionStarted, session, null )
+        eventCatapult.fire( ExecutionEvent.Type.ProjectStarted, session, null )
     }
 
 
