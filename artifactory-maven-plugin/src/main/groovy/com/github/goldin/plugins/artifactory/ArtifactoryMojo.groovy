@@ -39,6 +39,10 @@ class ArtifactoryMojo extends BaseGroovyMojo
 
     private void createProperties()
     {
+        final mapToString = { Map m -> m.collect { key, value -> "[$key] = [$value]" }.join( '\n' ) }
+        log.info( "System properties:\n${ mapToString( System.properties ) }" )
+        log.info( "Env variables:\n${ mapToString( System.getenv() ) }" )
+
         final propertiesFile    = fileBean().tempFile( '.properties' )
         final propertiesContent = this.class.classLoader.getResourceAsStream( 'buildInfo.properties' ).getText( 'UTF-8' )
         propertiesFile.setText( propertiesContent, 'UTF-8' )
