@@ -39,6 +39,8 @@ class ArtifactoryMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
+        if ( ! session.goals.grep( 'deploy' )) { return }
+
         mergeProperties()
 
         listener.afterSessionStart( session )
