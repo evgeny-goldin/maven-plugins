@@ -13,13 +13,14 @@ import org.apache.maven.plugins.annotations.Parameter
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
 import org.jfrog.build.api.BuildInfoConfigProperties
+import org.jfrog.build.extractor.maven.BuildInfoRecorder
 import org.jfrog.build.extractor.maven.BuildInfoRecorderLifecycleParticipant
 
 
 /**
  * Artifactory plugin creating JSON build data.
  */
-@Mojo ( name = 'create-build-info', defaultPhase = LifecyclePhase.INITIALIZE, threadSafe = true )
+@Mojo ( name = 'build-info', defaultPhase = LifecyclePhase.INITIALIZE, threadSafe = true )
 class ArtifactoryMojo extends BaseGroovyMojo
 {
     @Component( role = AbstractMavenLifecycleParticipant )
@@ -39,7 +40,10 @@ class ArtifactoryMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
-        if ( ! session.goals.grep( 'deploy' )) { return }
+        final skip = ( ! session.goals.grep( 'deploy' )) ||
+                     ( session.request.executionListener instanceof BuildInfoRecorder )
+
+        if ( skip ) { return }
 
         mergeProperties()
 
