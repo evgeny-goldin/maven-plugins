@@ -49,9 +49,13 @@ class ArtifactoryMojo extends BaseGroovyMojo
     }
 
 
+    /**
+     * Merges *.properties files with <configuration> values and writes a new *.properties file to be picked up later
+     * by the original Maven listener.
+     */
     private void mergeProperties ()
     {
-        Map<String,?> map      = [:]
+        Map<String,String> map = [:]
         final systemProperties = System.getProperty( BuildInfoConfigProperties.PROP_PROPS_FILE )?.with {
             String fileName -> fileName ? new File( fileName ) : null
         }
@@ -59,6 +63,8 @@ class ArtifactoryMojo extends BaseGroovyMojo
         if ( systemProperties ){ map += loadProperties( systemProperties )}
         if ( properties       ){ map += loadProperties( properties )}
         if ( propertiesMap    ){ map += propertiesMap }
+
+        map = ( Map<String,String> ) map.collectEntries { String key, String value -> [ key, updateValue( value )] }
 
         final propertiesFile = fileBean().tempFile( '-buildInfo.properties' )
         propertiesFile.withWriter { Writer w -> new Properties( map ).store( w, 'Build Info Properties' )}
@@ -68,15 +74,30 @@ class ArtifactoryMojo extends BaseGroovyMojo
     }
 
 
+    /**
+     * Loads {@code Properties} instance from the file specified.
+     */
     @Requires({ f?.file })
     @Ensures ({ result != null })
-    Map<String,String> loadProperties( File f )
+    private Map<String,String> loadProperties( File f )
     {
         f.withReader {
             Reader r ->
             final p = new Properties()
             p.load( r )
             ( Map<String,String> ) p
+        }
+    }
+
+
+    /**
+     * Updates all "${VAR}" entries in the value specified to their corresponding environment variables or system properties.
+     */
+    private String updateValue( String value )
+    {
+        value?.replaceAll( /\$\{([^}]+)\}/ ){
+            final String var = it[ 1 ]
+            System.getenv( var ) ?: System.getProperty( var ) ?: '${' + var + '}'
         }
     }
 }
