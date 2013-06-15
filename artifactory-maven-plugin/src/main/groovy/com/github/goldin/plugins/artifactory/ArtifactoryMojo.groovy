@@ -40,6 +40,8 @@ class ArtifactoryMojo extends BaseGroovyMojo
     @Override
     void doExecute ()
     {
+        session.executionProperties[ 'maven.deploy.skip' ] = 'true'
+
         final skip = ( ! session.goals.grep( 'deploy' )) ||
                      ( session.request.executionListener instanceof BuildInfoRecorder )
 
