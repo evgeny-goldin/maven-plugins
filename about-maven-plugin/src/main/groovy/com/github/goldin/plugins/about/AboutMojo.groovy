@@ -33,7 +33,7 @@ class AboutMojo extends BaseGroovyMojo
     private String  fileName
 
     // http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-dependency-plugin%22
-    @Parameter ( defaultValue = '2.6' )
+    @Parameter ( defaultValue = '2.8' )
     private String  mavenDependencyPluginVersion
 
     @Parameter
