@@ -13,6 +13,7 @@ import org.sonatype.aether.util.artifact.DefaultArtifact
 /**
  * Resolved Ivy artifacts using the settings file specified.
  */
+@SuppressWarnings([ 'GrFinalVariableAccess' ])
 class IvyArtifactResolver implements ArtifactResolver {
 
     private final ArtifactResolver delegateResolver
