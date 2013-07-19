@@ -90,7 +90,7 @@ class ConfigMarkup extends Markup
                 addScm()
                 add( 'quietPeriod',           job.quietPeriod )
                 add( 'scmCheckoutRetryCount', job.scmCheckoutRetryCount )
-                assignedNode( job.node ?: '' )
+                if(job.node) { assignedNode(job.node) }
                 canRoam( job.node ? false : true )
                 disabled( job.disabled )
                 blockBuildWhenDownstreamBuilding( job.blockBuildWhenDownstreamBuilding )
