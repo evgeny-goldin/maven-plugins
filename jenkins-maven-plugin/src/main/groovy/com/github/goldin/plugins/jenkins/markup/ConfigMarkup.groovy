@@ -288,6 +288,7 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
             if ( job.privateRepository || job.privateRepositoryPerExecutor )
             {
                 localRepository( class: "hudson.maven.local_repo.${ job.privateRepository ? 'PerJobLocalRepositoryLocator' : 'PerExecutorLocalRepositoryLocator' }" )
+                usePrivateRepository(true)
             }
 
             ignoreUpstremChanges( ! job.buildOnSNAPSHOT )
