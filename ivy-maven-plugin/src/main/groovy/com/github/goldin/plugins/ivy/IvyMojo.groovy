@@ -79,6 +79,11 @@ class IvyMojo extends BaseGroovyMojo
     @Parameter ( required = false )
     private boolean failOnError = true
 
+    /**
+     * Should we include transitive dependencies?
+     */
+    @Parameter ( required = false )
+    private boolean transitive = false
 
     @Override
     @Requires({ this.ivyconf })
@@ -177,17 +182,17 @@ class IvyMojo extends BaseGroovyMojo
      * @return artifacts resolved
      */
     @Requires({ helper && dependencies })
-    @Ensures({ result && ( result.size() == dependencies.size()) })
+    @Ensures({ result && ( transitive || result.size() == dependencies.size()) })
     List<Artifact> resolveMavenDependencies ( IvyHelper helper, ArtifactItem[] dependencies )
     {
-        dependencies.collect {
+        dependencies.collectMany {
             ArtifactItem d ->
 
             d.groupId.startsWith( IVY_PREFIX ) ?
-                helper.resolve(                    d.groupId, d.artifactId, d.version,     d.type, d.classifier ) :
-                downloadArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, false ),
+                helper.resolve(                     d.groupId, d.artifactId, d.version,     d.type, d.classifier, transitive ) :
+                [downloadArtifact( toMavenArtifact( d.groupId, d.artifactId, d.version, '', d.type, d.classifier, false      ),
                                   logVerbosely(),
-                                  failOnError )
+                                  failOnError )]
         }
     }
 }

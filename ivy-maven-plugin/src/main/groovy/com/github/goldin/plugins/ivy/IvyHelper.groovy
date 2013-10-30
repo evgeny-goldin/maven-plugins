@@ -74,7 +74,7 @@ class IvyHelper
      */
     @Requires({ groupId && artifactId && version && type })
     @Ensures({ result })
-    Artifact resolve ( String groupId, String artifactId, String version, String type, String classifier )
+    List<Artifact> resolve ( String groupId, String artifactId, String version, String type, String classifier, boolean transitive )
     {
         if ( groupId.startsWith( IVY_PREFIX ))
         {
@@ -88,30 +88,57 @@ class IvyHelper
         {
             final md      = DefaultModuleDescriptor.newDefaultInstance( ModuleRevisionId.newInstance( groupId, artifactId + '-caller', 'working' ))
             final module  = ModuleRevisionId.newInstance( groupId, artifactId, version )
-            final dd      = new DefaultDependencyDescriptor( md, module, false, false, true )
-            dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier ?: '.*', type, type ),
-                                                           new ExactOrRegexpPatternMatcher(),
-                                                           [:] ))
+            final dd      = new DefaultDependencyDescriptor( md, module, false, false, transitive )
+            if ( transitive )
+            {
+                classifier.split(',').each { dd.addDependencyConfiguration('*', it.trim()) }
+            }
+            else
+            {
+                dd.addIncludeRule( '', new DefaultIncludeRule( new ArtifactId( module.moduleId, classifier ?: '.*', type, type ),
+                                                               new ExactOrRegexpPatternMatcher(),
+                                                               [:] ))
+            }
             md.addDependency( dd );
             XmlModuleDescriptorWriter.write( md, ivyfile );
 
             final gavc      = "$groupId:$artifactId:$version:$type${ classifier ? ':' + classifier  : '' }"
             final artifacts = resolve( ivyfile.toURL(), false )
 
-            if ( artifacts.size() != 1 )
+            if ( !transitive && artifacts.size() != 1 )
             {
                 failOrWarn( artifacts ?
                     "Multiple artifacts resolved for [$gavc] - ${ artifacts }, consider adding <classifier> such as <classifier>${ artifacts*.classifier.find{ it }}</classifier>" :
                     "Failed to resolve [$gavc] artifact" )
             }
 
-            toMavenArtifact( groupId, artifactId, version, '', type,
-                             '' /* <classifier> is only used to name an Ivy artifact, this is not a real Maven <classifier> */,
-                             false,
-                             ( artifacts ? artifacts.first().file : null ))
+            // <classifier> is only used to name an Ivy artifact, this is not a real Maven <classifier>, however we do 
+            // need to distinguish between two (e.g.) jar artifacts from the same module (as Maven puts the resulting 
+            // Artifacts in a Set)
+            if ( artifacts )
+            {
+                artifacts.collect {
+                    artifact ->
+                        toMavenArtifact( artifact.groupId, artifact.artifactId, artifact.version, '', artifact.type,
+                                         artifact.classifier,
+                                         false,
+                                         artifact.file )
+                }
+            }
+            else
+            {
+                toMavenArtifact( groupId, artifactId, version, '', type,
+                                 '',
+                                 false,
+                                 null )
+            }
         }
         finally
         {
+            if ( verbose )
+            {
+                print ivyfile.text
+            }
             fileBean().delete( ivyfile )
         }
     }
