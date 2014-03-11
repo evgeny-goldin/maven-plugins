@@ -1,584 +1,562 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+<project xmlns              = "http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi          = "http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0
                                http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.goldin</groupId>
-	<artifactId>main.plugins</artifactId>
-	<packaging>pom</packaging>
-	<version>0.3-SNAPSHOT</version>
-	<name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
-	<description>Maven plugins</description>
-	<url>http://evgeny-goldin.com/wiki/Maven-plugins</url>
-
-	<parent>
-		<groupId>org.sonatype.oss</groupId>
-		<artifactId>oss-parent</artifactId>
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.oss%22%20AND%20a%3A%22oss-parent%22 -->
-		<version>7</version>
-	</parent>
-
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<scm>
-		<connection>scm:git:git@github.com:evgeny-goldin/maven-plugins.git</connection>
-		<developerConnection>scm:git:git@github.com:evgeny-goldin/maven-plugins.git</developerConnection>
-		<url>git@github.com:evgeny-goldin/maven-plugins.git</url>
-	</scm>
-
-	<developers>
-		<developer>
-			<id>evgenyg</id>
-			<name>Evgeny Goldin</name>
-			<email>evgenyg@gmail.com</email>
-		</developer>
-	</developers>
-
-<!-- 	<repositories> -->
-<!-- 		<repository> -->
-<!-- 			<id>Goldin</id> -->
-<!-- 			<url>http://evgenyg.artifactoryonline.com/evgenyg/repo/</url> -->
-<!-- 		</repository> -->
-<!-- 	</repositories> -->
-
-<!-- 	<pluginRepositories> -->
-<!-- 		<pluginRepository> -->
-<!-- 			<id>Goldin Plugins</id> -->
-<!-- 			<url>http://evgenyg.artifactoryonline.com/evgenyg/repo/</url> -->
-<!-- 		</pluginRepository> -->
-<!-- 	</pluginRepositories> -->
-	
-	<properties>
-
-		<!-- ~~~~~~~~~~~~~~~~ -->
-		<!-- Library versions -->
-		<!-- ~~~~~~~~~~~~~~~~ -->
-
-		<java-version>1.6</java-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven%22%20AND%20a%3A%22maven-core%22 -->
-		<maven-version>3.1.1</maven-version>
-
-		<!-- http://evgenyg.artifactoryonline.com/evgenyg/plugins-releases/com/github/goldin/about-maven-plugin/ -->
-<!-- 		<previous-plugins-version>0.3-beta-1</previous-plugins-version> -->
-
-		<!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
-		<gcommons-version>0.6.3-SNAPSHOT</gcommons-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.groovy%22%20AND%20a%3A%22groovy%22 -->
-		<groovy-version>2.1.5</groovy-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.gmaven%22%20AND%20a%3A%22gmaven%22 -->
-		<gmaven-version>1.4</gmaven-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework%22%20AND%20a%3A%22spring-core%22 -->
-		<spring-version>3.2.3.RELEASE</spring-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework.batch%22%20AND%20a%3A%22spring-batch-core%22 -->
-		<spring-batch-version>2.2.0.RELEASE</spring-batch-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22junit%22%20AND%20a%3A%22junit%22 -->
-		<junit-version>4.11</junit-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ant%22%20AND%20a%3A%22ant%22 -->
-		<ant-version>1.9.1</ant-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.eclipse.aether%22%20AND%20a%3A%22aether-api%22 -->
-		<aether-version>0.9.0.M2</aether-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.gcontracts%22%20AND%20a%3A%22gcontracts-core%22 -->
-		<gcontracts-version>1.2.12</gcontracts-version>
-
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22 -->
-		<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-plexus%22 -->
-		<sisu-inject-version>2.4.0</sisu-inject-version>
-	</properties>
-
-
-	<modules>
-
-		<!-- ~~~~~ -->
-		<!-- Infra -->
-		<!-- ~~~~~ -->
-
-		<module>maven-common</module>
-		<module>mojo-parent</module>
-
-		<!-- ~~~~~~~ -->
-		<!-- Plugins -->
-		<!-- ~~~~~~~ -->
-
-		<module>duplicates-finder-plugin</module>
-		<module>ivy-maven-plugin</module>
-		<module>about-maven-plugin</module>
-		<module>copy-maven-plugin</module>
-		<module>jenkins-maven-plugin</module>
-		<module>assert-maven-plugin</module>
-		<module>mail-maven-plugin</module>
-		<module>find-maven-plugin</module>
-		<module>timestamp-maven-plugin</module>
-		<module>properties-maven-plugin</module>
-<!-- 		<module>silencer-maven-plugin</module> -->
-		<module>sshexec-maven-plugin</module>
-		<module>spring-batch-maven-plugin</module>
-	</modules>
-
-
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit-version}</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
-
-	<prerequisites>
-		<maven>3.0</maven>
-	</prerequisites>
-
-
-	<build>
-		<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
-
-		<resources>
-			<resource>
-				<directory>${project.basedir}/src/main/resources</directory>
-			</resource>
-		</resources>
-
-		<testResources>
-			<testResource>
-				<directory>${project.basedir}/src/test/resources</directory>
-			</testResource>
-		</testResources>
-
-
-		<pluginManagement>
-			<plugins>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-clean-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-clean-plugin%22 -->
-					<version>2.5</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-resources-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-resources-plugin%22 -->
-					<version>2.6</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-compiler-plugin%22 -->
-					<version>3.1</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-jar-plugin%22 -->
-					<version>2.4</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-install-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-install-plugin%22 -->
-					<version>2.4</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-plugin-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-plugin-plugin%22 -->
-					<version>3.2</version>
-				</plugin>
-
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<!-- Configuring surefire plugin to display test errors in console -->
-				<!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/ -->
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-surefire-plugin%22 -->
-					<version>2.15</version>
-					<configuration>
-						<useFile>false</useFile>
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>junit</groupId>
-							<artifactId>junit</artifactId>
-							<version>${junit-version}</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-
-				<!-- ~~~~~~~~~~~~~ -->
-				<!-- GMaven plugin -->
-				<!-- ~~~~~~~~~~~~~ -->
-
-				<plugin>
-					<groupId>org.codehaus.gmaven</groupId>
-					<artifactId>gmaven-plugin</artifactId>
-					<version>${gmaven-version}</version>
-					<configuration>
-						<providerSelection>2.0</providerSelection>
-						<source />
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.codehaus.gmaven.runtime</groupId>
-							<artifactId>gmaven-runtime-2.0</artifactId>
-							<version>${gmaven-version}</version>
-							<exclusions>
-								<exclusion>
-									<groupId>org.codehaus.groovy</groupId>
-									<artifactId>groovy-all</artifactId>
-								</exclusion>
-							</exclusions>
-						</dependency>
-						<dependency>
-							<groupId>org.codehaus.groovy</groupId>
-							<artifactId>groovy-all</artifactId>
-							<version>${groovy-version}</version>
-						</dependency>
-						<dependency>
-							<groupId>org.apache.ant</groupId>
-							<artifactId>ant</artifactId>
-							<version>${ant-version}</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
-
-		<plugins>
-
-<!-- 			<plugin> -->
-<!-- 				<groupId>com.github.goldin</groupId> -->
-<!-- 				<artifactId>silencer-maven-plugin</artifactId> -->
-<!-- 				<version>${previous-plugins-version}</version> -->
-<!-- 				<executions> -->
-<!-- 					<execution> -->
-<!-- 						<id>enable-silencer</id> -->
-<!-- 						<phase>validate</phase> -->
-<!-- 						<goals> -->
-<!-- 							<goal>silence</goal> -->
-<!-- 						</goals> -->
-<!-- 						<configuration> -->
-<!-- 							<runIf>{{ System.getProperty( 'silence' ) != null }}</runIf> -->
-<!-- 							<logSummary>true</logSummary> -->
-<!-- 							<topN>5</topN> -->
-<!-- 						</configuration> -->
-<!-- 					</execution> -->
-<!-- 				</executions> -->
-<!-- 			</plugin> -->
-
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<!-- Enforcing Maven/Java versions -->
-			<!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-enforcer-plugin/ -->
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-enforcer-plugin%22 -->
-				<version>1.2</version>
-				<inherited>false</inherited>
-				<executions>
-					<execution>
-						<id>maven-enforcer</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<phase>validate</phase>
-					</execution>
-				</executions>
-				<configuration>
-					<rules>
-						<requireMavenVersion>
-							<version>${maven-version}</version>
-						</requireMavenVersion>
-						<requireJavaVersion>
-							<version>${java-version}</version>
-						</requireJavaVersion>
-					</rules>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.codehaus.gmaven</groupId>
-				<artifactId>gmaven-plugin</artifactId>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<!-- Displaying plugin versions checked -->
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<executions>
-					<execution>
-						<id>display-versions</id>
-						<goals>
-							<goal>execute</goal>
-						</goals>
-						<phase>validate</phase>
-						<configuration>
-							<source>
-								if ( System.getProperty( 'silence' ) == null )
-								{
-								final
-								props = new Properties()
-								props.load(
-								org.apache.maven.Maven.class.getResourceAsStream(
-								'/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
-								final mavenVersion = props.getProperty( 'version', 'Unknown'
-								).trim()
-								println """
-								~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-								Module -
-								[${project.groupId}:${project.artifactId}:${project.version}]
-								Java - [${java.version}][${java.home}][${java.vendor}]
-								Maven -
-								[$mavenVersion]
-								Groovy - [$GroovySystem.version]
-								GMaven -
-								[${gmaven-version}]
-								~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""".trim()
-								}
-							</source>
-						</configuration>
-					</execution>
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<!-- Compiling Groovy sources and tests -->
-					<!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
-					<!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code -->
-					<!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119 -->
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<execution>
-						<id>compile-groovy</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<fileset>
-									<directory>${pom.basedir}/src/main/groovy</directory>
-									<includes>
-										<include>**/*.groovy</include>
-									</includes>
-								</fileset>
-							</sources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>compile-groovy-tests</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<fileset>
-									<directory>${pom.basedir}/src/test/groovy</directory>
-									<includes>
-										<include>**/*.groovy</include>
-									</includes>
-								</fileset>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-	</build>
-
-
-	<profiles>
-
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<!-- Profile adding additional release files -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-		<profile>
-			<id>addFiles</id>
-			<modules>
-				<module>groovydoc</module>
-			</modules>
-			<build>
-				<plugins>
-
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<!-- Copying "license.txt" and "README.markdown" files to ${project.build.outputDirectory} -->
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-					<plugin>
-						<groupId>com.github.goldin</groupId>
-						<artifactId>copy-maven-plugin</artifactId>
-						<version>${previous-plugins-version}</version>
-						<executions>
-							<execution>
-								<id>copy-license-readme</id>
-								<phase>prepare-package</phase>
-								<goals>
-									<goal>copy</goal>
-								</goals>
-								<configuration>
-									<runIf>{{ new File( project.build.outputDirectory ).directory
-										}}</runIf>
-									<resources>
-										<resource>
-											<targetPath>${project.build.outputDirectory}</targetPath>
-											<file>${project.basedir}/../license.txt</file>
-										</resource>
-										<resource>
-											<targetPath>${project.build.outputDirectory}</targetPath>
-											<file>${project.basedir}/README.markdown</file>
-											<failIfNotFound>false</failIfNotFound>
-										</resource>
-									</resources>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<!-- Copying "about.txt" to ${project.build.outputDirectory} -->
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-					<plugin>
-						<groupId>com.github.goldin</groupId>
-						<artifactId>find-maven-plugin</artifactId>
-						<version>${previous-plugins-version}</version>
-						<executions>
-							<execution>
-								<id>find-root-directory</id>
-								<phase>initialize</phase>
-								<goals>
-									<goal>find</goal>
-								</goals>
-								<configuration>
-									<propertyName>mavenSettingsDir</propertyName>
-									<file>maven-settings</file>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>com.github.goldin</groupId>
-						<artifactId>about-maven-plugin</artifactId>
-						<version>${previous-plugins-version}</version>
-						<executions>
-							<execution>
-								<id>copy-about</id>
-								<phase>prepare-package</phase>
-								<goals>
-									<goal>create-about</goal>
-								</goals>
-								<configuration>
-									<runIf>{{ new File( project.build.outputDirectory ).directory
-										}}</runIf>
-									<dumpDependencies>true</dumpDependencies>
-									<dumpMaven>true</dumpMaven>
-									<fileName>${project.build.outputDirectory}/about~${project.groupId}~${project.artifactId}~${project.version}.txt</fileName>
-									<updateArchives>false</updateArchives>
-									<mavenCommandLine>-s
-										${mavenSettingsDir}/settings-artifactory.xml</mavenCommandLine>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<!-- Creating sources and Javadoc archives -->
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-source-plugin%22 -->
-						<version>2.2.1</version>
-						<executions>
-							<execution>
-								<id>pack-sources</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-								<configuration>
-									<includes>
-										<include>**/*.java</include>
-										<include>**/*.groovy</include>
-									</includes>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-javadoc-plugin%22 -->
-						<version>2.9</version>
-						<executions>
-							<execution>
-								<id>pack-javadoc</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<!-- Profile checking for duplicate libraries in scopes -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-		<profile>
-			<id>duplicates</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.github.goldin</groupId>
-						<artifactId>duplicates-finder-plugin</artifactId>
-						<version>${previous-plugins-version}</version>
-						<executions>
-							<execution>
-								<id>find-duplicates</id>
-								<phase>initialize</phase>
-								<goals>
-									<goal>find-duplicates</goal>
-								</goals>
-								<configuration>
-									<verbose>false</verbose>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.goldin</groupId>
+    <artifactId>main.plugins</artifactId>
+    <packaging>pom</packaging>
+    <version>0.3-SNAPSHOT</version>
+    <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
+    <description>Maven plugins</description>
+    <url>http://evgeny-goldin.com/wiki/Maven-plugins</url>
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.oss%22%20AND%20a%3A%22oss-parent%22 -->
+        <version>7</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:evgeny-goldin/maven-plugins.git</connection>
+        <developerConnection>scm:git:git@github.com:evgeny-goldin/maven-plugins.git</developerConnection>
+        <url>git@github.com:evgeny-goldin/maven-plugins.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>evgenyg</id>
+            <name>Evgeny Goldin</name>
+            <email>evgenyg@gmail.com</email>
+        </developer>
+    </developers>
+
+    <properties>
+
+        <!-- ~~~~~~~~~~~~~~~~ -->
+        <!-- Library versions -->
+        <!-- ~~~~~~~~~~~~~~~~ -->
+
+        <java-version>1.6</java-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven%22%20AND%20a%3A%22maven-core%22 -->
+        <maven-version>3.1.1</maven-version>
+
+        <!-- http://evgenyg.artifactoryonline.com/evgenyg/plugins-releases/com/github/goldin/about-maven-plugin/ -->
+<!--         <previous-plugins-version>0.3-beta-1</previous-plugins-version> -->
+
+        <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
+        <gcommons-version>0.6.3-SNAPSHOT</gcommons-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.groovy%22%20AND%20a%3A%22groovy%22 -->
+        <groovy-version>2.1.5</groovy-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.gmaven%22%20AND%20a%3A%22gmaven%22 -->
+        <gmaven-version>1.5</gmaven-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework%22%20AND%20a%3A%22spring-core%22 -->
+        <spring-version>3.2.3.RELEASE</spring-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.springframework.batch%22%20AND%20a%3A%22spring-batch-core%22 -->
+        <spring-batch-version>2.2.0.RELEASE</spring-batch-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22junit%22%20AND%20a%3A%22junit%22 -->
+        <junit-version>4.11</junit-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ant%22%20AND%20a%3A%22ant%22 -->
+        <ant-version>1.9.1</ant-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.aether%22%20AND%20a%3A%22aether-api%22 -->
+        <aether-version>0.9.0.M2</aether-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.gcontracts%22%20AND%20a%3A%22gcontracts-core%22 -->
+        <gcontracts-version>1.2.12</gcontracts-version>
+
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22   -->
+        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-plexus%22 -->
+        <sisu-inject-version>2.4.0</sisu-inject-version>
+    </properties>
+
+
+    <modules>
+
+        <!-- ~~~~~ -->
+        <!-- Infra -->
+        <!-- ~~~~~ -->
+
+        <module>maven-common</module>
+        <module>mojo-parent</module>
+
+        <!-- ~~~~~~~ -->
+        <!-- Plugins -->
+        <!-- ~~~~~~~ -->
+
+        <module>duplicates-finder-plugin</module>
+        <module>ivy-maven-plugin</module>
+        <module>about-maven-plugin</module>
+        <module>copy-maven-plugin</module>
+        <module>jenkins-maven-plugin</module>
+        <module>assert-maven-plugin</module>
+        <module>mail-maven-plugin</module>
+        <module>find-maven-plugin</module>
+        <module>timestamp-maven-plugin</module>
+        <module>properties-maven-plugin</module>
+<!--         <module>silencer-maven-plugin</module> -->
+        <module>sshexec-maven-plugin</module>
+        <module>spring-batch-maven-plugin</module>
+    </modules>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
+    <prerequisites>
+        <maven>3.0</maven>
+    </prerequisites>
+
+
+    <build>
+        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
+
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+        </resources>
+
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+        </testResources>
+
+
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-clean-plugin%22 -->
+                    <version>2.5</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-resources-plugin%22 -->
+                    <version>2.6</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-compiler-plugin%22 -->
+                    <version>3.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-jar-plugin%22 -->
+                    <version>2.4</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-install-plugin%22 -->
+                    <version>2.4</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-plugin-plugin%22 -->
+                    <version>3.2</version>
+                </plugin>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <!-- Configuring surefire plugin to display test errors in console                 -->
+                <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/ -->
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-surefire-plugin%22 -->
+                    <version>2.15</version>
+                    <configuration>
+                        <useFile>false</useFile>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>junit</groupId>
+                            <artifactId>junit</artifactId>
+                            <version>${junit-version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+
+                <!-- ~~~~~~~~~~~~~ -->
+                <!-- GMaven plugin -->
+                <!-- ~~~~~~~~~~~~~ -->
+
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>${gmaven-version}</version>
+                    <configuration>
+                        <providerSelection>2.0</providerSelection>
+                        <source/>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.gmaven.runtime</groupId>
+                            <artifactId>gmaven-runtime-2.0</artifactId>
+                            <version>${gmaven-version}</version>
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>org.codehaus.groovy</groupId>
+                                    <artifactId>groovy-all</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-all</artifactId>
+                            <version>${groovy-version}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.apache.ant</groupId>
+                            <artifactId>ant</artifactId>
+                            <version>${ant-version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+
+        <plugins>
+
+<!--             <plugin> -->
+<!--                 <groupId>com.github.goldin</groupId> -->
+<!--                 <artifactId>silencer-maven-plugin</artifactId> -->
+<!--                 <version>${previous-plugins-version}</version> -->
+<!--                 <executions> -->
+<!--                     <execution> -->
+<!--                         <id>enable-silencer</id> -->
+<!--                         <phase>validate</phase> -->
+<!--                         <goals> -->
+<!--                             <goal>silence</goal> -->
+<!--                         </goals> -->
+<!--                         <configuration> -->
+<!--                             <runIf>{{ System.getProperty( 'silence' ) != null }}</runIf> -->
+<!--                             <logSummary>true</logSummary> -->
+<!--                             <topN>5</topN> -->
+<!--                         </configuration> -->
+<!--                     </execution> -->
+<!--                 </executions> -->
+<!--             </plugin> -->
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Enforcing Maven/Java versions                                                 -->
+            <!-- http://repo1.maven.org/maven2/org/apache/maven/plugins/maven-enforcer-plugin/ -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-enforcer-plugin%22 -->
+                <version>1.2</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>maven-enforcer</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <requireMavenVersion>
+                            <version>${maven-version}</version>
+                        </requireMavenVersion>
+                        <requireJavaVersion>
+                            <version>${java-version}</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>${gmaven-version}</version>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <!-- Displaying plugin versions checked -->
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <executions>
+                    <execution>
+                        <id>display-versions</id>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <source>
+                                if ( System.getProperty( 'silence' ) == null )
+                                {
+                                    final props = new Properties()
+                                    props.load( org.apache.maven.Maven.class.getResourceAsStream( '/META-INF/maven/org.apache.maven/maven-core/pom.properties' ))
+                                    final mavenVersion = props.getProperty( 'version', 'Unknown' ).trim()
+                                    println """
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Module - [${project.groupId}:${project.artifactId}:${project.version}]
+ Java   - [${java.version}][${java.home}][${java.vendor}]
+ Maven  - [$mavenVersion]
+ Groovy - [$GroovySystem.version]
+ GMaven - [${gmaven-version}]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""".trim()
+                                }
+                            </source>
+                        </configuration>
+                    </execution>
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Compiling Groovy sources and tests                               -->
+                    <!-- http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects -->
+                    <!-- http://docs.codehaus.org/display/GMAVEN/Executing+Groovy+Code    -->
+                    <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119     -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <execution>
+                        <id>compile-groovy</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${pom.basedir}/src/main/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-groovy-tests</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${pom.basedir}/src/test/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+
+    <profiles>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Profile adding additional release files  -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <profile>
+            <id>addFiles</id>
+            <modules>
+                <module>groovydoc</module>
+            </modules>
+            <build>
+                <plugins>
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Copying "license.txt" and "README.markdown" files to ${project.build.outputDirectory} -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                    <plugin>
+                        <groupId>com.github.goldin</groupId>
+                        <artifactId>copy-maven-plugin</artifactId>
+                        <version>${previous-plugins-version}</version>
+                        <executions>
+                            <execution>
+                                <id>copy-license-readme</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <runIf>{{ new File( project.build.outputDirectory ).directory }}</runIf>
+                                    <resources>
+                                        <resource>
+                                            <targetPath>${project.build.outputDirectory}</targetPath>
+                                            <file>${project.basedir}/../license.txt</file>
+                                        </resource>
+                                        <resource>
+                                            <targetPath>${project.build.outputDirectory}</targetPath>
+                                            <file>${project.basedir}/README.markdown</file>
+                                            <failIfNotFound>false</failIfNotFound>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Copying "about.txt" to ${project.build.outputDirectory} -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                    <plugin>
+                        <groupId>com.github.goldin</groupId>
+                        <artifactId>find-maven-plugin</artifactId>
+                        <version>${previous-plugins-version}</version>
+                        <executions>
+                            <execution>
+                                <id>find-root-directory</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>find</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>mavenSettingsDir</propertyName>
+                                    <file>maven-settings</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>com.github.goldin</groupId>
+                        <artifactId>about-maven-plugin</artifactId>
+                        <version>${previous-plugins-version}</version>
+                        <executions>
+                            <execution>
+                                <id>copy-about</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>create-about</goal>
+                                </goals>
+                                <configuration>
+                                    <runIf>{{ new File( project.build.outputDirectory ).directory }}</runIf>
+                                    <dumpDependencies>true</dumpDependencies>
+                                    <dumpMaven>true</dumpMaven>
+                                    <fileName>${project.build.outputDirectory}/about~${project.groupId}~${project.artifactId}~${project.version}.txt</fileName>
+                                    <updateArchives>false</updateArchives>
+                                    <mavenCommandLine>-s ${mavenSettingsDir}/settings-artifactory.xml</mavenCommandLine>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- Creating sources and Javadoc archives -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-source-plugin%22 -->
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>pack-sources</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>**/*.java</include>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-javadoc-plugin%22 -->
+                        <version>2.9</version>
+                        <executions>
+                            <execution>
+                                <id>pack-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <!-- Profile checking for duplicate libraries in scopes -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+        <profile>
+            <id>duplicates</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.goldin</groupId>
+                        <artifactId>duplicates-finder-plugin</artifactId>
+                        <version>${previous-plugins-version}</version>
+                        <executions>
+                            <execution>
+                                <id>find-duplicates</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>find-duplicates</goal>
+                                </goals>
+                                <configuration>
+                                    <verbose>false</verbose>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
