@@ -4,7 +4,7 @@ import static com.github.goldin.plugins.common.GMojoUtils.*
 import com.github.goldin.plugins.common.SilentLogger
 import com.github.goldin.plugins.common.BaseGroovyMojo
 import org.apache.maven.LoggingRepositoryListener
-import org.apache.maven.cli.transfer.AbstractMavenTransferListener
+import org.apache.maven.cli.AbstractMavenTransferListener
 import org.apache.maven.lifecycle.internal.LifecycleModuleBuilder
 import org.apache.maven.plugin.DefaultBuildPluginManager
 import org.apache.maven.plugins.annotations.Component

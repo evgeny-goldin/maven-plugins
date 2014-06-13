@@ -9,13 +9,13 @@
     <groupId>com.github.goldin</groupId>
     <artifactId>mojo-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <name>[${project.groupId}:${project.artifactId}:${project.version}]</name>
 
     <parent>
         <groupId>com.github.goldin</groupId>
         <artifactId>main.plugins</artifactId>
-        <version>0.3.1-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>com.github.goldin</groupId>
             <artifactId>maven-common</artifactId>
-            <version>0.3.1-SNAPSHOT</version>
+            <version>0.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
