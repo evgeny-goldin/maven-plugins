@@ -10,7 +10,7 @@ import org.gcontracts.annotations.Requires
 /**
  * {@link ArtifactsFilter} implementation filtering artifacts according to their scope,
  * similarly to
- * {@link org.sonatype.aether.util.graph.selector.ScopeDependencySelector#selectDependency(org.sonatype.aether.graph.Dependency)}
+ * {@link org.eclipse.aether.util.graph.selector.ScopeDependencySelector#selectDependency(org.eclipse.aether.graph.Dependency)}
  * and not
  * {@link org.apache.maven.shared.artifact.filter.collection.ScopeFilter#filter(java.util.Set)}.
  *
