@@ -9,7 +9,7 @@ class SilentLogger extends    org.apache.log4j.Logger
                    implements org.apache.maven.plugin.logging.Log,
                               org.codehaus.plexus.logging.Logger,
                               org.apache.commons.logging.Log,
-                              org.sonatype.aether.spi.log.Logger,
+                              org.eclipse.aether.spi.log.Logger,
                               org.slf4j.Logger,
                               org.apache.ivy.util.MessageLogger
 {
