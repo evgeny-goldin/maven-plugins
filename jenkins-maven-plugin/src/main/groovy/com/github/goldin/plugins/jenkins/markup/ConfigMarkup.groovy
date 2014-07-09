@@ -306,6 +306,7 @@ ${ new DescriptionTableMarkup( job, jobs, indent, newLine ).markup }
                         recipients( job.mail.recipients )
                         dontNotifyEveryUnstableBuild( ! job.mail.sendForUnstable )
                         sendToIndividuals( job.mail.sendToIndividuals )
+                        perModuleEmail( job.mail.perModuleEmail )
                     }
                 }
             }

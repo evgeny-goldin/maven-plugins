@@ -10,9 +10,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.plugins.annotations.ResolutionScope
+import org.eclipse.aether.internal.impl.DefaultRepositorySystem
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.impl.internal.DefaultRepositorySystem
 
 
 /**
