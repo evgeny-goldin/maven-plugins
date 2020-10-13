@@ -73,7 +73,7 @@
         <spring-batch-version>2.2.0.RELEASE</spring-batch-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22junit%22%20AND%20a%3A%22junit%22 -->
-        <junit-version>4.11</junit-version>
+        <junit-version>4.13.1</junit-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ant%22%20AND%20a%3A%22ant%22 -->
         <ant-version>1.10.8</ant-version>
