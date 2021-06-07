@@ -423,7 +423,7 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22ch.qos.logback%22%20AND%20a%3A%22logback-classic%22 -->
-            <version>1.0.13</version>
+            <version>1.2.0</version>
             <scope>compile</scope>
         </dependency>
 
