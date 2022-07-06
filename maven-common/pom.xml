@@ -385,7 +385,7 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.jcraft%22%20AND%20a%3A%22jsch%22 -->
-            <version>0.1.50</version>
+            <version>0.1.54</version>
             <scope>runtime</scope>
         </dependency>
 
