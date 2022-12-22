@@ -3,11 +3,11 @@ package com.github.goldin.plugins.ivy
 import static com.github.goldin.plugins.common.GMojoUtils.*
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.RepositorySystemSession
-import org.sonatype.aether.impl.ArtifactResolver
-import org.sonatype.aether.resolution.ArtifactRequest
-import org.sonatype.aether.resolution.ArtifactResult
-import org.sonatype.aether.util.artifact.DefaultArtifact
+import org.eclipse.aether.RepositorySystemSession
+import org.eclipse.aether.impl.ArtifactResolver
+import org.eclipse.aether.resolution.ArtifactRequest
+import org.eclipse.aether.resolution.ArtifactResult
+import org.eclipse.aether.artifact.DefaultArtifact
 
 
 /**
@@ -46,8 +46,8 @@ class IvyArtifactResolver implements ArtifactResolver {
         final extension    = a.extension
         // Artifact may have no "file" set if resolution fails and helper's "failOnError" is "false"
         final artifact     = ivyHelper.resolve( organisation, name, revision, extension, pattern )
-        final result       = new ArtifactResult( request )                                  // org.sonatype.aether.resolution.ArtifactResult
-        result.artifact    = new DefaultArtifact( organisation, name, extension, revision ) // org.sonatype.aether.util.artifact.DefaultArtifact
+        final result       = new ArtifactResult( request )                                  // org.eclipse.aether.resolution.ArtifactResult
+        result.artifact    = new DefaultArtifact( organisation, name, extension, revision ) // org.eclipse.aether.artifact.DefaultArtifact
         if ( artifact.file )
         {
             result.artifact = result.artifact.setFile( artifact.file )

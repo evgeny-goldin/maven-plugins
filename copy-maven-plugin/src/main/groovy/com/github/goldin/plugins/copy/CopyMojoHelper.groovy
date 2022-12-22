@@ -19,9 +19,9 @@ import org.apache.maven.shared.filtering.MavenResourcesExecution
 import org.codehaus.plexus.util.FileUtils
 import org.gcontracts.annotations.Ensures
 import org.gcontracts.annotations.Requires
-import org.sonatype.aether.deployment.DeployRequest
-import org.sonatype.aether.repository.RemoteRepository
-import org.sonatype.aether.resolution.ArtifactDescriptorRequest
+import org.eclipse.aether.deployment.DeployRequest
+import org.eclipse.aether.repository.RemoteRepository
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest
 import org.apache.maven.shared.filtering.DefaultMavenFileFilter.Wrapper
 import java.util.jar.Attributes
 import java.util.jar.Manifest
