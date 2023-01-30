@@ -9,4 +9,5 @@ class Mail
     String  recipients
     boolean sendForUnstable   = true
     boolean sendToIndividuals = true
+    boolean perModuleEmail = true
 }
