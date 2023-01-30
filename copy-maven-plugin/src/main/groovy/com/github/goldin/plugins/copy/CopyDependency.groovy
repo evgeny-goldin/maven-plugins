@@ -32,6 +32,7 @@ class CopyDependency extends ArtifactItem
                                           // should be applied while traversing the dependencies tree
     Boolean stripVersion                  // Whether version number should be removed from file names
     Boolean stripTimestamp                // Whether snapshot timestamp should be removed from file names
+    Boolean useFinalName                  // Whether the file name is set to finalName from the artifact's POM
     Boolean excludeTransitive             // Whether transitive dependencies should be excluded
     int     depth           = -1          // Depth of transitive arguments
 

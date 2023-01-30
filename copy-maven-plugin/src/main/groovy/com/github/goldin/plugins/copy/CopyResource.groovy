@@ -120,6 +120,7 @@ final class CopyResource extends Resource implements Cloneable
     Boolean parallelDownload
     Boolean stripVersion
     Boolean stripTimestamp
+    Boolean useFinalName
     Boolean verbose
     Boolean failIfNotFound
     Boolean failOnError
