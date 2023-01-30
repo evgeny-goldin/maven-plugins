@@ -58,7 +58,7 @@
         <previous-plugins-version>0.3-beta-1</previous-plugins-version>
 
         <!-- http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/gcommons/ -->
-        <gcommons-version>0.6.3-SNAPSHOT</gcommons-version>
+        <gcommons-version>0.5.4</gcommons-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.groovy%22%20AND%20a%3A%22groovy%22 -->
         <groovy-version>2.1.5</groovy-version>
@@ -79,14 +79,15 @@
         <ant-version>1.10.11</ant-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.aether%22%20AND%20a%3A%22aether-api%22 -->
-        <aether-version>1.13.1</aether-version>
+        <aether-version>1.0.2.v20150114</aether-version>
+        <sonatype-aether-version>1.13.1</sonatype-aether-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.gcontracts%22%20AND%20a%3A%22gcontracts-core%22 -->
         <gcontracts-version>1.2.12</gcontracts-version>
 
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-bean%22   -->
         <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-inject-plexus%22 -->
-        <sisu-inject-version>2.4.0</sisu-inject-version>
+        <sisu-inject-version>2.5.3</sisu-inject-version>
     </properties>
 
 
@@ -260,7 +261,7 @@
 
         <plugins>
 
-            <plugin>
+            <!--plugin>
                 <groupId>com.github.goldin</groupId>
                 <artifactId>silencer-maven-plugin</artifactId>
                 <version>${previous-plugins-version}</version>
@@ -278,7 +279,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin-->
 
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
             <!-- Enforcing Maven/Java versions                                                 -->
@@ -289,7 +290,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.maven.plugins%22%20AND%20a%3A%22maven-enforcer-plugin%22 -->
-                <version>1.2</version>
+                <version>1.3</version>
                 <inherited>false</inherited>
                 <executions>
                     <execution>

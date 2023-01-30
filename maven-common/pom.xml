@@ -41,6 +41,28 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Needed to process the annotations to create an xml file -->
+            <plugin>
+              <groupId>org.codehaus.plexus</groupId>
+              <artifactId>plexus-component-metadata</artifactId>
+              <version>1.6</version>
+              <executions>
+                <execution>
+                  <id>process-classes</id>
+                  <goals>
+                    <goal>generate-metadata</goal>
+                  </goals>
+                </execution>
+                <execution>
+                  <id>process-test-classes</id>
+                  <goals>
+                    <goal>generate-test-metadata</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -104,29 +126,38 @@
             <scope>compile</scope>
         </dependency>
 
+	<!-- ~~~~~~ -->
+        <!-- aether -->
+        <!-- ~~~~~~ -->
+        <dependency>
+            <groupId>org.eclipse.aether</groupId>
+            <artifactId>aether-api</artifactId>
+            <version>${aether-version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.aether</groupId>
+            <artifactId>aether-util</artifactId>
+            <version>${aether-version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-api</artifactId>
-            <version>${aether-version}</version>
-            <scope>compile</scope>
+            <version>${sonatype-aether-version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-util</artifactId>
-            <version>${aether-version}</version>
-            <scope>compile</scope>
+            <version>${sonatype-aether-version}</version>
         </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-impl</artifactId>
-            <version>${aether-version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-connector-wagon</artifactId>
-            <version>${aether-version}</version>
-            <scope>provided</scope>
+            <version>${sonatype-aether-version}</version>
         </dependency>
 
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -276,7 +307,7 @@
             <groupId>org.sonatype.sisu</groupId>
             <artifactId>sisu-guice</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.sonatype.sisu%22%20AND%20a%3A%22sisu-guice%22 -->
-            <version>3.1.5</version>
+            <version>3.2.5</version>
             <exclusions>
                 <!-- Duplicate of "org.sonatype.sisu:sisu-inject-bean:jar:2.3.0"  -->
                 <exclusion>

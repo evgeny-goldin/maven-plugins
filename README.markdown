@@ -4,8 +4,6 @@
 
 * [Issue tracker](http://evgeny-goldin.org/youtrack/issues/pl).
 
-* **Only Maven 3 is supported!**
+* **Supports Maven 3 and upwards!**
 
 * Run `"mvn -s settings.xml clean install"` to build and install plugins into your local Maven repository.
-
-* Run `"mvn -s settings.xml clean install -Dsilence"` to build and install plugins with Maven logging minimized.
