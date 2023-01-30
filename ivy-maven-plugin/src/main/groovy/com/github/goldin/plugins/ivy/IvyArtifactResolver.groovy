@@ -45,7 +45,7 @@ class IvyArtifactResolver implements ArtifactResolver {
         final revision     = a.version
         final extension    = a.extension
         // Artifact may have no "file" set if resolution fails and helper's "failOnError" is "false"
-        final artifact     = ivyHelper.resolve( organisation, name, revision, extension, pattern )
+        final artifact     = ivyHelper.resolve( organisation, name, revision, extension, pattern, false ).first()
         final result       = new ArtifactResult( request )                                  // org.sonatype.aether.resolution.ArtifactResult
         result.artifact    = new DefaultArtifact( organisation, name, extension, revision ) // org.sonatype.aether.util.artifact.DefaultArtifact
         if ( artifact.file )
