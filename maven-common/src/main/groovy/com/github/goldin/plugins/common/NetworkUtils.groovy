@@ -36,7 +36,7 @@ class NetworkUtils
             verbose     : verbose,
             trust       : true,
             output      : outputFile.canonicalPath,
-            failonerror : failOnError ] + sshAuthArguments( pathData.password ))
+            failonerror : failOnError ] + sshAuthArguments( pathData.password, pathData.host ))
 
         log.info( "Running sshexec [$command] in [${ pathData.host }:${ pathData.directory }]" )
         new AntBuilder().sshexec( arguments )
@@ -237,7 +237,7 @@ class NetworkUtils
          */
 
         final localDestination  = file.canonicalPath
-        final authMap           = sshAuthArguments( pathData.password )
+        final authMap           = sshAuthArguments( pathData.password, pathData.host )
         final remoteDestination = "${ authMap.username ?: pathData.username }${ authMap.password ? ':' + authMap.password : '' }@${ pathData.host }:${ pathData.directory }"
 
         final Map<String,?> arguments = grepMap(( Map<String,?> ) [
@@ -263,14 +263,14 @@ class NetworkUtils
      *        can be either a password, a keyfile path, or a combination of "keyfile___passphrase".
      * @return {@code Map} of arguments to be used for ssh-based authentication
      */
-    @Requires({ authData })
+    @Requires({ authData && host })
     @Ensures ({ result })
-    private static Map<String,?> sshAuthArguments( String authData )
+    private static Map<String,?> sshAuthArguments( String authData, String host )
     {
         if ( authData == '<settings>' )
         {   // http://maven.apache.org/settings.html
-            final  server = ThreadLocals.get( MavenSession ).settings.servers.find { it.username || it.privateKey }
-            assert server, "No 'settings.xml' server contains a username or a private key"
+            final  server = ThreadLocals.get( MavenSession ).settings.servers.find { it.id == host }
+            assert server, "No 'settings.xml' server matches the given host"
             return grepMap ([ username   : server.username,
                               password   : server.password,
                               keyfile    : server.privateKey,
