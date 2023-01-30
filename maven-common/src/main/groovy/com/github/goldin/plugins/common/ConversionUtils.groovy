@@ -37,7 +37,7 @@ final class ConversionUtils
                 scope ?: 'compile',
                 type,
                 classifier,
-                new org.apache.maven.artifact.handler.DefaultArtifactHandler(),
+                new org.apache.maven.artifact.handler.DefaultArtifactHandler(type),
                 optional )
 
         if ( file ) { mavenArtifact.file = GMojoUtils.verifyBean().file( file ) }
