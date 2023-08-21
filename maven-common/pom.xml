@@ -445,7 +445,7 @@
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.apache.ivy%22%20AND%20a%3A%22ivy%22 -->
-            <version>2.3.0</version>
+            <version>2.5.2</version>
             <scope>compile</scope>
         </dependency>
 
