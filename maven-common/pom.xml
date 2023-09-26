@@ -250,7 +250,7 @@
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
             <!-- http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22org.codehaus.plexus%22%20AND%20a%3A%22plexus-utils%22 -->
-            <version>3.0.16</version>
+            <version>3.0.24</version>
             <scope>compile</scope>
         </dependency>
 
